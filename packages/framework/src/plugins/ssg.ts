@@ -28,6 +28,7 @@
  */
 
 import type { Nitro } from 'nitropack';
+import { createJiti } from 'jiti';
 import { fileToRoute } from './path-to-route.js';
 import fastGlob from 'fast-glob';
 import { resolve } from 'pathe';
@@ -59,8 +60,17 @@ import { resolve } from 'pathe';
  * Note on Nitro 2.x hook names: see pages.ts for details.
  */
 export default async function ssgPlugin(nitro: Nitro): Promise<void> {
+  // generateRoutes() is only useful for SSG prerendering — skip entirely during
+  // dev mode. `nitro dev` never prerenders; resolving routes is a no-op there.
+  if (nitro.options.dev) return;
+
   const rootDir = nitro.options.rootDir;
   const pagesDir = resolve(rootDir, 'pages');
+
+  // jiti loads TypeScript files at runtime without a separate compile step.
+  // Node.js ESM cannot import .ts files natively (ERR_UNKNOWN_FILE_EXTENSION);
+  // jiti's transform pipeline handles the TypeScript → JS conversion in memory.
+  const jiti = createJiti(import.meta.url, { interopDefault: true });
 
   // Scan for all page files — same glob pattern as the pages plugin
   let files: string[];
@@ -92,13 +102,13 @@ export default async function ssgPlugin(nitro: Nitro): Promise<void> {
 
     // Attempt to call generateRoutes() from the page module
     try {
-      // Dynamic import uses the absolute file path.
-      // In Node.js ESM, file:// URLs are required for Windows compatibility,
-      // but on POSIX systems absolute paths work directly with import().
-      const mod = await import(file);
+      // jiti.import() compiles TypeScript on the fly before loading.
+      // Native import() would throw ERR_UNKNOWN_FILE_EXTENSION for .ts files.
+      const mod = await jiti.import(file) as Record<string, unknown>;
 
-      if (typeof mod.generateRoutes === 'function') {
-        const paths: string[] = await mod.generateRoutes();
+      const generateRoutes = mod.generateRoutes as (() => Promise<string[]>) | undefined;
+      if (typeof generateRoutes === 'function') {
+        const paths: string[] = await generateRoutes();
 
         if (!Array.isArray(paths) || paths.length === 0) {
           nitro.logger.warn(
