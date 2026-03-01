@@ -27,12 +27,15 @@ export default defineNitroConfig({
   // IMPORTANT: publicAssets, NOT publicDir — publicDir is ignored by edge adapters.
   publicAssets: [
     {
-      dir: 'dist/client',
+      // Nitro resolves publicAssets.dir relative to srcDir (not rootDir).
+      // Since srcDir='server', use '../dist/client' to reach <rootDir>/dist/client.
+      dir: '../dist/client',
       baseURL: '/_litro/',
       maxAge: 31536000, // 1 year — Vite writes content-hashed filenames
     },
     {
-      dir: 'public',
+      // Similarly, '../public' resolves to <rootDir>/public.
+      dir: '../public',
       baseURL: '/',
       maxAge: 0,
     },

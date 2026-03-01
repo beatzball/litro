@@ -45,18 +45,23 @@ Litro uses a two-stage build pipeline where **Vite owns the client** and **Nitro
                 ┌─────────────────────────────────────────┐
                 │             Build Pipeline               │
                 │                                          │
+                │  Stage 0 — Page Scan (litro CLI)         │
+                │  ─────────────────────────────────────── │
+                │  pages/**  → routes.generated.ts         │
+                │  (at project root, not in dist/)         │
+                │                                          │
                 │  Stage 1 — Client (Vite)                 │
                 │  ─────────────────────────────────────── │
                 │  app.ts → Rollup tree-shake              │
-                │         → dist/client/app-[hash].js      │
+                │         → dist/client/app.js             │
                 │         → dist/client/assets/…           │
                 │                                          │
                 │  Stage 2 — Server (Nitro)                │
                 │  ─────────────────────────────────────── │
                 │  server/**  → Rollup bundle              │
                 │  + publicAssets: dist/client/            │
-                │         → .output/server/index.mjs       │
-                │         → .output/public/_litro/…        │
+                │         → dist/server/server/index.mjs   │
+                │         → dist/server/public/_litro/…    │
                 └─────────────────────────────────────────┘
 ```
 
@@ -64,9 +69,11 @@ Litro uses a two-stage build pipeline where **Vite owns the client** and **Nitro
 
 Nitro's `publicDir` option is silently ignored by edge adapters (Cloudflare Workers, Vercel Edge). The `publicAssets` array is the only way to ensure the Vite output is included in the deployment artifact for ALL targets. Each entry in `publicAssets` specifies:
 
-- `dir` — source directory (relative to project root)
+- `dir` — source directory (**resolved relative to `srcDir`**, not `rootDir` — use `'../dist/client'` when `srcDir = 'server'`)
 - `baseURL` — URL prefix under which the files are served
 - `maxAge` — `cache-control: max-age` value in seconds
+
+Nitro's `resolveAssetsOptions` resolves `publicAssets[].dir` as `path.resolve(srcDir, dir)`. Because `srcDir` is an absolute path to `<rootDir>/server`, a bare `'dist/client'` string would resolve to `<rootDir>/server/dist/client` (wrong). Use `'../dist/client'` or an absolute path.
 
 Vite produces content-hashed filenames so the client bundle can be served with a `max-age` of 1 year (`31536000`).
 
@@ -228,11 +235,12 @@ The `litro` CLI (`packages/framework/src/cli/index.ts`) is intentionally thin. I
 ```
 litro dev      → spawn('nitro', ['dev', '--port', '3030'], { LITRO_MODE: 'server' })
                (default port 3030; override with --port <n> or -p <n>)
-litro build    → spawn('vite', ['build'])
-                 then spawn('nitro', ['build'], { LITRO_MODE: 'server'|'static' })
-litro generate → spawn('vite', ['build'])
-                 then spawn('nitro', ['build'], { LITRO_MODE: 'static' })
-litro preview  → spawn('nitro', ['preview'])
+litro build    → scanAndWriteClientRoutes(cwd)            // Stage 0: write routes.generated.ts
+                 then spawn('vite', ['build'])             // Stage 1: client bundle
+                 then spawn('nitro', ['build'], { LITRO_MODE: 'server'|'static' })  // Stage 2
+litro generate → same as litro build --mode static
+litro preview  → spawn('node', ['dist/server/server/index.mjs'], { PORT: port })
+               (nitro preview was removed in Nitro 2.13; runs the built entry directly)
 ```
 
 The `dist/cli/index.js` binary is produced by `tsc -p tsconfig.json` from `src/cli/index.ts`. The `bin` field in `packages/framework/package.json` points at this compiled output. The framework must be built (`pnpm --filter litro build`) before running `litro` commands in the playground.

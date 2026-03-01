@@ -97,7 +97,7 @@ All four research findings are in `research/`. Critical decisions locked in:
 - **Single dev server port**: Vite is injected via `server/middleware/vite-dev.ts` — a Nitro server middleware that is auto-registered before the router. It starts Vite in `middlewareMode: true` and calls `fromNodeMiddleware(server.middlewares)`. No separate Vite port, no cross-process proxy. The middleware is excluded from production via `ignore` + `handlers[env:'dev']` in nitro.config (see Nitro 2.13 notes below).
 - **Page scanner**: Use `fast-glob` with `**/*.{ts,tsx}` pattern and `pathe` for path operations (not Node's `path` — Windows safe).
 - **Virtual module pattern**: Page scanner generates a `#litro/page-manifest` virtual module during `build:before`. A single catch-all Nitro handler reads it at runtime. This avoids registering individual Nitro routes per page.
-- **Production assets**: Use `publicAssets` (not `publicDir`) — `publicDir` is ignored by edge adapters (Cloudflare, Vercel Edge).
+- **Production assets**: Use `publicAssets` (not `publicDir`) — `publicDir` is ignored by edge adapters (Cloudflare, Vercel Edge). **Critical**: `publicAssets[].dir` is resolved relative to `srcDir` (not `rootDir`). With `srcDir: 'server'`, use `'../dist/client'` not `'dist/client'` — a bare path resolves to `<rootDir>/server/dist/client` (wrong), causing `assets = {}` in the built server and 404 for all `/_litro/**` assets in preview.
 - **Two plugin types in Nitro**: build-time plugins (in `nitro.config.ts`, use `nitro.hooks`) vs runtime plugins (`server/plugins/`, use `nitroApp.hooks`). The page scanner is a build-time plugin.
 
 ### SSR Pipeline (R-2)
@@ -171,6 +171,8 @@ Verified working:
 - `pageModules` registry enabling bundle-time page compilation
 - Dev server (`litro dev`) — Vite middleware intercepts JS/TS requests; Nitro handles HTML and API
 - Default dev port: 3030 (custom port via `litro dev --port <n>`)
+- Preview server (`litro preview`) — `/_litro/app.js` and all client assets served correctly
+- `litro build` — page scan runs before `vite build`; fresh routes always baked into client bundle
 
 Pending:
 - SSG mode (`LITRO_MODE=static`) not yet field-tested

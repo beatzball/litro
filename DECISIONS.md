@@ -124,6 +124,32 @@ A Rollup stub plugin (added in `pagesPlugin`) provides belt-and-suspenders prote
 
 ---
 
+## Build fix: `publicAssets.dir` relative to `srcDir`, not `rootDir`
+
+**Decision**: Use `'../dist/client'` and `'../public'` instead of `'dist/client'` and `'public'` in the `publicAssets` array when `srcDir = 'server'`.
+
+**Rationale**: Nitro's `resolveAssetsOptions` does `publicAsset.dir = resolve(options.srcDir, publicAsset.dir)`. Because `srcDir` resolves to the absolute path `<rootDir>/server`, a bare `'dist/client'` resolves to `<rootDir>/server/dist/client` which does not exist. With incorrect paths, `copyPublicAssets()` finds no files, `dist/server/public/` stays empty, the `assets` manifest in the built bundle is `{}`, and all `/_litro/**` requests 404 in preview.
+
+**Symptom**: `GET /_litro/app.js 404` in preview, client JS never loads, client router never starts, links appear broken.
+
+**Detection**: Build output should contain `[nitro] ✔ Generated public dist/server/public`. If missing, `publicAssets.dir` paths are wrong.
+
+---
+
+## Build fix: `routes.generated.ts` at project root, pre-scan before vite
+
+**Decision**: Write `routes.generated.ts` to `<rootDir>/routes.generated.ts` (not `dist/client/routes.generated.ts`). The `litro build` CLI calls `scanAndWriteClientRoutes(cwd)` before spawning `vite build`.
+
+**Rationale**: Vite's `emptyOutDir: true` (the default) clears the output directory during the write phase. Any file placed in `dist/client/` is unreliable as a Vite input because it can be deleted mid-build. More critically, `litro build` runs Vite before Nitro, so the Nitro `build:before` hook (which regenerates the routes) fires after Vite has already bundled `app.ts` — baking stale routes from the previous session into the client bundle.
+
+The fix uses two changes together:
+1. The file lives at `<rootDir>/routes.generated.ts`, outside Vite's output directory, so it is not affected by `emptyOutDir` and Vite can read it as a stable source file.
+2. The CLI runs `scanAndWriteClientRoutes(cwd)` synchronously before spawning `vite build`, ensuring the file always contains current routes before the Vite bundling step.
+
+`app.ts` imports `'./routes.generated.js'`; Vite resolves `.js` → `.ts` automatically.
+
+---
+
 ## CLI: default dev port 3030
 
 **Decision**: `litro dev` defaults to port 3030 and accepts `--port` / `-p` for overrides.

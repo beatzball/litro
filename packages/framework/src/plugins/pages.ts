@@ -151,13 +151,41 @@ ${routeLines}
 }
 
 /**
- * Ensures the output directory exists and writes the client routes file.
+ * Writes the client routes file to <rootDir>/routes.generated.ts.
+ *
+ * The file lives at the project root (not in dist/) so it:
+ *   1. Is not deleted by Vite's `emptyOutDir` during production builds
+ *   2. Can be imported by app.ts as a source file (Vite transforms it)
+ *   3. Is freshly regenerated before every `vite build` via the CLI pre-scan step
  */
 async function writeClientRoutes(rootDir: string, content: string): Promise<void> {
-  const outDir = resolve(rootDir, 'dist', 'client');
-  await mkdir(outDir, { recursive: true });
-  const outPath = join(outDir, 'routes.generated.ts');
+  const outPath = join(rootDir, 'routes.generated.ts');
   await writeFile(outPath, content, 'utf-8');
+}
+
+/**
+ * Standalone scanner: scans pages/, generates the client routes file.
+ *
+ * Exported so the CLI can call it before `vite build` to ensure fresh routes
+ * are baked into the client bundle. Also called by the Nitro `build:before`
+ * hook (via pagesPlugin) for the server-side manifest.
+ */
+export async function scanAndWriteClientRoutes(rootDir: string): Promise<void> {
+  const pagesDir = resolve(rootDir, 'pages');
+  let pageFiles: string[];
+  try {
+    pageFiles = await scanPageFiles(rootDir);
+  } catch {
+    return; // pages/ doesn't exist yet — silently skip
+  }
+  if (pageFiles.length === 0) return;
+
+  const routes = pageFiles
+    .map(file => fileToRoute(file, pagesDir))
+    .sort(compareRoutes);
+
+  const content = generateClientRoutes(routes, rootDir);
+  await writeClientRoutes(rootDir, content);
 }
 
 /**
@@ -338,7 +366,7 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     try {
       const clientContent = generateClientRoutes(routes, rootDir);
       await writeClientRoutes(rootDir, clientContent);
-      nitro.logger.info('[litro] Wrote dist/client/routes.generated.ts');
+      nitro.logger.info('[litro] Wrote routes.generated.ts');
     } catch (err) {
       // Non-fatal: the client routes file is a build artifact consumed by Vite.
       // If Vite hasn't run yet there's no dist/client/ — that's okay in dev.

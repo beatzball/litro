@@ -194,8 +194,11 @@ export default defineNitroConfig({
   ...(mode === "static" ? ssgPreset() : ssrPreset()),
   srcDir: "server",
   publicAssets: [
-    { dir: "dist/client", baseURL: "/_litro/", maxAge: 31536000 },
-    { dir: "public", baseURL: "/", maxAge: 0 },
+    // Paths are resolved relative to srcDir ('server/'), so use '../' to reach
+    // the project root. Bare paths like 'dist/client' would incorrectly resolve
+    // to 'server/dist/client' and produce a 404 for all /_litro/** assets.
+    { dir: "../dist/client", baseURL: "/_litro/", maxAge: 31536000 },
+    { dir: "../public", baseURL: "/", maxAge: 0 },
   ],
   externals: { inline: ["@lit-labs/ssr", "@lit-labs/ssr-client"] },
   esbuild: {
