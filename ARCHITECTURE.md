@@ -77,7 +77,7 @@ Vite produces content-hashed filenames so the client bundle can be served with a
 In development, **both Vite and Nitro share a single HTTP port**. There is no separate Vite port, no cross-process proxy, and no CORS issues.
 
 ```
-Browser ──HTTP──► :3000 (Nitro dev server)
+Browser ──HTTP──► :3030 (Nitro dev server)
                      │
                      ├── /api/**          ─► Nitro API handlers
                      ├── /_litro/**       ─► Nitro static asset handler
@@ -89,17 +89,18 @@ Browser ──HTTP──► :3000 (Nitro dev server)
 
 ### How it works
 
-1. `nitro.config.ts` exports a `devHandlers` array. Each entry is a `{ route, handler }` pair where `handler` is an H3 event handler.
+The Vite dev middleware lives in `server/middleware/vite-dev.ts`. Nitro auto-discovers all files in `server/middleware/` and registers them in the H3 app **before** the router (this is the key ordering guarantee from `createNitroApp()`).
 
-2. During `nitro dev`, Nitro mounts these dev handlers into its internal connect-compatible middleware stack — **before** its own file-based router.
+The middleware:
+1. Starts a Vite server with `server.middlewareMode: true` and `appType: 'custom'` — Vite does NOT bind its own HTTP port, and its built-in SPA fallback is suppressed.
+2. Wraps `viteServer.middlewares` with `fromNodeMiddleware()` from `h3` to adapt the connect `(req, res, next)` signature to H3's event handler interface.
+3. Passes every request through Vite. Vite handles requests it owns (JS/TS modules, HMR WebSocket, virtual module URLs like `/@id/…`). For all other requests it calls `next()`, which Nitro's router then handles (API routes, HTML catch-all).
 
-3. Vite is started with `server.middlewareMode: true` and `appType: 'custom'`. This suppresses Vite's built-in HTML serving and HTTP listener — it only gives us a connect middleware function.
+**Production exclusion**: `server/middleware/vite-dev.ts` contains a dynamic `import('vite')`. Nitro's `@vercel/nft` dependency tracer runs during Rollup's resolution phase (before DCE) and would copy vite + esbuild + rollup + postcss (~4.5 MB) to the output. The fix uses two `nitro.config.ts` options together:
+- `ignore: ['**/middleware/vite-dev.ts']` — prevents Nitro's `scanHandlers()` from auto-discovering the file.
+- `handlers: [{ middleware: true, handler: '…/vite-dev.ts', env: 'dev' }]` — re-registers it explicitly so Nitro's `getHandlers()` (evaluated lazily inside a Rollup virtual module) only includes it when `env: 'dev'` matches. In production builds the file never enters Rollup's module graph.
 
-4. The Vite middleware is wrapped with `fromNodeMiddleware()` from `h3` to adapt it from `(req, res, next)` to H3's `(event) => Promise<void>` signature.
-
-5. The resulting H3 handler is registered in `devHandlers` so Nitro routes matching requests to Vite before falling through to its own handlers.
-
-**Key constraint**: `devHandlers` is only respected during `nitro dev`. In production (`nitro build`), this key is completely ignored — Vite's output is already baked into `dist/client/` and served via `publicAssets`.
+**Key constraint**: `devHandlers` (a separate array in Nitro's options) is read by `DevServer.createApp()` at construction time, before any build hook fires — it cannot be populated from `build:before` or any config hook. Server middleware files are the correct mechanism.
 
 ---
 
@@ -225,7 +226,8 @@ Route-not-found requests during dev return a 404 HTML page listing all registere
 The `litro` CLI (`packages/framework/src/cli/index.ts`) is intentionally thin. It delegates all heavy work to the `nitro` and `vite` CLI binaries found in the project's `node_modules/.bin/`. This avoids re-implementing dev server, build orchestration, or preview logic. The CLI uses Node.js `child_process.spawn` (no `execa` dependency) and sets `LITRO_MODE` in the environment so downstream Nitro and Vite plugins can read the current mode.
 
 ```
-litro dev      → spawn('nitro', ['dev'],     { LITRO_MODE: 'server' })
+litro dev      → spawn('nitro', ['dev', '--port', '3030'], { LITRO_MODE: 'server' })
+               (default port 3030; override with --port <n> or -p <n>)
 litro build    → spawn('vite', ['build'])
                  then spawn('nitro', ['build'], { LITRO_MODE: 'server'|'static' })
 litro generate → spawn('vite', ['build'])

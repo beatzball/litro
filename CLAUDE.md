@@ -94,7 +94,7 @@ litro/
 All four research findings are in `research/`. Critical decisions locked in:
 
 ### Build Pipeline (R-1, R-4)
-- **Single dev server port**: Inject Vite into Nitro via `devHandlers` + `fromNodeMiddleware()`. No separate Vite port, no cross-process proxy.
+- **Single dev server port**: Vite is injected via `server/middleware/vite-dev.ts` — a Nitro server middleware that is auto-registered before the router. It starts Vite in `middlewareMode: true` and calls `fromNodeMiddleware(server.middlewares)`. No separate Vite port, no cross-process proxy. The middleware is excluded from production via `ignore` + `handlers[env:'dev']` in nitro.config (see Nitro 2.13 notes below).
 - **Page scanner**: Use `fast-glob` with `**/*.{ts,tsx}` pattern and `pathe` for path operations (not Node's `path` — Windows safe).
 - **Virtual module pattern**: Page scanner generates a `#litro/page-manifest` virtual module during `build:before`. A single catch-all Nitro handler reads it at runtime. This avoids registering individual Nitro routes per page.
 - **Production assets**: Use `publicAssets` (not `publicDir`) — `publicDir` is ignored by edge adapters (Cloudflare, Vercel Edge).
@@ -120,7 +120,7 @@ All four research findings are in `research/`. Critical decisions locked in:
 - `[slug]` → `:slug`, `[...all]` → `:all(.*)*`, `[[param]]` → `:param?`, `index` files strip to parent path
 - Sort static routes before dynamic, dynamic before catch-all
 
-## Nitro 2.10 Compatibility (Discovered During Implementation)
+## Nitro 2.10–2.13 Compatibility (Discovered During Implementation)
 
 These are corrections to what research agents expected vs. what Nitro 2.10 actually does:
 
@@ -144,24 +144,34 @@ These are corrections to what research agents expected vs. what Nitro 2.10 actua
 - A `pageModules` registry is exported from the manifest so `createPageHandler` can access `pageData` exports without a runtime `.ts` import.
 - Nitro's esbuild needs `experimentalDecorators: true, useDefineForClassFields: false` (in `esbuild.options.tsconfigRaw`) to handle Lit's decorator syntax (`@customElement`, `@state`, etc.).
 
+### Vite dev middleware — production bundle size
+
+`server/middleware/vite-dev.ts` contains `import('vite')`. Even though `process.dev` DCE eliminates it from compiled code, Nitro's `@vercel/nft` dependency tracer runs during Rollup's **resolution phase** (before DCE) and adds vite to `trackedExternals`, causing vite + esbuild + rollup + postcss (~4.5 MB) to be copied to the production output.
+
+**Root cause**: `buildProduction()` calls `scanHandlers()` a **second time** after `build:before` fires, overwriting any filter applied in `build:before` to `nitro.scannedHandlers`.
+
+**Fix**: Use `ignore: ['**/middleware/vite-dev.ts']` in nitro.config to prevent auto-discovery, then re-register with `handlers: [{ ..., env: 'dev' }]`. Nitro's `getHandlers()` (inside a lazy Rollup virtual module) excludes `env: 'dev'` handlers in production — the file never enters the module graph and `import('vite')` is never resolved.
+
+Key distinction: `nitro.options.handlers` (explicit config) persists through both `scanHandlers()` calls; `nitro.scannedHandlers` is overwritten each time.
+
 ## Current Status
 
 **All phases complete. System working end-to-end.**
 
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
-- V-1: Validation complete (95/95 unit tests passing)
+- V-1: Validation complete (93/93 unit tests passing)
 
 Verified working:
 - Vite client build → `dist/client/`
-- Nitro server build → `dist/server/`
+- Nitro server build → `dist/server/` (745 kB)
 - SSR rendering with Declarative Shadow DOM on all page routes
 - `pageData` server-side data fetching and injection
 - API routes (`/api/hello`)
 - `pageModules` registry enabling bundle-time page compilation
+- Dev server (`litro dev`) — Vite middleware intercepts JS/TS requests; Nitro handles HTML and API
+- Default dev port: 3030 (custom port via `litro dev --port <n>`)
 
 Pending:
-- `litro` CLI binary needs `pnpm --filter litro build` before use
-- Dev server (`nitro dev`) / HMR not yet tested
-- SSG mode (`LITRO_MODE=static`) not yet tested
-- Playwright e2e tests pending dev server work
+- SSG mode (`LITRO_MODE=static`) not yet field-tested
+- Playwright e2e tests

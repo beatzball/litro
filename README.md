@@ -37,10 +37,10 @@ pnpm --filter litro build
 
 # Start the dev server (from playground/)
 cd playground
-npx nitro dev
+litro dev
 ```
 
-The dev server starts on `http://localhost:3000` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port.
+The dev server starts on `http://localhost:3030` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port.
 
 ---
 
@@ -240,12 +240,13 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 ```bash
 pnpm install                    # install all workspace deps
 pnpm --filter litro build       # compile framework (required once)
-pnpm --filter litro test        # run unit tests (95 tests)
+pnpm --filter litro test        # run unit tests (93 tests)
 pnpm --filter litro dev         # watch-compile framework
 
 cd playground
-npx nitro dev                   # start dev server
-npx vite build && npx nitro build  # full production build
+litro dev                       # start dev server on :3030
+litro dev --port 8080           # start on a custom port
+litro build                     # full production build (vite + nitro)
 PORT=4000 node dist/server/server/index.mjs  # run production server
 ```
 

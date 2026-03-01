@@ -105,3 +105,27 @@ The key insight is that `LitroOutlet` and `LitroLink` are custom elements that a
 A Rollup stub plugin (added in `pagesPlugin`) provides belt-and-suspenders protection for production builds, replacing `@vaadin/router` with a no-op stub in the server bundle. The dynamic import approach is the fundamental fix; the stub is belt-and-suspenders.
 
 **Why not a rollup alias/stub alone**: In Nitro dev mode, `litro` is loaded as an external Node.js module (not bundled by rollup). Rollup plugins are not applied to external modules, so a stub-only approach fails in dev mode. The dynamic import approach works in both dev and production.
+
+---
+
+## Vite dev middleware: server/middleware/ over devHandlers
+
+**Decision**: Vite dev middleware is implemented as a Nitro server middleware file (`server/middleware/vite-dev.ts`) rather than by pushing to `nitro.options.devHandlers`.
+
+**Rationale**: `DevServer.createApp()` reads `nitro.options.devHandlers` in its constructor, which is called from `createDevServer()` — before `build:before` or any other build hook fires. There is no hook window in which `devHandlers` can be populated in time. Server middleware files are registered in `createNitroApp()` via `h3App.use(middleware)` before the router is mounted, giving Vite first access to every request.
+
+---
+
+## Vite dev middleware: `ignore` + `handlers[env:'dev']` for production exclusion
+
+**Decision**: Prevent auto-discovery of `server/middleware/vite-dev.ts` via `ignore: ['**/middleware/vite-dev.ts']` and re-register it with `handlers: [{ ..., env: 'dev' }]` in `nitro.config.ts`.
+
+**Rationale**: Even with `process.dev` DCE, Nitro's `@vercel/nft` tracer populates `trackedExternals` during Rollup's resolution phase (before DCE runs). Additionally, `buildProduction()` calls `scanHandlers()` a second time after `build:before`, overwriting any filter applied to `nitro.scannedHandlers`. Only `nitro.options.handlers` (explicit config) survives both scans. With `env: 'dev'`, Nitro's `getHandlers()` evaluates inside a lazy Rollup virtual module — in production it excludes the handler, so the file never enters the module graph and `import('vite')` is never resolved. Production bundle: 745 kB (vs 5.29 MB without this fix).
+
+---
+
+## CLI: default dev port 3030
+
+**Decision**: `litro dev` defaults to port 3030 and accepts `--port` / `-p` for overrides.
+
+**Rationale**: Avoids collision with the common defaults of React (3000), Vue (5173), and other tools. The port is passed through to `nitro dev --port <n>`; Nitro handles the actual binding.
