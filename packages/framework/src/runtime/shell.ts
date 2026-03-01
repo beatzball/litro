@@ -15,16 +15,17 @@
  *      <template shadowrootmode> elements. A type="module" script is deferred
  *      and arrives too late; a plain inline script runs synchronously.
  *
- *   2. lit-element-hydrate-support.js (type="module") — monkey-patches
- *      LitElement.prototype.createRenderRoot() to enter hydration mode.
- *      MUST load before any LitElement subclass is evaluated. Loading it as a
- *      module in <head> (before app.js) ensures correct ordering.
+ *   2. app.js (type="module" in the foot) — the Vite-built client bundle.
+ *      `@lit-labs/ssr-client/lit-element-hydrate-support.js` is the FIRST
+ *      import inside app.ts, so the hydration patch is applied before any
+ *      LitElement subclass is evaluated within the same bundle. No separate
+ *      hydration-support script tag is needed.
  *
- *   3. app.js (type="module") — the Vite-built client bundle, loaded after
- *      the hydration support module has already patched LitElement.
- *
- * The path /_litro/app.js must match the `baseURL` in nitro.config.ts
- * publicAssets (currently '/_litro/'). If that base changes, update here.
+ * The default app script path `/_litro/app.js` maps to `dist/client/app.js`
+ * via the `publicAssets` entry in nitro.config.ts. In dev mode, pass
+ * `appScriptUrl: '/app.ts'` so Vite's middleware can transform the module
+ * on the fly (no pre-built bundle required). Nitro's vite-dev plugin injects
+ * Vite as a devHandler at `/**`, so `/app.ts` is served correctly in dev.
  */
 
 /** Minified MutationObserver-based DSD polyfill.
@@ -71,6 +72,16 @@ export interface ShellOptions {
    * without an extra round-trip.
    */
   serverDataJson?: string;
+  /**
+   * URL for the client-side app bundle `<script type="module">` tag.
+   *
+   * Production default: `/_litro/app.js` (served from dist/client/app.js via
+   * the `publicAssets` Nitro config entry).
+   *
+   * Dev mode: pass `/app.ts` so Vite's middleware serves and hot-reloads the
+   * entry module directly (no pre-built bundle required during development).
+   */
+  appScriptUrl?: string;
 }
 
 /**
@@ -102,6 +113,7 @@ export function buildShell(
   const serverDataScript = options?.serverDataJson
     ? `\n  <script type="application/json" id="__litro_data__">${options.serverDataJson}</script>`
     : '';
+  const appScriptUrl = options?.appScriptUrl ?? '/_litro/app.js';
 
   const head = `<!DOCTYPE html>
 <html lang="en">
@@ -116,26 +128,19 @@ export function buildShell(
     by the browser and arrives after the parser has already processed the DSD templates,
     making it too late to upgrade them.
   -->
-  <script>${DSD_POLYFILL}</script>
-  <!--
-    CRITICAL IMPORT ORDER: @lit-labs/ssr-client/lit-element-hydrate-support.js
-    MUST load as a module script in <head> BEFORE app.js (the Lit component bundle).
-    It monkey-patches LitElement.prototype.createRenderRoot() to enter hydration mode
-    (claim the existing DSD shadow root) instead of creating a fresh empty shadow root.
-    If any LitElement subclass loads first, those components will not hydrate correctly.
-  -->
-  <script type="module" src="/_litro/lit-element-hydrate-support.js"></script>${extraHead}${serverDataScript}
+  <script>${DSD_POLYFILL}</script>${extraHead}${serverDataScript}
 </head>
 <body${bodyAttrs}>
 `;
 
   const foot = `
   <!--
-    App bundle — loads AFTER the hydration support script in <head>.
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
     /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
-    Content-hashed filenames produced by Vite allow 1-year cache headers.
   -->
-  <script type="module" src="/_litro/app.js"></script>
+  <script type="module" src="${appScriptUrl}"></script>
 </body>
 </html>
 <!-- /${componentTag} -->

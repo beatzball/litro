@@ -28,14 +28,22 @@
 
 export const version = '0.0.1';
 
-export { createPageHandler } from './runtime/create-page-handler.js';
-export { renderToStream } from './runtime/ssr.js';
+// Client-safe exports — these are the only exports that should appear in the
+// browser bundle. Server-only modules (createPageHandler, renderToStream,
+// ssgPlugin, presets) must NOT be re-exported here: they pull in Node.js-only
+// dependencies (@lit-labs/ssr, jiti, fast-glob) that cause Vite to fail when
+// building the client bundle.
+//
+// Server-only imports:
+//   createPageHandler → import from 'litro/runtime/create-page-handler.js'
+//   renderToStream    → import from 'litro/runtime/ssr.js'
+//   ssgPlugin         → import from 'litro/plugins/ssg'
+//   ssgPreset/ssrPreset → import from 'litro/config'
+
 export { definePageData, getServerData } from './runtime/page-data.js';
 export { LitroPage, LitroPageMixin } from './runtime/LitroPage.js';
+
+// Type-only exports — erased at runtime, never cause module graph issues.
 export type { LitroRoute, LitroRouteMeta } from './types/route.js';
 export type { PageHandlerOptions } from './runtime/create-page-handler.js';
 export type { PageDataFetcher } from './runtime/page-data.js';
-
-// SSG plugin and config presets (I-6)
-export { default as ssgPlugin } from './plugins/ssg.js';
-export { ssgPreset, ssrPreset } from './config/presets.js';

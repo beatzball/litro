@@ -64,6 +64,12 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "sideEffects": [
+    "./src/runtime/LitroOutlet.ts",
+    "./src/runtime/LitroLink.ts",
+    "./dist/runtime/LitroOutlet.js",
+    "./dist/runtime/LitroLink.js"
+  ],
   "dependencies": {
     "execa": "^8.0.1",
     "nitropack": "^2.10.4",

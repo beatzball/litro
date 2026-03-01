@@ -23,7 +23,7 @@
  */
 
 import { defineEventHandler, setResponseHeader, getRequestURL } from 'h3';
-import { createPageHandler } from 'litro';
+import { createPageHandler } from 'litro/runtime/create-page-handler.js';
 import type { LitroRoute } from 'litro';
 import { routes, pageModules } from '#litro/page-manifest';
 

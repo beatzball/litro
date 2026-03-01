@@ -75,37 +75,15 @@ describe('buildShell — head: DSD polyfill', () => {
 });
 
 // ---------------------------------------------------------------------------
-// head — hydration support script ordering
+// head — no separate hydration support script
 // ---------------------------------------------------------------------------
 
-describe('buildShell — head: hydration support script', () => {
-  it('contains the lit-element-hydrate-support.js module script', () => {
+describe('buildShell — head: hydration support', () => {
+  it('does NOT include a separate lit-element-hydrate-support.js script tag', () => {
+    // The hydrate-support module is the first import in app.ts and is bundled
+    // into app.js. A separate <script> tag is unnecessary and would 404.
     const { head } = buildDefault();
-    expect(head).toContain('lit-element-hydrate-support.js');
-  });
-
-  it('hydration support script is type="module"', () => {
-    const { head } = buildDefault();
-    expect(head).toContain(
-      '<script type="module" src="/_litro/lit-element-hydrate-support.js">',
-    );
-  });
-
-  it('hydration support script appears BEFORE the closing </head> tag', () => {
-    const { head } = buildDefault();
-    const hydrationIdx = head.indexOf('lit-element-hydrate-support.js');
-    const headCloseIdx = head.indexOf('</head>');
-    expect(hydrationIdx).toBeGreaterThan(-1);
-    expect(hydrationIdx).toBeLessThan(headCloseIdx);
-  });
-
-  it('DSD polyfill appears before the hydration support script in head', () => {
-    const { head } = buildDefault();
-    // The polyfill must run before any module script — modules are deferred so
-    // the polyfill always arrives first, but we verify the source order too.
-    const polyfillIdx = head.indexOf('MutationObserver');
-    const hydrationIdx = head.indexOf('lit-element-hydrate-support.js');
-    expect(polyfillIdx).toBeLessThan(hydrationIdx);
+    expect(head).not.toContain('lit-element-hydrate-support.js');
   });
 });
 
@@ -186,14 +164,20 @@ describe('buildShell — head: extra head HTML', () => {
 // ---------------------------------------------------------------------------
 
 describe('buildShell — foot: app bundle', () => {
-  it('contains the app.js script tag', () => {
+  it('defaults to /_litro/app.js when no appScriptUrl is provided', () => {
     const { foot } = buildDefault();
     expect(foot).toContain('src="/_litro/app.js"');
   });
 
-  it('app.js script is type="module"', () => {
+  it('default app script is type="module"', () => {
     const { foot } = buildDefault();
     expect(foot).toContain('<script type="module" src="/_litro/app.js">');
+  });
+
+  it('uses appScriptUrl option when provided', () => {
+    const { foot } = buildDefault('page-home', { appScriptUrl: '/app.ts' });
+    expect(foot).toContain('src="/app.ts"');
+    expect(foot).not.toContain('src="/_litro/app.js"');
   });
 });
 
