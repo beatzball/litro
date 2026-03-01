@@ -1,0 +1,19 @@
+{
+  "name": "litro-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter playground dev",
+    "build": "pnpm --filter playground build",
+    "preview": "pnpm --filter playground preview",
+    "test": "pnpm --filter litro test",
+    "test:e2e": "playwright test",
+    "lint": "tsc --noEmit -p packages/framework/tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

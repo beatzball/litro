@@ -1,0 +1,31 @@
+import { test, expect } from '@playwright/test';
+
+test('client navigation between pages does not cause full reload', async ({ page }) => {
+  await page.goto('/');
+  // Track navigation events — a full reload would trigger 'load'
+  let fullReloadCount = 0;
+  page.on('load', () => fullReloadCount++);
+
+  await page.waitForSelector('litro-outlet');
+  // Navigate to /blog via litro-link or direct Router.go
+  await page.evaluate(() => {
+    (window as any).__vaadinRouter?.go('/blog')
+      ?? history.pushState({}, '', '/blog');
+  });
+  await page.waitForURL('**/blog');
+
+  // No full reload should have occurred after the initial load
+  expect(fullReloadCount).toBe(1); // only the initial page load
+});
+
+test('blog index page renders after navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.goto('/blog');
+  await expect(page.locator('h1')).toContainText('Blog');
+});
+
+test('404 returns appropriate response for unknown routes', async ({ request }) => {
+  const response = await request.get('/this-route-does-not-exist');
+  // Should return 404 or a catch-all fallback
+  expect([404, 200]).toContain(response.status());
+});

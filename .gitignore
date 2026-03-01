@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.output/
+.nitro/
+
+# Framework compiled output
+packages/*/dist/
+
+# Playground: Vite client bundle + Nitro server bundle
+playground/dist/
+
+# Generated files (overwritten on every build by the pages plugin)
+playground/server/stubs/page-manifest.ts
+
+# Playwright
+/test-results/
+/playwright-report/
+e2e/test-results/
+
+# Nitro / Nuxt cache
+.nitro/
+.nuxt/
+
+# TypeScript composite build info
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.env
+.env.*
+*.local
+.vscode/settings.json

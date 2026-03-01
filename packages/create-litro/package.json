@@ -1,0 +1,16 @@
+{
+  "name": "create-litro",
+  "version": "0.0.1",
+  "description": "Create a new Litro app",
+  "type": "module",
+  "bin": {
+    "create-litro": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
