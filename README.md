@@ -1,0 +1,265 @@
+# Litro
+
+A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nitro](https://nitro.unjs.io).
+
+- **File-based routing** — `pages/index.ts` → `/`, `pages/blog/[slug].ts` → `/blog/:slug`
+- **Server-side rendering** — streaming Declarative Shadow DOM via `@lit-labs/ssr`
+- **Client hydration** — `@vaadin/router` takes over after SSR with no flicker
+- **Server-side data fetching** — `definePageData()` runs on the server before render
+- **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
+- **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
+- **Any deployment target** — Node.js, Cloudflare Workers, Vercel Edge, static — via Nitro adapters
+
+> **Status**: Early development. Core SSR pipeline is working. CLI, HMR, and SSG are implemented but not yet field-tested.
+
+---
+
+## Monorepo structure
+
+```
+litro/
+  packages/
+    framework/        ← npm package: litro
+    create-litro/     ← npm create litro (scaffolding, stub)
+  playground/         ← test app
+```
+
+---
+
+## Quick start (playground)
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the framework (required before using the CLI)
+pnpm --filter litro build
+
+# Start the dev server (from playground/)
+cd playground
+npx nitro dev
+```
+
+The dev server starts on `http://localhost:3000` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port.
+
+---
+
+## App structure
+
+```
+my-app/
+  pages/
+    index.ts          →  GET /
+    about.ts          →  GET /about
+    blog/
+      index.ts        →  GET /blog
+      [slug].ts       →  GET /blog/:slug
+    [...all].ts       →  GET /* (catch-all)
+  server/
+    api/              ← H3 API handlers (e.g. server/api/hello.ts → GET /api/hello)
+    middleware/       ← Nitro middleware
+  public/             ← Static assets served at /
+  app.ts              ← Client entry (hydration + router bootstrap)
+  vite.config.ts
+  nitro.config.ts
+```
+
+---
+
+## Pages
+
+A page file exports a Lit component decorated with `@customElement`. The filename determines the route.
+
+```typescript
+// pages/index.ts  →  /
+import { LitElement, html } from "lit";
+import { customElement } from "lit/decorators.js";
+
+@customElement("page-home")
+export class HomePage extends LitElement {
+  render() {
+    return html`<h1>Hello from Litro</h1>`;
+  }
+}
+```
+
+### Dynamic routes
+
+```
+pages/blog/[slug].ts    →  /blog/:slug
+pages/[...all].ts       →  /* (catch-all)
+pages/[[lang]]/index.ts →  /:lang?
+```
+
+---
+
+## Server-side data fetching
+
+`definePageData()` runs on the server before the component renders. The result is serialized into the HTML shell as a JSON script tag and read by `LitroPage` on first load.
+
+```typescript
+// pages/index.ts
+import { customElement, state } from "lit/decorators.js";
+import { LitroPage } from "litro/runtime";
+import { definePageData } from "litro";
+
+export const pageData = definePageData(async (event) => {
+  // event is the H3 event — access headers, cookies, params, etc.
+  return {
+    message: "Hello from the server!",
+    timestamp: new Date().toISOString(),
+  };
+});
+
+@customElement("page-home")
+export class HomePage extends LitroPage {
+  @state() declare serverData: { message: string; timestamp: string } | null;
+
+  override async fetchData() {
+    // Called on client-side navigation (not on the initial SSR load)
+    const res = await fetch("/api/hello");
+    return res.json();
+  }
+
+  render() {
+    return html` <h1>${this.serverData?.message ?? "Loading..."}</h1> `;
+  }
+}
+```
+
+On the first (SSR) load, `serverData` is populated from the injected JSON. On subsequent client-side navigations, `fetchData()` is called instead.
+
+---
+
+## API routes
+
+Files in `server/api/` are plain [H3](https://h3.unjs.io) event handlers.
+
+```typescript
+// server/api/hello.ts  →  GET /api/hello
+import { defineEventHandler } from "h3";
+
+export default defineEventHandler((event) => {
+  return { message: "Hello!", timestamp: new Date().toISOString() };
+});
+```
+
+---
+
+## Build
+
+```bash
+# Build client (Vite) + server (Nitro) for Node.js
+pnpm build          # or: npx vite build && npx nitro build
+
+# Build for static site generation (prerender all routes to HTML)
+LITRO_MODE=static pnpm build
+```
+
+Output:
+
+- `dist/client/` — Vite client bundle (JS, assets)
+- `dist/server/` — Nitro server bundle
+
+---
+
+## Deployment
+
+Litro delegates all deployment to Nitro's adapter system. Set `NITRO_PRESET` or configure `preset` in `nitro.config.ts`:
+
+| Target                | Preset                            |
+| --------------------- | --------------------------------- |
+| Node.js server        | `node-server` (default)           |
+| Cloudflare Workers    | `cloudflare-workers`              |
+| Vercel Edge           | `vercel-edge`                     |
+| Netlify Edge          | `netlify-edge`                    |
+| Static / GitHub Pages | `static` (or `LITRO_MODE=static`) |
+
+See [Nitro deployment docs](https://nitro.unjs.io/deploy) for the full list.
+
+---
+
+## `nitro.config.ts` reference
+
+```typescript
+import { defineNitroConfig } from "nitropack/config";
+import type { Nitro } from "nitropack";
+import { ssgPreset, ssrPreset } from "litro/config";
+import pagesPlugin from "litro/plugins";
+import ssgPlugin from "litro/plugins/ssg";
+
+const mode = process.env.LITRO_MODE ?? "server";
+
+export default defineNitroConfig({
+  ...(mode === "static" ? ssgPreset() : ssrPreset()),
+  srcDir: "server",
+  publicAssets: [
+    { dir: "dist/client", baseURL: "/_litro/", maxAge: 31536000 },
+    { dir: "public", baseURL: "/", maxAge: 0 },
+  ],
+  externals: { inline: ["@lit-labs/ssr", "@lit-labs/ssr-client"] },
+  esbuild: {
+    options: {
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          useDefineForClassFields: false,
+        },
+      },
+    },
+  },
+  hooks: {
+    "build:before": async (nitro: Nitro) => {
+      await pagesPlugin(nitro);
+      await ssgPlugin(nitro);
+    },
+  },
+});
+```
+
+---
+
+## Static site generation
+
+Export a `generateRoutes()` function from any dynamic page to tell the SSG which paths to prerender:
+
+```typescript
+// pages/blog/[slug].ts
+export async function generateRoutes(): Promise<string[]> {
+  // fetch from a CMS, database, or static data
+  return ["/blog/hello-world", "/blog/getting-started"];
+}
+```
+
+Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender list by the pages plugin.
+
+---
+
+## Development
+
+```bash
+pnpm install                    # install all workspace deps
+pnpm --filter litro build       # compile framework (required once)
+pnpm --filter litro test        # run unit tests (95 tests)
+pnpm --filter litro dev         # watch-compile framework
+
+cd playground
+npx nitro dev                   # start dev server
+npx vite build && npx nitro build  # full production build
+PORT=4000 node dist/server/server/index.mjs  # run production server
+```
+
+---
+
+## Tech stack
+
+| Layer         | Library                                                                               | Role                                   |
+| ------------- | ------------------------------------------------------------------------------------- | -------------------------------------- |
+| Components    | [Lit 3](https://lit.dev)                                                              | Web component authoring                |
+| SSR           | [@lit-labs/ssr](https://github.com/lit/lit/tree/main/packages/labs/ssr)               | Streaming Declarative Shadow DOM       |
+| Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration              |
+| Client router | [@vaadin/router](https://vaadin.com/router)                                           | Web component-aware pushState router   |
+| Server        | [Nitro](https://nitro.unjs.io)                                                        | Routing, API, SSR, deployment adapters |
+| Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
+| Language      | TypeScript 5                                                                          | Required throughout                    |
+| Monorepo      | pnpm workspaces                                                                       | Package management                     |
