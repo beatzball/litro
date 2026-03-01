@@ -36,7 +36,8 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { Router } from '@vaadin/router';
+// @vaadin/router is dynamically imported inside handleClick() so it is never
+// evaluated in Node.js (window does not exist server-side).
 
 @customElement('litro-link')
 export class LitroLink extends LitElement {
@@ -64,8 +65,11 @@ export class LitroLink extends LitElement {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (!this.href.startsWith('/')) return;
 
+    // preventDefault() must be called synchronously before the async import.
     e.preventDefault();
-    Router.go(this.href);
+    // @vaadin/router is loaded lazily — safe because handleClick() only fires
+    // in the browser where window exists.
+    void import('@vaadin/router').then(({ Router }) => Router.go(this.href));
   }
 
   override render() {

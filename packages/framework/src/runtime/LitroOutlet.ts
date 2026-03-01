@@ -32,7 +32,11 @@
 
 import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { Router, type Route } from '@vaadin/router';
+// `@vaadin/router` accesses `window` at module evaluation time.
+// We only import the TYPE here (erased at runtime); the value is loaded
+// lazily via a dynamic import inside firstUpdated() so the module is never
+// evaluated in Node.js (where window does not exist).
+import type { Router, Route } from '@vaadin/router';
 
 @customElement('litro-outlet')
 export class LitroOutlet extends LitElement {
@@ -64,8 +68,14 @@ export class LitroOutlet extends LitElement {
    * firstUpdated() fires once, after the component's first render cycle
    * completes and the element is in the DOM. At this point `this` is a real,
    * attached DOM node that the router can use as its outlet container.
+   *
+   * @vaadin/router is imported dynamically here so it is never evaluated in
+   * Node.js. The module accesses `window` at eval time; a dynamic import
+   * inside this client-only lifecycle method is safe because firstUpdated()
+   * never runs on the server.
    */
-  override firstUpdated() {
+  override async firstUpdated() {
+    const { Router } = await import('@vaadin/router');
     this.router = new Router(this);
     this.router.setRoutes(this.routes);
   }

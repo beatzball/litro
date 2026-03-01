@@ -91,3 +91,17 @@ Running log of architectural and implementation decisions. All agents append her
 **Decision**: Set `experimentalDecorators: true` and `useDefineForClassFields: false` in Nitro's `esbuild.options.tsconfigRaw`.
 
 **Rationale**: Lit uses TypeScript's legacy experimental decorators (`@customElement`, `@state`, `@property`). Without this configuration, Nitro's esbuild treats the decorators as TC39 stage-3 decorators, causing parse errors on `@state() declare field` syntax.
+
+---
+
+## `@vaadin/router` server-side isolation via dynamic imports
+
+**Decision**: `LitroOutlet.ts` and `LitroLink.ts` use dynamic `import('@vaadin/router')` inside their lifecycle methods (`firstUpdated()`, `handleClick()`) rather than a static top-level import.
+
+**Rationale**: `@vaadin/router` transitively loads `@vaadin/vaadin-development-mode-detector`, which reads `window` at module evaluation time. A static `import { Router } from '@vaadin/router'` at the top of `LitroOutlet.ts` causes Node.js to evaluate the module when `litro/runtime` is imported — crashing the server.
+
+The key insight is that `LitroOutlet` and `LitroLink` are custom elements that are **never instantiated on the server**. Their lifecycle methods (`firstUpdated`, event handlers) only run in the browser. A dynamic import inside those methods is therefore safe: it is never triggered in Node.js, regardless of whether `litro/runtime` is bundled by rollup (production) or loaded as an external module (dev mode).
+
+A Rollup stub plugin (added in `pagesPlugin`) provides belt-and-suspenders protection for production builds, replacing `@vaadin/router` with a no-op stub in the server bundle. The dynamic import approach is the fundamental fix; the stub is belt-and-suspenders.
+
+**Why not a rollup alias/stub alone**: In Nitro dev mode, `litro` is loaded as an external Node.js module (not bundled by rollup). Rollup plugins are not applied to external modules, so a stub-only approach fails in dev mode. The dynamic import approach works in both dev and production.

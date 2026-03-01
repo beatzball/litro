@@ -179,6 +179,76 @@ async function writeServerManifest(rootDir: string, content: string): Promise<vo
 }
 
 // ---------------------------------------------------------------------------
+// Server-side stub for @vaadin/router
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a Rollup plugin that intercepts `@vaadin/router` imports in the
+ * **server** bundle and replaces them with a no-op stub.
+ *
+ * Why: The `litro/runtime` barrel re-exports `LitroOutlet` and `LitroLink`,
+ * both of which import `@vaadin/router` at the top level. `@vaadin/router`
+ * transitively loads `@vaadin/vaadin-development-mode-detector`, which reads
+ * `window` at module evaluation time — crashing Node.js.
+ *
+ * The stub satisfies the interface used by `LitroOutlet` and `LitroLink`
+ * without any DOM/window access. Since those components are never rendered
+ * server-side, the stub is never actually invoked at runtime.
+ *
+ * Note: This plugin is added to Nitro's rollup config (server bundle only).
+ * Vite (client bundle) is unaffected — it bundles the real @vaadin/router.
+ */
+/** Minimal Rollup plugin interface (avoids a direct 'rollup' type dependency). */
+interface MinimalRollupPlugin {
+  name: string;
+  resolveId(id: string): string | null;
+  load(id: string): string | null;
+}
+
+function vaadinRouterStubPlugin(): MinimalRollupPlugin {
+  const STUB_ID = '\0@vaadin/router-server-stub';
+  return {
+    name: 'litro:vaadin-router-stub',
+    resolveId(id: string) {
+      if (id === '@vaadin/router') return STUB_ID;
+      return null;
+    },
+    load(id: string) {
+      if (id !== STUB_ID) return null;
+      // Minimal stub: satisfies the Router usage in LitroOutlet and LitroLink.
+      // - new Router(outlet) — constructor
+      // - router.setRoutes(routes) — instance method
+      // - Router.go(path) — static method used by LitroLink
+      return `
+export class Router {
+  constructor(_outlet) {}
+  setRoutes(_routes) {}
+  static go(_path) {}
+}
+export default Router;
+`;
+    },
+  };
+}
+
+/**
+ * Prepends the @vaadin/router stub plugin to Nitro's rollup plugin list.
+ * Must be called before rollup starts (i.e., from build:before).
+ */
+function injectVaadinRouterStub(nitro: Nitro): void {
+  // nitro.options.rollupConfig may be undefined if the user hasn't set it
+  if (!nitro.options.rollupConfig) {
+    (nitro.options as Record<string, unknown>).rollupConfig = {};
+  }
+  const rc = nitro.options.rollupConfig as Record<string, unknown>;
+  if (!rc.plugins || !Array.isArray(rc.plugins)) {
+    rc.plugins = [];
+  }
+  // Prepend so it runs before @rollup/plugin-node-resolve
+  (rc.plugins as MinimalRollupPlugin[]).unshift(vaadinRouterStubPlugin());
+}
+
+// ---------------------------------------------------------------------------
 // Main plugin export
 // ---------------------------------------------------------------------------
 
@@ -209,6 +279,10 @@ async function writeServerManifest(rootDir: string, content: string): Promise<vo
  *   hooks['build:before'] rather than registering nested hooks.
  */
 export default async function pagesPlugin(nitro: Nitro): Promise<void> {
+  // Stub @vaadin/router in the server bundle to prevent window-access at eval time.
+  // Must be done before rollup starts — we're inside build:before so it's safe.
+  injectVaadinRouterStub(nitro);
+
   // ---------------------------------------------------------------------------
   // Core scan function — called both at build time and on dev reload
   // ---------------------------------------------------------------------------
