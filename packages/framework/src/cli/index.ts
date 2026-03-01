@@ -11,13 +11,16 @@
  *
  * generate: Alias for `litro build --mode static`.
  *
- * preview:  Runs `nitro preview` against the production build output.
+ * preview:  Runs the production server entry (.output/server/index.mjs) directly.
+ *           `nitro preview` was removed in Nitro 2.13.
  *
  * Delegates entirely to the `nitro` and `vite` CLI binaries found in the project's
  * node_modules. Does NOT use execa — only Node.js built-in child_process.spawn.
  */
 
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import process from 'node:process';
 
 const [,, command, ...args] = process.argv;
@@ -91,9 +94,29 @@ switch (command) {
     }
     break;
 
-  case 'preview':
-    run('nitro', ['preview']);
+  case 'preview': {
+    // `nitro preview` was removed in Nitro 2.13. Run the production server
+    // entry directly. Nitro's node-server preset writes the entry to
+    // .output/server/index.mjs relative to the project root.
+    // ssrPreset sets output.dir = 'dist/server'; Nitro appends its own
+    // 'server/' subdirectory, so the entry is dist/server/server/index.mjs.
+    const entry = join(cwd, 'dist', 'server', 'server', 'index.mjs');
+    if (!existsSync(entry)) {
+      console.error(
+        '[litro] No production build found at dist/server/server/index.mjs\n' +
+        '        Run `litro build` first.',
+      );
+      process.exit(1);
+    }
+    const portFlagIdx = args.findIndex((a) => a === '--port' || a === '-p');
+    const portInline = args.find((a) => a.startsWith('--port=') || a.startsWith('-p='));
+    const port =
+      portInline?.split('=')[1] ??
+      (portFlagIdx !== -1 ? args[portFlagIdx + 1] : undefined) ??
+      '3030';
+    run('node', [entry], { PORT: port });
     break;
+  }
 
   default:
     console.log(`
