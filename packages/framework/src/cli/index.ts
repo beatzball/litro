@@ -39,11 +39,17 @@ function run(
 }
 
 switch (command) {
-  case 'dev':
-    // Nitro dev server orchestrates the single-port server.
-    // The project's nitro.config.ts registers the Vite dev middleware via devHandlers.
-    run('nitro', ['dev'], { LITRO_MODE: 'server' });
+  case 'dev': {
+    // Resolve port: --port <n> or -p <n> from args, falling back to 3030.
+    const portFlagIdx = args.findIndex((a) => a === '--port' || a === '-p');
+    const portInline = args.find((a) => a.startsWith('--port=') || a.startsWith('-p='));
+    const port =
+      portInline?.split('=')[1] ??
+      (portFlagIdx !== -1 ? args[portFlagIdx + 1] : undefined) ??
+      '3030';
+    run('nitro', ['dev', '--port', port], { LITRO_MODE: 'server' });
     break;
+  }
 
   case 'build': {
     const modeFlag =
@@ -94,7 +100,8 @@ switch (command) {
 litro — Lit-first fullstack framework
 
 Commands:
-  litro dev              Start development server
+  litro dev              Start development server (default port: 3030)
+  litro dev --port 8080  Start on a custom port
   litro build            Build for production (--mode static|server, default: server)
   litro generate         Build static site (alias for litro build --mode static)
   litro preview          Preview production build
