@@ -1,5 +1,6 @@
 import { defineNitroConfig } from 'nitropack/config';
 import type { Nitro } from 'nitropack';
+import { resolve } from 'node:path';
 import { ssgPreset, ssrPreset } from '../packages/framework/dist/config/presets.js';
 import pagesPlugin from '../packages/framework/dist/plugins/pages.js';
 import ssgPlugin from '../packages/framework/dist/plugins/ssg.js';
@@ -59,19 +60,28 @@ export default defineNitroConfig({
     },
   },
 
-  // ─── Build-time Plugins ────────────────────────────────────────────────────
-  // Plugins run during createNitro() and can register nitro:init hooks.
-  // viteDevPlugin MUST be here (not in hooks['build:before']) because Nitro's
-  // DevServer constructor calls createApp() which reads devHandlers before
-  // build:before ever fires. nitro:init fires before createDevServer(), so
-  // plugins that register a nitro:init hook can inject devHandlers in time.
+  // ─── Vite Dev Middleware ───────────────────────────────────────────────────
+  // server/middleware/vite-dev.ts contains a dynamic import('vite') that must
+  // NOT enter Rollup's module graph in production — even though process.dev DCE
+  // eliminates it from the compiled code, Nitro's @vercel/nft tracer adds vite
+  // to trackedExternals BEFORE DCE (during Rollup's resolution phase), causing
+  // vite + esbuild + rollup + postcss to be copied to the output (~4.5 MB).
   //
-  // Note: Nitro resolves plugin paths relative to rootDir. Paths with '../'
-  // that escape the project root may not resolve correctly in all Nitro
-  // versions, so we use the local wrapper at ./plugins/vite-dev.ts instead
-  // of referencing the framework package directly.
-  plugins: [
-    './plugins/vite-dev.ts',
+  // Fix: prevent auto-discovery + register explicitly with env: 'dev'.
+  //   - `ignore` stops globby from finding the file in server/middleware/.
+  //   - `handlers` re-registers it with env: 'dev' so Nitro's getHandlers()
+  //     excludes it in production builds — the file never enters Rollup's
+  //     module graph, so import('vite') is never resolved, and vite is not
+  //     copied to the output.
+  //   - In dev (env: 'dev' matches), it is included and intercepts every
+  //     request before Nitro's router, giving Vite first access.
+  ignore: ['**/middleware/vite-dev.ts'],
+  handlers: [
+    {
+      middleware: true,
+      handler: resolve('./server/middleware/vite-dev.ts'),
+      env: 'dev',
+    },
   ],
 
   // ─── Build-time Hooks ──────────────────────────────────────────────────────
@@ -80,6 +90,12 @@ export default defineNitroConfig({
   // build:before fires. Plugins are called directly (awaited) — they run their
   // scan/setup immediately rather than registering nested sub-hooks which would
   // be registered too late to fire in the same build cycle.
+  //
+  // Vite dev middleware is NOT injected here. Nitro's DevServer.createApp()
+  // reads devHandlers before build:before fires, so pushing to devHandlers
+  // there is too late. Instead, server/middleware/vite-dev.ts is registered
+  // as a Nitro server middleware (auto-discovered) — middleware files are added
+  // to h3App before the router in createNitroApp(), giving Vite first access.
   hooks: {
     'build:before': async (nitro: Nitro) => {
       // Run page scanner — scans pages/, writes manifest stub, sets virtual module
