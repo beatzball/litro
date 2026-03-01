@@ -35,11 +35,22 @@ export default defineEventHandler(async (event) => {
   if (!process.dev || !process.env.NITRO_DEV_WORKER_ID) return;
 
   if (!viteHandlerPromise) {
+    // Extract Nitro's underlying HTTP server from the first request's socket.
+    // Passing it as hmr.server tells Vite to attach its WebSocket upgrade
+    // handler to the *existing* server (port 3030) instead of opening a new
+    // standalone WebSocket server that would conflict with Nitro's port.
+    const httpServer = (event.node.req.socket as import('node:net').Socket & {
+      server?: import('node:http').Server;
+    }).server;
+
     viteHandlerPromise = import('vite')
       .then(({ createServer }) =>
         createServer({
           // middlewareMode: Vite does NOT bind its own HTTP server.
-          server: { middlewareMode: true },
+          server: {
+            middlewareMode: true,
+            hmr: httpServer ? { server: httpServer } : true,
+          },
           // 'custom' appType: suppress Vite's SPA HTML fallback.
           appType: 'custom',
           // process.cwd() is the project root because Nitro is always

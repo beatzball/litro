@@ -76,6 +76,14 @@ export class LitroOutlet extends LitElement {
    */
   override async firstUpdated() {
     const { Router } = await import('@vaadin/router');
+    // Remove any SSR'd children before the router takes over. The SSR'd page
+    // component is streamed inside <litro-outlet> so content is visible before
+    // JS loads. The router renders a new instance and manages the outlet from
+    // here; the old SSR node must be cleared first or the router will append a
+    // second copy alongside it (duplicate content bug).
+    while (this.lastChild) {
+      this.removeChild(this.lastChild);
+    }
     this.router = new Router(this);
     this.router.setRoutes(this.routes);
   }

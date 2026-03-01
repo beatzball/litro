@@ -129,8 +129,18 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // Lit templates must use unsafeStatic (from lit/static-html.js) — plain
       // expression interpolation of tag names is an invalid Lit expression
       // location and causes SSR to throw "Unexpected final partIndex".
+      //
+      // When serverDataJson is available, pass the parsed data as a .serverData
+      // property binding so this.serverData is populated *during* SSR. This means
+      // render() sees the real data and the streamed DSD HTML already shows the
+      // correct content (not "No data yet"). After JS loads, the router creates
+      // a new component instance, calls onBeforeEnter() → getServerData() (reads
+      // the JSON script tag still in the DOM) → sets serverData on the new
+      // instance, producing the same content seamlessly.
       const tagStatic = unsafeStatic(route.componentTag);
-      const template = html`<${tagStatic}></${tagStatic}>`;
+      const template = serverDataJson
+        ? html`<${tagStatic} .serverData=${JSON.parse(serverDataJson)}></${tagStatic}>`
+        : html`<${tagStatic}></${tagStatic}>`;
 
       // Get the AsyncIterable<string> from the SSR engine.
       const ssrIterable = renderToStream(template);

@@ -131,9 +131,11 @@ export function buildShell(
   <script>${DSD_POLYFILL}</script>${extraHead}${serverDataScript}
 </head>
 <body${bodyAttrs}>
+<litro-outlet>
 `;
 
-  const foot = `
+  const foot = `</litro-outlet>
+
   <!--
     App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
     first import inside app.ts, so the hydration patch runs before any
