@@ -59,6 +59,21 @@ export default defineNitroConfig({
     },
   },
 
+  // ─── Build-time Plugins ────────────────────────────────────────────────────
+  // Plugins run during createNitro() and can register nitro:init hooks.
+  // viteDevPlugin MUST be here (not in hooks['build:before']) because Nitro's
+  // DevServer constructor calls createApp() which reads devHandlers before
+  // build:before ever fires. nitro:init fires before createDevServer(), so
+  // plugins that register a nitro:init hook can inject devHandlers in time.
+  //
+  // Note: Nitro resolves plugin paths relative to rootDir. Paths with '../'
+  // that escape the project root may not resolve correctly in all Nitro
+  // versions, so we use the local wrapper at ./plugins/vite-dev.ts instead
+  // of referencing the framework package directly.
+  plugins: [
+    './plugins/vite-dev.ts',
+  ],
+
   // ─── Build-time Hooks ──────────────────────────────────────────────────────
   // Nitro 2.x fires 'build:before' right before rollup starts.
   // Config hooks are registered during createNitro() so they are ready when
@@ -71,9 +86,6 @@ export default defineNitroConfig({
       await pagesPlugin(nitro);
       // Run SSG resolver — resolves dynamic routes for prerendering
       await ssgPlugin(nitro);
-      // Inject Vite dev middleware — no-ops in production (nitro.options.dev guard)
-      const { default: viteDevPlugin } = await import('../packages/framework/dist/plugins/vite-dev.js');
-      await viteDevPlugin(nitro);
     },
   },
 
