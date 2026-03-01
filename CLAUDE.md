@@ -70,30 +70,13 @@ litro/
 - `generateRoutes(): Promise<string[]>` — optional export on dynamic pages for SSG prerendering
 - All deployment targets delegated entirely to Nitro's adapter system (no custom adapters)
 
-## Agent Roles and Dependency Order
-
-| Agent | Role | Depends On |
-|-------|------|------------|
-| R-1 | Research: Nuxt internals (page scan, Vite/Nitro coordination) | — |
-| R-2 | Research: `@lit-labs/ssr` (SSR API, DSD, hydration) | — |
-| R-3 | Research: `@vaadin/router` (API, Lit integration, lifecycle) | — |
-| R-4 | Research: Nitro standalone (config, plugins, prerender, adapters) | — |
-| I-1 | Implement: Monorepo scaffold + Vite/Nitro build pipeline | R-1, R-4 |
-| I-2 | Implement: Page scanner + route generator (Nitro plugin) | R-1, R-4, I-1 |
-| I-3 | Implement: SSR pipeline (Nitro handler + `@lit-labs/ssr` + streaming) | R-2, R-4, I-1 |
-| I-4 | Implement: Client hydration bootstrap + `@vaadin/router` integration | R-2, R-3, I-1 |
-| I-5 | Implement: Data fetching convention | R-2, R-3, I-3, I-4 |
-| I-6 | Implement: Static site generation mode | R-4, I-2, I-3 |
-| I-7 | Implement: CLI + HMR + error overlay | I-1, I-2 |
-| V-1 | Validate: E2E test suite + deployment smoke tests | All I-* |
-
 ## Shared Output Structure
 
 - Research findings → `research/<agent-id>-findings.md` (e.g. `research/R-1-findings.md`)
 - Framework code → `packages/framework/`
 - Scaffolding CLI → `packages/create-litro/`
 - Test app → `playground/`
-- Architecture doc → `ARCHITECTURE.md` (written by I-1 after scaffold)
+- Architecture doc → `ARCHITECTURE.md`
 - Decision log → `DECISIONS.md` (running log, all agents append)
 
 ## Source References
@@ -113,7 +96,7 @@ All four research findings are in `research/`. Critical decisions locked in:
 ### Build Pipeline (R-1, R-4)
 - **Single dev server port**: Inject Vite into Nitro via `devHandlers` + `fromNodeMiddleware()`. No separate Vite port, no cross-process proxy.
 - **Page scanner**: Use `fast-glob` with `**/*.{ts,tsx}` pattern and `pathe` for path operations (not Node's `path` — Windows safe).
-- **Virtual module pattern**: Page scanner generates a `#litro/page-manifest` virtual module at `nitro:build:before`. A single catch-all Nitro handler reads it at runtime. This avoids registering individual Nitro routes per page.
+- **Virtual module pattern**: Page scanner generates a `#litro/page-manifest` virtual module during `build:before`. A single catch-all Nitro handler reads it at runtime. This avoids registering individual Nitro routes per page.
 - **Production assets**: Use `publicAssets` (not `publicDir`) — `publicDir` is ignored by edge adapters (Cloudflare, Vercel Edge).
 - **Two plugin types in Nitro**: build-time plugins (in `nitro.config.ts`, use `nitro.hooks`) vs runtime plugins (`server/plugins/`, use `nitroApp.hooks`). The page scanner is a build-time plugin.
 
@@ -123,6 +106,7 @@ All four research findings are in `research/`. Critical decisions locked in:
 - **DSD polyfill**: Include a MutationObserver-based inline `<script>` polyfill in the shell `<head>` for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4).
 - **SSR failure mode**: Components accessing `window`/`document` at module eval time will throw on the server. Wrap in `isServer` guard or use `<litro-client-only>`. Do NOT use VM sandbox mode.
 - **Edge adapters**: `@lit-labs/ssr` requires `externals.inline: ['@lit-labs/ssr']` in `nitro.config.ts` to bundle correctly on Cloudflare/Vercel Edge.
+- **Dynamic tag names**: Use `unsafeStatic` from `lit/static-html.js` — plain expression interpolation of tag names (`html\`<${tag}>\``) is an invalid Lit expression location and causes SSR to throw.
 
 ### Client Router (R-3)
 - **Mount in `firstUpdated()`** — not `constructor()` or `connectedCallback()`. Outlet must be in the DOM first.
@@ -136,6 +120,48 @@ All four research findings are in `research/`. Critical decisions locked in:
 - `[slug]` → `:slug`, `[...all]` → `:all(.*)*`, `[[param]]` → `:param?`, `index` files strip to parent path
 - Sort static routes before dynamic, dynamic before catch-all
 
+## Nitro 2.10 Compatibility (Discovered During Implementation)
+
+These are corrections to what research agents expected vs. what Nitro 2.10 actually does:
+
+### Hook names
+- `'build:before'` fires before the rollup build (NOT `'nitro:build:before'`)
+- `'dev:reload'` fires on dev hot-reload (NOT `'nitro:dev:reload'`)
+- `'nitro:init'` — **does NOT fire** from `createNitro()` in Nitro 2.10. Config hooks registered for this event are silently never called.
+
+### Plugin calling convention
+- Config `hooks['build:before']` entries are registered in `createNitro()` before `build:before` fires — use this to trigger build-time logic.
+- Build-time plugins must be **directly awaited** from `hooks['build:before']`. They cannot register a nested `build:before` sub-hook (the event already fired by the time the sub-hook would be registered).
+
+### Virtual modules vs. `package.json` imports
+- Nitro's virtual module plugin wins over `@rollup/plugin-node-resolve` for `#` imports **only when** the virtual module content is set in `nitro.options.virtual`.
+- When the virtual module is **not** set, `@rollup/plugin-node-resolve` falls back to the `package.json` `"imports"` field — the stub file is used. Keep the `"imports"` entry as a cold-start fallback.
+- Virtual module content **must be plain JavaScript** — TypeScript syntax causes a Rollup parse error.
+
+### Page module bundling
+- Node.js ESM cannot import `.ts` files at runtime (`ERR_UNKNOWN_FILE_EXTENSION`).
+- Solution: the `#litro/page-manifest` virtual module includes **static imports** of all page `.ts` files. Rollup's esbuild plugin compiles them at build time; `customElements.define()` runs on server startup.
+- A `pageModules` registry is exported from the manifest so `createPageHandler` can access `pageData` exports without a runtime `.ts` import.
+- Nitro's esbuild needs `experimentalDecorators: true, useDefineForClassFields: false` (in `esbuild.options.tsconfigRaw`) to handle Lit's decorator syntax (`@customElement`, `@state`, etc.).
+
 ## Current Status
 
-Research complete (R-1 through R-4). Implementation starting with I-1 (monorepo scaffold). Full PRD is in `PRD-litro-framework.md`.
+**All phases complete. System working end-to-end.**
+
+- R-1 through R-4: Research complete (findings in `research/`)
+- I-1 through I-7: Implementation complete
+- V-1: Validation complete (95/95 unit tests passing)
+
+Verified working:
+- Vite client build → `dist/client/`
+- Nitro server build → `dist/server/`
+- SSR rendering with Declarative Shadow DOM on all page routes
+- `pageData` server-side data fetching and injection
+- API routes (`/api/hello`)
+- `pageModules` registry enabling bundle-time page compilation
+
+Pending:
+- `litro` CLI binary needs `pnpm --filter litro build` before use
+- Dev server (`nitro dev`) / HMR not yet tested
+- SSG mode (`LITRO_MODE=static`) not yet tested
+- Playwright e2e tests pending dev server work

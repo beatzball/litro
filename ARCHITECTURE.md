@@ -127,15 +127,29 @@ Runtime (single catch-all handler):
 - **Single handler = simpler adapter compatibility**: One catch-all handler works identically across all Nitro deployment targets (Node, Cloudflare, Vercel Edge, etc.).
 - **Incremental updates**: In dev mode, the manifest virtual module can be regenerated in-memory on file-change without restarting the Nitro server.
 
-### The alias in `nitro.config.ts`
+### How it actually works (Nitro 2.10)
 
-```typescript
-alias: {
-  '#litro/page-manifest': './server/stubs/page-manifest.ts',
+The pages plugin runs directly from `hooks['build:before']` in `nitro.config.ts`. It:
+
+1. Scans `pages/**/*.{ts,tsx}` with `fast-glob`
+2. Sets `nitro.options.virtual['#litro/page-manifest']` to the generated JavaScript source
+3. Overwrites `server/stubs/page-manifest.ts` with the same content (physical file fallback — see below)
+
+**Virtual module content** includes:
+- Static `import * as _pageN from '/abs/path/pages/foo.ts'` for every page — Rollup's esbuild plugin compiles the TypeScript at build time, registering all `@customElement` definitions as side effects
+- A `routes` array export (JSON — the route metadata)
+- A `pageModules` registry export mapping `filePath → bundled module object`
+
+**Two-path resolution** — Nitro's virtual plugin wins over `@rollup/plugin-node-resolve` when the virtual content is set. When it is not set (cold start or plugin error), node-resolve falls back to the `package.json` `"imports"` field which points at `server/stubs/page-manifest.ts` — a committed stub with an empty `routes` array.
+
+```json
+// playground/package.json
+"imports": {
+  "#litro/page-manifest": "./server/stubs/page-manifest.ts"
 }
 ```
 
-The stub returns an empty `PageEntry[]`. I-2 will replace the stub target with a dynamically generated module that contains the real page list.
+The stub file is overwritten on every build by the pages plugin, so after the first successful build it always contains the real routes.
 
 ---
 
@@ -194,7 +208,7 @@ Vite handles HMR for Lit components natively via ESM hot module replacement. Cha
 
 ### Page file additions/deletions
 
-The Nitro plugin (I-2) hooks `nitro:dev:reload` to re-run the page scanner when files change. New or deleted pages update the `#litro/page-manifest` virtual module in-memory. Note: Nitro dev server must be restarted for new routes to register in the H3 request handler — the route registry is locked after startup (Nitro limitation, documented in R-4 findings).
+The pages plugin registers a `'dev:reload'` hook (Nitro 2.x hook name — not `'nitro:dev:reload'`) to re-run the page scanner when files change. New or deleted pages update the `#litro/page-manifest` virtual module in-memory. Note: Nitro dev server must be restarted for new routes to register in the H3 request handler — the route registry is locked after startup (Nitro limitation, documented in R-4 findings).
 
 ### Config changes
 
@@ -220,3 +234,68 @@ litro preview  → spawn('nitro', ['preview'])
 ```
 
 The `dist/cli/index.js` binary is produced by `tsc -p tsconfig.json` from `src/cli/index.ts`. The `bin` field in `packages/framework/package.json` points at this compiled output. The framework must be built (`pnpm --filter litro build`) before running `litro` commands in the playground.
+
+---
+
+## 8. Nitro 2.10 Implementation Notes
+
+These are corrections discovered during implementation that differ from the original research findings:
+
+### Hook names changed
+
+| Expected (docs/older Nitro) | Actual (Nitro 2.10) |
+|---|---|
+| `'nitro:build:before'` | `'build:before'` |
+| `'nitro:dev:reload'` | `'dev:reload'` |
+| `'nitro:init'` in config hooks | **never fires** — `createNitro()` does not call `callHook('nitro:init')` |
+
+### Plugin calling convention
+
+Config `hooks` entries are registered by `createNitro()` before `build:before` fires. Build-time plugins must therefore be **directly called and awaited** from within `hooks['build:before']` — they cannot register nested `build:before` sub-hooks because the event has already fired by the time those sub-hooks would be registered.
+
+```typescript
+// nitro.config.ts — CORRECT
+hooks: {
+  'build:before': async (nitro) => {
+    await pagesPlugin(nitro);   // runs scan immediately
+    await ssgPlugin(nitro);     // runs SSG resolution immediately
+  }
+}
+
+// BROKEN — pagesPlugin registers its own 'build:before' hook which never fires
+hooks: {
+  'nitro:init': async (nitro) => {  // nitro:init never fires in Nitro 2.10
+    pagesPlugin(nitro);
+  }
+}
+```
+
+### Page module bundling for SSR
+
+Node.js ESM cannot import `.ts` files at runtime. The `#litro/page-manifest` virtual module includes **static imports** of all page TypeScript files. Rollup's esbuild plugin compiles them at build time so all `@customElement` decorators run on server startup. A `pageModules` registry maps `filePath → module object` so `createPageHandler` can access `pageData` without a runtime `.ts` import.
+
+Nitro's esbuild requires explicit decorator config for Lit components:
+
+```typescript
+// nitro.config.ts
+esbuild: {
+  options: {
+    tsconfigRaw: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        useDefineForClassFields: false,
+      }
+    }
+  }
+}
+```
+
+### Dynamic tag names in Lit SSR
+
+`html\`<${tag}></${tag}>\`` is an **invalid expression location** in Lit. Use `unsafeStatic` from `lit/static-html.js`:
+
+```typescript
+import { html, unsafeStatic } from 'lit/static-html.js';
+const tagStatic = unsafeStatic(route.componentTag);
+const template = html`<${tagStatic}></${tagStatic}>`;
+```
