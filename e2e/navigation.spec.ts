@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test('client navigation between pages does not cause full reload', async ({ page }) => {
-  await page.goto('/');
-  // Track navigation events — a full reload would trigger 'load'
+  // Register before goto so the initial page load is counted (fullReloadCount = 1).
+  // A client-side pushState navigation must NOT increment this further.
   let fullReloadCount = 0;
   page.on('load', () => fullReloadCount++);
 
+  await page.goto('/');
   await page.waitForSelector('litro-outlet');
   // Navigate to /blog via litro-link or direct Router.go
   await page.evaluate(() => {
