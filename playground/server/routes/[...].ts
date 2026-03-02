@@ -33,40 +33,44 @@ import { routes, pageModules } from '#litro/page-manifest';
 
 /**
  * Matches a URL pathname against the sorted LitroRoute array.
+ * Returns the matched route and any extracted URL params.
  *
  * Routes are pre-sorted (static < dynamic < catch-all) by the page scanner,
  * so iterating in order and returning the first match gives highest-specificity
  * wins — exactly what h3's own router does.
  */
-function matchRoute(pathname: string): LitroRoute | undefined {
+function matchRoute(
+  pathname: string,
+): { route: LitroRoute; params: Record<string, string> } | undefined {
   for (const route of routes) {
     if (route.isCatchAll) {
       // Catch-all matches everything — only reached if no static/dynamic matched
-      return route;
+      return { route, params: {} };
     }
 
     if (!route.isDynamic) {
       // Exact match for static routes
       if (pathname === route.path) {
-        return route;
+        return { route, params: {} };
       }
       continue;
     }
 
-    // Dynamic route: convert the vaadin-router/h3 pattern to a RegExp.
+    // Dynamic route: convert the vaadin-router/h3 pattern to a named-capture RegExp.
+    // Named groups automatically map param names to captured values.
     // Examples:
-    //   /blog/:slug          → /^\/blog\/([^/]+)$/
-    //   /users/:id/posts     → /^\/users\/([^/]+)\/posts$/
-    //   /:lang?              → /^\/((?:[^/]+))?$/
+    //   /blog/:slug        → /^\/blog\/(?<slug>[^/]+)$/
+    //   /:lang?            → /^\/(?<lang>[^/]*)?$/
     const regexStr = '^' + route.path
-      .replace(/:[^/]+\(\.\*\)\*/g, '(.+)')   // :param(.*)* — already handled as catch-all
-      .replace(/:[^/?]+\?/g, '([^/]*)?')       // :param? — optional segment
-      .replace(/:[^/]+/g, '([^/]+)')            // :param — required segment
+      .replace(/:([^/]+)\(\.\*\)\*/g, '(?<$1>.+)')  // :param(.*)* — catch-all segment
+      .replace(/:([^/?]+)\?/g, '(?<$1>[^/]*)?')      // :param? — optional segment
+      .replace(/:([^/]+)/g, '(?<$1>[^/]+)')           // :param — required segment
       + '$';
 
     try {
-      if (new RegExp(regexStr).test(pathname)) {
-        return route;
+      const match = pathname.match(new RegExp(regexStr));
+      if (match) {
+        return { route, params: (match.groups ?? {}) as Record<string, string> };
       }
     } catch {
       // Malformed regex pattern — skip and continue
@@ -84,9 +88,9 @@ export default defineEventHandler(async (event) => {
   const url = getRequestURL(event);
   const pathname = url.pathname;
 
-  const matched = matchRoute(pathname);
+  const result = matchRoute(pathname);
 
-  if (!matched) {
+  if (!result) {
     setResponseHeader(event, 'content-type', 'text/html; charset=utf-8');
     return `<!DOCTYPE html>
 <html lang="en">
@@ -100,6 +104,12 @@ export default defineEventHandler(async (event) => {
 </body>
 </html>`;
   }
+
+  const { route: matched, params } = result;
+
+  // Populate event.context.params so pageData fetchers can access route params
+  // (e.g., event.context.params.slug for /blog/:slug).
+  event.context.params = { ...event.context.params, ...params };
 
   // Create and immediately invoke the SSR handler for this route.
   // createPageHandler() returns an H3 EventHandler that streams the
