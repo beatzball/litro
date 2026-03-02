@@ -20,22 +20,72 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 litro/
   packages/
     framework/        ← npm package: litro
-    create-litro/     ← npm create litro (scaffolding, stub)
+    create-litro/     ← npm create litro (scaffolding)
   playground/         ← test app
 ```
 
 ---
 
-## Quick start (playground)
+## Quick start — scaffold a new app (local)
+
+> **Note:** `create-litro` is not published to npm yet. Use the local path instructions below.
+
+**Step 1 — build the framework and scaffolder from source:**
 
 ```bash
-# Install dependencies
+git clone <this-repo> litro
+cd litro
 pnpm install
+pnpm --filter litro build          # compiles packages/framework → dist/
+pnpm --filter create-litro build   # compiles packages/create-litro → dist/
+```
 
-# Build the framework (required before using the CLI)
+**Step 2 — scaffold your app:**
+
+```bash
+cd /path/to/your/projects
+node /path/to/litro/packages/create-litro/dist/index.js my-app
+# or pass both args at once (non-interactive):
+node /path/to/litro/packages/create-litro/dist/index.js my-app fullstack
+```
+
+**Step 3 — point the app at the local `litro` package:**
+
+Open the generated `my-app/package.json` and replace the `litro` version with a `file:` reference:
+
+```json
+"dependencies": {
+  "litro": "file:/path/to/litro/packages/framework",
+  ...
+}
+```
+
+**Step 4 — install, build, and run:**
+
+```bash
+cd my-app
+pnpm install
+pnpm run build     # Stage 0: page scan → Stage 1: vite build → Stage 2: nitro build
+pnpm run preview   # starts http://localhost:3030
+```
+
+The scaffolded app includes:
+- `pages/index.ts` — home page with `pageData` server fetching
+- `pages/blog/index.ts` — blog listing
+- `pages/blog/[slug].ts` — dynamic post page with route params and `generateRoutes()`
+- `server/api/hello.ts` — JSON API endpoint
+- All config files (`nitro.config.ts`, `vite.config.ts`, `tsconfig.json`)
+
+---
+
+## Quick start — playground (monorepo)
+
+```bash
+# Install dependencies and build the framework
+pnpm install
 pnpm --filter litro build
 
-# Start the dev server (from playground/)
+# Start the dev server from the playground directory
 cd playground
 litro dev
 ```
