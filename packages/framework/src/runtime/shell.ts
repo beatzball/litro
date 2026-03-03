@@ -23,9 +23,8 @@
  *
  * The default app script path `/_litro/app.js` maps to `dist/client/app.js`
  * via the `publicAssets` entry in nitro.config.ts. In dev mode, pass
- * `appScriptUrl: '/app.ts'` so Vite's middleware can transform the module
- * on the fly (no pre-built bundle required). Nitro's vite-dev plugin injects
- * Vite as a devHandler at `/**`, so `/app.ts` is served correctly in dev.
+ * `appScriptUrl: '/_litro/app.ts'` so Vite's middleware (base: '/_litro/')
+ * can transform the module on the fly (no pre-built bundle required).
  */
 
 /** Minified MutationObserver-based DSD polyfill.
@@ -78,8 +77,8 @@ export interface ShellOptions {
    * Production default: `/_litro/app.js` (served from dist/client/app.js via
    * the `publicAssets` Nitro config entry).
    *
-   * Dev mode: pass `/app.ts` so Vite's middleware serves and hot-reloads the
-   * entry module directly (no pre-built bundle required during development).
+   * Dev mode: pass `/_litro/app.ts` so Vite's middleware (base: '/_litro/')
+   * serves and hot-reloads the entry module directly (no pre-built bundle).
    */
   appScriptUrl?: string;
 }

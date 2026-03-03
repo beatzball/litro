@@ -108,11 +108,11 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
 
       // Determine the app bundle URL for the HTML shell.
       // NITRO_DEV_WORKER_ID is set by Nitro when running the dev server worker.
-      // In dev mode we reference /app.ts directly so Vite's middleware can
-      // transform and HMR it on the fly (no pre-built bundle needed).
+      // In dev mode we reference /_litro/app.ts so Vite's middleware (which
+      // uses base: '/_litro/') can transform and HMR it on the fly.
       // In production NITRO_DEV_WORKER_ID is unset — use /_litro/app.js.
       const appScriptUrl = process.env.NITRO_DEV_WORKER_ID
-        ? '/app.ts'
+        ? '/_litro/app.ts'
         : '/_litro/app.js';
 
       // Build the HTML shell for this component. The shell is split into head
@@ -196,7 +196,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // Build a minimal fallback shell (no server data — data fetch may have
       // been the source of the error, or may not have run yet).
       const appScriptUrl = process.env.NITRO_DEV_WORKER_ID
-        ? '/app.ts'
+        ? '/_litro/app.ts'
         : '/_litro/app.js';
       const fallbackShell = buildShell(route.componentTag, '', {
         title: routeMeta?.title,

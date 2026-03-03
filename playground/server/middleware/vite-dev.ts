@@ -2,7 +2,7 @@
  * Vite dev middleware
  *
  * Intercepts ALL requests before Nitro's route handlers so that Vite can
- * serve JS/TS modules (including /app.ts and page chunks) with the correct
+ * serve JS/TS modules (including /_litro/app.ts and page chunks) with the correct
  * MIME type. Vite calls next() for requests it does not own (HTML pages,
  * API routes), which Nitro's router then handles normally.
  *
