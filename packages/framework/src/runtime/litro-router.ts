@@ -182,6 +182,6 @@ export class LitroRouter {
  * Only the catch-all modifier differs: `:param(.*)*` → `:param*`
  * All other patterns (`:param`, `:param?`) are URLPattern-compatible as-is.
  */
-function vaadinToURLPattern(path: string): string {
+export function vaadinToURLPattern(path: string): string {
   return path.replace(/:([^/]+)\(\.\*\)\*/g, ':$1*');
 }

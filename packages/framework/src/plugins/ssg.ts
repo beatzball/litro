@@ -43,7 +43,7 @@ import { resolve } from 'pathe';
  * effect of importing a Lit page. Prevents "already been used with this
  * registry" errors when the prerender bundle re-registers the same elements.
  */
-function patchCustomElementsIdempotent(): void {
+export function patchCustomElementsIdempotent(): void {
   type CE = Record<string, unknown> & {
     define: (name: string, ctor: unknown, options?: unknown) => void;
     get: (name: string) => unknown;
