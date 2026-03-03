@@ -38,6 +38,27 @@ import { resolve } from 'pathe';
 // ---------------------------------------------------------------------------
 
 /**
+ * Patches globalThis.customElements.define to be idempotent (skip if already
+ * registered). Applied once after jiti loads @lit-labs/ssr-dom-shim as a side
+ * effect of importing a Lit page. Prevents "already been used with this
+ * registry" errors when the prerender bundle re-registers the same elements.
+ */
+function patchCustomElementsIdempotent(): void {
+  type CE = Record<string, unknown> & {
+    define: (name: string, ctor: unknown, options?: unknown) => void;
+    get: (name: string) => unknown;
+  };
+  const ce = (globalThis as Record<string, unknown>).customElements as CE | undefined;
+  if (!ce || ce.__litroIdempotent) return;
+  const orig = ce.define.bind(ce);
+  ce.define = function (name, ctor, options) {
+    if (ce.get(name)) return;
+    orig(name, ctor, options);
+  };
+  ce.__litroIdempotent = true;
+}
+
+/**
  * The Litro SSG plugin.
  *
  * Registered as a Nitro build-time plugin via `plugins` in nitro.config.ts
@@ -105,6 +126,18 @@ export default async function ssgPlugin(nitro: Nitro): Promise<void> {
       // jiti.import() compiles TypeScript on the fly before loading.
       // Native import() would throw ERR_UNKNOWN_FILE_EXTENSION for .ts files.
       const mod = await jiti.import(file) as Record<string, unknown>;
+
+      // jiti uses a separate module loader from Node's native ESM cache, so
+      // importing a Lit page loads @lit-labs/ssr-dom-shim and calls
+      // customElements.define() as a side effect — registering elements in the
+      // global registry. The prerender bundle later imports the same pages via
+      // static imports in the page manifest, hitting the same global registry and
+      // throwing "has already been used with this registry".
+      //
+      // Fix: after the jiti import (which is when the shim first becomes available),
+      // patch customElements.define to be idempotent. Subsequent registrations of
+      // already-defined elements become no-ops instead of throwing.
+      patchCustomElementsIdempotent();
 
       const generateRoutes = mod.generateRoutes as (() => Promise<string[]>) | undefined;
       if (typeof generateRoutes === 'function') {

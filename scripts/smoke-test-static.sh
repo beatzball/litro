@@ -14,9 +14,15 @@ echo "=== Litro Smoke Test: static preset ==="
 
 cd "$(dirname "$0")/.."
 
-# Build
+# Build framework so the CLI is available
+echo "Building framework..."
+pnpm --filter litro build
+
+# Build playground
 echo "Building static site..."
-LITRO_MODE=static pnpm --filter playground build
+cd playground
+node ../packages/framework/dist/cli/index.js build --mode=static
+cd ..
 
 # Check output
 if [ ! -f "playground/dist/static/index.html" ]; then

@@ -32,11 +32,17 @@ function run(
   cmdArgs: string[],
   env?: Record<string, string>,
 ): ReturnType<typeof spawn> {
+  const binPath = join(cwd, 'node_modules', '.bin');
+  const pathSep = process.platform === 'win32' ? ';' : ':';
   const child = spawn(cmd, cmdArgs, {
     cwd,
     stdio: 'inherit',
     shell: true,
-    env: { ...process.env, ...env },
+    env: {
+      ...process.env,
+      PATH: `${binPath}${pathSep}${process.env.PATH}`,
+      ...env,
+    },
   });
   child.on('exit', (code) => process.exit(code ?? 0));
   return child;

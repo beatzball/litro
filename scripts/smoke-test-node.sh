@@ -14,9 +14,15 @@ echo "=== Litro Smoke Test: node-server preset ==="
 
 cd "$(dirname "$0")/.."
 
-# Build
+# Build framework so the CLI is available
+echo "Building framework..."
+pnpm --filter litro build
+
+# Build playground
 echo "Building..."
-LITRO_MODE=server pnpm --filter playground build
+cd playground
+node ../packages/framework/dist/cli/index.js build --mode=server
+cd ..
 
 # Check output exists
 if [ ! -f "playground/.nitro/dev/index.mjs" ] && [ ! -f "playground/dist/server/index.mjs" ]; then
