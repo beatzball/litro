@@ -317,3 +317,11 @@ PORT=4000 node dist/server/server/index.mjs  # run production server
 | Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
 | Language      | TypeScript 5                                                                          | Required throughout                    |
 | Monorepo      | pnpm workspaces                                                                       | Package management                     |
+
+---
+
+## License
+
+Apache License 2.0 — see [LICENSE](./LICENSE) for the full text.
+
+Copyright 2026 beatzball

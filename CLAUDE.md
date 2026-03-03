@@ -1,5 +1,9 @@
 # Litro — Project Context for All Agents
 
+## License
+
+Apache License 2.0. Copyright 2026 beatzball. See `LICENSE` at the repo root.
+
 ## What Is Litro
 
 Litro is a greenfield fullstack web framework being built in this repo. It combines:
