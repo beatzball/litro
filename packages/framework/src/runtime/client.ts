@@ -20,18 +20,17 @@
  * Server-side safety
  * ──────────────────
  * This file must NOT be imported by any Nitro/server code path. It transitively
- * imports @vaadin/router, which accesses window at module eval time and will
- * crash Node.js. The Vite build is the only consumer of this module.
+ * imports litro-router, which accesses window at runtime and will crash Node.js.
  */
 
 // Step 1 — MUST BE FIRST: patch LitElement before any Lit code is evaluated.
 import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
 
 // Step 2 — router and custom elements (safe to import after the patch)
-import { Router } from '@vaadin/router';
+import { LitroRouter } from './litro-router.js';
 import './LitroOutlet.js';
 import './LitroLink.js';
 
-export { Router };
+export { LitroRouter };
 export { LitroOutlet, initRouter } from './LitroOutlet.js';
 export { LitroLink } from './LitroLink.js';

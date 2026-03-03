@@ -2,7 +2,7 @@
  * LitroLink — <litro-link>
  *
  * A progressive-enhancement wrapper around a standard `<a>` element that
- * intercepts clicks for client-side navigation via @vaadin/router.
+ * intercepts clicks for client-side navigation via LitroRouter.
  *
  * Design decisions:
  *
@@ -29,14 +29,14 @@
  *    full path from the event target through all shadow boundaries, so we can
  *    still identify the inner <a> and extract its href.
  *
- * 5. @vaadin/router IS CLIENT-ONLY
- *    This module must NEVER be imported in server-side code paths. @vaadin/router
- *    accesses window at module evaluation time and will crash Node.js.
+ * 5. litro-router IS CLIENT-ONLY
+ *    This module must NEVER be imported in server-side code paths. LitroRouter
+ *    accesses window, history, and document at runtime and will crash Node.js.
  */
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-// @vaadin/router is dynamically imported inside handleClick() so it is never
+// litro-router is dynamically imported inside handleClick() so it is never
 // evaluated in Node.js (window does not exist server-side).
 
 @customElement('litro-link')
@@ -67,9 +67,9 @@ export class LitroLink extends LitElement {
 
     // preventDefault() must be called synchronously before the async import.
     e.preventDefault();
-    // @vaadin/router is loaded lazily — safe because handleClick() only fires
+    // litro-router is loaded lazily — safe because handleClick() only fires
     // in the browser where window exists.
-    void import('@vaadin/router').then(({ Router }) => Router.go(this.href));
+    void import('./litro-router.js').then(({ LitroRouter }) => LitroRouter.go(this.href));
   }
 
   override render() {

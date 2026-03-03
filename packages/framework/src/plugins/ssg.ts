@@ -21,7 +21,7 @@
  *
  * Why not rely on crawlLinks?
  *   `crawlLinks: true` discovers links in the HTML output of prerendered pages.
- *   It DOES NOT discover routes configured in @vaadin/router — those are
+ *   It DOES NOT discover routes configured in LitroRouter — those are
  *   client-side JS and are never visible to the prerender crawler. All dynamic
  *   page routes must be explicitly listed via generateRoutes().
  *   (See R-4 findings §6.3 and R-3 findings §client-router-ssg.)

@@ -1,47 +1,47 @@
 /**
  * LitroOutlet — <litro-outlet>
  *
- * The router mount point custom element. This is where @vaadin/router renders
+ * The router mount point custom element. This is where LitroRouter renders
  * the current route's page component into the document.
  *
  * Design decisions:
  *
  * 1. LIGHT DOM (`createRenderRoot() { return this; }`)
- *    Shadow DOM conflicts with the router outlet mechanism: @vaadin/router calls
- *    appendChild() on the outlet element directly. If LitroOutlet used shadow DOM,
- *    the appended children would land inside the shadow root but would be invisible
- *    to the light DOM document flow and would break CSS inheritance and slot
- *    composition. Light DOM keeps the router's subtree in the normal document tree.
+ *    LitroRouter calls appendChild() on the outlet element directly. If
+ *    LitroOutlet used shadow DOM, the appended children would land inside the
+ *    shadow root but would be invisible to the light DOM document flow and
+ *    would break CSS inheritance and slot composition. Light DOM keeps the
+ *    router's subtree in the normal document tree.
  *
  * 2. NO LIT BINDINGS INSIDE THE ELEMENT
  *    Lit's reconciler only touches nodes it owns (those created by its template
  *    renderer). Because LitroOutlet renders nothing (render() is not defined),
- *    Lit never touches the element's children. @vaadin/router can freely
+ *    Lit never touches the element's children. LitroRouter can freely
  *    append/replace children without Lit clobbering them on re-render.
  *
  * 3. ROUTER MOUNTED IN firstUpdated()
  *    The outlet element must already be attached to the DOM before calling
- *    `new Router(outlet)`. constructor() and connectedCallback() fire too early
- *    in some upgrade scenarios. firstUpdated() is the correct Lit hook because
- *    it fires after the first render and the element is guaranteed to be in the DOM.
+ *    `new LitroRouter(outlet)`. constructor() and connectedCallback() fire too
+ *    early in some upgrade scenarios. firstUpdated() is the correct Lit hook
+ *    because it fires after the first render and the element is guaranteed to
+ *    be in the DOM.
  *
- * 4. @vaadin/router IS CLIENT-ONLY
- *    This module must NEVER be imported in server-side code paths. @vaadin/router
- *    accesses window at module evaluation time and will crash Node.js.
+ * 4. litro-router IS CLIENT-ONLY
+ *    This module must NEVER be imported in server-side code paths. LitroRouter
+ *    accesses window, history, and document at runtime and will crash Node.js.
  */
 
 import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-// `@vaadin/router` accesses `window` at module evaluation time.
-// We only import the TYPE here (erased at runtime); the value is loaded
-// lazily via a dynamic import inside firstUpdated() so the module is never
-// evaluated in Node.js (where window does not exist).
-import type { Router, Route } from '@vaadin/router';
+// LitroRouter accesses `window` at runtime. We only import the TYPE here
+// (erased at runtime); the value is loaded lazily via a dynamic import inside
+// firstUpdated() so the module is never evaluated in Node.js.
+import type { LitroRouter, Route } from './litro-router.js';
 
 @customElement('litro-outlet')
 export class LitroOutlet extends LitElement {
   /**
-   * Use light DOM so @vaadin/router's appended children land in the normal
+   * Use light DOM so LitroRouter's appended children land in the normal
    * document tree, not inside an isolated shadow root.
    */
   override createRenderRoot() {
@@ -49,8 +49,8 @@ export class LitroOutlet extends LitElement {
   }
 
   /**
-   * The array of @vaadin/router Route objects. Set by the client entry after
-   * the routes.generated.ts file is imported.
+   * The array of Route objects. Set by the client entry after
+   * routes.generated.ts is imported.
    *
    * Example:
    *   [
@@ -60,7 +60,7 @@ export class LitroOutlet extends LitElement {
    */
   @property({ type: Array }) routes: Route[] = [];
 
-  private router?: Router;
+  private router?: LitroRouter;
 
   /**
    * Mount the router after the first render.
@@ -69,13 +69,13 @@ export class LitroOutlet extends LitElement {
    * completes and the element is in the DOM. At this point `this` is a real,
    * attached DOM node that the router can use as its outlet container.
    *
-   * @vaadin/router is imported dynamically here so it is never evaluated in
-   * Node.js. The module accesses `window` at eval time; a dynamic import
+   * litro-router is imported dynamically here so it is never evaluated in
+   * Node.js. The module accesses `window` at runtime; a dynamic import
    * inside this client-only lifecycle method is safe because firstUpdated()
    * never runs on the server.
    */
   override async firstUpdated() {
-    const { Router } = await import('@vaadin/router');
+    const { LitroRouter } = await import('./litro-router.js');
     // Remove any SSR'd children before the router takes over. The SSR'd page
     // component is streamed inside <litro-outlet> so content is visible before
     // JS loads. The router renders a new instance and manages the outlet from
@@ -84,7 +84,7 @@ export class LitroOutlet extends LitElement {
     while (this.lastChild) {
       this.removeChild(this.lastChild);
     }
-    this.router = new Router(this);
+    this.router = new LitroRouter(this);
     this.router.setRoutes(this.routes);
   }
 }

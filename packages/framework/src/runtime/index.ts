@@ -3,9 +3,10 @@
  *
  * This is the entry point for `import ... from 'litro/runtime'`.
  *
- * NOTE: This barrel re-exports client-side modules that import @vaadin/router.
+ * NOTE: This barrel re-exports client-side modules that import litro-router.
  * It must NOT be imported in server-side (Nitro/Node.js) code paths.
- * @vaadin/router accesses window at module evaluation time and will crash Node.js.
+ * LitroRouter accesses window, history, and document at runtime and will
+ * crash Node.js.
  *
  * Use `litro/runtime/LitroOutlet.js` or `litro/runtime/LitroLink.js` for
  * direct imports if you need finer-grained control.
@@ -25,6 +26,6 @@ export { LitroLink } from './LitroLink.js';
 export { getServerData } from './page-data.js';
 export { LitroPage, LitroPageMixin } from './LitroPage.js';
 
-// Re-export the @vaadin/router Route type so consumers don't need a direct
-// @vaadin/router dependency just to type their route arrays.
-export type { Route } from '@vaadin/router';
+// Re-export the Route type so consumers don't need a direct litro-router
+// dependency just to type their route arrays.
+export type { Route, LitroLocation } from './litro-router.js';

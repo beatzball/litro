@@ -4,12 +4,12 @@
  * LitroRoute is the canonical shape produced by the page scanner plugin
  * and consumed by:
  *   - The #litro/page-manifest virtual module (Nitro server side)
- *   - The dist/client/routes.generated.ts file (@vaadin/router client side)
+ *   - The routes.generated.ts file (LitroRouter client side)
  */
 
 export interface LitroRoute {
   /**
-   * The route path in h3/vaadin-router syntax.
+   * The route path in h3/Litro syntax.
    * e.g. '/', '/about', '/blog/:slug', '/:all(.*)*'
    */
   path: string;

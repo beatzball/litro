@@ -11,7 +11,7 @@ Litro is a greenfield fullstack web framework being built in this repo. It combi
 - **Lit** — the only component model (no React, Vue, or Svelte anywhere in the dependency tree)
 - **Nitro** — server engine (same server that powers Nuxt), handles routing, API, SSR, deployment adapters
 - **`@lit-labs/ssr`** — server-side rendering via Declarative Shadow DOM (DSD), streaming support
-- **`@vaadin/router`** — client-side router, designed for web components
+- **`LitroRouter`** — built-in client-side router (URLPattern API), no external dependency
 - **Vite** — client bundle build and HMR
 - **pnpm workspaces** — monorepo tooling
 - **TypeScript** — required throughout
@@ -26,7 +26,7 @@ Nitro Server
     ├── /api/**  →  server/api/ route files (plain H3 handlers, no Lit)
     └── /**      →  Page Handler
                         ├── SSR mode: @lit-labs/ssr renders Lit component → streams DSD HTML
-                        │     └── client: @lit-labs/ssr-client hydrates → @vaadin/router takes over
+                        │     └── client: @lit-labs/ssr-client hydrates → LitroRouter takes over
                         └── Static mode: prerendered .html files served by Nitro static preset
 ```
 
@@ -90,7 +90,7 @@ litro/
 - Lit SSR docs: https://lit.dev/docs/ssr/overview/
 - `@lit-labs/ssr` source: https://github.com/lit/lit/tree/main/packages/labs/ssr
 - `@lit-labs/ssr-client`: https://github.com/lit/lit/tree/main/packages/labs/ssr-client
-- Vaadin Router docs: https://vaadin.com/router — source: https://github.com/vaadin/router
+- URLPattern spec: https://developer.mozilla.org/en-US/docs/Web/API/URLPattern
 - H3 docs: https://h3.unjs.io
 
 ## Research Findings — Key Decisions (R-1 through R-4 Complete)
@@ -112,13 +112,16 @@ All four research findings are in `research/`. Critical decisions locked in:
 - **Edge adapters**: `@lit-labs/ssr` requires `externals.inline: ['@lit-labs/ssr']` in `nitro.config.ts` to bundle correctly on Cloudflare/Vercel Edge.
 - **Dynamic tag names**: Use `unsafeStatic` from `lit/static-html.js` — plain expression interpolation of tag names (`html\`<${tag}>\``) is an invalid Lit expression location and causes SSR to throw.
 
-### Client Router (R-3)
+### Client Router (R-3 + post-R-3 decision)
+- **`@vaadin/router` is replaced** — it was deprecated. Litro now uses a built-in `LitroRouter` in `packages/framework/src/runtime/litro-router.ts` built on the native URLPattern API. No external router dependency.
 - **Mount in `firstUpdated()`** — not `constructor()` or `connectedCallback()`. Outlet must be in the DOM first.
 - **No Lit bindings inside the outlet element** — Lit won't touch unbound children, keeping the router's subtree safe from reconciliation.
-- **`@vaadin/router` cannot be imported server-side** — it accesses `window` at module eval time. Never import it in SSR code paths.
+- **`litro-router.ts` is client-only** — it accesses `window`/`history`/`document` at runtime. Never import it in SSR code paths. Dynamic import in `LitroOutlet.firstUpdated()` and `LitroLink.handleClick()` ensures it's never evaluated server-side.
 - **No hash routing** — pushState only. Uses `event.composedPath()` so Shadow DOM links are intercepted correctly.
-- **Guards**: Implement in `action()` callback via `commands.redirect()` / `commands.prevent()`. No dedicated guard API.
-- **`crawlLinks` does NOT find `@vaadin/router` routes** — all static page routes must be explicitly added to `prerender.routes`.
+- **Path format**: Litro paths use h3/path-to-regexp syntax (`:all(.*)*` for catch-alls). `LitroRouter` converts to URLPattern format (`/:all*`) at `setRoutes()` time. The rest of the system (scanner, manifest, server routing) is unaffected.
+- **`onBeforeEnter(location: LitroLocation)`** — called by the router on the freshly created element before it is appended to the outlet. `LitroLocation` has `{ pathname, params, search, hash }`.
+- **`crawlLinks` does NOT find `LitroRouter` routes** — all static page routes must be explicitly added to `prerender.routes`.
+- **No Rollup stub needed** — the old `vaadinRouterStubPlugin` in `pages.ts` is removed. `litro-router.ts` has no module-eval side effects, so no server-bundle isolation trick is needed beyond the dynamic import.
 
 ### Path-to-Route Conversion (R-1)
 - `[slug]` → `:slug`, `[...all]` → `:all(.*)*`, `[[param]]` → `:param?`, `index` files strip to parent path

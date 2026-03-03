@@ -4,7 +4,7 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 - **File-based routing** — `pages/index.ts` → `/`, `pages/blog/[slug].ts` → `/blog/:slug`
 - **Server-side rendering** — streaming Declarative Shadow DOM via `@lit-labs/ssr`
-- **Client hydration** — `@vaadin/router` takes over after SSR with no flicker
+- **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
 - **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
@@ -312,7 +312,7 @@ PORT=4000 node dist/server/server/index.mjs  # run production server
 | Components    | [Lit 3](https://lit.dev)                                                              | Web component authoring                |
 | SSR           | [@lit-labs/ssr](https://github.com/lit/lit/tree/main/packages/labs/ssr)               | Streaming Declarative Shadow DOM       |
 | Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration              |
-| Client router | [@vaadin/router](https://vaadin.com/router)                                           | Web component-aware pushState router   |
+| Client router | `LitroRouter` (built-in, URLPattern API)                                              | Web component-aware pushState router   |
 | Server        | [Nitro](https://nitro.unjs.io)                                                        | Routing, API, SSR, deployment adapters |
 | Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
 | Language      | TypeScript 5                                                                          | Required throughout                    |

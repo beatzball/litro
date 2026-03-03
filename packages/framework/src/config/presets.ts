@@ -18,8 +18,8 @@
  *     that can be served from any static host (Netlify, GitHub Pages, S3, etc.)
  *   - `crawlLinks: true` — Nitro's prerender crawler follows <a href> links
  *     found in already-prerendered HTML. This catches links hardcoded in
- *     templates but does NOT discover @vaadin/router routes (client-side JS).
- *     All @vaadin/router routes must be added via generateRoutes() exports.
+ *     templates but does NOT discover LitroRouter routes (client-side JS).
+ *     All LitroRouter routes must be added via generateRoutes() exports.
  *   - `failOnError: false` — a missing generateRoutes export or a failing page
  *     is a console.warn, not a build failure. Allows partial prerender in CI.
  *   - `autoSubfolderIndex: true` — /about → /about/index.html. Enables clean
@@ -48,7 +48,7 @@ export function ssgPreset(): Partial<NitroConfig> {
     },
     prerender: {
       // crawlLinks discovers <a href> links in prerendered HTML output.
-      // Does NOT discover @vaadin/router client-side routes — those require
+      // Does NOT discover LitroRouter client-side routes — those require
       // explicit generateRoutes() exports on each dynamic page file.
       crawlLinks: true,
 

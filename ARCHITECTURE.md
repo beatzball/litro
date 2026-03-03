@@ -309,3 +309,56 @@ import { html, unsafeStatic } from 'lit/static-html.js';
 const tagStatic = unsafeStatic(route.componentTag);
 const template = html`<${tagStatic}></${tagStatic}>`;
 ```
+
+---
+
+## 9. LitroRouter — Built-in Client Router
+
+Litro ships its own client-side router (`packages/framework/src/runtime/litro-router.ts`) built on the native **URLPattern** web API (Baseline Newly Available Sep 2025). There is no external router dependency.
+
+### Design
+
+```
+LitroOutlet.firstUpdated()
+  └── dynamic import('./litro-router.js')     ← never evaluated server-side
+        └── new LitroRouter(this)
+              └── router.setRoutes(routes)
+                    ├── converts path format (vaadinToURLPattern)
+                    ├── new URLPattern({ pathname: ... }) per route
+                    ├── window.addEventListener('popstate', ...)
+                    ├── document.addEventListener('click', ...)  ← Shadow DOM aware
+                    └── _resolve()  ← initial navigation
+```
+
+### Route lifecycle
+
+For each navigation:
+1. `_resolve()` iterates routes, calls `URLPattern.exec({ pathname })` for each
+2. First match wins (routes are pre-sorted static → dynamic → catch-all by the page scanner)
+3. `route.action()` is called first — typically a dynamic import that defines the custom element
+4. `document.createElement(route.component)` creates the element instance
+5. `element.onBeforeEnter(location)` is called if defined — `LitroPage` uses this for data fetching
+6. Outlet children are cleared; new element is appended
+
+### Path format conversion
+
+The page scanner emits paths in h3/path-to-regexp format (e.g. `/:all(.*)*` for catch-alls). URLPattern uses `/:all*` for the same semantics. `vaadinToURLPattern()` converts only the catch-all modifier; all other segments (`:param`, `:param?`) are identical in both formats.
+
+### LitroLocation type
+
+```typescript
+interface LitroLocation {
+  pathname: string;
+  params: Record<string, string | undefined>;  // URLPattern named groups
+  search: string;                               // '?foo=bar' or ''
+  hash: string;                                 // '#section' or ''
+}
+```
+
+### Server-side safety
+
+`litro-router.ts` does not access `window`, `history`, or `document` at module evaluation time. The dynamic import in `LitroOutlet.firstUpdated()` and `LitroLink.handleClick()` ensures the module is never evaluated in Node.js. No Rollup stub plugin is needed (unlike the former `@vaadin/router` approach).
+
+### TypeScript types
+
+`URLPattern` is not yet in TypeScript's `lib.dom.d.ts` (TS 5.9). Minimal ambient type declarations are inline in `litro-router.ts` to avoid requiring `lib` changes in downstream projects.

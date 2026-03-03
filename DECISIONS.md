@@ -94,17 +94,23 @@ Running log of architectural and implementation decisions. All agents append her
 
 ---
 
-## `@vaadin/router` server-side isolation via dynamic imports
+## Replaced `@vaadin/router` with `LitroRouter` (URLPattern API)
 
-**Decision**: `LitroOutlet.ts` and `LitroLink.ts` use dynamic `import('@vaadin/router')` inside their lifecycle methods (`firstUpdated()`, `handleClick()`) rather than a static top-level import.
+**Decision**: Remove `@vaadin/router` (deprecated) as a dependency. Replace with a thin built-in router class (`packages/framework/src/runtime/litro-router.ts`) built on the native `URLPattern` web API.
 
-**Rationale**: `@vaadin/router` transitively loads `@vaadin/vaadin-development-mode-detector`, which reads `window` at module evaluation time. A static `import { Router } from '@vaadin/router'` at the top of `LitroOutlet.ts` causes Node.js to evaluate the module when `litro/runtime` is imported — crashing the server.
+**Rationale**: `@vaadin/router` was deprecated by the Vaadin team. Since all router integration was already wrapped behind `LitroOutlet`, `LitroLink`, and `LitroPage`, consumers never imported `@vaadin/router` directly — only the internals needed to change.
 
-The key insight is that `LitroOutlet` and `LitroLink` are custom elements that are **never instantiated on the server**. Their lifecycle methods (`firstUpdated`, event handlers) only run in the browser. A dynamic import inside those methods is therefore safe: it is never triggered in Node.js, regardless of whether `litro/runtime` is bundled by rollup (production) or loaded as an external module (dev mode).
+`URLPattern` (Baseline Newly Available Sep 2025) provides native pattern matching with zero bundle overhead in modern browsers. The custom router also lets us:
+- Preserve all consumer-facing APIs (`setRoutes()`, `Router.go()`, `onBeforeEnter()`) unchanged
+- Keep the dynamic import pattern for SSR safety (litro-router accesses `window` at runtime, not at module eval time)
+- Eliminate the `vaadinRouterStubPlugin` Rollup plugin that was needed to prevent `window` crashes during server bundling
+- Fully control the `onBeforeEnter` lifecycle contract that `LitroPage` relies on for data fetching
 
-A Rollup stub plugin (added in `pagesPlugin`) provides belt-and-suspenders protection for production builds, replacing `@vaadin/router` with a no-op stub in the server bundle. The dynamic import approach is the fundamental fix; the stub is belt-and-suspenders.
+**Path format conversion**: Litro paths use h3/path-to-regexp syntax (`:param(.*)*` for catch-alls). URLPattern uses `:param*` for the same. `LitroRouter.setRoutes()` converts the format automatically via `vaadinToURLPattern()`, so the path format throughout the rest of the codebase (scanner output, manifest, server routing) is unchanged.
 
-**Why not a rollup alias/stub alone**: In Nitro dev mode, `litro` is loaded as an external Node.js module (not bundled by rollup). Rollup plugins are not applied to external modules, so a stub-only approach fails in dev mode. The dynamic import approach works in both dev and production.
+**SSR safety**: `litro-router.ts` does not access `window`, `document`, or `history` at module eval time — only inside methods that are called at runtime in the browser. The dynamic import pattern in `LitroOutlet` and `LitroLink` is preserved, so the module is never evaluated server-side.
+
+**TypeScript types**: `URLPattern` is not yet in TypeScript's `lib.dom.d.ts` (as of TS 5.9). Minimal ambient declarations (`interface URLPattern`, `interface URLPatternResult`, etc.) are added at the top of `litro-router.ts` to avoid requiring lib changes in downstream projects.
 
 ---
 
