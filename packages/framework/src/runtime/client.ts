@@ -27,7 +27,7 @@
 import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
 
 // Step 2 — router and custom elements (safe to import after the patch)
-import { LitroRouter } from './litro-router.js';
+import { LitroRouter } from 'litro-router';
 import './LitroOutlet.js';
 import './LitroLink.js';
 

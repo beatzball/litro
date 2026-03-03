@@ -28,4 +28,4 @@ export { LitroPage, LitroPageMixin } from './LitroPage.js';
 
 // Re-export the Route type so consumers don't need a direct litro-router
 // dependency just to type their route arrays.
-export type { Route, LitroLocation } from './litro-router.js';
+export type { Route, LitroLocation } from 'litro-router';

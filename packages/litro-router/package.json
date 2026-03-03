@@ -1,0 +1,26 @@
+{
+  "name": "litro-router",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Zero-dependency URLPattern client-side router for web components",
+  "keywords": ["router", "web-components", "url-pattern", "lit", "client-side-routing"],
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "jsdom": "^25.0.0"
+  }
+}

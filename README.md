@@ -20,9 +20,12 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 litro/
   packages/
     framework/        ← npm package: litro
+    litro-router/     ← npm package: litro-router (standalone, zero-dependency)
     create-litro/     ← npm create litro (scaffolding)
   playground/         ← test app
 ```
+
+`litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).
 
 ---
 
@@ -36,6 +39,7 @@ litro/
 git clone <this-repo> litro
 cd litro
 pnpm install
+pnpm --filter litro-router build   # compiles packages/litro-router → dist/
 pnpm --filter litro build          # compiles packages/framework → dist/
 pnpm --filter create-litro build   # compiles packages/create-litro → dist/
 ```
@@ -83,6 +87,7 @@ The scaffolded app includes:
 ```bash
 # Install dependencies and build the framework
 pnpm install
+pnpm --filter litro-router build
 pnpm --filter litro build
 
 # Start the dev server from the playground directory
@@ -291,10 +296,12 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 ## Development
 
 ```bash
-pnpm install                    # install all workspace deps
-pnpm --filter litro build       # compile framework (required once)
-pnpm --filter litro test        # run unit tests (93 tests)
-pnpm --filter litro dev         # watch-compile framework
+pnpm install                          # install all workspace deps
+pnpm --filter litro-router build      # compile litro-router (required once)
+pnpm --filter litro build             # compile framework (required once)
+pnpm --filter litro-router test       # run router unit tests (20 tests)
+pnpm --filter litro test              # run framework unit tests (99 tests)
+pnpm --filter litro dev               # watch-compile framework
 
 cd playground
 litro dev                       # start dev server on :3030
@@ -312,7 +319,7 @@ PORT=4000 node dist/server/server/index.mjs  # run production server
 | Components    | [Lit 3](https://lit.dev)                                                              | Web component authoring                |
 | SSR           | [@lit-labs/ssr](https://github.com/lit/lit/tree/main/packages/labs/ssr)               | Streaming Declarative Shadow DOM       |
 | Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration              |
-| Client router | `LitroRouter` (built-in, URLPattern API)                                              | Web component-aware pushState router   |
+| Client router | [`litro-router`](./packages/litro-router) (URLPattern API)                            | Web component-aware pushState router   |
 | Server        | [Nitro](https://nitro.unjs.io)                                                        | Routing, API, SSR, deployment adapters |
 | Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
 | Language      | TypeScript 5                                                                          | Required throughout                    |

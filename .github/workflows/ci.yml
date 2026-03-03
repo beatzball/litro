@@ -35,6 +35,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install
+      - run: pnpm --filter litro-router build
       - run: pnpm --filter litro build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test

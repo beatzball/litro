@@ -161,3 +161,19 @@ The fix uses two changes together:
 **Decision**: `litro dev` defaults to port 3030 and accepts `--port` / `-p` for overrides.
 
 **Rationale**: Avoids collision with the common defaults of React (3000), Vue (5173), and other tools. The port is passed through to `nitro dev --port <n>`; Nitro handles the actual binding.
+
+---
+
+## Extract LitroRouter into standalone `litro-router` package
+
+**Decision**: Move `packages/framework/src/runtime/litro-router.ts` into its own workspace package `packages/litro-router` (npm: `litro-router`). The `litro` package adds `"litro-router": "workspace:*"` as a dependency and all six internal import sites are updated to import from `litro-router`.
+
+**Rationale**: `LitroRouter` has zero runtime dependencies (browser-native APIs only) and no coupling to the rest of the Litro framework. Extracting it:
+
+- Allows it to be used with any web component setup without pulling in Nitro, Vite, Lit, or the rest of the Litro dependency tree
+- Enables independent versioning and changelog
+- Gives it its own README and npm listing, making it discoverable as a general-purpose tool
+
+**TypeScript project references**: `packages/framework/tsconfig.json` gains a `references` entry pointing at `../litro-router`. This tells `tsc` about the build dependency so it can resolve types from the compiled output. All build steps (CI, smoke test scripts) must build `litro-router` before `litro`.
+
+**No consumer-facing API change**: All public types (`Route`, `LitroLocation`) and the `LitroRouter` class are re-exported from `litro/runtime` unchanged, so existing Litro app code requires no modification.

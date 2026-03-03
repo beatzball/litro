@@ -13,6 +13,7 @@
     "sourceMap": true
   },
   "references": [
+    { "path": "./packages/litro-router" },
     { "path": "./packages/framework" },
     { "path": "./packages/create-litro" },
     { "path": "./playground" }

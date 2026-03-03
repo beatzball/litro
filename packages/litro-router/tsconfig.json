@@ -6,9 +6,6 @@
     "composite": true,
     "noEmitOnError": false
   },
-  "references": [
-    { "path": "../litro-router" }
-  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

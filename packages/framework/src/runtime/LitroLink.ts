@@ -69,7 +69,7 @@ export class LitroLink extends LitElement {
     e.preventDefault();
     // litro-router is loaded lazily — safe because handleClick() only fires
     // in the browser where window exists.
-    void import('./litro-router.js').then(({ LitroRouter }) => LitroRouter.go(this.href));
+    void import('litro-router').then(({ LitroRouter }) => LitroRouter.go(this.href));
   }
 
   override render() {

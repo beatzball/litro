@@ -71,6 +71,7 @@
     "./dist/runtime/LitroLink.js"
   ],
   "dependencies": {
+    "litro-router": "workspace:*",
     "execa": "^8.0.1",
     "nitropack": "^2.10.4",
     "h3": "^1.13.0",

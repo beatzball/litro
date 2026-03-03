@@ -11,6 +11,9 @@ litro/                          ← Git repo root (pnpm workspace root)
         vite/                   ← Vite plugins for the framework
         runtime/                ← Client-side runtime (router bootstrap, hydration)
         cli/                    ← litro dev / build / preview CLI entry
+    litro-router/               ← Standalone router package (npm: litro-router)
+      src/
+        index.ts                ← LitroRouter, Route, LitroLocation, vaadinToURLPattern
     create-litro/               ← `npm create litro` scaffolding CLI (stub)
   playground/                   ← Test app that uses the framework locally
     pages/                      ← Lit page components (filename = route)
@@ -32,6 +35,7 @@ litro/                          ← Git repo root (pnpm workspace root)
 | Package | npm name | Purpose |
 |---|---|---|
 | `packages/framework` | `litro` | Core framework: Nitro plugins, Vite plugins, client runtime, CLI |
+| `packages/litro-router` | `litro-router` | Standalone URLPattern router; zero dependencies; consumed by `litro` and independently publishable |
 | `packages/create-litro` | `create-litro` | `npm create litro` — project scaffolding |
 | `playground` | (private) | Integration test app; exercises all framework features locally |
 

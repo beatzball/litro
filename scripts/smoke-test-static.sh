@@ -16,6 +16,7 @@ cd "$(dirname "$0")/.."
 
 # Build framework so the CLI is available
 echo "Building framework..."
+pnpm --filter litro-router build
 pnpm --filter litro build
 
 # Build playground

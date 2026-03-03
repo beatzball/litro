@@ -1,13 +1,13 @@
 /**
  * Unit tests for LitroRouter and vaadinToURLPattern.
  *
- * Run with: pnpm --filter litro test
+ * Run with: pnpm --filter litro-router test
  *
  * @vitest-environment jsdom
  */
 
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
-import { LitroRouter, vaadinToURLPattern } from '../litro-router.js';
+import { LitroRouter, vaadinToURLPattern } from '../index.js';
 
 // ---------------------------------------------------------------------------
 // URLPattern polyfill
