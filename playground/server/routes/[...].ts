@@ -56,7 +56,7 @@ function matchRoute(
       continue;
     }
 
-    // Dynamic route: convert the vaadin-router/h3 pattern to a named-capture RegExp.
+    // Dynamic route: convert the h3 path pattern to a named-capture RegExp.
     // Named groups automatically map param names to captured values.
     // Examples:
     //   /blog/:slug        → /^\/blog\/(?<slug>[^/]+)$/

@@ -13,7 +13,7 @@ litro/                          ← Git repo root (pnpm workspace root)
         cli/                    ← litro dev / build / preview CLI entry
     litro-router/               ← Standalone router package (npm: litro-router)
       src/
-        index.ts                ← LitroRouter, Route, LitroLocation, vaadinToURLPattern
+        index.ts                ← LitroRouter, Route, LitroLocation, h3ToURLPattern
     create-litro/               ← `npm create litro` scaffolding CLI (stub)
   playground/                   ← Test app that uses the framework locally
     pages/                      ← Lit page components (filename = route)
@@ -327,7 +327,7 @@ LitroOutlet.firstUpdated()
   └── dynamic import('./litro-router.js')     ← never evaluated server-side
         └── new LitroRouter(this)
               └── router.setRoutes(routes)
-                    ├── converts path format (vaadinToURLPattern)
+                    ├── converts path format (h3ToURLPattern)
                     ├── new URLPattern({ pathname: ... }) per route
                     ├── window.addEventListener('popstate', ...)
                     ├── document.addEventListener('click', ...)  ← Shadow DOM aware
@@ -346,7 +346,7 @@ For each navigation:
 
 ### Path format conversion
 
-The page scanner emits paths in h3/path-to-regexp format (e.g. `/:all(.*)*` for catch-alls). URLPattern uses `/:all*` for the same semantics. `vaadinToURLPattern()` converts only the catch-all modifier; all other segments (`:param`, `:param?`) are identical in both formats.
+The page scanner emits paths in h3/path-to-regexp format (e.g. `/:all(.*)*` for catch-alls). URLPattern uses `/:all*` for the same semantics. `h3ToURLPattern()` converts only the catch-all modifier; all other segments (`:param`, `:param?`) are identical in both formats.
 
 ### LitroLocation type
 

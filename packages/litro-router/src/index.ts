@@ -95,7 +95,7 @@ export class LitroRouter {
     this.routes = routes
       .filter((r): r is Route & { component: string } => !!r.component)
       .map(r => ({
-        pattern: new URLPattern({ pathname: vaadinToURLPattern(r.path) }),
+        pattern: new URLPattern({ pathname: h3ToURLPattern(r.path) }),
         component: r.component,
         action: r.action ?? (() => {}),
       }));
@@ -119,6 +119,8 @@ export class LitroRouter {
    * and converts them to client-side navigations.
    */
   private _interceptClicks(e: MouseEvent): void {
+    // Already handled (e.g. by LitroLink) — don't push a second history entry.
+    if (e.defaultPrevented) return;
     // Modifier keys signal browser-native behavior (new tab, etc.) — pass through.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     // Only intercept left-clicks.
@@ -182,6 +184,6 @@ export class LitroRouter {
  * Only the catch-all modifier differs: `:param(.*)*` → `:param*`
  * All other patterns (`:param`, `:param?`) are URLPattern-compatible as-is.
  */
-export function vaadinToURLPattern(path: string): string {
+export function h3ToURLPattern(path: string): string {
   return path.replace(/:([^/]+)\(\.\*\)\*/g, ':$1*');
 }

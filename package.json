@@ -2,6 +2,7 @@
   "name": "litro-workspace",
   "private": true,
   "scripts": {
+    "setup": "pnpm install && pnpm --filter litro-router build && pnpm --filter litro build && pnpm install",
     "dev": "pnpm --filter playground dev",
     "build": "pnpm --filter playground build",
     "preview": "pnpm --filter playground preview",

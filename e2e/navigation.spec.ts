@@ -8,10 +8,10 @@ test('client navigation between pages does not cause full reload', async ({ page
 
   await page.goto('/');
   await page.waitForSelector('litro-outlet');
-  // Navigate to /blog via litro-link or direct Router.go
+  // Navigate to /blog via client-side history.pushState and a manual popstate event
   await page.evaluate(() => {
-    (window as any).__vaadinRouter?.go('/blog')
-      ?? history.pushState({}, '', '/blog');
+    history.pushState({}, '', '/blog');
+    window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await page.waitForURL('**/blog');
 

@@ -1,5 +1,5 @@
 /**
- * Unit tests for LitroRouter and vaadinToURLPattern.
+ * Unit tests for LitroRouter and h3ToURLPattern.
  *
  * Run with: pnpm --filter litro-router test
  *
@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
-import { LitroRouter, vaadinToURLPattern } from '../index.js';
+import { LitroRouter, h3ToURLPattern } from '../index.js';
 
 // ---------------------------------------------------------------------------
 // URLPattern polyfill
@@ -17,7 +17,7 @@ import { LitroRouter, vaadinToURLPattern } from '../index.js';
 // implementation that covers the three pattern shapes Litro uses:
 //   /                       — exact root
 //   /blog/:slug             — named parameter
-//   /:all*                  — catch-all (produced by vaadinToURLPattern)
+//   /:all*                  — catch-all (produced by h3ToURLPattern)
 // ---------------------------------------------------------------------------
 beforeAll(() => {
   if (typeof (globalThis as Record<string, unknown>).URLPattern !== 'undefined') return;
@@ -55,32 +55,32 @@ beforeAll(() => {
 });
 
 // ---------------------------------------------------------------------------
-// vaadinToURLPattern — catch-all syntax conversion
+// h3ToURLPattern — catch-all syntax conversion
 // ---------------------------------------------------------------------------
 
-describe('vaadinToURLPattern', () => {
+describe('h3ToURLPattern', () => {
   it('leaves static paths unchanged', () => {
-    expect(vaadinToURLPattern('/')).toBe('/');
-    expect(vaadinToURLPattern('/about')).toBe('/about');
-    expect(vaadinToURLPattern('/blog/post')).toBe('/blog/post');
+    expect(h3ToURLPattern('/')).toBe('/');
+    expect(h3ToURLPattern('/about')).toBe('/about');
+    expect(h3ToURLPattern('/blog/post')).toBe('/blog/post');
   });
 
   it('leaves named params unchanged', () => {
-    expect(vaadinToURLPattern('/blog/:slug')).toBe('/blog/:slug');
-    expect(vaadinToURLPattern('/docs/:section/:page')).toBe('/docs/:section/:page');
+    expect(h3ToURLPattern('/blog/:slug')).toBe('/blog/:slug');
+    expect(h3ToURLPattern('/docs/:section/:page')).toBe('/docs/:section/:page');
   });
 
   it('converts :param(.*)* to :param* (catch-all)', () => {
-    expect(vaadinToURLPattern('/:all(.*)*')).toBe('/:all*');
-    expect(vaadinToURLPattern('/files/:rest(.*)*')).toBe('/files/:rest*');
+    expect(h3ToURLPattern('/:all(.*)*')).toBe('/:all*');
+    expect(h3ToURLPattern('/files/:rest(.*)*')).toBe('/files/:rest*');
   });
 
   it('leaves optional :param? unchanged', () => {
-    expect(vaadinToURLPattern('/docs/:section?')).toBe('/docs/:section?');
+    expect(h3ToURLPattern('/docs/:section?')).toBe('/docs/:section?');
   });
 
   it('does not modify plain named params that happen to precede other segments', () => {
-    expect(vaadinToURLPattern('/a/:b/c')).toBe('/a/:b/c');
+    expect(h3ToURLPattern('/a/:b/c')).toBe('/a/:b/c');
   });
 });
 
@@ -296,6 +296,21 @@ describe('LitroRouter — click interception', () => {
     a.href = `${location.origin}/page`;
     document.body.appendChild(a);
     click(a, { button: 2 });
+    expect(spy).not.toHaveBeenCalled();
+    a.remove();
+    spy.mockRestore();
+  });
+
+  it('does not call go() when defaultPrevented (e.g. LitroLink already handled it)', () => {
+    // Regression: LitroLink calls e.preventDefault() before dispatching LitroRouter.go().
+    // The bubbled click must not trigger a second pushState from the global listener.
+    const spy = vi.spyOn(LitroRouter, 'go');
+    const a = document.createElement('a');
+    a.href = `${location.origin}/page`;
+    document.body.appendChild(a);
+    const evt = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+    evt.preventDefault(); // simulates LitroLink having already handled the click
+    a.dispatchEvent(evt);
     expect(spy).not.toHaveBeenCalled();
     a.remove();
     spy.mockRestore();

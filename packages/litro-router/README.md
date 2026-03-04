@@ -129,13 +129,13 @@ interface LitroLocation {
 }
 ```
 
-### `vaadinToURLPattern(path: string): string`
+### `h3ToURLPattern(path: string): string`
 
 Converts h3/path-to-regexp catch-all syntax to URLPattern syntax. Called automatically by `setRoutes()` — you do not need to call this yourself unless you are building tooling on top of the router.
 
 ```typescript
-vaadinToURLPattern('/:all(.*)*')  // → '/:all*'
-vaadinToURLPattern('/blog/:slug') // → '/blog/:slug' (unchanged)
+h3ToURLPattern('/:all(.*)*')  // → '/:all*'
+h3ToURLPattern('/blog/:slug') // → '/blog/:slug' (unchanged)
 ```
 
 ---
