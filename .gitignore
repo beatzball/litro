@@ -12,8 +12,9 @@ packages/*/dist/
 # Playground: Vite client bundle + Nitro server bundle
 playground/dist/
 
-# Generated files (overwritten on every build by the pages plugin)
-playground/server/stubs/page-manifest.ts
+# Generated files (overwritten on every build; contain machine-local absolute paths)
+playground/server/stubs/
+playground-11ty/server/stubs/
 playground/routes.generated.ts
 
 # Playwright
@@ -34,3 +35,6 @@ e2e/test-results/
 .env.*
 *.local
 .vscode/settings.json
+
+# Claude Code
+.claude/

@@ -6,6 +6,10 @@
     "dev": "pnpm --filter playground dev",
     "build": "pnpm --filter playground build",
     "preview": "pnpm --filter playground preview",
+    "dev:11ty": "pnpm --filter playground-11ty dev",
+    "build:11ty": "pnpm --filter playground-11ty build",
+    "preview:11ty": "pnpm --filter playground-11ty preview",
+    "prepare:11ty": "pnpm --filter litro-router build && pnpm --filter litro build",
     "test": "pnpm --filter litro test",
     "test:e2e": "playwright test",
     "lint": "tsc --noEmit -p packages/framework/tsconfig.json"
@@ -16,5 +20,10 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "serialize-javascript": ">=7.0.3"
+    }
   }
 }

@@ -7,14 +7,26 @@ litro/                          ← Git repo root (pnpm workspace root)
   packages/
     framework/                  ← Core package (npm: litro)
       src/
-        plugins/                ← Nitro BUILD-TIME plugins (page scanner, etc.)
-        vite/                   ← Vite plugins for the framework
+        plugins/                ← Nitro BUILD-TIME plugins (page scanner, ssg resolver)
+        vite/                   ← Vite plugins (litro:content virtual module)
+        content/                ← Content layer (ContentIndex, parser, Nitro plugin)
         runtime/                ← Client-side runtime (router bootstrap, hydration)
         cli/                    ← litro dev / build / preview CLI entry
     litro-router/               ← Standalone router package (npm: litro-router)
       src/
         index.ts                ← LitroRouter, Route, LitroLocation, h3ToURLPattern
-    create-litro/               ← `npm create litro` scaffolding CLI (stub)
+    create-litro/               ← `npm create litro` scaffolding CLI
+      src/
+        index.ts                ← CLI entry (--recipe, --mode, --list-recipes flags)
+        scaffold.ts             ← Recipe engine: copyTemplate, interpolate, listRecipes
+        types.ts                ← LitroRecipe, ScaffoldOptions, LitroRecipeManifest
+      recipes/
+        fullstack/              ← Default fullstack SSR recipe
+          recipe.config.ts
+          template/             ← Template files copied verbatim ({{placeholder}} interpolated)
+        11ty-blog/              ← Markdown blog recipe (11ty-compatible)
+          recipe.config.ts
+          template/
   playground/                   ← Test app that uses the framework locally
     pages/                      ← Lit page components (filename = route)
     server/
@@ -318,7 +330,7 @@ const template = html`<${tagStatic}></${tagStatic}>`;
 
 ## 9. LitroRouter — Built-in Client Router
 
-Litro ships its own client-side router (`packages/framework/src/runtime/litro-router.ts`) built on the native **URLPattern** web API (Baseline Newly Available Sep 2025). There is no external router dependency.
+Litro ships its own client-side router (`packages/litro-router/src/index.ts`) built on the native **URLPattern** web API (Baseline Newly Available Sep 2025). There is no external router dependency.
 
 ### Design
 
@@ -330,9 +342,19 @@ LitroOutlet.firstUpdated()
                     ├── converts path format (h3ToURLPattern)
                     ├── new URLPattern({ pathname: ... }) per route
                     ├── window.addEventListener('popstate', ...)
-                    ├── document.addEventListener('click', ...)  ← Shadow DOM aware
                     └── _resolve()  ← initial navigation
 ```
+
+### Navigation model
+
+`LitroRouter` does **not** intercept plain `<a>` clicks. Plain anchors always perform full page reloads (the browser default). This is intentional:
+
+- For **SSG sites**, full page reloads serve fresh pre-rendered HTML files, each containing the correct `__litro_data__` script tag injected by the static renderer. SPA navigation to such pages would bypass the server and arrive with `serverData = null`, causing a "Loading..." flash.
+- For **SSR sites**, the same argument applies: client-side navigation to a page that has server data would need a separate fetch to the API to populate `serverData`.
+
+For explicit SPA navigation, use one of:
+- **`<litro-link href="...">`** — wraps an `<a>` element; calls `LitroRouter.go()` on left-click without modifier keys. Gracefully degrades to a full page reload when JS is disabled.
+- **`LitroRouter.go(path)`** — programmatic pushState navigation from event handlers or other code.
 
 ### Route lifecycle
 
@@ -366,3 +388,106 @@ interface LitroLocation {
 ### TypeScript types
 
 `URLPattern` is not yet in TypeScript's `lib.dom.d.ts` (TS 5.9). Minimal ambient type declarations are inline in `litro-router.ts` to avoid requiring `lib` changes in downstream projects.
+
+---
+
+## 10. Content Layer (`litro:content`)
+
+The content layer provides a Markdown blog API via a virtual module (`litro:content`) that works in both Vite (dev/client) and Nitro (server/SSG) contexts.
+
+### How it works
+
+```
+Project root
+  litro.recipe.json          ← { "contentDir": "content/blog" }
+  content/
+    blog/
+      .11tydata.json         ← directory defaults (tags, etc.)
+      hello-world.md         ← post: slug = "hello-world"
+      getting-started/
+        index.md             ← post: slug = "getting-started" (index.md → parent dir name)
+    _data/
+      metadata.js            ← global site data (ES module, default export)
+```
+
+At build time, the Nitro content plugin (`packages/framework/src/content/plugin.ts`):
+
+1. Reads `litro.recipe.json` to find `contentDir` (defaults to `content/blog` if absent)
+2. Generates a JavaScript stub module that creates a `ContentIndex` and starts `build()` eagerly
+3. Writes the stub to `server/stubs/litro-content.js`
+4. Sets `nitro.options.alias['litro:content'] = stubPath` so Rollup resolves the virtual import
+5. Stores `__litroContentDir` and `__litroContentStub` on `nitro.options` for the SSG plugin
+
+The Vite plugin (`packages/framework/src/vite/index.ts`) handles `litro:content` resolution in Vite builds (dev server and client production bundle). It returns a **browser stub** — no-op async functions (`getPosts`, `getPost`, `getTags`, `getGlobalData`) that return empty values. The stub exists purely to satisfy any static `import … from 'litro:content'` at the top of page files without pulling in Node.js-only modules (`node:fs`, `fast-glob`, `gray-matter`) that would crash Vite's dep optimizer. Real content data reaches the client exclusively through the server-side `pageData` → `serverData` pathway — the client never calls the content API directly.
+
+### ContentIndex
+
+`ContentIndex` (`src/content/index.ts`) builds an in-memory index from a content directory:
+
+- Scans `**/*.md` with `fast-glob`
+- Parses each file with `gray-matter` (YAML frontmatter) + `unified/remark/rehype` (Markdown → HTML)
+- Merges `.11tydata.json` directory data (file fields win over directory defaults)
+- Builds two Maps: `slug → Post` and `tag → Post[]`
+- Filters out drafts by default (`draft: true` in frontmatter)
+
+The `build()` call is idempotent — calling it multiple times produces the same result. In the server stub, `build()` is started eagerly at module eval time (startup), so the first request finds a warm index rather than waiting.
+
+### jiti alias for SSG
+
+The SSG plugin (`src/plugins/ssg.ts`) uses jiti to import page TypeScript files and call `generateRoutes()`. Page files in the `11ty-blog` recipe import `litro:content` inside `generateRoutes()`, so jiti must be able to resolve the alias. The SSG plugin reads `__litroContentStub` from `nitro.options` and passes it to jiti's `alias` option.
+
+### TypeScript declarations
+
+`src/content/env.d.ts` contains `declare module 'litro:content'` with all exported types and functions. Projects reference this via `/// <reference types="litro/content/env" />` or by adding `litro/content/env` to `compilerOptions.types` in `tsconfig.json`.
+
+---
+
+## 11. Recipe System (`create-litro`)
+
+`create-litro` is a scaffolding CLI built on a recipe system where each recipe is a directory containing a `recipe.config.ts` and a `template/` directory.
+
+### Recipe discovery
+
+```
+packages/create-litro/
+  recipes/
+    fullstack/
+      recipe.config.ts     ← exports: LitroRecipe (name, displayName, description, mode)
+      template/            ← files copied verbatim to the target directory
+    11ty-blog/
+      recipe.config.ts
+      template/
+```
+
+At runtime, `listRecipes()` scans the `recipes/` directory adjacent to the compiled `dist/src/scaffold.js` file, dynamically imports each `recipe.config.js`, and returns `LitroRecipe[]`.
+
+### Template interpolation
+
+`scaffold(recipeName, options, targetDir)` copies every file from `template/` to `targetDir`, replacing `{{placeholder}}` tokens with values from `ScaffoldOptions`:
+
+| Placeholder | Source |
+|---|---|
+| `{{projectName}}` | `options.projectName` |
+| `{{mode}}` | `options.mode` (`'ssr'` or `'ssg'`) |
+| `{{recipeVersion}}` | `options.recipeVersion` (defaults to `'0.0.0'`) |
+
+Binary files (images, fonts, archives) are copied without interpolation. Text files (`.ts`, `.json`, `.md`, etc.) are interpolated.
+
+### Build output
+
+The TypeScript compiler is configured with `rootDir: "."` (not `"./src"`) so both `src/` and `recipes/**/*.ts` compile into `dist/`. The build script appends `cp -r recipes dist/` to copy template files (which are not TypeScript source and are excluded from compilation via `tsconfig.json` `"exclude"`).
+
+```
+dist/
+  src/
+    index.js          ← CLI entry (bin)
+    scaffold.js
+    types.js
+  recipes/
+    fullstack/
+      recipe.config.js
+      template/       ← non-TS template files (copied verbatim by cp)
+    11ty-blog/
+      recipe.config.js
+      template/
+```

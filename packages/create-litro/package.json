@@ -4,14 +4,16 @@
   "description": "Create a new Litro app",
   "type": "module",
   "bin": {
-    "create-litro": "./dist/index.js"
+    "create-litro": "./dist/src/index.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch"
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('recipes', 'dist/recipes', { recursive: true })\"",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }

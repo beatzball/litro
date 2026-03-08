@@ -15,9 +15,11 @@
  * rendered on demand for any :slug value by the catch-all Nitro handler.
  */
 
-import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { html } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { LitroPage } from 'litro/runtime';
 import { definePageData } from 'litro';
+import type { LitroLocation } from 'litro-router';
 
 // ---------------------------------------------------------------------------
 // Server-side data fetching
@@ -68,15 +70,27 @@ export async function generateRoutes(): Promise<string[]> {
 // Page component
 // ---------------------------------------------------------------------------
 
+export interface BlogPostData {
+  slug: string;
+  title: string;
+  content: string;
+}
+
 @customElement('page-blog-slug')
-export class BlogPostPage extends LitElement {
-  @property() slug = '';
+export class BlogPostPage extends LitroPage {
+  @state() declare serverData: BlogPostData | null;
+
+  override async fetchData(location: LitroLocation): Promise<BlogPostData> {
+    const slug = location.params['slug'] ?? '';
+    return { slug, title: `Post: ${slug}`, content: `Content for ${slug}` };
+  }
 
   render() {
+    const { slug = '' } = this.serverData ?? {};
     return html`
       <article>
-        <h1>Blog Post: ${this.slug}</h1>
-        <p>This is a dynamic blog post page rendered for slug: <strong>${this.slug}</strong>.</p>
+        <h1>Blog Post: ${slug}</h1>
+        <p>This is a dynamic blog post page rendered for slug: <strong>${slug}</strong>.</p>
         <litro-link href="/blog">← Back to Blog</litro-link>
         &nbsp;|&nbsp;
         <litro-link href="/">← Back Home</litro-link>

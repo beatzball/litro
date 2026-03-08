@@ -1,0 +1,7 @@
+{
+  "recipe": "11ty-blog",
+  "version": "0.0.1",
+  "mode": "ssg",
+  "contentDir": "content/blog",
+  "options": {}
+}

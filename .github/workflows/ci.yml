@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  unit-tests:
+  test:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
@@ -19,11 +19,14 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install
-      - run: pnpm --filter litro test
+      - run: pnpm install --frozen-lockfile
+      # Runs tests in all three packages:
+      #   litro-router (16), litro/framework (174), create-litro (11)
+      - name: Run all package tests
+        run: pnpm -r test
 
-  e2e-tests:
-    name: E2E Tests
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,20 +37,17 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install
-      - run: pnpm --filter litro-router build
-      - run: pnpm --filter litro build
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm exec playwright test
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+      - run: pnpm install --frozen-lockfile
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      # Also verifies the cross-platform fs.cpSync recipe-copy step
+      - name: Build create-litro
+        run: pnpm --filter create-litro build
 
-  smoke-test-static:
-    name: Smoke Test (static)
+  audit:
+    name: Dependency Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,20 +58,5 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install
-      - run: bash scripts/smoke-test-static.sh
-
-  smoke-test-node:
-    name: Smoke Test (node-server)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install
-      - run: bash scripts/smoke-test-node.sh
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high

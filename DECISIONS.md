@@ -106,7 +106,7 @@ Running log of architectural and implementation decisions. All agents append her
 - Eliminate the `vaadinRouterStubPlugin` Rollup plugin that was needed to prevent `window` crashes during server bundling
 - Fully control the `onBeforeEnter` lifecycle contract that `LitroPage` relies on for data fetching
 
-**Path format conversion**: Litro paths use h3/path-to-regexp syntax (`:param(.*)*` for catch-alls). URLPattern uses `:param*` for the same. `LitroRouter.setRoutes()` converts the format automatically via `vaadinToURLPattern()`, so the path format throughout the rest of the codebase (scanner output, manifest, server routing) is unchanged.
+**Path format conversion**: Litro paths use h3/path-to-regexp syntax (`:param(.*)*` for catch-alls). URLPattern uses `:param*` for the same. `LitroRouter.setRoutes()` converts the format automatically via `h3ToURLPattern()`, so the path format throughout the rest of the codebase (scanner output, manifest, server routing) is unchanged.
 
 **SSR safety**: `litro-router.ts` does not access `window`, `document`, or `history` at module eval time — only inside methods that are called at runtime in the browser. The dynamic import pattern in `LitroOutlet` and `LitroLink` is preserved, so the module is never evaluated server-side.
 
@@ -177,3 +177,72 @@ The fix uses two changes together:
 **TypeScript project references**: `packages/framework/tsconfig.json` gains a `references` entry pointing at `../litro-router`. This tells `tsc` about the build dependency so it can resolve types from the compiled output. All build steps (CI, smoke test scripts) must build `litro-router` before `litro`.
 
 **No consumer-facing API change**: All public types (`Route`, `LitroLocation`) and the `LitroRouter` class are re-exported from `litro/runtime` unchanged, so existing Litro app code requires no modification.
+
+---
+
+## Recipe system: physical template files over inline strings
+
+**Decision**: Replace all hardcoded inline template strings in `create-litro/src/index.ts` with physical files in `recipes/<name>/template/`. The `scaffold()` function copies files from `template/` to the target directory, applying `{{placeholder}}` interpolation to text files.
+
+**Rationale**: Inline strings are uneditable in any IDE (no syntax highlighting, no linting, no formatting), hard to maintain as templates grow, and impossible to test by running the template files themselves. Physical files live at proper paths and can be linted, formatted, and type-checked if desired.
+
+**tsconfig rootDir change**: `create-litro/tsconfig.json` sets `rootDir: "."` (not `"./src"`) so both `src/` and `recipes/**/*.ts` compile into `dist/`. Template `.ts` files (page components, config files) are excluded from compilation via `"exclude": ["recipes/**/template/**"]` — they are user-facing source, not build tooling.
+
+**Build script**: `tsc -p tsconfig.json && cp -r recipes dist/` — the `cp` copies all non-TS template files (Markdown, JSON, `.gitignore`, etc.) that `tsc` would not emit.
+
+---
+
+## `litro:content` virtual module: Nitro alias + physical stub (not `nitro.options.virtual`)
+
+**Decision**: Resolve `litro:content` in Nitro/Rollup via `nitro.options.alias['litro:content'] = stubPath` (pointing at a generated physical JS file), not via `nitro.options.virtual`.
+
+**Rationale**: `nitro.options.virtual` only handles `#`-prefixed module IDs. The `litro:content` ID does not start with `#`, so Nitro's virtual plugin would not intercept it. Rollup's `@rollup/plugin-node-resolve` handles bare string IDs; the `alias` option is the correct Rollup-level hook for mapping a bare specifier to a physical file path.
+
+The physical stub (`server/stubs/litro-content.js`) is generated at build time by the content plugin and contains a real `ContentIndex` instantiation rather than a type stub, so it works correctly when Rollup bundles it into the server output.
+
+---
+
+## Content plugin registers `__litroContentStub` on `nitro.options` for SSG plugin
+
+**Decision**: The Nitro content plugin stores the stub path as `nitro.options.__litroContentStub`. The SSG plugin reads this and passes it to jiti's `alias` option.
+
+**Rationale**: The SSG plugin imports page TypeScript files via jiti to call `generateRoutes()`. Page files in the `11ty-blog` recipe import `litro:content` inside `generateRoutes()`. Without the alias, jiti cannot resolve the import and throws `Cannot find module 'litro:content'`. Passing the stub path through `nitro.options` avoids tight coupling between the two plugins (the SSG plugin doesn't need to know how the content plugin generates the stub).
+
+---
+
+## `litro.recipe.json` written to scaffolded project root
+
+**Decision**: The `11ty-blog` recipe template includes a `litro.recipe.json` file with `{ "recipe": "...", "mode": "{{mode}}", "contentDir": "content/blog" }`. This file is interpolated during scaffolding and written to the project root.
+
+**Rationale**: The Nitro content plugin (`content/plugin.ts`) reads `litro.recipe.json` to find `contentDir`. Without this file the plugin falls back to `content/blog` (the same default), but the explicit file makes the configuration visible, auditable, and overridable without touching `nitro.config.ts`. It also carries the recipe name and version, which enables future tooling (upgrades, migrations).
+
+---
+
+## Content layer: eager `build()` at server startup
+
+**Decision**: The generated `litro-content.js` stub calls `_index.build()` immediately at module eval time and caches the resulting Promise as `_ready`. All exported functions (`getPosts`, `getPost`, etc.) `await _ready` before delegating.
+
+**Rationale**: Without eager initialization, the first request after a cold start triggers the full content scan synchronously, adding latency visible to the first user. With eager initialization, `build()` starts in the background as soon as the server module loads. By the time the first request arrives (typically tens to hundreds of milliseconds later), the index is already warm.
+
+---
+
+## Remove global `<a>` click interceptor from `LitroRouter`
+
+**Decision**: Remove the `_interceptClicks` method (and its `document.addEventListener('click', ...)` registration) from `LitroRouter`. Plain `<a>` tags now perform full page reloads as the browser intends. `<litro-link>` is the explicit, opt-in SPA navigation mechanism.
+
+**Rationale**:
+
+1. **Correctness for SSG**: When a user navigates between pages in an SSG site via a SPA route change, the router mounts the new page component client-side without a server round-trip. The `__litro_data__` script tag injected by the static renderer is page-specific — it remains in the DOM from the initial load. On SPA navigation to a second page, `getServerData()` reads the stale script tag (belonging to the first page) or returns `null` if the tag was already consumed, causing `serverData` to be `null` or wrong and the page to show "Loading…" indefinitely.
+2. **Browser default is correct**: Full page reloads for `<a>` navigation are the standard web model. Intercepting all clicks globally is a pattern from single-page apps with client-side-only data — it does not fit a server-rendered framework where each page has server-injected data.
+3. **Explicit opt-in is cleaner**: `<litro-link>` makes SPA navigation a deliberate authoring choice rather than a global side effect. This avoids surprising behaviour (e.g. external links being accidentally intercepted, or anchor-fragment navigation being swallowed).
+4. **Removes 6 tests that were testing interceptor-specific behaviour** — total litro-router test count drops from 20 to 14. The remaining 14 tests cover route resolution, param extraction, catch-all matching, `onBeforeEnter` lifecycle, `action()` ordering, and programmatic `LitroRouter.go()`.
+
+---
+
+## SSG navigation fix: replace `<litro-link>` with `<a>` in `playground-11ty` pages
+
+**Decision**: Update `playground-11ty/pages/index.ts` and `playground-11ty/pages/blog/[slug].ts` to use plain `<a>` tags for all page-to-page navigation links instead of `<litro-link>`.
+
+**Rationale**: The `playground-11ty` app uses the `11ty-blog` recipe in SSG mode. Each page's server data (post list, individual post body) is injected by the static renderer into a `__litro_data__` script tag. If navigation between pages were handled client-side by `LitroRouter` (via `<litro-link>`), the router would mount the new page component without a server round-trip — but the `__litro_data__` tag is from the original page, causing `serverData = null` on the new page and a "Loading…" display that never resolves.
+
+Plain `<a>` links cause a full browser navigation, loading the pre-rendered HTML for the destination page. That HTML contains the correct `__litro_data__` for that page, so `serverData` is populated correctly on every load. This is the correct navigation model for SSG sites.

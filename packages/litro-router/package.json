@@ -2,6 +2,7 @@
   "name": "litro-router",
   "version": "0.0.1",
   "type": "module",
+  "types": "./dist/index.d.ts",
   "description": "Zero-dependency URLPattern client-side router for web components",
   "keywords": ["router", "web-components", "url-pattern", "lit", "client-side-routing"],
   "exports": {

@@ -6,6 +6,7 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 - **Streaming SSR** — Declarative Shadow DOM via `@lit-labs/ssr`, streamed from the server
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server data fetching** — `definePageData()` runs on the server, serialized to the client
+- **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
 - **API routes** — plain `server/api/` files using H3 handlers
 - **One port in dev** — Vite and Nitro share a single HTTP port
 - **Any deployment** — Node.js, Cloudflare Workers, Vercel Edge, static via Nitro adapters

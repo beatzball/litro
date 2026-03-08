@@ -18,7 +18,7 @@
  * node_modules. Does NOT use execa — only Node.js built-in child_process.spawn.
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -50,6 +50,23 @@ function run(
 
 switch (command) {
   case 'dev': {
+    // If dist/client/app.js doesn't exist, run vite build once so the static
+    // asset handler has something to serve. Vite's dev middleware will still
+    // intercept /_litro/app.js on the fly (serving app.ts) when available;
+    // the pre-built file is the reliable fallback.
+    const distClientApp = join(cwd, 'dist', 'client', 'app.js');
+    if (!existsSync(distClientApp)) {
+      console.log('[litro] Building client bundle...');
+      const binPath = join(cwd, 'node_modules', '.bin');
+      const pathSep = process.platform === 'win32' ? ';' : ':';
+      spawnSync('vite', ['build'], {
+        cwd,
+        stdio: 'inherit',
+        shell: true,
+        env: { ...process.env, PATH: `${binPath}${pathSep}${process.env.PATH}` },
+      });
+    }
+
     // Resolve port: --port <n> or -p <n> from args, falling back to 3030.
     const portFlagIdx = args.findIndex((a) => a === '--port' || a === '-p');
     const portInline = args.find((a) => a.startsWith('--port=') || a.startsWith('-p='));

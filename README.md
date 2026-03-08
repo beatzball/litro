@@ -6,11 +6,13 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 - **Server-side rendering** — streaming Declarative Shadow DOM via `@lit-labs/ssr`
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
+- **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
+- **Recipe-based scaffolding** — `fullstack` and `11ty-blog` recipes via `npm create litro`
 - **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
 - **Any deployment target** — Node.js, Cloudflare Workers, Vercel Edge, static — via Nitro adapters
 
-> **Status**: Early development. Core SSR pipeline is working. CLI, HMR, and SSG are implemented but not yet field-tested.
+> **Status**: Early development. Core SSR pipeline, content layer, and scaffolding are working. Playwright e2e tests not yet written.
 
 ---
 
@@ -48,9 +50,18 @@ pnpm --filter create-litro build   # compiles packages/create-litro → dist/
 
 ```bash
 cd /path/to/your/projects
-node /path/to/litro/packages/create-litro/dist/index.js my-app
-# or pass both args at once (non-interactive):
-node /path/to/litro/packages/create-litro/dist/index.js my-app fullstack
+
+# Interactive (prompts for recipe + mode):
+node /path/to/litro/packages/create-litro/dist/src/index.js my-app
+
+# Non-interactive — fullstack SSR app:
+node /path/to/litro/packages/create-litro/dist/src/index.js my-app --recipe fullstack --mode ssr
+
+# Non-interactive — 11ty-compatible blog, static output:
+node /path/to/litro/packages/create-litro/dist/src/index.js my-app --recipe 11ty-blog --mode ssg
+
+# List all recipes:
+node /path/to/litro/packages/create-litro/dist/src/index.js --list-recipes
 ```
 
 **Step 3 — point the app at the local `litro` package:**
@@ -73,12 +84,18 @@ pnpm run build     # Stage 0: page scan → Stage 1: vite build → Stage 2: nit
 pnpm run preview   # starts http://localhost:3030
 ```
 
-The scaffolded app includes:
+The `fullstack` scaffolded app includes:
 - `pages/index.ts` — home page with `pageData` server fetching
 - `pages/blog/index.ts` — blog listing
 - `pages/blog/[slug].ts` — dynamic post page with route params and `generateRoutes()`
 - `server/api/hello.ts` — JSON API endpoint
 - All config files (`nitro.config.ts`, `vite.config.ts`, `tsconfig.json`)
+
+The `11ty-blog` recipe also includes a Markdown content layer:
+- `content/blog/*.md` — posts with YAML frontmatter (title, date, tags, draft)
+- `content/_data/metadata.js` — global site data
+- Pages that import from `litro:content` for post listing, individual posts, and tag filtering
+- `litro.recipe.json` — tells the content plugin where to find posts
 
 ---
 
@@ -277,6 +294,61 @@ export default defineNitroConfig({
 
 ---
 
+## Content layer (`litro:content`)
+
+The `litro:content` virtual module provides a file-system Markdown content API compatible with the 11ty data cascade format.
+
+Add `litro.recipe.json` to your project root to configure the content directory:
+
+```json
+{ "contentDir": "content/blog" }
+```
+
+Then import from the virtual module in any page or server route:
+
+```typescript
+import { getPosts, getPost, getTags, getGlobalData } from 'litro:content';
+
+// List posts (sorted by date descending, drafts excluded)
+const posts = await getPosts({ tag: 'tutorial', limit: 5 });
+
+// Single post by slug
+const post = await getPost('hello-world');  // null if not found
+
+// All tags (sorted alphabetically)
+const tags = await getTags();
+
+// Global site data from content/_data/metadata.js
+const meta = await getGlobalData();
+```
+
+Frontmatter fields: `title` (required), `date`, `description`, `tags`, `draft`.
+
+Directory data: place a `.11tydata.json` file alongside your posts to set default tags or other fields for all posts in that directory — exactly as 11ty's data cascade works.
+
+For TypeScript types, add to your project's `tsconfig.json`:
+```json
+{ "compilerOptions": { "types": ["litro/content/env"] } }
+```
+
+The content plugin must be registered in `nitro.config.ts`:
+
+```typescript
+import contentPlugin from 'litro/content/plugin';
+
+export default defineNitroConfig({
+  hooks: {
+    'build:before': async (nitro) => {
+      await contentPlugin(nitro);
+      await pagesPlugin(nitro);
+      await ssgPlugin(nitro);
+    },
+  },
+});
+```
+
+---
+
 ## Static site generation
 
 Export a `generateRoutes()` function from any dynamic page to tell the SSG which paths to prerender:
@@ -299,8 +371,9 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 pnpm install                          # install all workspace deps
 pnpm --filter litro-router build      # compile litro-router (required once)
 pnpm --filter litro build             # compile framework (required once)
-pnpm --filter litro-router test       # run router unit tests (20 tests)
-pnpm --filter litro test              # run framework unit tests (99 tests)
+pnpm --filter litro-router test       # run router unit tests (16 tests)
+pnpm --filter litro test              # run framework unit tests (174 tests)
+pnpm --filter create-litro test       # run scaffolding tests (11 tests)
 pnpm --filter litro dev               # watch-compile framework
 
 cd playground

@@ -91,7 +91,19 @@ export default async function ssgPlugin(nitro: Nitro): Promise<void> {
   // jiti loads TypeScript files at runtime without a separate compile step.
   // Node.js ESM cannot import .ts files natively (ERR_UNKNOWN_FILE_EXTENSION);
   // jiti's transform pipeline handles the TypeScript → JS conversion in memory.
-  const jiti = createJiti(import.meta.url, { interopDefault: true });
+  //
+  // Pass any aliases set by other plugins (e.g. litro:content → generated stub)
+  // so page modules that import 'litro:content' inside generateRoutes() resolve.
+  const opts = nitro.options as Record<string, unknown>;
+  const jitiAlias: Record<string, string> = {};
+  const contentStub = opts['__litroContentStub'] as string | undefined;
+  if (contentStub) {
+    jitiAlias['litro:content'] = contentStub;
+  }
+  const jiti = createJiti(import.meta.url, {
+    interopDefault: true,
+    ...(Object.keys(jitiAlias).length > 0 ? { alias: jitiAlias } : {}),
+  });
 
   // Scan for all page files — same glob pattern as the pages plugin
   let files: string[];

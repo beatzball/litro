@@ -113,11 +113,12 @@ All four research findings are in `research/`. Critical decisions locked in:
 - **Dynamic tag names**: Use `unsafeStatic` from `lit/static-html.js` — plain expression interpolation of tag names (`html\`<${tag}>\``) is an invalid Lit expression location and causes SSR to throw.
 
 ### Client Router (R-3 + post-R-3 decision)
-- **`@vaadin/router` is replaced** — it was deprecated. Litro now uses a built-in `LitroRouter` in `packages/framework/src/runtime/litro-router.ts` built on the native URLPattern API. No external router dependency.
+- **`@vaadin/router` is replaced** — it was deprecated. Litro now uses a built-in `LitroRouter` in `packages/litro-router/src/index.ts` built on the native URLPattern API. No external router dependency.
 - **Mount in `firstUpdated()`** — not `constructor()` or `connectedCallback()`. Outlet must be in the DOM first.
 - **No Lit bindings inside the outlet element** — Lit won't touch unbound children, keeping the router's subtree safe from reconciliation.
 - **`litro-router.ts` is client-only** — it accesses `window`/`history`/`document` at runtime. Never import it in SSR code paths. Dynamic import in `LitroOutlet.firstUpdated()` and `LitroLink.handleClick()` ensures it's never evaluated server-side.
-- **No hash routing** — pushState only. Uses `event.composedPath()` so Shadow DOM links are intercepted correctly.
+- **No hash routing** — pushState only.
+- **No global click interceptor** — `LitroRouter` does NOT intercept plain `<a>` clicks. Plain anchors do full page reloads (browser default). Use `<litro-link>` for SPA navigation or call `LitroRouter.go()` directly.
 - **Path format**: Litro paths use h3/path-to-regexp syntax (`:all(.*)*` for catch-alls). `LitroRouter` converts to URLPattern format (`/:all*`) at `setRoutes()` time. The rest of the system (scanner, manifest, server routing) is unaffected.
 - **`onBeforeEnter(location: LitroLocation)`** — called by the router on the freshly created element before it is appended to the outlet. `LitroLocation` has `{ pathname, params, search, hash }`.
 - **`crawlLinks` does NOT find `LitroRouter` routes** — all static page routes must be explicitly added to `prerender.routes`.
@@ -167,7 +168,8 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
-- V-1: Validation complete (93/93 unit tests passing)
+- Recipe system + content layer: complete (11ty-blog recipe, `litro:content` virtual module)
+- Tests: 171/171 passing across all packages
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -177,10 +179,23 @@ Verified working:
 - API routes (`/api/hello`)
 - `pageModules` registry enabling bundle-time page compilation
 - Dev server (`litro dev`) — Vite middleware intercepts JS/TS requests; Nitro handles HTML and API
+  - Auto-builds `dist/client/app.js` via `vite build` if it doesn't exist (needed because `dist/` is gitignored)
 - Default dev port: 3030 (custom port via `litro dev --port <n>`)
 - Preview server (`litro preview`) — `/_litro/app.js` and all client assets served correctly
 - `litro build` — page scan runs before `vite build`; fresh routes always baked into client bundle
+- `create-litro` recipe system — `fullstack` and `11ty-blog` recipes, `{{placeholder}}` interpolation
+- `litro:content` virtual module — Markdown content layer, 11ty-compatible frontmatter + data cascade
+  - **Vite plugin** (`packages/framework/src/vite/index.ts`) returns a no-op browser stub (empty async functions) — real content is server-side only, delivered via `pageData` → `serverData`
+  - **Nitro plugin** (`packages/framework/src/content/plugin.ts`) generates the real `ContentIndex` stub at `server/stubs/litro-content.js`
+- SSG plugin resolves `litro:content` via jiti alias so `generateRoutes()` can call content API
+- `LitroRouter` no longer intercepts plain `<a>` clicks — use `<litro-link>` for SPA navigation; plain `<a>` does full page reload
+- SSG navigation fix — `playground-11ty` pages use plain `<a>` tags so each navigation fetches fresh pre-rendered HTML with correct `__litro_data__`
+
+Test breakdown:
+- `packages/litro-router`: 14 tests
+- `packages/framework`: 149 tests
+- `packages/create-litro`: 8 tests
 
 Pending:
-- SSG mode (`LITRO_MODE=static`) not yet field-tested
+- SSG mode (`LITRO_MODE=static`) not yet field-tested with content layer
 - Playwright e2e tests

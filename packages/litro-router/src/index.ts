@@ -18,10 +18,7 @@
  *    and onBeforeEnter() on page elements — so LitroOutlet and LitroPage
  *    need only minimal changes.
  *
- * 3. Click interception via event.composedPath() so links inside Shadow DOM
- *    are correctly detected across shadow boundaries.
- *
- * 4. onBeforeEnter(location) is called on the newly created element BEFORE
+ * 3. onBeforeEnter(location) is called on the newly created element BEFORE
  *    it is appended to the outlet, matching the vaadin-router lifecycle that
  *    LitroPage depends on for server-data hydration.
  */
@@ -101,7 +98,6 @@ export class LitroRouter {
       }));
 
     window.addEventListener('popstate', () => void this._resolve());
-    document.addEventListener('click', this._interceptClicks.bind(this));
     void this._resolve();
   }
 
@@ -112,32 +108,6 @@ export class LitroRouter {
   static go(path: string): void {
     history.pushState(null, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
-  }
-
-  /**
-   * Intercepts clicks on <a> elements (including those inside Shadow DOM)
-   * and converts them to client-side navigations.
-   */
-  private _interceptClicks(e: MouseEvent): void {
-    // Already handled (e.g. by LitroLink) — don't push a second history entry.
-    if (e.defaultPrevented) return;
-    // Modifier keys signal browser-native behavior (new tab, etc.) — pass through.
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    // Only intercept left-clicks.
-    if (e.button !== 0) return;
-
-    const target = e.composedPath().find(
-      el => el instanceof HTMLAnchorElement
-    ) as HTMLAnchorElement | undefined;
-
-    if (!target || !target.href || target.target) return;
-
-    const url = new URL(target.href);
-    // Only intercept same-origin navigations.
-    if (url.origin !== location.origin) return;
-
-    e.preventDefault();
-    LitroRouter.go(url.pathname + url.search + url.hash);
   }
 
   private async _resolve(): Promise<void> {

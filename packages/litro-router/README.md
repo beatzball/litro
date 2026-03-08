@@ -4,7 +4,7 @@ Zero-dependency client-side router for web components, built on the native [URLP
 
 - **Zero dependencies** — browser-native APIs only, nothing to bundle
 - **URLPattern matching** — `:slug`, `:slug?`, and `/:all*` catch-alls
-- **Shadow DOM aware** — intercepts links via `event.composedPath()` across shadow boundaries
+- **Explicit SPA navigation** — use `LitroRouter.go()` or `<litro-link>` for pushState navigation; plain `<a>` tags do full page reloads (browser default)
 - **SSR safe** — no module-eval side effects; can be dynamically imported, never crashes Node.js
 - **Framework agnostic** — works with any web component library (Lit, FAST, plain `HTMLElement`, etc.)
 
@@ -62,7 +62,7 @@ document.querySelector('#go-home')!.addEventListener('click', () => {
 });
 ```
 
-The router immediately resolves the current `location.pathname` when `setRoutes()` is called. From then on it responds to `popstate` events (back/forward) and intercepts `<a>` clicks for same-origin paths.
+The router immediately resolves the current `location.pathname` when `setRoutes()` is called. From then on it responds to `popstate` events (back/forward button). For in-app SPA navigation use `<litro-link>` (provided by the Litro framework) or call `LitroRouter.go()` directly — plain `<a>` tags perform full page reloads as usual.
 
 ---
 
@@ -90,9 +90,11 @@ The outlet element should be an empty container already in the document. After `
 
 ### `router.setRoutes(routes: Route[])`
 
-Configures the route table. Also attaches the `popstate` and `click` listeners and triggers an initial resolution for the current URL. Call this once after the outlet is in the DOM.
+Configures the route table. Also attaches a `popstate` listener and triggers an initial resolution for the current URL. Call this once after the outlet is in the DOM.
 
 Routes without a `component` are skipped during resolution (useful for redirect-only routes using `action`).
+
+**Note**: `LitroRouter` does **not** intercept plain `<a>` clicks. Plain anchors perform full page reloads (browser default). For SPA navigation use `<litro-link>` (provided by the Litro framework) or call `LitroRouter.go()` directly.
 
 ### `LitroRouter.go(path: string)`
 
@@ -169,18 +171,14 @@ class BlogPostPage extends LitElement {
 
 ---
 
-## Click interception
+## SPA navigation
 
-Once `setRoutes()` is called, `LitroRouter` listens for `click` events on `document` and intercepts any `<a>` click that meets all of these conditions:
+`LitroRouter` does **not** intercept plain `<a>` clicks. Plain anchors always perform full page reloads — this is the correct browser default and the right behaviour for SSG sites, where each page load fetches a fresh pre-rendered HTML file with the correct `__litro_data__` script tag injected by the server.
 
-- Same origin as the current page
-- No `target` attribute set
-- No modifier key held (`Ctrl`, `Meta`, `Shift`, `Alt`)
-- Left mouse button (`button === 0`)
+For explicit SPA navigation use one of the following:
 
-The check uses `event.composedPath()` so links rendered inside a Shadow DOM are correctly detected across shadow boundaries.
-
-External links, `target="_blank"` links, and modifier-key clicks pass through to the browser unchanged.
+- **`<litro-link href="...">`** — a custom element provided by the `litro` framework package. It wraps a standard `<a>` and calls `LitroRouter.go()` on click, intercepting only same-origin, left-click, no-modifier clicks. Falls back to a normal full-page navigation if JavaScript is disabled.
+- **`LitroRouter.go(path)`** — call directly from event handlers or programmatic navigation.
 
 ---
 

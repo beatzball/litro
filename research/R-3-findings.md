@@ -1186,7 +1186,7 @@ This document was produced from knowledge of the `@vaadin/router` API as of v2.x
 - Vaadin Router API reference (within the docs site): lifecycle hooks, `Router` class, `RouterLocation`, `RouterCommands`
 - `@vaadin/router` source code: `src/router.ts`, `src/triggers/click.ts`, `src/triggers/popstate.ts`
 - `path-to-regexp` library (used internally by `@vaadin/router` for route matching)
-- Litro PRD: `REPO_ROOT/PRD-litro-framework.md`
-- R-2 findings (for hydration sequencing context): `REPO_ROOT/research/R-2-findings.md`
+- Litro PRD: `PRD-litro-framework.md` (repo root)
+- R-2 findings (for hydration sequencing context): `research/R-2-findings.md`
 
 **Note on research methodology:** WebFetch and WebSearch tools were unavailable in this session. All findings are based on authoritative knowledge of `@vaadin/router` v1.x/v2.x from training data (knowledge cutoff August 2025). The package has been stable since 2018 with no breaking changes to the core API described here. Implementation agents should verify the `action` callback signature and `commands` object API against the installed package version before implementation.

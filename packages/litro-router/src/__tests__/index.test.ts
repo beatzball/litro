@@ -85,6 +85,72 @@ describe('h3ToURLPattern', () => {
 });
 
 // ---------------------------------------------------------------------------
+// No click interceptor on document
+//
+// The global click interceptor (_interceptClicks) was removed. LitroRouter
+// no longer calls document.addEventListener('click', ...) in setRoutes().
+// Plain <a> tags do full page reloads; only <litro-link> (which calls
+// LitroRouter.go() directly) performs SPA navigation.
+// ---------------------------------------------------------------------------
+
+describe('LitroRouter — no document click listener', () => {
+  it('setRoutes() does not register a click listener on document', () => {
+    const clickListeners: EventListenerOrEventListenerObject[] = [];
+    const original = document.addEventListener.bind(document);
+    const spy = vi.spyOn(document, 'addEventListener').mockImplementation(
+      (type: string, listener: EventListenerOrEventListenerObject, ...rest: Parameters<typeof document.addEventListener> extends [string, EventListenerOrEventListenerObject, ...infer R] ? R : never[]) => {
+        if (type === 'click') clickListeners.push(listener);
+        original(type, listener, ...(rest as [EventListenerOptions | boolean | undefined]));
+      },
+    );
+
+    const outlet = document.createElement('div');
+    document.body.appendChild(outlet);
+    if (!customElements.get('no-click-page')) {
+      customElements.define('no-click-page', class extends HTMLElement {});
+    }
+    const router = new LitroRouter(outlet);
+    router.setRoutes([{ path: '/', component: 'no-click-page' }]);
+
+    expect(clickListeners).toHaveLength(0);
+
+    spy.mockRestore();
+    outlet.remove();
+  });
+
+  it('clicking a plain <a> tag does NOT call LitroRouter.go()', () => {
+    // setRoutes() registers only a popstate listener, not a click listener.
+    // A plain <a href="/about"> click therefore triggers full navigation, not SPA.
+    const goSpy = vi.spyOn(history, 'pushState');
+
+    const outlet = document.createElement('div');
+    document.body.appendChild(outlet);
+    if (!customElements.get('no-intercept-page')) {
+      customElements.define('no-intercept-page', class extends HTMLElement {});
+    }
+    const router = new LitroRouter(outlet);
+    router.setRoutes([{ path: '/about', component: 'no-intercept-page' }]);
+
+    // Simulate a click on a plain anchor in the document
+    const anchor = document.createElement('a');
+    anchor.href = '/about';
+    document.body.appendChild(anchor);
+
+    // Dispatch a click event — LitroRouter should NOT intercept it,
+    // so pushState should NOT be called as a result of the click.
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+    anchor.dispatchEvent(clickEvent);
+
+    // pushState was NOT called by the router's click handler (there is none)
+    expect(goSpy).not.toHaveBeenCalled();
+
+    goSpy.mockRestore();
+    anchor.remove();
+    outlet.remove();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // LitroRouter.go()
 // ---------------------------------------------------------------------------
 
@@ -208,111 +274,3 @@ describe('LitroRouter — setRoutes and resolve', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Click interception
-// ---------------------------------------------------------------------------
-
-describe('LitroRouter — click interception', () => {
-  let outlet: HTMLDivElement;
-
-  beforeEach(() => {
-    outlet = document.createElement('div');
-    document.body.appendChild(outlet);
-    const router = new LitroRouter(outlet);
-    // Empty routes — we only care about whether go() is called, not routing.
-    router.setRoutes([]);
-  });
-
-  afterEach(() => {
-    outlet.remove();
-  });
-
-  function click(a: HTMLAnchorElement, overrides?: MouseEventInit): void {
-    a.dispatchEvent(new MouseEvent('click', {
-      bubbles: true, cancelable: true, button: 0,
-      ...overrides,
-    }));
-  }
-
-  it('intercepts left-clicks on same-origin anchors', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    document.body.appendChild(a);
-    click(a);
-    expect(spy).toHaveBeenCalledWith('/page');
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not intercept external-origin links', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = 'https://external.example.com/page';
-    document.body.appendChild(a);
-    click(a);
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not intercept links with a target attribute', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    click(a);
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not intercept ctrl+click', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    document.body.appendChild(a);
-    click(a, { ctrlKey: true });
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not intercept meta+click', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    document.body.appendChild(a);
-    click(a, { metaKey: true });
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not intercept right-clicks (button !== 0)', () => {
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    document.body.appendChild(a);
-    click(a, { button: 2 });
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-
-  it('does not call go() when defaultPrevented (e.g. LitroLink already handled it)', () => {
-    // Regression: LitroLink calls e.preventDefault() before dispatching LitroRouter.go().
-    // The bubbled click must not trigger a second pushState from the global listener.
-    const spy = vi.spyOn(LitroRouter, 'go');
-    const a = document.createElement('a');
-    a.href = `${location.origin}/page`;
-    document.body.appendChild(a);
-    const evt = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
-    evt.preventDefault(); // simulates LitroLink having already handled the click
-    a.dispatchEvent(evt);
-    expect(spy).not.toHaveBeenCalled();
-    a.remove();
-    spy.mockRestore();
-  });
-});
