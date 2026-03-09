@@ -15,7 +15,7 @@
     "lint": "tsc --noEmit -p packages/framework/tsconfig.json",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm -r --filter './packages/*' build && changeset publish"
+    "release": "pnpm -r --filter \"./packages/*\" build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
