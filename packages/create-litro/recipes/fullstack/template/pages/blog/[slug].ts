@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { definePageData } from 'litro';
+import { definePageData } from '@beatzball/litro';
 
 export interface PostData {
   slug: string;

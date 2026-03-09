@@ -65,8 +65,8 @@ export function patchCustomElementsIdempotent(): void {
  * AFTER pagesPlugin (order matters — pages plugin seeds the prerender list
  * first, then this plugin appends dynamic routes to it).
  *
- *   import pagesPlugin from 'litro/plugins';
- *   import ssgPlugin from 'litro/plugins/ssg';
+ *   import pagesPlugin from '@beatzball/litro/plugins';
+ *   import ssgPlugin from '@beatzball/litro/plugins/ssg';
  *   // or locally during development:
  *   import ssgPlugin from '../packages/framework/src/plugins/ssg.js';
  *

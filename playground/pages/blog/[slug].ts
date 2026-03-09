@@ -17,9 +17,9 @@
 
 import { html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { LitroPage } from 'litro/runtime';
-import { definePageData } from 'litro';
-import type { LitroLocation } from 'litro-router';
+import { LitroPage } from '@beatzball/litro/runtime';
+import { definePageData } from '@beatzball/litro';
+import type { LitroLocation } from '@beatzball/litro-router';
 
 // ---------------------------------------------------------------------------
 // Server-side data fetching

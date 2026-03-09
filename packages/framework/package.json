@@ -1,5 +1,5 @@
 {
-  "name": "litro",
+  "name": "@beatzball/litro",
   "version": "0.0.2",
   "description": "Litro — fullstack Lit framework powered by Nitro",
   "license": "Apache-2.0",
@@ -93,7 +93,7 @@
     "./dist/runtime/LitroLink.js"
   ],
   "dependencies": {
-    "litro-router": "workspace:*",
+    "@beatzball/litro-router": "workspace:*",
     "execa": "^8.0.1",
     "nitropack": "^2.13.1",
     "h3": "^1.13.0",

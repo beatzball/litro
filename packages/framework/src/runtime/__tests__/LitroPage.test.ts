@@ -23,7 +23,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { LitroPage, LitroPageMixin } from '../LitroPage.js';
 import { LitElement } from 'lit';
-import type { LitroLocation } from 'litro-router';
+import type { LitroLocation } from '@beatzball/litro-router';
 
 // ---------------------------------------------------------------------------
 // Helpers

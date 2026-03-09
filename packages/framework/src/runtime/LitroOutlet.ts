@@ -36,7 +36,7 @@ import { customElement, property } from 'lit/decorators.js';
 // LitroRouter accesses `window` at runtime. We only import the TYPE here
 // (erased at runtime); the value is loaded lazily via a dynamic import inside
 // firstUpdated() so the module is never evaluated in Node.js.
-import type { LitroRouter, Route } from 'litro-router';
+import type { LitroRouter, Route } from '@beatzball/litro-router';
 
 @customElement('litro-outlet')
 export class LitroOutlet extends LitElement {
@@ -94,7 +94,7 @@ export class LitroOutlet extends LitElement {
  * element lifecycle (e.g., from a plain app.ts without a wrapper element).
  *
  * Usage:
- *   import { initRouter } from 'litro/runtime/LitroOutlet.js';
+ *   import { initRouter } from '@beatzball/litro/runtime/LitroOutlet.js';
  *   initRouter(routes);
  *
  * This function waits for DOMContentLoaded (if not already fired), finds the
