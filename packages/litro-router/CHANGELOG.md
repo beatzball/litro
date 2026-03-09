@@ -1,5 +1,11 @@
 # litro-router
 
+## 0.1.1
+
+### Patch Changes
+
+- 6a8da0e: Update all README references to use `@beatzball` scoped package names following the rename in v0.1.0. Fixes install commands, `pnpm --filter` flags, `npm create` commands, and import paths.
+
 ## 0.1.0
 
 ### Minor Changes
