@@ -75,7 +75,7 @@ export class LitroOutlet extends LitElement {
    * never runs on the server.
    */
   override async firstUpdated() {
-    const { LitroRouter } = await import('litro-router');
+    const { LitroRouter } = await import('@beatzball/litro-router');
     // Remove any SSR'd children before the router takes over. The SSR'd page
     // component is streamed inside <litro-outlet> so content is visible before
     // JS loads. The router renders a new instance and manages the outlet from
