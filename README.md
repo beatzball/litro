@@ -33,8 +33,6 @@ litro/
 
 ## Quick start — scaffold a new app (local)
 
-> **Note:** `create-litro` is not published to npm yet. Use the local path instructions below.
-
 **Step 1 — build the framework and scaffolder from source:**
 
 ```bash
@@ -185,8 +183,6 @@ export const pageData = definePageData(async (event) => {
 
 @customElement("page-home")
 export class HomePage extends LitroPage {
-  @state() declare serverData: { message: string; timestamp: string } | null;
-
   override async fetchData() {
     // Called on client-side navigation (not on the initial SSR load)
     const res = await fetch("/api/hello");
@@ -194,7 +190,9 @@ export class HomePage extends LitroPage {
   }
 
   render() {
-    return html` <h1>${this.serverData?.message ?? "Loading..."}</h1> `;
+    // Cast serverData locally — do NOT use `@state() declare` (breaks jiti/SSG)
+    const data = this.serverData as { message: string; timestamp: string } | null;
+    return html` <h1>${data?.message ?? "Loading..."}</h1> `;
   }
 }
 ```
