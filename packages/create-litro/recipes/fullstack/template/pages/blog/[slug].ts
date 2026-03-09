@@ -1,5 +1,5 @@
 import { html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { LitroLocation } from '@beatzball/litro-router';
@@ -27,8 +27,6 @@ export async function generateRoutes(): Promise<string[]> {
 
 @customElement('page-blog-slug')
 export class BlogPostPage extends LitroPage {
-  @state() declare serverData: PostData | null;
-
   // Called by LitroRouter on client-side navigation to fetch data for the new slug.
   override async fetchData(location: LitroLocation): Promise<PostData> {
     const slug = location.params['slug'] ?? '';
@@ -40,10 +38,11 @@ export class BlogPostPage extends LitroPage {
   }
 
   render() {
+    const data = this.serverData as PostData | null;
     return html`
       <article>
-        <h1>${this.serverData?.title ?? 'Loading…'}</h1>
-        <p>${this.serverData?.content ?? ''}</p>
+        <h1>${data?.title ?? 'Loading…'}</h1>
+        <p>${data?.content ?? ''}</p>
         <litro-link href="/blog">← Back to Blog</litro-link>
         &nbsp;|&nbsp;
         <litro-link href="/">← Home</litro-link>

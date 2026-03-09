@@ -83,6 +83,13 @@ interface InternalRoute {
 export class LitroRouter {
   private routes: InternalRoute[] = [];
   private outlet: HTMLElement;
+  /**
+   * Monotonically increasing counter. Incremented at the start of every
+   * `_resolve()` call. Each invocation captures its own token and checks it
+   * after every `await`; if the counter has moved on, a newer navigation
+   * superseded this one and we bail out without touching the DOM.
+   */
+  private _resolveToken = 0;
 
   constructor(outlet: HTMLElement) {
     this.outlet = outlet;
@@ -111,6 +118,7 @@ export class LitroRouter {
   }
 
   private async _resolve(): Promise<void> {
+    const token = ++this._resolveToken;
     const pathname = location.pathname;
 
     for (const route of this.routes) {
@@ -122,6 +130,9 @@ export class LitroRouter {
       // Run the action first (typically: dynamically import the page module so
       // customElements.define() runs before createElement is called).
       await route.action();
+
+      // A newer navigation superseded this one — bail out without touching DOM.
+      if (token !== this._resolveToken) return;
 
       const loc: LitroLocation = {
         pathname,
@@ -138,6 +149,9 @@ export class LitroRouter {
       if (typeof el.onBeforeEnter === 'function') {
         await el.onBeforeEnter(loc);
       }
+
+      // Check again after the onBeforeEnter async hook.
+      if (token !== this._resolveToken) return;
 
       // Swap outlet content.
       while (this.outlet.lastChild) {

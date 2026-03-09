@@ -1,5 +1,5 @@
 import { html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 
@@ -18,8 +18,6 @@ export const pageData = definePageData(async (_event) => {
 
 @customElement('page-home')
 export class HomePage extends LitroPage {
-  @state() declare serverData: HomeData | null;
-
   // Called on client-side navigation (not on the initial SSR load).
   override async fetchData() {
     const res = await fetch('/api/hello');
@@ -27,11 +25,12 @@ export class HomePage extends LitroPage {
   }
 
   render() {
+    const data = this.serverData as HomeData | null;
     if (this.loading) return html`<p>Loading…</p>`;
     return html`
       <main>
-        <h1>${this.serverData?.message ?? 'Welcome to {{projectName}}'}</h1>
-        <p><small>Rendered at: ${this.serverData?.timestamp ?? '—'}</small></p>
+        <h1>${data?.message ?? 'Welcome to {{projectName}}'}</h1>
+        <p><small>Rendered at: ${data?.timestamp ?? '—'}</small></p>
         <nav>
           <litro-link href="/blog">Go to Blog →</litro-link>
         </nav>

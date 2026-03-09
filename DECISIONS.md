@@ -94,6 +94,20 @@ Running log of architectural and implementation decisions. All agents append her
 
 ---
 
+## LitroLink: `static override properties` instead of `@property()` field decorators
+
+**Decision**: `LitroLink` declares `href`, `target`, and `rel` via `static override properties = { ... }` plus plain field initializers (`href = ''`), NOT `@property()` on plain fields.
+
+**Rationale**: Vite 5 uses esbuild 0.21+ which applies the TC39 Stage 3 decorator transform to client bundles. In that transform, `@property()` only handles `accessor` fields (`accessor href = ''`); applied to a plain field (`href = ''`) it is silently dropped and the field is never added to `observedAttributes`. As a result, `this.href` stays `''` forever regardless of the HTML attribute, breaking all link navigation silently.
+
+`accessor` fields are also problematic: Lit's TC39 `init` function fires during instance construction before `elementProperties` is populated, causing a runtime crash ("Cannot read properties of undefined (reading 'has')").
+
+`static override properties` is read by Lit in `finalize()`, called from the `observedAttributes` getter when `customElements.define()` runs — before any instances are created. This works correctly under both legacy experimental decorators (Nitro/SSR esbuild) and TC39 Stage 3 (Vite client build).
+
+**Corollary — template pages**: Page components should NOT use `@state() declare serverData: T | null` to narrow the inherited `serverData: unknown` type. The `declare` modifier emits no runtime code but causes jiti's oxc-transform to throw "Fields with the 'declare' modifier cannot be initialized here" in SSG mode. Instead, use a local type cast in `render()`: `const data = this.serverData as T | null`.
+
+---
+
 ## Replaced `@vaadin/router` with `LitroRouter` (URLPattern API)
 
 **Decision**: Remove `@vaadin/router` (deprecated) as a dependency. Replace with a thin built-in router class (`packages/framework/src/runtime/litro-router.ts`) built on the native `URLPattern` web API.
@@ -266,6 +280,27 @@ Without `base: '/_litro/'`, Vite uses `"/"` and all `<link rel="modulepreload">`
 **Symptom**: Dynamic routes (e.g. `/blog/hello-world`) show "Loading…" indefinitely and the JS console shows the MIME type error. Two network requests are visible for the slug path — one HTML page response and one failed module preload.
 
 **Also fixed**: `pages/blog/[slug].ts` in the fullstack recipe was extending `LitElement` directly instead of `LitroPage`. Without `LitroPage`, client-side SPA navigation to a different slug does not call `fetchData()`, so `serverData` is never updated after the initial load.
+
+---
+
+## LitroOutlet: plain getter/setter for `routes`, not a Lit reactive property
+
+**Decision**: Replace `@property({ type: Array }) routes: Route[] = []` with a plain getter/setter on `LitroOutlet` that calls `router.setRoutes()` directly when the router is already initialised. The property is NOT declared as a Lit reactive property.
+
+**Rationale**:
+
+The timing sequence when `app.ts` loads:
+1. Importing `LitroOutlet.js` calls `customElements.define()`, which immediately upgrades the SSR'd `<litro-outlet>` element already in the DOM
+2. Lit schedules the first update as a **microtask**
+3. `app.ts` registers a `DOMContentLoaded` listener (a macrotask)
+4. The microtask fires → `firstUpdated()` runs with `routes = []` → router initialised with no routes
+5. `DOMContentLoaded` fires → `outlet.routes = routes` — but the router never receives them
+
+The `updated()` lifecycle hook was considered but rejected: Lit's `createProperty()` installs an accessor that calls `requestUpdate()`, scheduling a render cycle. `firstUpdated()` removes all children (including Lit's internal ChildPart marker nodes) so the router owns the subtree. Any subsequent Lit render cycle crashes with "ChildPart has no parentNode".
+
+A plain getter/setter fixes both problems without touching Lit's render pipeline: the setter forwards route changes directly to the router if it exists, with no `requestUpdate()` call. Since `LitroOutlet` has no render output and routes are never set via HTML attribute, Lit's reactive property system is not needed.
+
+**Also fixed**: `app.ts` (in the fullstack recipe template and in `playground/`) updated to set `outlet.routes` synchronously after imports, before any async task boundary. Module scripts are deferred by the browser, so by the time they execute the DOM is fully parsed and `<litro-outlet>` is present. Setting routes synchronously ensures `firstUpdated()` sees the real route table before the first Lit update microtask fires.
 
 ---
 

@@ -32,7 +32,7 @@
  */
 
 import { LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 // LitroRouter accesses `window` at runtime. We only import the TYPE here
 // (erased at runtime); the value is loaded lazily via a dynamic import inside
 // firstUpdated() so the module is never evaluated in Node.js.
@@ -52,15 +52,41 @@ export class LitroOutlet extends LitElement {
    * The array of Route objects. Set by the client entry after
    * routes.generated.ts is imported.
    *
+   * Plain getter/setter — NOT a Lit reactive property (@property / static
+   * properties). Routes are always assigned programmatically, never via an
+   * HTML attribute, so Lit's reactive property system is not needed here.
+   *
+   * Why not a Lit reactive property: Lit's createProperty() installs its own
+   * accessor that calls requestUpdate(), scheduling a render cycle. But
+   * firstUpdated() clears all children (including Lit's internal ChildPart
+   * marker nodes) so the router can own the element's subtree. Any subsequent
+   * render cycle crashes with "ChildPart has no parentNode". The plain setter
+   * forwards route changes directly to the router without touching Lit's
+   * render pipeline.
+   *
    * Example:
    *   [
    *     { path: '/', component: 'page-home', action: async () => { await import('./pages/index.js'); } },
    *     { path: '/about', component: 'page-about', action: async () => { await import('./pages/about.js'); } },
    *   ]
    */
-  @property({ type: Array }) routes: Route[] = [];
-
+  private _routes: Route[] = [];
   private router?: LitroRouter;
+
+  get routes(): Route[] {
+    return this._routes;
+  }
+
+  set routes(value: Route[]) {
+    this._routes = value;
+    // If the router is already initialised (i.e. routes arrived after
+    // firstUpdated()), forward them immediately. This handles the timing race
+    // where app.ts sets outlet.routes inside a DOMContentLoaded callback that
+    // fires after Lit's first-update microtask.
+    if (this.router) {
+      this.router.setRoutes(value);
+    }
+  }
 
   /**
    * Mount the router after the first render.
@@ -85,7 +111,7 @@ export class LitroOutlet extends LitElement {
       this.removeChild(this.lastChild);
     }
     this.router = new LitroRouter(this);
-    this.router.setRoutes(this.routes);
+    this.router.setRoutes(this._routes);
   }
 }
 
