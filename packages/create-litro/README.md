@@ -5,24 +5,24 @@ Scaffold a new [Litro](https://github.com/beatzball/litro) app.
 ## Usage
 
 ```bash
-npm create litro@latest my-app
+npm create @beatzball/litro@latest my-app
 # or
-pnpm create litro my-app
+pnpm create @beatzball/litro my-app
 # or
-yarn create litro my-app
+yarn create @beatzball/litro my-app
 ```
 
 Follow the interactive prompts to choose a recipe and rendering mode, or pass flags directly to skip them:
 
 ```bash
 # Fullstack SSR app (default)
-npm create litro@latest my-app --recipe fullstack --mode ssr
+npm create @beatzball/litro@latest my-app --recipe fullstack --mode ssr
 
 # 11ty-compatible blog (SSG or SSR)
-npm create litro@latest my-app --recipe 11ty-blog --mode ssg
+npm create @beatzball/litro@latest my-app --recipe 11ty-blog --mode ssg
 
 # List all available recipes
-npm create litro@latest -- --list-recipes
+npm create @beatzball/litro@latest -- --list-recipes
 ```
 
 ## Recipes

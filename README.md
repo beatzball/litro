@@ -7,7 +7,7 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
 - **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
-- **Recipe-based scaffolding** — `fullstack` and `11ty-blog` recipes via `npm create litro`
+- **Recipe-based scaffolding** — `fullstack` and `11ty-blog` recipes via `npm create @beatzball/litro`
 - **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
 - **Any deployment target** — Node.js, Cloudflare Workers, Vercel Edge, static — via Nitro adapters
@@ -21,13 +21,13 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 ```
 litro/
   packages/
-    framework/        ← npm package: litro
-    litro-router/     ← npm package: litro-router (standalone, zero-dependency)
-    create-litro/     ← npm create litro (scaffolding)
+    framework/        ← npm package: @beatzball/litro
+    litro-router/     ← npm package: @beatzball/litro-router (standalone, zero-dependency)
+    create-litro/     ← npm create @beatzball/litro (scaffolding)
   playground/         ← test app
 ```
 
-`litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).
+`@beatzball/litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).
 
 ---
 
@@ -41,9 +41,9 @@ litro/
 git clone <this-repo> litro
 cd litro
 pnpm install
-pnpm --filter litro-router build   # compiles packages/litro-router → dist/
-pnpm --filter litro build          # compiles packages/framework → dist/
-pnpm --filter create-litro build   # compiles packages/create-litro → dist/
+pnpm --filter @beatzball/litro-router build   # compiles packages/litro-router → dist/
+pnpm --filter @beatzball/litro build          # compiles packages/framework → dist/
+pnpm --filter @beatzball/create-litro build   # compiles packages/create-litro → dist/
 ```
 
 **Step 2 — scaffold your app:**
@@ -104,8 +104,8 @@ The `11ty-blog` recipe also includes a Markdown content layer:
 ```bash
 # Install dependencies and build the framework
 pnpm install
-pnpm --filter litro-router build
-pnpm --filter litro build
+pnpm --filter @beatzball/litro-router build
+pnpm --filter @beatzball/litro build
 
 # Start the dev server from the playground directory
 cd playground
@@ -368,13 +368,13 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 ## Development
 
 ```bash
-pnpm install                          # install all workspace deps
-pnpm --filter litro-router build      # compile litro-router (required once)
-pnpm --filter litro build             # compile framework (required once)
-pnpm --filter litro-router test       # run router unit tests (16 tests)
-pnpm --filter litro test              # run framework unit tests (174 tests)
-pnpm --filter create-litro test       # run scaffolding tests (11 tests)
-pnpm --filter litro dev               # watch-compile framework
+pnpm install                                    # install all workspace deps
+pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
+pnpm --filter @beatzball/litro build            # compile framework (required once)
+pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
+pnpm --filter @beatzball/litro test             # run framework unit tests (174 tests)
+pnpm --filter @beatzball/create-litro test      # run scaffolding tests (11 tests)
+pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 cd playground
 litro dev                       # start dev server on :3030

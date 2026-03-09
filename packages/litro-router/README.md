@@ -8,7 +8,7 @@ Zero-dependency client-side router for web components, built on the native [URLP
 - **SSR safe** — no module-eval side effects; can be dynamically imported, never crashes Node.js
 - **Framework agnostic** — works with any web component library (Lit, FAST, plain `HTMLElement`, etc.)
 
-This package is also built into the [Litro](https://github.com/beatzball/litro) fullstack framework — if you are using Litro you already have it and do not need to install it separately.
+This package is also built into the [@beatzball/litro](https://github.com/beatzball/litro) fullstack framework — if you are using Litro you already have it and do not need to install it separately.
 
 ---
 
@@ -21,9 +21,9 @@ This package is also built into the [Litro](https://github.com/beatzball/litro) 
 ## Installation
 
 ```bash
-npm install litro-router
+npm install @beatzball/litro-router
 # or
-pnpm add litro-router
+pnpm add @beatzball/litro-router
 ```
 
 ---
@@ -31,7 +31,7 @@ pnpm add litro-router
 ## Quick start
 
 ```typescript
-import { LitroRouter } from 'litro-router';
+import { LitroRouter } from '@beatzball/litro-router';
 
 // 1. Provide an outlet element — the router swaps its children on navigation
 const outlet = document.querySelector('#outlet')!;
@@ -149,7 +149,7 @@ If the element that the router mounts has an `onBeforeEnter` method, the router 
 ```typescript
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { LitroLocation } from 'litro-router';
+import type { LitroLocation } from '@beatzball/litro-router';
 
 @customElement('page-blog-post')
 class BlogPostPage extends LitElement {
@@ -187,14 +187,14 @@ For explicit SPA navigation use one of the following:
 `litro-router` accesses `window`, `history`, `document`, and `location` at **call time** (inside methods), not at module evaluation time. This means it is safe to import the module types in server code:
 
 ```typescript
-import type { Route, LitroLocation } from 'litro-router'; // type-only: safe on server
+import type { Route, LitroLocation } from '@beatzball/litro-router'; // type-only: safe on server
 ```
 
 The `LitroRouter` class itself must only be instantiated in the browser. The recommended pattern is a dynamic import inside a client-only lifecycle hook:
 
 ```typescript
 override async firstUpdated() {
-  const { LitroRouter } = await import('litro-router');
+  const { LitroRouter } = await import('@beatzball/litro-router');
   const router = new LitroRouter(this);
   router.setRoutes(this.routes);
 }
