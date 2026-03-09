@@ -1,7 +1,7 @@
 ---
-"@beatzball/litro": major
-"@beatzball/litro-router": major
-"@beatzball/create-litro": major
+"@beatzball/litro": minor
+"@beatzball/litro-router": minor
+"@beatzball/create-litro": minor
 ---
 
 Rename all packages to `@beatzball` scope. The unscoped `litro` package was blocked by npm's name-similarity protection (too close to `lit`, `listr`, etc.). All three packages are now published under the `@beatzball` org scope:
