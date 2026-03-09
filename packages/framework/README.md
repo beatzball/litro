@@ -23,7 +23,7 @@ Full documentation, quick start, and API reference are in the [repository README
 
 ```bash
 # Scaffold a new app (once published to npm)
-npm create litro@latest my-app
+npm create @beatzball/litro@latest my-app
 cd my-app
 npm install
 npm run dev
@@ -35,9 +35,9 @@ npm run dev
 
 | Package | Description |
 |---|---|
-| `litro` | This package — core framework |
-| [`litro-router`](https://www.npmjs.com/package/litro-router) | Standalone URLPattern router (zero dependencies) |
-| `create-litro` | `npm create litro` scaffolding CLI |
+| `@beatzball/litro` | This package — core framework |
+| [`@beatzball/litro-router`](https://www.npmjs.com/package/@beatzball/litro-router) | Standalone URLPattern router (zero dependencies) |
+| `@beatzball/create-litro` | `npm create @beatzball/litro` scaffolding CLI |
 
 ---
 

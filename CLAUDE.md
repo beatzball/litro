@@ -61,7 +61,7 @@ litro/
         vite/         ← Vite plugins
         runtime/      ← Client-side runtime (router bootstrap, hydration)
         cli/          ← litro dev/build/preview commands
-    create-litro/     ← Scaffolding CLI (npm create litro)
+    create-litro/     ← Scaffolding CLI (npm create @beatzball/litro)
   playground/         ← Test app using the framework locally
   research/           ← Research agent findings (R-1 through R-4)
 ```
@@ -169,7 +169,7 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
 - Recipe system + content layer: complete (11ty-blog recipe, `litro:content` virtual module)
-- Tests: 171/171 passing across all packages
+- Tests: 201/201 passing across all packages
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -192,9 +192,9 @@ Verified working:
 - SSG navigation fix — `playground-11ty` pages use plain `<a>` tags so each navigation fetches fresh pre-rendered HTML with correct `__litro_data__`
 
 Test breakdown:
-- `packages/litro-router`: 14 tests
-- `packages/framework`: 149 tests
-- `packages/create-litro`: 8 tests
+- `packages/litro-router`: 16 tests
+- `packages/framework`: 174 tests
+- `packages/create-litro`: 11 tests
 
 Pending:
 - SSG mode (`LITRO_MODE=static`) not yet field-tested with content layer
