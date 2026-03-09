@@ -94,6 +94,20 @@ Running log of architectural and implementation decisions. All agents append her
 
 ---
 
+## LitroLink: `static override properties` instead of `@property()` field decorators
+
+**Decision**: `LitroLink` declares `href`, `target`, and `rel` via `static override properties = { ... }` plus plain field initializers (`href = ''`), NOT `@property()` on plain fields.
+
+**Rationale**: Vite 5 uses esbuild 0.21+ which applies the TC39 Stage 3 decorator transform to client bundles. In that transform, `@property()` only handles `accessor` fields (`accessor href = ''`); applied to a plain field (`href = ''`) it is silently dropped and the field is never added to `observedAttributes`. As a result, `this.href` stays `''` forever regardless of the HTML attribute, breaking all link navigation silently.
+
+`accessor` fields are also problematic: Lit's TC39 `init` function fires during instance construction before `elementProperties` is populated, causing a runtime crash ("Cannot read properties of undefined (reading 'has')").
+
+`static override properties` is read by Lit in `finalize()`, called from the `observedAttributes` getter when `customElements.define()` runs — before any instances are created. This works correctly under both legacy experimental decorators (Nitro/SSR esbuild) and TC39 Stage 3 (Vite client build).
+
+**Corollary — template pages**: Page components should NOT use `@state() declare serverData: T | null` to narrow the inherited `serverData: unknown` type. The `declare` modifier emits no runtime code but causes jiti's oxc-transform to throw "Fields with the 'declare' modifier cannot be initialized here" in SSG mode. Instead, use a local type cast in `render()`: `const data = this.serverData as T | null`.
+
+---
+
 ## Replaced `@vaadin/router` with `LitroRouter` (URLPattern API)
 
 **Decision**: Remove `@vaadin/router` (deprecated) as a dependency. Replace with a thin built-in router class (`packages/framework/src/runtime/litro-router.ts`) built on the native `URLPattern` web API.

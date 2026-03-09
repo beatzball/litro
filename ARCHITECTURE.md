@@ -383,7 +383,7 @@ interface LitroLocation {
 
 ### Server-side safety
 
-`litro-router.ts` does not access `window`, `history`, or `document` at module evaluation time. The dynamic import in `LitroOutlet.firstUpdated()` and `LitroLink.handleClick()` ensures the module is never evaluated in Node.js. No Rollup stub plugin is needed (unlike the former `@vaadin/router` approach).
+`litro-router.ts` does not access `window`, `history`, or `document` at module evaluation time. The dynamic import in `LitroOutlet.firstUpdated()` and `LitroLink._clickHandler()` ensures the module is never evaluated in Node.js. No Rollup stub plugin is needed (unlike the former `@vaadin/router` approach).
 
 ### TypeScript types
 
