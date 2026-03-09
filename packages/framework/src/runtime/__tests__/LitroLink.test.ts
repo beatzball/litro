@@ -6,7 +6,7 @@
  * critical logic under test.
  *
  * Testing approach:
- *   - Mock `litro-router` so LitroRouter.go() is a spy function.
+ *   - Mock `@beatzball/litro-router` so LitroRouter.go() is a spy function.
  *   - Register LitroLink with customElements.define() so jsdom can instantiate it.
  *   - Call the private handleClick() method directly via type cast — this avoids
  *     the complexity of simulating full Lit rendering and shadow DOM events.
@@ -22,14 +22,14 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 // Mock litro-router before importing LitroLink.
 //
 // LitroLink.handleClick() does:
-//   void import('litro-router').then(({ LitroRouter }) => LitroRouter.go(this.href));
+//   void import('@beatzball/litro-router').then(({ LitroRouter }) => LitroRouter.go(this.href));
 //
 // We intercept this dynamic import so LitroRouter.go() becomes a vi.fn() spy.
 // ---------------------------------------------------------------------------
 
 const goSpy = vi.fn();
 
-vi.mock('litro-router', () => ({
+vi.mock('@beatzball/litro-router', () => ({
   LitroRouter: {
     go: goSpy,
   },

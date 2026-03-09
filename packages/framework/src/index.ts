@@ -35,10 +35,10 @@ export const version = '0.0.1';
 // building the client bundle.
 //
 // Server-only imports:
-//   createPageHandler → import from 'litro/runtime/create-page-handler.js'
-//   renderToStream    → import from 'litro/runtime/ssr.js'
-//   ssgPlugin         → import from 'litro/plugins/ssg'
-//   ssgPreset/ssrPreset → import from 'litro/config'
+//   createPageHandler → import from '@beatzball/litro/runtime/create-page-handler.js'
+//   renderToStream    → import from '@beatzball/litro/runtime/ssr.js'
+//   ssgPlugin         → import from '@beatzball/litro/plugins/ssg'
+//   ssgPreset/ssrPreset → import from '@beatzball/litro/config'
 
 export { definePageData, getServerData } from './runtime/page-data.js';
 export { LitroPage, LitroPageMixin } from './runtime/LitroPage.js';

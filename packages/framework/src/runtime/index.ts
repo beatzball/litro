@@ -1,7 +1,7 @@
 /**
  * Litro runtime — public API barrel
  *
- * This is the entry point for `import ... from 'litro/runtime'`.
+ * This is the entry point for `import ... from '@beatzball/litro/runtime'`.
  *
  * NOTE: This barrel re-exports client-side modules that import litro-router.
  * It must NOT be imported in server-side (Nitro/Node.js) code paths.
@@ -28,4 +28,4 @@ export { LitroPage, LitroPageMixin } from './LitroPage.js';
 
 // Re-export the Route type so consumers don't need a direct litro-router
 // dependency just to type their route arrays.
-export type { Route, LitroLocation } from 'litro-router';
+export type { Route, LitroLocation } from '@beatzball/litro-router';

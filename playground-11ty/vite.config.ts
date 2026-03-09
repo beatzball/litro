@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import litroContentPlugin from 'litro/vite';
+import litroContentPlugin from '@beatzball/litro/vite';
 
 export default defineConfig({
   plugins: [litroContentPlugin()],

@@ -4,7 +4,7 @@
  * Usage in nitro.config.ts:
  *
  *   import { ssgPreset, ssrPreset } from '../packages/framework/src/config/presets.js';
- *   // or from 'litro/config' once the package is built
+ *   // or from '@beatzball/litro/config' once the package is built
  *
  *   const mode = process.env.LITRO_MODE ?? 'server'; // 'static' | 'server'
  *

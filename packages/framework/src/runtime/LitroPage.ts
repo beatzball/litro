@@ -39,7 +39,7 @@
 import { LitElement } from 'lit';
 import { state } from 'lit/decorators.js';
 import { getServerData } from './page-data.js';
-import type { LitroLocation } from 'litro-router';
+import type { LitroLocation } from '@beatzball/litro-router';
 
 // Generic constructor constraint used by the mixin pattern.
 type Constructor<T = LitElement> = new (...args: any[]) => T;

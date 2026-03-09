@@ -1,7 +1,7 @@
 import { html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { LitroPage } from 'litro/runtime';
-import { definePageData } from 'litro';
+import { LitroPage } from '@beatzball/litro/runtime';
+import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
 

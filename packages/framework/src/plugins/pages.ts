@@ -142,7 +142,7 @@ function generateClientRoutes(routes: LitroRoute[], rootDir: string): string {
 // This file is consumed by the Litro client bootstrap (app.ts).
 // Re-generated on every build.
 
-import type { Route } from 'litro/runtime';
+import type { Route } from '@beatzball/litro/runtime';
 
 export const routes: Route[] = [
 ${routeLines}
@@ -216,7 +216,7 @@ async function writeServerManifest(rootDir: string, content: string): Promise<vo
  * Registered as a Nitro build-time plugin via `plugins` in nitro.config.ts:
  *
  *   import pagesPlugin from './plugins/pages';
- *   // or from 'litro/plugins' once the package is built
+ *   // or from '@beatzball/litro/plugins' once the package is built
  *
  *   export default defineNitroConfig({
  *     plugins: ['./plugins/vite-dev.ts', pagesPlugin],
