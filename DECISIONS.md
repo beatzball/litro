@@ -246,3 +246,22 @@ The physical stub (`server/stubs/litro-content.js`) is generated at build time b
 **Rationale**: The `playground-11ty` app uses the `11ty-blog` recipe in SSG mode. Each page's server data (post list, individual post body) is injected by the static renderer into a `__litro_data__` script tag. If navigation between pages were handled client-side by `LitroRouter` (via `<litro-link>`), the router would mount the new page component without a server round-trip — but the `__litro_data__` tag is from the original page, causing `serverData = null` on the new page and a "Loading…" display that never resolves.
 
 Plain `<a>` links cause a full browser navigation, loading the pre-rendered HTML for the destination page. That HTML contains the correct `__litro_data__` for that page, so `serverData` is populated correctly on every load. This is the correct navigation model for SSG sites.
+
+---
+
+## Release pipeline: Changesets + GitHub Actions
+
+**Decision**: Use [Changesets](https://github.com/changesets/changesets) (`@changesets/cli`) for version management, changelog generation, and automated npm publishing via `changesets/action` in GitHub Actions.
+
+**Rationale**:
+
+1. **Monorepo-native**: Changesets is designed for pnpm/npm workspaces with multiple independent packages. It handles per-package version bumps and per-package `CHANGELOG.md` generation without coupling packages together.
+2. **Internal dep cascade**: `updateInternalDependencies: "patch"` in `.changeset/config.json` ensures that when `litro-router` is bumped, `litro` (which depends on it via `workspace:*`) automatically gets a patch bump — consumers always get a consistent set of packages.
+3. **PR-based release flow**: The `changesets/action` GitHub Action opens a "Version Packages" PR when changesets are pending, giving maintainers a human review point before any publish. Merging that PR triggers the actual npm publish and GitHub Release creation.
+4. **Explicit changelog authorship**: Contributors write changeset summaries at PR time rather than relying on commit message parsing. This produces more readable changelogs than automated commit-scraping tools (e.g. semantic-release).
+5. **GitHub Releases**: `createGithubReleases: true` in the action config automatically creates a tagged GitHub Release per package publish, using the changelog content as release notes.
+
+**Configuration**:
+- `.changeset/config.json` — `access: "public"`, `baseBranch: "main"`, `linked: []` (packages version independently)
+- `.github/workflows/release.yml` — triggers on push to `main`; requires `NPM_TOKEN` secret
+- Root `package.json` scripts: `changeset`, `version-packages`, `release`
