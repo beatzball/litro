@@ -14,7 +14,7 @@
     "generate": "litro generate"
   },
   "dependencies": {
-    "litro": "workspace:*",
+    "@beatzball/litro": "workspace:*",
     "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",

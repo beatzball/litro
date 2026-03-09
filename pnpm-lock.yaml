@@ -32,6 +32,9 @@ importers:
 
   packages/framework:
     dependencies:
+      '@beatzball/litro-router':
+        specifier: workspace:*
+        version: link:../litro-router
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
@@ -56,9 +59,6 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.3.2
-      litro-router:
-        specifier: workspace:*
-        version: link:../litro-router
       nitropack:
         specifier: ^2.13.1
         version: 2.13.1
@@ -108,6 +108,9 @@ importers:
 
   playground:
     dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
@@ -120,9 +123,6 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.3.2
-      litro:
-        specifier: workspace:*
-        version: link:../packages/framework
     devDependencies:
       nitropack:
         specifier: ^2.10.4
@@ -136,6 +136,9 @@ importers:
 
   playground-11ty:
     dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
@@ -148,9 +151,6 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.3.2
-      litro:
-        specifier: workspace:*
-        version: link:../packages/framework
     devDependencies:
       nitropack:
         specifier: ^2.10.4

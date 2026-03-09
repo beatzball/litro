@@ -23,8 +23,8 @@
  */
 
 import { defineEventHandler, setResponseHeader, getRequestURL } from 'h3';
-import { createPageHandler } from 'litro/runtime/create-page-handler.js';
-import type { LitroRoute } from 'litro';
+import { createPageHandler } from '@beatzball/litro/runtime/create-page-handler.js';
+import type { LitroRoute } from '@beatzball/litro';
 import { routes, pageModules } from '#litro/page-manifest';
 
 // ---------------------------------------------------------------------------

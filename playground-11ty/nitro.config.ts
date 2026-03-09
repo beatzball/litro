@@ -1,10 +1,10 @@
 import { defineNitroConfig } from 'nitropack/config';
 import type { Nitro } from 'nitropack';
 import { resolve } from 'node:path';
-import { ssrPreset, ssgPreset } from 'litro/config';
-import pagesPlugin from 'litro/plugins';
-import ssgPlugin from 'litro/plugins/ssg';
-import contentPlugin from 'litro/content/plugin';
+import { ssrPreset, ssgPreset } from '@beatzball/litro/config';
+import pagesPlugin from '@beatzball/litro/plugins';
+import ssgPlugin from '@beatzball/litro/plugins/ssg';
+import contentPlugin from '@beatzball/litro/content/plugin';
 
 const mode = process.env.LITRO_MODE ?? 'server';
 

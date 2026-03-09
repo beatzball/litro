@@ -12,7 +12,7 @@
     "generate": "litro generate"
   },
   "dependencies": {
-    "litro": "latest",
+    "@beatzball/litro": "latest",
     "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",

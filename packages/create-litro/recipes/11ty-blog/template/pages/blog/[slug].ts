@@ -1,8 +1,8 @@
 import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement, state } from 'lit/decorators.js';
-import { LitroPage } from 'litro/runtime';
-import { definePageData } from 'litro';
+import { LitroPage } from '@beatzball/litro/runtime';
+import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import type { Post } from 'litro:content';
 import { getPost, getPosts } from 'litro:content';

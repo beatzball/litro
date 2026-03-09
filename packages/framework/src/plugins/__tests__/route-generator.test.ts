@@ -46,7 +46,7 @@ function generateManifestModule(routes: LitroRoute[]): string {
 // This is the #litro/page-manifest virtual module.
 // It is re-generated on every build and dev-reload.
 
-import type { LitroRoute } from 'litro/types';
+import type { LitroRoute } from '@beatzball/litro/types';
 
 export const routes: LitroRoute[] = ${routesJson};
 
@@ -76,7 +76,7 @@ function generateClientRoutes(routes: LitroRoute[], rootDir: string): string {
 // This file is consumed by the Litro client bootstrap (app.ts).
 // Re-generated on every build.
 
-import type { Route } from 'litro/runtime';
+import type { Route } from '@beatzball/litro/runtime';
 
 export const routes: Route[] = [
 ${routeLines}
@@ -107,7 +107,7 @@ describe('generateManifestModule — virtual module source', () => {
   });
 
   it('imports LitroRoute from litro/types', () => {
-    expect(source).toContain("import type { LitroRoute } from 'litro/types'");
+    expect(source).toContain("import type { LitroRoute } from '@beatzball/litro/types'");
   });
 
   it('includes the @generated header comment', () => {
@@ -185,7 +185,7 @@ describe('generateClientRoutes — litro/runtime Route[] format', () => {
   const source = generateClientRoutes(routes, ROOT_DIR);
 
   it('imports Route type from litro/runtime', () => {
-    expect(source).toContain("import type { Route } from 'litro/runtime'");
+    expect(source).toContain("import type { Route } from '@beatzball/litro/runtime'");
   });
 
   it('exports a `routes` array typed as Route[]', () => {
