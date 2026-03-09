@@ -400,6 +400,38 @@ PORT=4000 node dist/server/server/index.mjs  # run production server
 
 ---
 
+## Contributing
+
+### Making a change
+
+1. Fork the repo, create a branch, make your changes.
+2. If your change is user-facing (bug fix, new feature, breaking change), add a changeset:
+   ```bash
+   pnpm changeset
+   # Select which packages changed, pick the semver bump type, write a short summary.
+   # Commit the generated .changeset/<name>.md file with your PR.
+   ```
+   Internal changes (docs, tests, tooling) don't need a changeset.
+3. Open a PR against `main`. CI runs tests, build, and a dependency audit automatically.
+
+### Release workflow
+
+Releases are fully automated via [Changesets](https://github.com/changesets/changesets):
+
+- When a PR with a `.changeset/*.md` file is merged to `main`, a bot opens a **"Version Packages"** PR that bumps `package.json` versions and updates each package's `CHANGELOG.md`.
+- When that PR is merged, the release workflow publishes changed packages to npm and creates GitHub Releases.
+- `litro-router` bumps automatically propagate a patch bump to `litro` (internal dep cascade).
+
+**Release scripts (maintainers):**
+
+```bash
+pnpm changeset          # create a changeset interactively
+pnpm version-packages   # apply pending changesets → bump versions + write CHANGELOGs
+pnpm release            # build all packages and publish to npm
+```
+
+---
+
 ## License
 
 Apache License 2.0 — see [LICENSE](./LICENSE) for the full text.

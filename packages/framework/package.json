@@ -2,6 +2,15 @@
   "name": "litro",
   "version": "0.0.1",
   "description": "Litro — fullstack Lit framework powered by Nitro",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beatzball/litro.git",
+    "directory": "packages/framework"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

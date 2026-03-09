@@ -2,6 +2,15 @@
   "name": "create-litro",
   "version": "0.0.1",
   "description": "Create a new Litro app",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beatzball/litro.git",
+    "directory": "packages/create-litro"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "bin": {
     "create-litro": "./dist/src/index.js"
