@@ -1,5 +1,11 @@
 # create-litro
 
+## 0.1.2
+
+### Patch Changes
+
+- 19f4909: Fix recipe templates using unscoped `litro/runtime/...` imports instead of `@beatzball/litro/runtime/...`, and bump `nitropack` devDependency to `^2.13.1`.
+
 ## 0.1.1
 
 ### Patch Changes
