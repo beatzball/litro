@@ -56,6 +56,8 @@ switch (command) {
     // the pre-built file is the reliable fallback.
     const distClientApp = join(cwd, 'dist', 'client', 'app.js');
     if (!existsSync(distClientApp)) {
+      console.log('[litro] Scanning pages...');
+      await scanAndWriteClientRoutes(cwd);
       console.log('[litro] Building client bundle...');
       const binPath = join(cwd, 'node_modules', '.bin');
       const pathSep = process.platform === 'win32' ? ';' : ':';
