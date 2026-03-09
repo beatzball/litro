@@ -269,6 +269,27 @@ Without `base: '/_litro/'`, Vite uses `"/"` and all `<link rel="modulepreload">`
 
 ---
 
+## LitroOutlet: plain getter/setter for `routes`, not a Lit reactive property
+
+**Decision**: Replace `@property({ type: Array }) routes: Route[] = []` with a plain getter/setter on `LitroOutlet` that calls `router.setRoutes()` directly when the router is already initialised. The property is NOT declared as a Lit reactive property.
+
+**Rationale**:
+
+The timing sequence when `app.ts` loads:
+1. Importing `LitroOutlet.js` calls `customElements.define()`, which immediately upgrades the SSR'd `<litro-outlet>` element already in the DOM
+2. Lit schedules the first update as a **microtask**
+3. `app.ts` registers a `DOMContentLoaded` listener (a macrotask)
+4. The microtask fires → `firstUpdated()` runs with `routes = []` → router initialised with no routes
+5. `DOMContentLoaded` fires → `outlet.routes = routes` — but the router never receives them
+
+The `updated()` lifecycle hook was considered but rejected: Lit's `createProperty()` installs an accessor that calls `requestUpdate()`, scheduling a render cycle. `firstUpdated()` removes all children (including Lit's internal ChildPart marker nodes) so the router owns the subtree. Any subsequent Lit render cycle crashes with "ChildPart has no parentNode".
+
+A plain getter/setter fixes both problems without touching Lit's render pipeline: the setter forwards route changes directly to the router if it exists, with no `requestUpdate()` call. Since `LitroOutlet` has no render output and routes are never set via HTML attribute, Lit's reactive property system is not needed.
+
+**Also fixed**: `app.ts` (in the fullstack recipe template and in `playground/`) updated to set `outlet.routes` synchronously after imports, before any async task boundary. Module scripts are deferred by the browser, so by the time they execute the DOM is fully parsed and `<litro-outlet>` is present. Setting routes synchronously ensures `firstUpdated()` sees the real route table before the first Lit update microtask fires.
+
+---
+
 ## Release pipeline: Changesets + GitHub Actions
 
 **Decision**: Use [Changesets](https://github.com/changesets/changesets) (`@changesets/cli`) for version management, changelog generation, and automated npm publishing via `changesets/action` in GitHub Actions.

@@ -10,11 +10,14 @@ import '@beatzball/litro/runtime/LitroLink.js';
 // emptyOutDir does not delete it between builds.
 import { routes } from './routes.generated.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const outlet = document.querySelector('litro-outlet') as (Element & { routes: unknown }) | null;
-  if (outlet) {
-    outlet.routes = routes;
-  } else {
-    console.warn('[litro] <litro-outlet> not found — router will not start.');
-  }
-});
+// Set routes synchronously. By the time this module-script executes (all
+// module scripts are deferred), the HTML is fully parsed and <litro-outlet>
+// is already in the DOM. Setting outlet.routes here — before Lit's first
+// update microtask fires — ensures firstUpdated() sees the real route table
+// rather than the empty default, so the router starts correctly.
+const outlet = document.querySelector('litro-outlet') as (Element & { routes: unknown }) | null;
+if (outlet) {
+  outlet.routes = routes;
+} else {
+  console.warn('[litro] <litro-outlet> not found — router will not start.');
+}
