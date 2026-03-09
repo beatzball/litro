@@ -28,18 +28,17 @@ import '@beatzball/litro/runtime/LitroLink.js';
 // emptyOutDir does not delete it, and it can be re-generated before vite build.
 import { routes } from './routes.generated.js';
 
-// Step 4 — initialize the router when the DOM is ready
-// We set .routes on the <litro-outlet> element rather than calling initRouter()
-// here so the element's own firstUpdated() lifecycle creates the Router instance
-// after the element is in the DOM.
-document.addEventListener('DOMContentLoaded', () => {
-  const outlet = document.querySelector('litro-outlet') as (Element & { routes: unknown }) | null;
-  if (outlet) {
-    outlet.routes = routes;
-  } else {
-    console.warn(
-      '[litro] DOMContentLoaded: no <litro-outlet> found in the document. ' +
-        'Make sure the HTML shell includes <litro-outlet></litro-outlet>.'
-    );
-  }
-});
+// Step 4 — initialize the router
+// Set .routes synchronously. Module scripts are deferred, so by the time this
+// executes the HTML is fully parsed and <litro-outlet> is in the DOM. Setting
+// routes here — before Lit's first update microtask fires — ensures
+// firstUpdated() sees the real route table, not the empty default.
+const outlet = document.querySelector('litro-outlet') as (Element & { routes: unknown }) | null;
+if (outlet) {
+  outlet.routes = routes;
+} else {
+  console.warn(
+    '[litro] no <litro-outlet> found in the document. ' +
+      'Make sure the HTML shell includes <litro-outlet></litro-outlet>.'
+  );
+}

@@ -77,10 +77,10 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
      * The page data, populated either from the server-injected script tag
      * (on SSR load) or from `fetchData()` (on client navigation).
      *
-     * Type is `unknown` at the mixin level; subclasses should narrow it:
-     * ```ts
-     * @state() declare serverData: MyDataShape | null;
-     * ```
+     * Type is `unknown` at the mixin level; subclasses narrow it with a local
+     * cast in render(): `const data = this.serverData as MyDataShape | null`.
+     * Do NOT use `@state() declare serverData` — the `declare` modifier causes
+     * jiti/oxc-transform to throw in SSG mode.
      */
     @state() serverData: unknown = null;
 
@@ -156,16 +156,15 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
  * ```ts
  * @customElement('page-home')
  * export class HomePage extends LitroPage {
- *   @state() declare serverData: { message: string } | null;
- *
  *   override async fetchData() {
  *     const res = await fetch('/api/hello');
  *     return res.json();
  *   }
  *
  *   render() {
+ *     const data = this.serverData as { message: string } | null;
  *     if (this.loading) return html`<p>Loading...</p>`;
- *     return html`<h1>${this.serverData?.message}</h1>`;
+ *     return html`<h1>${data?.message}</h1>`;
  *   }
  * }
  * ```
