@@ -12,9 +12,13 @@
     "prepare:11ty": "pnpm --filter litro-router build && pnpm --filter litro build",
     "test": "pnpm --filter litro test",
     "test:e2e": "playwright test",
-    "lint": "tsc --noEmit -p packages/framework/tsconfig.json"
+    "lint": "tsc --noEmit -p packages/framework/tsconfig.json",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm -r --filter \"./packages/*\" build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.12",
     "@playwright/test": "^1.48.0"
   },
   "engines": {
