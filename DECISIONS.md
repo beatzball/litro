@@ -249,6 +249,26 @@ Plain `<a>` links cause a full browser navigation, loading the pre-rendered HTML
 
 ---
 
+## `create-litro` fullstack recipe: `base: '/_litro/'` required in `vite.config.ts`
+
+**Decision**: Add `base: '/_litro/'` and `resolve.conditions` to the fullstack recipe's `vite.config.ts`, matching the playground and `11ty-blog` recipe.
+
+**Rationale**: Vite embeds the `base` URL into its compiled preload URL resolver at build time:
+
+```js
+const Ft = function(i) { return "/_litro/" + i }
+```
+
+Without `base: '/_litro/'`, Vite uses `"/"` and all `<link rel="modulepreload">` hints for dynamic import chunks resolve to `/assets/...` instead of `/_litro/assets/...`. The Nitro catch-all route handler matches those paths and returns HTML, causing the browser to reject the response with:
+
+> Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html".
+
+**Symptom**: Dynamic routes (e.g. `/blog/hello-world`) show "Loading…" indefinitely and the JS console shows the MIME type error. Two network requests are visible for the slug path — one HTML page response and one failed module preload.
+
+**Also fixed**: `pages/blog/[slug].ts` in the fullstack recipe was extending `LitElement` directly instead of `LitroPage`. Without `LitroPage`, client-side SPA navigation to a different slug does not call `fetchData()`, so `serverData` is never updated after the initial load.
+
+---
+
 ## Release pipeline: Changesets + GitHub Actions
 
 **Decision**: Use [Changesets](https://github.com/changesets/changesets) (`@changesets/cli`) for version management, changelog generation, and automated npm publishing via `changesets/action` in GitHub Actions.
