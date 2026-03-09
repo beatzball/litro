@@ -21,7 +21,7 @@
     "h3": "^1.13.0"
   },
   "devDependencies": {
-    "nitropack": "^2.10.4",
+    "nitropack": "^2.13.1",
     "vite": "^5.4.11",
     "typescript": "^5.7.3"
   }
