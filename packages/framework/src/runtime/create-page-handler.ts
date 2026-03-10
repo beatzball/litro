@@ -118,6 +118,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // <script type="application/json" id="__litro_data__">.
       const shell = buildShell(route.componentTag, '', {
         title: routeMeta?.title,
+        head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         serverDataJson,
         appScriptUrl,
       });
@@ -195,6 +196,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const appScriptUrl = '/_litro/app.js';
       const fallbackShell = buildShell(route.componentTag, '', {
         title: routeMeta?.title,
+        head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         appScriptUrl,
       });
 

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.output/
+.nitro/
+
+# Generated (overwritten on every build by the pages plugin)
+server/stubs/page-manifest.ts
+routes.generated.ts
+
+# TypeScript build info
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.env
+.env.*
+*.local

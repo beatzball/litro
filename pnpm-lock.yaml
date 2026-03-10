@@ -162,6 +162,34 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
 
+  playground-starlight:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
+      '@lit-labs/ssr':
+        specifier: ^3.3.0
+        version: 3.3.1
+      '@lit-labs/ssr-client':
+        specifier: ^1.1.7
+        version: 1.1.8
+      h3:
+        specifier: ^1.13.0
+        version: 1.15.5
+      lit:
+        specifier: ^3.2.1
+        version: 3.3.2
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
 packages:
 
   '@asamuzakjp/css-color@3.2.0':

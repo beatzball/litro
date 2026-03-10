@@ -7,7 +7,7 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
 - **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
-- **Recipe-based scaffolding** — `fullstack` and `11ty-blog` recipes via `npm create @beatzball/litro`
+- **Recipe-based scaffolding** — `fullstack`, `11ty-blog`, and `starlight` recipes via `npm create @beatzball/litro`
 - **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
 - **Any deployment target** — Node.js, Cloudflare Workers, Vercel Edge, static — via Nitro adapters
@@ -58,6 +58,9 @@ node /path/to/litro/packages/create-litro/dist/src/index.js my-app --recipe full
 # Non-interactive — 11ty-compatible blog, static output:
 node /path/to/litro/packages/create-litro/dist/src/index.js my-app --recipe 11ty-blog --mode ssg
 
+# Non-interactive — Starlight docs + blog, static output:
+node /path/to/litro/packages/create-litro/dist/src/index.js my-docs --recipe starlight
+
 # List all recipes:
 node /path/to/litro/packages/create-litro/dist/src/index.js --list-recipes
 ```
@@ -94,6 +97,15 @@ The `11ty-blog` recipe also includes a Markdown content layer:
 - `content/_data/metadata.js` — global site data
 - Pages that import from `litro:content` for post listing, individual posts, and tag filtering
 - `litro.recipe.json` — tells the content plugin where to find posts
+
+The `starlight` recipe scaffolds an Astro Starlight-inspired docs + blog site:
+- `content/docs/*.md` — documentation pages with sidebar ordering frontmatter
+- `content/blog/*.md` — blog posts (title, date, tags, description)
+- Layout components: `<starlight-page>`, `<starlight-header>`, `<starlight-sidebar>`, `<starlight-toc>`
+- UI components: `<sl-card>`, `<sl-card-grid>`, `<sl-badge>`, `<sl-aside>`, `<sl-tabs>`
+- `server/starlight.config.js` — site title, nav links, sidebar groups
+- `public/styles/starlight.css` — full `--sl-*` CSS token layer with dark/light mode
+- SSG-only (no `--mode` flag needed — hardcoded to `ssg`)
 
 ---
 
@@ -370,8 +382,8 @@ pnpm install                                    # install all workspace deps
 pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
 pnpm --filter @beatzball/litro build            # compile framework (required once)
 pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
-pnpm --filter @beatzball/litro test             # run framework unit tests (174 tests)
-pnpm --filter @beatzball/create-litro test      # run scaffolding tests (11 tests)
+pnpm --filter @beatzball/litro test             # run framework unit tests (182 tests)
+pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 cd playground

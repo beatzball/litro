@@ -1,0 +1,7 @@
+{
+  "recipe": "starlight",
+  "version": "{{recipeVersion}}",
+  "mode": "ssg",
+  "contentDir": "content",
+  "options": {}
+}
