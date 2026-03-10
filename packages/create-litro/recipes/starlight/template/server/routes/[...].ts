@@ -47,9 +47,11 @@ export default defineEventHandler(async (event) => {
   const { route: matched, params } = result;
   event.context.params = { ...event.context.params, ...params };
 
+  const mod = pageModules[matched.filePath];
   const handler = createPageHandler({
     route: matched,
-    pageModule: pageModules[matched.filePath],
+    routeMeta: (mod?.routeMeta as { title?: string; head?: string } | undefined),
+    pageModule: mod,
   });
   return handler(event);
 });
