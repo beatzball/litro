@@ -1,0 +1,26 @@
+{
+  "name": "{{projectName}}",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#litro/page-manifest": "./server/stubs/page-manifest.ts"
+  },
+  "scripts": {
+    "dev": "litro dev",
+    "build": "litro build",
+    "preview": "litro preview",
+    "generate": "litro generate"
+  },
+  "dependencies": {
+    "@beatzball/litro": "latest",
+    "lit": "^3.2.1",
+    "@lit-labs/ssr": "^3.3.0",
+    "@lit-labs/ssr-client": "^1.1.7",
+    "h3": "^1.13.0"
+  },
+  "devDependencies": {
+    "nitropack": "^2.13.1",
+    "vite": "^5.4.11",
+    "typescript": "^5.7.3"
+  }
+}

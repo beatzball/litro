@@ -168,8 +168,8 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
-- Recipe system + content layer: complete (11ty-blog recipe, `litro:content` virtual module)
-- Tests: 201/201 passing across all packages
+- Recipe system + content layer: complete (`fullstack`, `11ty-blog`, `starlight` recipes, `litro:content` virtual module)
+- Tests: 215/215 passing across all packages
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -181,21 +181,24 @@ Verified working:
 - Dev server (`litro dev`) — Vite middleware intercepts JS/TS requests; Nitro handles HTML and API
   - Auto-builds `dist/client/app.js` via `vite build` if it doesn't exist (needed because `dist/` is gitignored)
 - Default dev port: 3030 (custom port via `litro dev --port <n>`)
-- Preview server (`litro preview`) — `/_litro/app.js` and all client assets served correctly
+- Preview server (`litro preview`) — SSR builds served from `dist/server/server/index.mjs`; SSG builds served by built-in static file server from `dist/static/`
 - `litro build` — page scan runs before `vite build`; fresh routes always baked into client bundle
-- `create-litro` recipe system — `fullstack` and `11ty-blog` recipes, `{{placeholder}}` interpolation
+- `create-litro` recipe system — `fullstack`, `11ty-blog`, `starlight` recipes, `{{placeholder}}` interpolation
 - `litro:content` virtual module — Markdown content layer, 11ty-compatible frontmatter + data cascade
   - **Vite plugin** (`packages/framework/src/vite/index.ts`) returns a no-op browser stub (empty async functions) — real content is server-side only, delivered via `pageData` → `serverData`
   - **Nitro plugin** (`packages/framework/src/content/plugin.ts`) generates the real `ContentIndex` stub at `server/stubs/litro-content.js`
 - SSG plugin resolves `litro:content` via jiti alias so `generateRoutes()` can call content API
 - `LitroRouter` no longer intercepts plain `<a>` clicks — use `<litro-link>` for SPA navigation; plain `<a>` does full page reload
 - SSG navigation fix — `playground-11ty` pages use plain `<a>` tags so each navigation fetches fresh pre-rendered HTML with correct `__litro_data__`
+- `starlight` recipe — Astro Starlight-inspired docs+blog SSG site; `playground-starlight` workspace validates 11 prerendered routes
+- Hash-only `popstate` events (TOC/fragment links) no longer re-render pages — `LitroRouter` guards on `_lastPathname`
+- Scroll-to-hash after mount — `LitroRouter` traverses shadow DOM via `_findDeep()` to reach heading `id` attributes inside shadow roots
+- `routeMeta.head` injected into HTML shell via `buildShell()` — required for stylesheet links and FOUC-prevention scripts to reach the browser
 
 Test breakdown:
 - `packages/litro-router`: 16 tests
-- `packages/framework`: 174 tests
-- `packages/create-litro`: 11 tests
+- `packages/framework`: 182 tests
+- `packages/create-litro`: 17 tests
 
 Pending:
-- SSG mode (`LITRO_MODE=static`) not yet field-tested with content layer
 - Playwright e2e tests
