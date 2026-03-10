@@ -35,7 +35,10 @@ function run(
 ): ReturnType<typeof spawn> {
   const binPath = join(cwd, 'node_modules', '.bin');
   const pathSep = process.platform === 'win32' ? ';' : ':';
-  const child = spawn(cmd, cmdArgs, {
+  // Node.js v22 DEP0190: passing an args array with shell:true is deprecated.
+  // Join into a single command string instead.
+  const fullCmd = cmdArgs.length > 0 ? `${cmd} ${cmdArgs.join(' ')}` : cmd;
+  const child = spawn(fullCmd, {
     cwd,
     stdio: 'inherit',
     shell: true,
@@ -62,7 +65,7 @@ switch (command) {
       console.log('[litro] Building client bundle...');
       const binPath = join(cwd, 'node_modules', '.bin');
       const pathSep = process.platform === 'win32' ? ';' : ':';
-      spawnSync('vite', ['build'], {
+      spawnSync('vite build', {
         cwd,
         stdio: 'inherit',
         shell: true,

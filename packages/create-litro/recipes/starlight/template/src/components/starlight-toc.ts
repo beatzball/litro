@@ -110,7 +110,7 @@ export class StarlightToc extends LitElement {
 
   override render() {
     if (!this.entries.length) return html``;
-    const currentHash = location.hash;
+    const currentHash = typeof location !== 'undefined' ? location.hash : '';
     return html`
       <nav aria-label="On this page">
         <h2>On this page</h2>
