@@ -320,3 +320,39 @@ A plain getter/setter fixes both problems without touching Lit's render pipeline
 - `.changeset/config.json` — `access: "public"`, `baseBranch: "main"`, `linked: []` (packages version independently)
 - `.github/workflows/release.yml` — triggers on push to `main`; requires `NPM_TOKEN` secret
 - Root `package.json` scripts: `changeset`, `version-packages`, `release`
+
+---
+
+## LitroRouter: hash-only `popstate` guard and shadow-DOM scroll-to-hash
+
+**Decision**: `LitroRouter` skips re-rendering when only the hash changes on `popstate`, and actively scrolls to hash targets after mounting a new component.
+
+**Rationale**:
+
+The HTML spec fires `popstate` on every history navigation, including fragment-only changes (e.g. `<a href="#section">`). Before this change, TOC links that pushed a hash update via `history.pushState` would fire `popstate` → the router would re-render the current page → `getServerData()` would return `null` (the `<script type="application/json" id="__litro_data__">` tag was already consumed on first render) → `serverData = null` → the page displayed "Loading…".
+
+**Fix — hash guard**: `LitroRouter` tracks `_lastPathname`. The `popstate` listener skips `_resolve()` when `location.pathname === this._lastPathname`. This preserves SPA behaviour for pathname changes while leaving hash-only navigations to the browser.
+
+**Fix — scroll-to-hash**: After mounting a new component, if `location.hash` is set, `LitroRouter` waits for the component's `updateComplete` promise (if available) then calls `_scrollToHash()`. This handles the case where the page is loaded or navigated to with a hash in the URL.
+
+**Fix — shadow DOM traversal**: Heading elements rendered via `unsafeHTML` inside Lit shadow roots are not reachable by `document.getElementById()` or the browser's native fragment scrolling. `_findDeep(root, id)` recursively walks shadow roots via `el.shadowRoot` to find the target element. The same approach is used in `<starlight-toc>` for its click handler.
+
+**`<starlight-toc>` click handler**: TOC anchor clicks call `e.preventDefault()`, find the target via `_findDeep`, scroll to it smoothly, and push the hash via `history.pushState` (which does NOT fire `popstate`). This avoids re-rendering entirely.
+
+---
+
+## `litro preview` static file server for SSG builds
+
+**Decision**: `litro preview` detects `dist/static/` and serves it with a built-in Node.js HTTP server. If `dist/static/` is absent, it falls back to running `dist/server/server/index.mjs` (SSR build).
+
+**Rationale**: Nitro's SSG preset outputs prerendered HTML to `dist/static/` (not `dist/server/`). The previous `preview` command only handled SSR builds (`dist/server/server/index.mjs`), so `litro preview` after an SSG build exited with "No production build found". Adding a static branch makes `litro preview` work for both build modes without requiring users to know which preset was used.
+
+The static server implements clean-URL resolution (tries `path`, `path.html`, `path/index.html` in order) and a MIME type map for common web asset types, matching the behaviour of most static hosting platforms.
+
+---
+
+## `routeMeta.head` forwarding in `createPageHandler`
+
+**Decision**: Both `buildShell()` calls in `createPageHandler` (main SSR path and client-only fallback) must explicitly forward `head: routeMeta?.head`.
+
+**Rationale**: `buildShell()` accepts a `head` option for injecting arbitrary HTML into `<head>` — used by the starlight recipe to inject `<link rel="stylesheet" href="/styles/starlight.css">` and the FOUC-prevention inline `<script>`. The original implementation omitted `head` from both `buildShell()` calls, so the stylesheet and theme script were silently dropped from all SSR'd pages. The server route handler (`server/routes/[...].ts`) must also read `routeMeta` from `pageModules[matched.filePath]` and pass it to `createPageHandler`.

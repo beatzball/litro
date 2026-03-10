@@ -382,8 +382,8 @@ pnpm install                                    # install all workspace deps
 pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
 pnpm --filter @beatzball/litro build            # compile framework (required once)
 pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
-pnpm --filter @beatzball/litro test             # run framework unit tests (174 tests)
-pnpm --filter @beatzball/create-litro test      # run scaffolding tests (11 tests)
+pnpm --filter @beatzball/litro test             # run framework unit tests (182 tests)
+pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 cd playground
