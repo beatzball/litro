@@ -66,9 +66,8 @@ export class StarlightToc extends LitElement {
     .depth-3 a { padding-left: 1.5rem; }
     .depth-4 a { padding-left: 2.25rem; }
 
-    /* Active via :target — the heading's id matches the URL hash */
-    li:has(a:target) a,
-    li a:target {
+    /* Active via [aria-current] set by the click handler */
+    li a[aria-current='true'] {
       color: var(--sl-color-accent, #7c3aed);
       border-left-color: var(--sl-color-accent, #7c3aed);
     }
@@ -76,15 +75,53 @@ export class StarlightToc extends LitElement {
 
   entries: TocEntry[] = [];
 
+  /**
+   * Click handler for TOC anchor links.
+   *
+   * Heading elements rendered via unsafeHTML live inside shadow roots that
+   * native fragment navigation and document.getElementById() cannot reach.
+   * Instead of relying on the browser's default hash navigation (which also
+   * fires popstate and re-renders the page component with no data), we:
+   *   1. Prevent the default navigation.
+   *   2. Walk the shadow tree to find the target element.
+   *   3. Scroll to it smoothly.
+   *   4. Update the URL hash via pushState (does not fire popstate).
+   */
+  private _handleClick(e: MouseEvent, slug: string) {
+    e.preventDefault();
+    const target = this._findDeep(document, slug);
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+    history.pushState(null, '', `#${slug}`);
+  }
+
+  /** Recursively searches shadow roots for an element matching the CSS id selector. */
+  private _findDeep(root: Document | ShadowRoot | Element, id: string): Element | null {
+    const sel = `#${CSS.escape(id)}`;
+    const direct = root.querySelector(sel);
+    if (direct) return direct;
+    for (const el of root.querySelectorAll('*')) {
+      if (el.shadowRoot) {
+        const found = this._findDeep(el.shadowRoot, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   override render() {
     if (!this.entries.length) return html``;
+    const currentHash = location.hash;
     return html`
       <nav aria-label="On this page">
         <h2>On this page</h2>
         <ul>
           ${this.entries.map(entry => html`
             <li class="depth-${entry.depth}">
-              <a href="#${entry.slug}">${entry.text}</a>
+              <a
+                href="#${entry.slug}"
+                aria-current="${currentHash === '#' + entry.slug ? 'true' : 'false'}"
+                @click=${(e: MouseEvent) => this._handleClick(e, entry.slug)}
+              >${entry.text}</a>
             </li>
           `)}
         </ul>

@@ -90,6 +90,8 @@ export class LitroRouter {
    * superseded this one and we bail out without touching the DOM.
    */
   private _resolveToken = 0;
+  /** Last pathname rendered by `_resolve()`. Used to skip re-renders on hash-only navigations. */
+  private _lastPathname = '';
 
   constructor(outlet: HTMLElement) {
     this.outlet = outlet;
@@ -104,7 +106,12 @@ export class LitroRouter {
         action: r.action ?? (() => {}),
       }));
 
-    window.addEventListener('popstate', () => void this._resolve());
+    // Fragment navigations (clicking <a href="#section">) fire popstate per the
+    // HTML spec. Guard against re-rendering the same page when only the hash changes.
+    window.addEventListener('popstate', () => {
+      if (location.pathname === this._lastPathname) return;
+      void this._resolve();
+    });
     void this._resolve();
   }
 
@@ -120,6 +127,7 @@ export class LitroRouter {
   private async _resolve(): Promise<void> {
     const token = ++this._resolveToken;
     const pathname = location.pathname;
+    this._lastPathname = pathname;
 
     for (const route of this.routes) {
       const match = route.pattern.exec({ pathname });
@@ -144,6 +152,7 @@ export class LitroRouter {
       // Create the element, call lifecycle hook, then mount.
       const el = document.createElement(route.component) as HTMLElement & {
         onBeforeEnter?: (loc: LitroLocation) => Promise<void> | void;
+        updateComplete?: Promise<boolean>;
       };
 
       if (typeof el.onBeforeEnter === 'function') {
@@ -158,8 +167,43 @@ export class LitroRouter {
         this.outlet.removeChild(this.outlet.lastChild);
       }
       this.outlet.appendChild(el);
+
+      // Scroll to hash after the component finishes rendering. Heading elements
+      // injected via unsafeHTML live inside shadow roots, so native fragment
+      // scrolling can't reach them — we traverse the shadow tree manually.
+      const hash = location.hash;
+      if (hash) {
+        const settle = el.updateComplete ?? Promise.resolve(true);
+        settle.then(() => this._scrollToHash(hash));
+      }
       return;
     }
+  }
+
+  /**
+   * Scrolls to the element matching `hash` (e.g. '#welcome') by walking
+   * the shadow DOM tree. Required because heading `id` attributes rendered
+   * via Lit templates end up inside shadow roots that native fragment
+   * navigation and `document.getElementById()` cannot reach.
+   */
+  private _scrollToHash(hash: string): void {
+    const id = hash.startsWith('#') ? hash.slice(1) : hash;
+    if (!id) return;
+    const target = this._findDeep(document, id);
+    if (target) target.scrollIntoView();
+  }
+
+  private _findDeep(root: Document | ShadowRoot | Element, id: string): Element | null {
+    const sel = `#${CSS.escape(id)}`;
+    const direct = root.querySelector(sel);
+    if (direct) return direct;
+    for (const el of root.querySelectorAll('*')) {
+      if (el.shadowRoot) {
+        const found = this._findDeep(el.shadowRoot, id);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 }
 
