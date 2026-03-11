@@ -2,6 +2,7 @@
   "name": "litro-workspace",
   "private": true,
   "scripts": {
+    "clean": "pnpm dlx rimraf node_modules \"packages/*/node_modules\" \"packages/*/dist\" \"playground*/node_modules\" \"playground*/dist\" .output .nitro \"playground*/server/stubs\" \"playground*/routes.generated.ts\" test-results playwright-report \"e2e/test-results\" \"**/*.tsbuildinfo\"",
     "setup": "pnpm install && pnpm --filter @beatzball/litro-router build && pnpm --filter @beatzball/litro build && pnpm install",
     "dev": "pnpm --filter playground dev",
     "build": "pnpm --filter playground build",
