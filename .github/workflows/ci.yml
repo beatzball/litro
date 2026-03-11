@@ -46,6 +46,29 @@ jobs:
       - name: Build create-litro
         run: pnpm --filter create-litro build
 
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run E2E tests (dev mode)
+        run: pnpm test:e2e
+
   audit:
     name: Dependency Audit
     runs-on: ubuntu-latest

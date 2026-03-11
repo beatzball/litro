@@ -9,7 +9,8 @@
     "dev": "litro dev",
     "build": "litro build",
     "preview": "litro preview",
-    "generate": "litro generate"
+    "generate": "litro generate",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@beatzball/litro": "latest",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "nitropack": "^2.13.1",
     "vite": "^5.4.11",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "@playwright/test": "^1.48.0"
   }
 }

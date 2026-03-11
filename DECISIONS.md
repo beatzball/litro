@@ -356,3 +356,19 @@ The static server implements clean-URL resolution (tries `path`, `path.html`, `p
 **Decision**: Both `buildShell()` calls in `createPageHandler` (main SSR path and client-only fallback) must explicitly forward `head: routeMeta?.head`.
 
 **Rationale**: `buildShell()` accepts a `head` option for injecting arbitrary HTML into `<head>` — used by the starlight recipe to inject `<link rel="stylesheet" href="/styles/starlight.css">` and the FOUC-prevention inline `<script>`. The original implementation omitted `head` from both `buildShell()` calls, so the stylesheet and theme script were silently dropped from all SSR'd pages. The server route handler (`server/routes/[...].ts`) must also read `routeMeta` from `pageModules[matched.filePath]` and pass it to `createPageHandler`.
+
+---
+
+## Playwright e2e test suite
+
+**Decision**: Single root `e2e/` directory with per-playground subdirectories. Each Playwright project maps `testDir` to its subdirectory and `baseURL` to its port. Dev mode uses `reuseExistingServer: !CI`; preview mode (`playwright.preview.config.ts`) uses `reuseExistingServer: false` with a 180 s timeout to accommodate the full build.
+
+**Port assignments**: playground = 3030, playground-11ty = 3031, playground-starlight = 3032. All three are started in parallel by Playwright's `webServer` array.
+
+**Shadow DOM and `textContent()`**: Playwright's CSS selectors pierce open shadow roots for element lookup, but `locator.textContent()` returns `node.textContent` which does NOT include shadow root children. For assertions on shadow-DOM content, use `locator.evaluate(el => el.shadowRoot?.textContent)`.
+
+**LitroLink selector scope**: `litro-link[href=...]` elements only exist on pages that render navigation links. Tests must navigate to a page that contains the target `litro-link` before clicking — the home page in the base `playground` has no such links; the blog index does.
+
+**Recipe templates**: Each `create-litro` recipe template ships `playwright.config.ts` + `e2e/index.spec.ts` (3 starter tests). The `copyTemplate` recursive walk picks them up automatically — no scaffolding code changes needed.
+
+**CI**: An `e2e` job runs after `build`, installs Chromium, and runs `pnpm test:e2e` (dev mode only). Preview mode is available locally via `pnpm test:e2e:preview` but excluded from CI to avoid ~10 min of build time per run.
