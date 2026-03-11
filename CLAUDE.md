@@ -169,7 +169,7 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
 - Recipe system + content layer: complete (`fullstack`, `11ty-blog`, `starlight` recipes, `litro:content` virtual module)
-- Tests: 215/215 passing across all packages
+- Tests: 215/215 passing across all packages + 32/32 Playwright e2e tests
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -199,6 +199,12 @@ Test breakdown:
 - `packages/litro-router`: 16 tests
 - `packages/framework`: 182 tests
 - `packages/create-litro`: 17 tests
+- Playwright e2e: 32 tests across 3 playgrounds (dev mode)
 
-Pending:
-- Playwright e2e tests
+E2E test structure:
+- `e2e/playground/` — SSR, navigation (SPA, back/forward, LitroLink), data fetching (14 tests)
+- `e2e/playground-11ty/` — content layer, API routes (9 tests)
+- `e2e/playground-starlight/` — pages, prerendered route 200-check, TOC (9 tests)
+- `pnpm test:e2e` — dev mode (all 3 servers on ports 3030/3031/3032)
+- `pnpm test:e2e:preview` — production mode (builds + previews each playground)
+- Each `create-litro` recipe template ships `playwright.config.ts` + `e2e/index.spec.ts`
