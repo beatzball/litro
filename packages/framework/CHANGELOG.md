@@ -1,5 +1,11 @@
 # litro
 
+## 0.1.5
+
+### Patch Changes
+
+- 3269a17: The content plugin now generates `litro-content.js` stubs using a path relative to the stub file rather than an absolute path. This prevents machine-specific directory paths from being baked into generated files.
+
 ## 0.1.4
 
 ### Patch Changes
