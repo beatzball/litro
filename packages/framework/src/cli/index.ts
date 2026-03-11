@@ -24,6 +24,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import process from 'node:process';
 import { scanAndWriteClientRoutes } from '../plugins/pages.js';
+import { parsePortArg, resolvePort } from './port.js';
 
 const [,, command, ...args] = process.argv;
 const cwd = process.cwd();
@@ -73,14 +74,9 @@ switch (command) {
       });
     }
 
-    // Resolve port: --port <n> or -p <n> from args, falling back to 3030.
-    const portFlagIdx = args.findIndex((a) => a === '--port' || a === '-p');
-    const portInline = args.find((a) => a.startsWith('--port=') || a.startsWith('-p='));
-    const port =
-      portInline?.split('=')[1] ??
-      (portFlagIdx !== -1 ? args[portFlagIdx + 1] : undefined) ??
-      '3030';
-    run('nitro', ['dev', '--port', port], { LITRO_MODE: 'server' });
+    const { port: rawPort, explicit } = parsePortArg(args);
+    const port = await resolvePort(rawPort, explicit);
+    run('nitro', ['dev', '--port', String(port)], { LITRO_MODE: 'server' });
     break;
   }
 
@@ -142,13 +138,8 @@ switch (command) {
     break;
 
   case 'preview': {
-    const portFlagIdx = args.findIndex((a) => a === '--port' || a === '-p');
-    const portInline = args.find((a) => a.startsWith('--port=') || a.startsWith('-p='));
-    const port = Number(
-      portInline?.split('=')[1] ??
-      (portFlagIdx !== -1 ? args[portFlagIdx + 1] : undefined) ??
-      '3030',
-    );
+    const { port: rawPort, explicit } = parsePortArg(args);
+    const port = await resolvePort(rawPort, explicit);
 
     // SSG build: serve dist/static/ with a built-in static file server.
     const staticDir = join(cwd, 'dist', 'static');
@@ -219,7 +210,7 @@ switch (command) {
 litro — Lit-first fullstack framework
 
 Commands:
-  litro dev              Start development server (default port: 3030)
+  litro dev              Start development server (default port: 3000)
   litro dev --port 8080  Start on a custom port
   litro build            Build for production (--mode static|server, default: server)
   litro generate         Build static site (alias for litro build --mode static)
