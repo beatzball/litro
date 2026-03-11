@@ -13,9 +13,8 @@ packages/*/dist/
 playground/dist/
 
 # Generated files (overwritten on every build; contain machine-local absolute paths)
-playground/server/stubs/
-playground-11ty/server/stubs/
-playground/routes.generated.ts
+playground*/server/stubs/
+playground*/routes.generated.ts
 
 # Playwright
 /test-results/
