@@ -100,7 +100,7 @@ Vite produces content-hashed filenames so the client bundle can be served with a
 In development, **both Vite and Nitro share a single HTTP port**. There is no separate Vite port, no cross-process proxy, and no CORS issues.
 
 ```
-Browser ──HTTP──► :3030 (Nitro dev server)
+Browser ──HTTP──► :3000 (Nitro dev server, auto-increments if taken)
                      │
                      ├── /api/**          ─► Nitro API handlers
                      ├── /_litro/**       ─► Nitro static asset handler
@@ -249,8 +249,8 @@ Route-not-found requests during dev return a 404 HTML page listing all registere
 The `litro` CLI (`packages/framework/src/cli/index.ts`) is intentionally thin. It delegates all heavy work to the `nitro` and `vite` CLI binaries found in the project's `node_modules/.bin/`. This avoids re-implementing dev server, build orchestration, or preview logic. The CLI uses Node.js `child_process.spawn` (no `execa` dependency) and sets `LITRO_MODE` in the environment so downstream Nitro and Vite plugins can read the current mode.
 
 ```
-litro dev      → spawn('nitro', ['dev', '--port', '3030'], { LITRO_MODE: 'server' })
-               (default port 3030; override with --port <n> or -p <n>)
+litro dev      → resolvePort(3000) → spawn('nitro', ['dev', '--port', '<n>'], { LITRO_MODE: 'server' })
+               (default port 3000; auto-increments if taken; override with --port <n> or -p <n>)
 litro build    → scanAndWriteClientRoutes(cwd)            // Stage 0: write routes.generated.ts
                  then spawn('vite', ['build'])             // Stage 1: client bundle
                  then spawn('nitro', ['build'], { LITRO_MODE: 'server'|'static' })  // Stage 2
