@@ -1,5 +1,11 @@
 # create-litro
 
+## 0.2.1
+
+### Patch Changes
+
+- 338e2c7: Add Playwright e2e setup to all recipe templates. Each scaffolded project now includes `playwright.config.ts` and `e2e/index.spec.ts` with 3 starter tests, and `@playwright/test` in `devDependencies`.
+
 ## 0.2.0
 
 ### Minor Changes

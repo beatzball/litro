@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Litro — fullstack Lit framework powered by Nitro",
   "license": "Apache-2.0",
   "repository": {
