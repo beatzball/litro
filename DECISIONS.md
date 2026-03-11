@@ -170,11 +170,11 @@ The fix uses two changes together:
 
 ---
 
-## CLI: default dev port 3030
+## CLI: dynamic port selection
 
-**Decision**: `litro dev` defaults to port 3030 and accepts `--port` / `-p` for overrides.
+**Decision**: `litro dev` and `litro preview` default to port 3000 and auto-increment if that port is taken. Passing `--port` / `-p` explicitly errors out instead of silently moving to another port.
 
-**Rationale**: Avoids collision with the common defaults of React (3000), Vue (5173), and other tools. The port is passed through to `nitro dev --port <n>`; Nitro handles the actual binding.
+**Rationale**: Port collisions (multiple playgrounds, Docker containers, other dev tools) previously produced an opaque `EADDRINUSE` crash from Nitro. A connect-based TCP probe (`node:net` `createConnection`) is used rather than a bind-based probe — Docker Desktop on macOS publishes ports through a userspace proxy that may not hold a conventional bound socket, so only a connection attempt reliably detects occupancy. The resolved port is handed to Nitro/the static server; Nitro's own port fallback is never invoked.
 
 ---
 

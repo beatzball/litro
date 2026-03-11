@@ -180,7 +180,7 @@ Verified working:
 - `pageModules` registry enabling bundle-time page compilation
 - Dev server (`litro dev`) — Vite middleware intercepts JS/TS requests; Nitro handles HTML and API
   - Auto-builds `dist/client/app.js` via `vite build` if it doesn't exist (needed because `dist/` is gitignored)
-- Default dev port: 3030 (custom port via `litro dev --port <n>`)
+- Default dev port: 3000, auto-increments if taken (custom port via `litro dev --port <n>`)
 - Preview server (`litro preview`) — SSR builds served from `dist/server/server/index.mjs`; SSG builds served by built-in static file server from `dist/static/`
 - `litro build` — page scan runs before `vite build`; fresh routes always baked into client bundle
 - `create-litro` recipe system — `fullstack`, `11ty-blog`, `starlight` recipes, `{{placeholder}}` interpolation
