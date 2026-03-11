@@ -21,3 +21,9 @@ test('API route returns JSON', async ({ request }) => {
   expect(json).toHaveProperty('message');
   expect(json).toHaveProperty('timestamp');
 });
+
+test('dynamic route renders DSD markup', async ({ request }) => {
+  const response = await request.get('/blog/hello-world');
+  const body = await response.text();
+  expect(body).toContain('shadowrootmode');
+});

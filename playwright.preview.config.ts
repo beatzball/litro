@@ -26,24 +26,24 @@ export default defineConfig({
   webServer: [
     {
       name: 'playground',
-      command: 'cd playground && node ../packages/framework/dist/cli/index.js dev --port 3030',
+      command: 'cd playground && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3030',
       url: 'http://localhost:3030',
-      reuseExistingServer: !process.env.CI,
-      timeout: 60000,
+      reuseExistingServer: false,
+      timeout: 180000,
     },
     {
       name: 'playground-11ty',
-      command: 'cd playground-11ty && node ../packages/framework/dist/cli/index.js dev --port 3031',
+      command: 'cd playground-11ty && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3031',
       url: 'http://localhost:3031',
-      reuseExistingServer: !process.env.CI,
-      timeout: 60000,
+      reuseExistingServer: false,
+      timeout: 180000,
     },
     {
       name: 'playground-starlight',
-      command: 'cd playground-starlight && node ../packages/framework/dist/cli/index.js dev --port 3032',
+      command: 'cd playground-starlight && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3032',
       url: 'http://localhost:3032',
-      reuseExistingServer: !process.env.CI,
-      timeout: 60000,
+      reuseExistingServer: false,
+      timeout: 180000,
     },
   ],
 });
