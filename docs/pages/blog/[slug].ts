@@ -59,6 +59,7 @@ export const routeMeta = {
 
 @customElement('page-blog-slug')
 export class BlogPostPage extends LitroPage {
+
   override render() {
     const data = this.serverData as BlogPostData | null;
     if (!data?.post) return html`<p>Loading&hellip;</p>`;

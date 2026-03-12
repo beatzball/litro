@@ -11,6 +11,7 @@ export const starlightHead = [
   '<link rel="icon" type="image/png" href="/logo.png" />',
   '<link rel="stylesheet" href="/shoelace/themes/light.css" />',
   '<link rel="stylesheet" href="/styles/starlight.css" />',
+  '<link rel="stylesheet" href="/styles/highlight.css" />',
   '<script>(function(){',
   'var s=localStorage.getItem("sl-theme");',
   'var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");',
