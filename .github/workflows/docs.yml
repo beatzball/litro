@@ -3,12 +3,18 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - 'packages/**'
+      - "docs/**"
+      - "packages/**"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -40,9 +46,22 @@ jobs:
         env:
           LITRO_BASE_PATH: /litro
           SITE_URL: https://beatzball.github.io/litro
+      ## Trying this group ---
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/dist/static
+          path: "./docs/dist/static"
+
+      - name: Deploy to Github Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      ## --------------------------
+
+      # - name: Deploy to GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./docs/dist/static
