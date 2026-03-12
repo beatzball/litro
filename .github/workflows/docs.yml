@@ -35,7 +35,8 @@ jobs:
         run: pnpm --filter @beatzball/litro build
 
       - name: Build docs site
-        run: pnpm --filter @beatzball/litro-docs build
+        working-directory: docs
+        run: node ../packages/framework/dist/cli/index.js build
         env:
           LITRO_BASE_PATH: /litro
           SITE_URL: https://beatzball.github.io/litro
