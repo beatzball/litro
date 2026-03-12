@@ -15,6 +15,8 @@ export default defineNitroConfig({
     { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
     { dir: '../content',     baseURL: '/content/', maxAge: 86400 },
+    { dir: '../node_modules/@shoelace-style/shoelace/dist/assets', baseURL: '/shoelace/assets/', maxAge: 604800 },
+    { dir: '../node_modules/@shoelace-style/shoelace/dist/themes', baseURL: '/shoelace/themes/', maxAge: 604800 },
   ],
 
   externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client'] },

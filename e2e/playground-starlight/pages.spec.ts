@@ -27,9 +27,19 @@ test('home page renders starlight-header', async ({ page }) => {
 test('home page renders feature cards', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
-  const cards = page.locator('sl-card');
+  const cards = page.locator('litro-card');
   await expect(cards.first()).toBeVisible();
   expect(await cards.count()).toBe(4);
+});
+
+test('feature card renders icon and title inline', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home');
+  // card-header lives inside litro-card's shadow root
+  const hasCardHeader = await page.locator('litro-card').first().evaluate(
+    (el) => !!el.shadowRoot?.querySelector('.card-header'),
+  );
+  expect(hasCardHeader).toBe(true);
 });
 
 test('docs getting-started page renders', async ({ page }) => {

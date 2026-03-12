@@ -162,19 +162,51 @@ export class LitroRouter {
       // Check again after the onBeforeEnter async hook.
       if (token !== this._resolveToken) return;
 
-      // Swap outlet content.
-      while (this.outlet.lastChild) {
-        this.outlet.removeChild(this.outlet.lastChild);
-      }
+      // Pre-render the new element before it's visible.
+      //
+      // Lit renders asynchronously (microtasks). If we clear the outlet and
+      // append the new element in one step, the browser can paint the element
+      // in several intermediate states (empty shell → page renders → nested
+      // components like starlight-sidebar render), producing a layout shift.
+      //
+      // Fix: append the new element hidden *alongside* the existing content
+      // so the old content stays visible while the new element renders. Once
+      // the page component's first update completes and a rAF confirms that
+      // nested Lit components have also flushed their microtask renders, swap
+      // atomically: remove old children, reveal new element.
+      el.setAttribute('hidden', '');
       this.outlet.appendChild(el);
+
+      const settle = (el as HTMLElement & { updateComplete?: Promise<boolean> }).updateComplete
+        ?? Promise.resolve(true);
+      await settle;
+
+      // One animation frame — microtasks (including nested Lit component
+      // renders triggered by the page's first render) all complete before
+      // the next rAF callback fires, ensuring a fully-rendered swap.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+      // Bail if a newer navigation superseded this one while we were waiting.
+      if (token !== this._resolveToken) {
+        el.remove();
+        return;
+      }
+
+      // Atomic swap: remove previous content, reveal the pre-rendered element.
+      let child = this.outlet.firstChild;
+      while (child && child !== el) {
+        const next = child.nextSibling;
+        this.outlet.removeChild(child);
+        child = next;
+      }
+      el.removeAttribute('hidden');
 
       // Scroll to hash after the component finishes rendering. Heading elements
       // injected via unsafeHTML live inside shadow roots, so native fragment
       // scrolling can't reach them — we traverse the shadow tree manually.
       const hash = location.hash;
       if (hash) {
-        const settle = el.updateComplete ?? Promise.resolve(true);
-        settle.then(() => this._scrollToHash(hash));
+        this._scrollToHash(hash);
       }
       return;
     }

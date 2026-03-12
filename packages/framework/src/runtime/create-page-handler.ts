@@ -110,7 +110,8 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // intercepts /_litro/app.js and serves app.ts on the fly (Vite resolves
       // .js → .ts automatically). If Vite is not intercepting, the static file
       // handler serves the pre-built dist/client/app.js as a fallback.
-      const appScriptUrl = '/_litro/app.js';
+      const basePath = process.env.LITRO_BASE_PATH ?? '';
+      const appScriptUrl = `${basePath}/_litro/app.js`;
 
       // Build the HTML shell for this component. The shell is split into head
       // and foot so we can stream the SSR output between the two halves.
@@ -193,7 +194,8 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
 
       // Build a minimal fallback shell (no server data — data fetch may have
       // been the source of the error, or may not have run yet).
-      const appScriptUrl = '/_litro/app.js';
+      const basePath = process.env.LITRO_BASE_PATH ?? '';
+      const appScriptUrl = `${basePath}/_litro/app.js`;
       const fallbackShell = buildShell(route.componentTag, '', {
         title: routeMeta?.title,
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,

@@ -86,8 +86,12 @@ export class StarlightPage extends LitElement {
 
     .toc-wrap {
       grid-area: toc;
-      padding: var(--sl-content-pad-y, 2rem) 0 var(--sl-content-pad-y, 2rem) var(--sl-content-pad-x, 1.5rem);
       border-left: 1px solid var(--sl-color-border, #e8e8e8);
+      position: sticky;
+      top: var(--sl-nav-height, 3.5rem);
+      height: calc(100vh - var(--sl-nav-height, 3.5rem));
+      overflow-y: auto;
+      padding: var(--sl-content-pad-y, 2rem) 0 var(--sl-content-pad-y, 2rem) var(--sl-content-pad-x, 1.5rem);
     }
 
     .page-title {

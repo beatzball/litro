@@ -22,12 +22,12 @@ export class StarlightHeader extends LitElement {
   static override styles = css`
     :host {
       display: block;
-    }
-
-    header {
       position: sticky;
       top: 0;
       z-index: 100;
+    }
+
+    header {
       height: var(--sl-nav-height, 3.5rem);
       background-color: var(--sl-color-bg-nav, #fff);
       border-bottom: 1px solid var(--sl-color-border, #e8e8e8);
