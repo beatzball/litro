@@ -5,6 +5,7 @@ on:
     paths:
       - 'docs/**'
       - 'packages/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
