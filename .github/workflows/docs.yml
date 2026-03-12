@@ -34,18 +34,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build litro-router
-        run: pnpm --filter @beatzball/litro-router build
-
-      - name: Build framework
-        run: pnpm --filter @beatzball/litro build
-
+      # - name: Build litro-router
+      #   run: pnpm --filter @beatzball/litro-router build
+      #
+      # - name: Build framework
+      #   run: pnpm --filter @beatzball/litro build
+      - name: Run Setup
+        run: pnpm run setup
+      - name: Prepare Builds
+        run: pnpm run prepare:docs
       - name: Build docs site
-        working-directory: docs
-        run: node ../packages/framework/dist/cli/index.js build
+        run: pnpm run build:docs
         env:
-          LITRO_BASE_PATH: /litro
-          SITE_URL: https://beatzball.github.io/litro
+          LITRO_BASE_PATH: /
+          SITE_URL: https://litro.dev
+
+      # - name: Build docs site
+      #   working-directory: docs
+      #   run: node ../packages/framework/dist/cli/index.js build
+      #   env:
+      #     LITRO_BASE_PATH: /litro
+      #     SITE_URL: https://beatzball.github.io/litro
       ## Trying this group ---
       - name: Setup Pages
         uses: actions/configure-pages@v5
