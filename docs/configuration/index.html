@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"configuration","title":"Configuration","date":"2026-01-01T00:00:00.000Z","description":"Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.","tags":["docs"],"draft":false,"body":"<h1>Configuration</h1>\n<h2><code>nitro.config.ts</code></h2>\n<p>Litro projects configure the server via <code>nitro.config.ts</code>. This is a standard Nitro config with Litro plugins.</p>\n<pre><code class=\"language-ts\">import { defineNitroConfig } from 'nitropack/config';\nimport { ssgPreset } from '@beatzball/litro/config';\nimport pagesPlugin from '@beatzball/litro/plugins';\nimport ssgPlugin from '@beatzball/litro/plugins/ssg';\nimport contentPlugin from '@beatzball/litro/content/plugin';\n\nexport default defineNitroConfig({\n  ...ssgPreset(), // enables SSG output\n\n  srcDir: 'server',\n\n  publicAssets: [\n    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },\n    { dir: '../public',      baseURL: '/',        maxAge: 0 },\n  ],\n\n  hooks: {\n    'build:before': async (nitro) => {\n      await contentPlugin(nitro); // content layer\n      await pagesPlugin(nitro);   // page scanner\n      await ssgPlugin(nitro);     // static route generation\n    },\n  },\n});\n</code></pre>\n<h2><code>vite.config.ts</code></h2>\n<p>Standard Vite config. The <code>litroContentPlugin()</code> bridges the <code>litro:content</code> virtual module for the client bundle (returns a browser stub — real data is server-side only).</p>\n<pre><code class=\"language-ts\">import { defineConfig } from 'vite';\nimport litroContentPlugin from '@beatzball/litro/vite';\n\nexport default defineConfig({\n  plugins: [litroContentPlugin()],\n  base: '/_litro/',\n  build: {\n    outDir: 'dist/client',\n    rollupOptions: {\n      input: 'app.ts',\n      output: { entryFileNames: '[name].js' },\n    },\n  },\n});\n</code></pre>\n<h2>Environment Variables</h2>\n<table>\n<thead>\n<tr>\n<th>Variable</th>\n<th>Description</th>\n<th>Default</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>LITRO_BASE_PATH</code></td>\n<td>Sub-path prefix for GitHub Pages project sites (e.g. <code>/litro</code>)</td>\n<td><code>''</code></td>\n</tr>\n<tr>\n<td><code>SITE_URL</code></td>\n<td>Canonical base URL for SEO meta tags</td>\n<td><code>https://litro.dev</code></td>\n</tr>\n</tbody>\n</table>","rawBody":"\n# Configuration\n\n## `nitro.config.ts`\n\nLitro projects configure the server via `nitro.config.ts`. This is a standard Nitro config with Litro plugins.\n\n```ts\nimport { defineNitroConfig } from 'nitropack/config';\nimport { ssgPreset } from '@beatzball/litro/config';\nimport pagesPlugin from '@beatzball/litro/plugins';\nimport ssgPlugin from '@beatzball/litro/plugins/ssg';\nimport contentPlugin from '@beatzball/litro/content/plugin';\n\nexport default defineNitroConfig({\n  ...ssgPreset(), // enables SSG output\n\n  srcDir: 'server',\n\n  publicAssets: [\n    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },\n    { dir: '../public',      baseURL: '/',        maxAge: 0 },\n  ],\n\n  hooks: {\n    'build:before': async (nitro) => {\n      await contentPlugin(nitro); // content layer\n      await pagesPlugin(nitro);   // page scanner\n      await ssgPlugin(nitro);     // static route generation\n    },\n  },\n});\n```\n\n## `vite.config.ts`\n\nStandard Vite config. The `litroContentPlugin()` bridges the `litro:content` virtual module for the client bundle (returns a browser stub — real data is server-side only).\n\n```ts\nimport { defineConfig } from 'vite';\nimport litroContentPlugin from '@beatzball/litro/vite';\n\nexport default defineConfig({\n  plugins: [litroContentPlugin()],\n  base: '/_litro/',\n  build: {\n    outDir: 'dist/client',\n    rollupOptions: {\n      input: 'app.ts',\n      output: { entryFileNames: '[name].js' },\n    },\n  },\n});\n```\n\n## Environment Variables\n\n| Variable | Description | Default |\n|---|---|---|\n| `LITRO_BASE_PATH` | Sub-path prefix for GitHub Pages project sites (e.g. `/litro`) | `''` |\n| `SITE_URL` | Canonical base URL for SEO meta tags | `https://litro.dev` |\n","url":"/content/docs/configuration","frontmatter":{"tags":["docs"],"layout":"docs","title":"Configuration","description":"Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.","date":"2026-01-01T00:00:00.000Z"}},"body":"<h2 id=\"nitroconfigts\"><code>nitro.config.ts</code></h2>\n<p>Litro projects configure the server via <code>nitro.config.ts</code>. This is a standard Nitro config with Litro plugins.</p>\n<pre><code class=\"language-ts\">import { defineNitroConfig } from 'nitropack/config';\nimport { ssgPreset } from '@beatzball/litro/config';\nimport pagesPlugin from '@beatzball/litro/plugins';\nimport ssgPlugin from '@beatzball/litro/plugins/ssg';\nimport contentPlugin from '@beatzball/litro/content/plugin';\n\nexport default defineNitroConfig({\n  ...ssgPreset(), // enables SSG output\n\n  srcDir: 'server',\n\n  publicAssets: [\n    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },\n    { dir: '../public',      baseURL: '/',        maxAge: 0 },\n  ],\n\n  hooks: {\n    'build:before': async (nitro) => {\n      await contentPlugin(nitro); // content layer\n      await pagesPlugin(nitro);   // page scanner\n      await ssgPlugin(nitro);     // static route generation\n    },\n  },\n});\n</code></pre>\n<h2 id=\"viteconfigts\"><code>vite.config.ts</code></h2>\n<p>Standard Vite config. The <code>litroContentPlugin()</code> bridges the <code>litro:content</code> virtual module for the client bundle (returns a browser stub — real data is server-side only).</p>\n<pre><code class=\"language-ts\">import { defineConfig } from 'vite';\nimport litroContentPlugin from '@beatzball/litro/vite';\n\nexport default defineConfig({\n  plugins: [litroContentPlugin()],\n  base: '/_litro/',\n  build: {\n    outDir: 'dist/client',\n    rollupOptions: {\n      input: 'app.ts',\n      output: { entryFileNames: '[name].js' },\n    },\n  },\n});\n</code></pre>\n<h2 id=\"environment-variables\">Environment Variables</h2>\n<table>\n<thead>\n<tr>\n<th>Variable</th>\n<th>Description</th>\n<th>Default</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>LITRO_BASE_PATH</code></td>\n<td>Sub-path prefix for GitHub Pages project sites (e.g. <code>/litro</code>)</td>\n<td><code>''</code></td>\n</tr>\n<tr>\n<td><code>SITE_URL</code></td>\n<td>Canonical base URL for SEO meta tags</td>\n<td><code>https://litro.dev</code></td>\n</tr>\n</tbody>\n</table>","toc":[{"depth":2,"text":"`nitro.config.ts`","slug":"nitroconfigts"},{"depth":2,"text":"`vite.config.ts`","slug":"viteconfigts"},{"depth":2,"text":"Environment Variables","slug":"environment-variables"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"configuration","prevDoc":{"label":"Getting Started","href":"/docs/getting-started"},"nextDoc":{"label":"Routing","href":"/docs/core-concepts/routing"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/configuration.md","seoHead":"<meta name=\"description\" content=\"Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/configuration\" />\n<meta property=\"og:title\" content=\"Configuration — Litro\" />\n<meta property=\"og:description\" content=\"Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/configuration\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Configuration — Litro\" />\n<meta name=\"twitter:description\" content=\"Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Configuration"
+        
+        
+        
+        currentSlug="configuration"
+        currentPath="/docs/configuration"
+      >
+        <div slot="content">
+          <!--lit-part hkJqXox1uMU=--><h2 id="nitroconfigts"><code>nitro.config.ts</code></h2>
+<p>Litro projects configure the server via <code>nitro.config.ts</code>. This is a standard Nitro config with Litro plugins.</p>
+<pre><code class="language-ts">import { defineNitroConfig } from 'nitropack/config';
+import { ssgPreset } from '@beatzball/litro/config';
+import pagesPlugin from '@beatzball/litro/plugins';
+import ssgPlugin from '@beatzball/litro/plugins/ssg';
+import contentPlugin from '@beatzball/litro/content/plugin';
+
+export default defineNitroConfig({
+  ...ssgPreset(), // enables SSG output
+
+  srcDir: 'server',
+
+  publicAssets: [
+    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
+    { dir: '../public',      baseURL: '/',        maxAge: 0 },
+  ],
+
+  hooks: {
+    'build:before': async (nitro) => {
+      await contentPlugin(nitro); // content layer
+      await pagesPlugin(nitro);   // page scanner
+      await ssgPlugin(nitro);     // static route generation
+    },
+  },
+});
+</code></pre>
+<h2 id="viteconfigts"><code>vite.config.ts</code></h2>
+<p>Standard Vite config. The <code>litroContentPlugin()</code> bridges the <code>litro:content</code> virtual module for the client bundle (returns a browser stub — real data is server-side only).</p>
+<pre><code class="language-ts">import { defineConfig } from 'vite';
+import litroContentPlugin from '@beatzball/litro/vite';
+
+export default defineConfig({
+  plugins: [litroContentPlugin()],
+  base: '/_litro/',
+  build: {
+    outDir: 'dist/client',
+    rollupOptions: {
+      input: 'app.ts',
+      output: { entryFileNames: '[name].js' },
+    },
+  },
+});
+</code></pre>
+<h2 id="environment-variables">Environment Variables</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LITRO_BASE_PATH</code></td>
+<td>Sub-path prefix for GitHub Pages project sites (e.g. <code>/litro</code>)</td>
+<td><code>''</code></td>
+</tr>
+<tr>
+<td><code>SITE_URL</code></td>
+<td>Canonical base URL for SEO meta tags</td>
+<td><code>https://litro.dev</code></td>
+</tr>
+</tbody>
+</table><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/getting-started" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->Getting Started<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/routing" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Routing<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/configuration.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

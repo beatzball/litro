@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"introduction","title":"Introduction","date":"2026-01-01T00:00:00.000Z","description":"Litro is a fullstack web framework combining Lit web components, Nitro server, and Vite for an integrated SSR and static generation experience.","tags":["docs"],"draft":false,"body":"<h1>Introduction</h1>\n<p>Litro is a greenfield fullstack web framework built on three pillars:</p>\n<ul>\n<li><strong>Lit</strong> — the only component model. Write UI as standard web components using <code>LitElement</code>.</li>\n<li><strong>Nitro</strong> — the server engine (same server powering Nuxt). Handles routing, API routes, SSR, and deployment adapters.</li>\n<li><strong>Vite</strong> — client-side bundling and HMR during development.</li>\n</ul>\n<h2>Why Litro?</h2>\n<p>Most frameworks lock you into a proprietary component model and a tightly coupled server layer. Litro is different:</p>\n<ul>\n<li>Components are standard web components — they work anywhere the browser does.</li>\n<li>The server is Nitro — you get access to every Nitro deployment adapter (Node.js, Cloudflare Workers, Vercel Edge, and more) without any additional configuration.</li>\n<li>SSR uses <code>@lit-labs/ssr</code> and Declarative Shadow DOM — fully spec-compliant, no VDOM required.</li>\n</ul>\n<h2>Architecture</h2>\n<pre><code>User Request\n    │\n    ▼\nNitro Server\n    ├── /api/**  →  server/api/ route files (plain H3 handlers)\n    └── /**      →  Page Handler\n                        ├── SSR: @lit-labs/ssr streams DSD HTML\n                        │     └── client: hydrates → LitroRouter takes over\n                        └── SSG: prerendered .html served statically\n</code></pre>\n<h2>What You Get</h2>\n<ul>\n<li>File-system routing (pages/ directory → URL)</li>\n<li>SSR with streaming Declarative Shadow DOM</li>\n<li><code>definePageData</code> for server-side data fetching</li>\n<li>Built-in client-side router (<code>LitroRouter</code>) using the URLPattern API</li>\n<li>Content layer for Markdown (11ty-compatible)</li>\n<li>SSG (static site generation) via the <code>ssgPreset</code></li>\n<li>Recipes for common project types (fullstack, 11ty blog, Starlight docs)</li>\n</ul>","rawBody":"\n# Introduction\n\nLitro is a greenfield fullstack web framework built on three pillars:\n\n- **Lit** — the only component model. Write UI as standard web components using `LitElement`.\n- **Nitro** — the server engine (same server powering Nuxt). Handles routing, API routes, SSR, and deployment adapters.\n- **Vite** — client-side bundling and HMR during development.\n\n## Why Litro?\n\nMost frameworks lock you into a proprietary component model and a tightly coupled server layer. Litro is different:\n\n- Components are standard web components — they work anywhere the browser does.\n- The server is Nitro — you get access to every Nitro deployment adapter (Node.js, Cloudflare Workers, Vercel Edge, and more) without any additional configuration.\n- SSR uses `@lit-labs/ssr` and Declarative Shadow DOM — fully spec-compliant, no VDOM required.\n\n## Architecture\n\n```\nUser Request\n    │\n    ▼\nNitro Server\n    ├── /api/**  →  server/api/ route files (plain H3 handlers)\n    └── /**      →  Page Handler\n                        ├── SSR: @lit-labs/ssr streams DSD HTML\n                        │     └── client: hydrates → LitroRouter takes over\n                        └── SSG: prerendered .html served statically\n```\n\n## What You Get\n\n- File-system routing (pages/ directory → URL)\n- SSR with streaming Declarative Shadow DOM\n- `definePageData` for server-side data fetching\n- Built-in client-side router (`LitroRouter`) using the URLPattern API\n- Content layer for Markdown (11ty-compatible)\n- SSG (static site generation) via the `ssgPreset`\n- Recipes for common project types (fullstack, 11ty blog, Starlight docs)\n","url":"/content/docs/introduction","frontmatter":{"tags":["docs"],"layout":"docs","title":"Introduction","description":"Litro is a fullstack web framework combining Lit web components, Nitro server, and Vite for an integrated SSR and static generation experience.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>Litro is a greenfield fullstack web framework built on three pillars:</p>\n<ul>\n<li><strong>Lit</strong> — the only component model. Write UI as standard web components using <code>LitElement</code>.</li>\n<li><strong>Nitro</strong> — the server engine (same server powering Nuxt). Handles routing, API routes, SSR, and deployment adapters.</li>\n<li><strong>Vite</strong> — client-side bundling and HMR during development.</li>\n</ul>\n<h2 id=\"why-litro\">Why Litro?</h2>\n<p>Most frameworks lock you into a proprietary component model and a tightly coupled server layer. Litro is different:</p>\n<ul>\n<li>Components are standard web components — they work anywhere the browser does.</li>\n<li>The server is Nitro — you get access to every Nitro deployment adapter (Node.js, Cloudflare Workers, Vercel Edge, and more) without any additional configuration.</li>\n<li>SSR uses <code>@lit-labs/ssr</code> and Declarative Shadow DOM — fully spec-compliant, no VDOM required.</li>\n</ul>\n<h2 id=\"architecture\">Architecture</h2>\n<pre><code>User Request\n    │\n    ▼\nNitro Server\n    ├── /api/**  →  server/api/ route files (plain H3 handlers)\n    └── /**      →  Page Handler\n                        ├── SSR: @lit-labs/ssr streams DSD HTML\n                        │     └── client: hydrates → LitroRouter takes over\n                        └── SSG: prerendered .html served statically\n</code></pre>\n<h2 id=\"what-you-get\">What You Get</h2>\n<ul>\n<li>File-system routing (pages/ directory → URL)</li>\n<li>SSR with streaming Declarative Shadow DOM</li>\n<li><code>definePageData</code> for server-side data fetching</li>\n<li>Built-in client-side router (<code>LitroRouter</code>) using the URLPattern API</li>\n<li>Content layer for Markdown (11ty-compatible)</li>\n<li>SSG (static site generation) via the <code>ssgPreset</code></li>\n<li>Recipes for common project types (fullstack, 11ty blog, Starlight docs)</li>\n</ul>","toc":[{"depth":2,"text":"Why Litro?","slug":"why-litro"},{"depth":2,"text":"Architecture","slug":"architecture"},{"depth":2,"text":"What You Get","slug":"what-you-get"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"introduction","prevDoc":null,"nextDoc":{"label":"Getting Started","href":"/docs/getting-started"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/introduction.md","seoHead":"<meta name=\"description\" content=\"Litro is a fullstack web framework combining Lit web components, Nitro server, and Vite for an integrated SSR and static generation experience.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/introduction\" />\n<meta property=\"og:title\" content=\"Introduction — Litro\" />\n<meta property=\"og:description\" content=\"Litro is a fullstack web framework combining Lit web components, Nitro server, and Vite for an integrated SSR and static generation experience.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/introduction\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Introduction — Litro\" />\n<meta name=\"twitter:description\" content=\"Litro is a fullstack web framework combining Lit web components, Nitro server, and Vite for an integrated SSR and static generation experience.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Introduction"
+        
+        
+        
+        currentSlug="introduction"
+        currentPath="/docs/introduction"
+      >
+        <div slot="content">
+          <!--lit-part on9o5nJGT+A=--><p>Litro is a greenfield fullstack web framework built on three pillars:</p>
+<ul>
+<li><strong>Lit</strong> — the only component model. Write UI as standard web components using <code>LitElement</code>.</li>
+<li><strong>Nitro</strong> — the server engine (same server powering Nuxt). Handles routing, API routes, SSR, and deployment adapters.</li>
+<li><strong>Vite</strong> — client-side bundling and HMR during development.</li>
+</ul>
+<h2 id="why-litro">Why Litro?</h2>
+<p>Most frameworks lock you into a proprietary component model and a tightly coupled server layer. Litro is different:</p>
+<ul>
+<li>Components are standard web components — they work anywhere the browser does.</li>
+<li>The server is Nitro — you get access to every Nitro deployment adapter (Node.js, Cloudflare Workers, Vercel Edge, and more) without any additional configuration.</li>
+<li>SSR uses <code>@lit-labs/ssr</code> and Declarative Shadow DOM — fully spec-compliant, no VDOM required.</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<pre><code>User Request
+    │
+    ▼
+Nitro Server
+    ├── /api/**  →  server/api/ route files (plain H3 handlers)
+    └── /**      →  Page Handler
+                        ├── SSR: @lit-labs/ssr streams DSD HTML
+                        │     └── client: hydrates → LitroRouter takes over
+                        └── SSG: prerendered .html served statically
+</code></pre>
+<h2 id="what-you-get">What You Get</h2>
+<ul>
+<li>File-system routing (pages/ directory → URL)</li>
+<li>SSR with streaming Declarative Shadow DOM</li>
+<li><code>definePageData</code> for server-side data fetching</li>
+<li>Built-in client-side router (<code>LitroRouter</code>) using the URLPattern API</li>
+<li>Content layer for Markdown (11ty-compatible)</li>
+<li>SSG (static site generation) via the <code>ssgPreset</code></li>
+<li>Recipes for common project types (fullstack, 11ty blog, Starlight docs)</li>
+</ul><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part 94tjhjhkEYE=--><span></span><!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/getting-started" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Getting Started<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/introduction.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

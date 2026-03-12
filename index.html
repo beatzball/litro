@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Litro — Fullstack Lit Framework</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"siteTitle":"Litro","description":"The fullstack Lit framework — components, SSR, and static generation in one.","nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"features":[{"iconSrc":"/logos/lit-flame.svg","title":"Lit Components","description":"Standard web components — no VDOM, no proprietary runtime. Works anywhere."},{"iconSrc":"/logos/nitro.svg","title":"Nitro Server","description":"API routes, middleware, and every Nitro deployment adapter out of the box."},{"icon":"🚀","title":"Streaming SSR","description":"Declarative Shadow DOM streaming via @lit-labs/ssr. Fast first paint."},{"icon":"🔀","title":"File-System Routing","description":"Pages folder maps directly to URLs. Dynamic segments, catch-alls, nested routes."},{"icon":"🏗️","title":"Static Generation","description":"Prerender all routes to HTML. Deploy to any CDN with zero server cost."},{"icon":"📝","title":"Content Layer","description":"Markdown content with 11ty-compatible frontmatter and data cascade."}],"seoHead":"<meta name=\"description\" content=\"The fullstack Lit framework — components, SSR, and static generation in one.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/\" />\n<meta property=\"og:title\" content=\"Litro\" />\n<meta property=\"og:description\" content=\"The fullstack Lit framework — components, SSR, and static generation in one.\" />\n<meta property=\"og:type\" content=\"website\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Litro\" />\n<meta name=\"twitter:description\" content=\"The fullstack Lit framework — components, SSR, and static generation in one.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part X26jujZMX/0=--><!--lit-node 0--><page-home ><template shadowroot="open" shadowrootmode="open"><!--lit-part f1+HLc/nZnQ=-->
+      <div style="min-height:100vh;display:flex;flex-direction:column;">
+        <!--lit-node 1--><starlight-header
+          
+          
+          
+         currentpath="/" sitetitle="Litro" defer-hydration><template shadowroot="open" shadowrootmode="open"><style>
+    :host {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header {
+      height: var(--sl-nav-height, 3.5rem);
+      background-color: var(--sl-color-bg-nav, #fff);
+      border-bottom: 1px solid var(--sl-color-border, #e8e8e8);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sl-content-pad-x, 1.5rem);
+      gap: 1.5rem;
+    }
+
+    .site-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: var(--sl-text-lg, 1.125rem);
+      font-weight: 700;
+      color: var(--sl-color-text, #23262f);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .site-title:hover { opacity: 0.85; }
+
+    .site-logo {
+      width: 1.75rem;
+      height: 1.75rem;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    nav a {
+      padding: 0.35rem 0.75rem;
+      font-size: var(--sl-text-sm, 0.875rem);
+      font-weight: 500;
+      color: var(--sl-color-gray-5, #4b4b4b);
+      text-decoration: none;
+      border-radius: var(--sl-border-radius, 0.375rem);
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    nav a:hover {
+      color: var(--sl-color-text, #23262f);
+      background-color: var(--sl-color-gray-2, #e8e8e8);
+    }
+
+    nav a[aria-current='page'] {
+      color: var(--sl-color-accent, #7c3aed);
+      background-color: var(--sl-color-accent-low, #ede9fe);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-left: auto;
+    }
+
+    .github-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--sl-border-radius, 0.375rem);
+      color: var(--sl-color-gray-5, #4b4b4b);
+      text-decoration: none;
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    .github-link:hover {
+      color: var(--sl-color-text, #23262f);
+      background-color: var(--sl-color-gray-2, #e8e8e8);
+    }
+
+    .github-link svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: currentColor;
+    }
+
+    sl-icon-button {
+      font-size: 1.1rem;
+      color: var(--sl-color-text, #23262f);
+    }
+  </style><!--lit-part MPbiVvy24Kw=-->
+      <header>
+        <a class="site-title" href="/">
+          <img class="site-logo" src="/logo.png" alt="" aria-hidden="true" />
+          <!--lit-part-->Litro<!--/lit-part-->
+        </a>
+        <nav aria-label="Main navigation">
+          <!--lit-part--><!--lit-part hlBOoUWoZnM=-->
+            <!--lit-node 0--><a
+              href="/docs/introduction"
+              aria-current="false"
+            ><!--lit-part-->Docs<!--/lit-part--></a>
+          <!--/lit-part--><!--lit-part hlBOoUWoZnM=-->
+            <!--lit-node 0--><a
+              href="/blog"
+              aria-current="false"
+            ><!--lit-part-->Blog<!--/lit-part--></a>
+          <!--/lit-part--><!--/lit-part-->
+        </nav>
+        <div class="header-actions">
+          <!--lit-part U7kY8uejMJw=-->
+            <!--lit-node 0--><a class="github-link" href="https://github.com/beatzball/litro" target="_blank" rel="noopener" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </a>
+          <!--/lit-part-->
+          <!--lit-node 8--><sl-icon-button
+            name="moon"
+            label="Switch to dark mode"
+            
+          ></sl-icon-button>
+        </div>
+      </header>
+    <!--/lit-part--></template></starlight-header>
+        <main style="
+          flex:1;
+          max-width:56rem;
+          margin:0 auto;
+          padding:4rem 1.5rem 3rem;
+          width:100%;
+        ">
+          <section style="text-align:center;margin-bottom:4rem;">
+            <img
+              src="/logo.png"
+              alt="Litro logo"
+              style="width:7rem;height:7rem;object-fit:contain;margin-bottom:1rem;"
+            />
+            <h1 style="
+              font-size:clamp(2rem,5vw,3.5rem);
+              font-weight:800;
+              color:var(--sl-color-text);
+              margin:0 0 1rem;
+              line-height:1.1;
+            "><!--lit-part-->Litro<!--/lit-part--></h1>
+            <!--lit-part AfAqdIQvbDA=-->
+              <p style="
+                font-size:var(--sl-text-xl);
+                color:var(--sl-color-gray-4);
+                max-width:36rem;
+                margin:0 auto 2.5rem;
+                line-height:1.6;
+              "><!--lit-part-->The fullstack Lit framework — components, SSR, and static generation in one.<!--/lit-part--></p>
+            <!--/lit-part-->
+            <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+              <sl-button variant="primary" size="medium" href="/docs/introduction">Get Started</sl-button>
+              <sl-button variant="default" size="medium" href="/blog">Blog</sl-button>
+            </div>
+          </section>
+
+          <section>
+            <litro-card-grid>
+              <!--lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon=""
+                  iconSrc="/logos/lit-flame.svg"
+                  title="Lit Components"
+                  description="Standard web components — no VDOM, no proprietary runtime. Works anywhere."
+                ></litro-card>
+              <!--/lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon=""
+                  iconSrc="/logos/nitro.svg"
+                  title="Nitro Server"
+                  description="API routes, middleware, and every Nitro deployment adapter out of the box."
+                ></litro-card>
+              <!--/lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon="🚀"
+                  iconSrc=""
+                  title="Streaming SSR"
+                  description="Declarative Shadow DOM streaming via @lit-labs/ssr. Fast first paint."
+                ></litro-card>
+              <!--/lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon="🔀"
+                  iconSrc=""
+                  title="File-System Routing"
+                  description="Pages folder maps directly to URLs. Dynamic segments, catch-alls, nested routes."
+                ></litro-card>
+              <!--/lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon="🏗️"
+                  iconSrc=""
+                  title="Static Generation"
+                  description="Prerender all routes to HTML. Deploy to any CDN with zero server cost."
+                ></litro-card>
+              <!--/lit-part--><!--lit-part R9hX2cbrO9c=-->
+                <!--lit-node 0--><litro-card
+                  icon="📝"
+                  iconSrc=""
+                  title="Content Layer"
+                  description="Markdown content with 11ty-compatible frontmatter and data cascade."
+                ></litro-card>
+              <!--/lit-part--><!--/lit-part-->
+            </litro-card-grid>
+          </section>
+        </main>
+      </div>
+    <!--/lit-part--></template></page-home><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-home -->

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"fullstack","title":"Fullstack Recipe","date":"2026-01-01T00:00:00.000Z","description":"The fullstack recipe creates an SSR app with API routes, a homepage, and a blog.","tags":[],"draft":false,"body":"<h1>Fullstack Recipe</h1>\n<p>The <code>fullstack</code> recipe creates a server-side rendered app with API routes.</p>\n<h2>Scaffold</h2>\n<pre><code class=\"language-bash\">pnpm create @beatzball/litro my-app\n# choose: fullstack\n</code></pre>\n<h2>Structure</h2>\n<pre><code>my-app/\n  pages/\n    index.ts          ← home page\n    about.ts          ← about page\n  server/\n    api/\n      hello.ts        ← GET /api/hello\n  public/\n  app.ts\n  nitro.config.ts\n  vite.config.ts\n</code></pre>\n<h2>What You Get</h2>\n<ul>\n<li>SSR with streaming DSD on all pages</li>\n<li><code>/api/hello</code> API endpoint</li>\n<li><code>definePageData</code> server data fetching</li>\n<li>Light/dark theme toggle</li>\n<li><code>&#x3C;litro-link></code> for SPA navigation</li>\n</ul>","rawBody":"\n# Fullstack Recipe\n\nThe `fullstack` recipe creates a server-side rendered app with API routes.\n\n## Scaffold\n\n```bash\npnpm create @beatzball/litro my-app\n# choose: fullstack\n```\n\n## Structure\n\n```\nmy-app/\n  pages/\n    index.ts          ← home page\n    about.ts          ← about page\n  server/\n    api/\n      hello.ts        ← GET /api/hello\n  public/\n  app.ts\n  nitro.config.ts\n  vite.config.ts\n```\n\n## What You Get\n\n- SSR with streaming DSD on all pages\n- `/api/hello` API endpoint\n- `definePageData` server data fetching\n- Light/dark theme toggle\n- `<litro-link>` for SPA navigation\n","url":"/content/docs/recipes/fullstack","frontmatter":{"title":"Fullstack Recipe","description":"The fullstack recipe creates an SSR app with API routes, a homepage, and a blog.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>The <code>fullstack</code> recipe creates a server-side rendered app with API routes.</p>\n<h2 id=\"scaffold\">Scaffold</h2>\n<pre><code class=\"language-bash\">pnpm create @beatzball/litro my-app\n# choose: fullstack\n</code></pre>\n<h2 id=\"structure\">Structure</h2>\n<pre><code>my-app/\n  pages/\n    index.ts          ← home page\n    about.ts          ← about page\n  server/\n    api/\n      hello.ts        ← GET /api/hello\n  public/\n  app.ts\n  nitro.config.ts\n  vite.config.ts\n</code></pre>\n<h2 id=\"what-you-get\">What You Get</h2>\n<ul>\n<li>SSR with streaming DSD on all pages</li>\n<li><code>/api/hello</code> API endpoint</li>\n<li><code>definePageData</code> server data fetching</li>\n<li>Light/dark theme toggle</li>\n<li><code>&#x3C;litro-link></code> for SPA navigation</li>\n</ul>","toc":[{"depth":2,"text":"Scaffold","slug":"scaffold"},{"depth":2,"text":"Structure","slug":"structure"},{"depth":2,"text":"What You Get","slug":"what-you-get"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"recipes/fullstack","prevDoc":{"label":"LitroRouter","href":"/docs/litro-router"},"nextDoc":{"label":"11ty Blog","href":"/docs/recipes/11ty-blog"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/recipes/fullstack.md","seoHead":"<meta name=\"description\" content=\"The fullstack recipe creates an SSR app with API routes, a homepage, and a blog.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/recipes/fullstack\" />\n<meta property=\"og:title\" content=\"Fullstack Recipe — Litro\" />\n<meta property=\"og:description\" content=\"The fullstack recipe creates an SSR app with API routes, a homepage, and a blog.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/recipes/fullstack\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Fullstack Recipe — Litro\" />\n<meta name=\"twitter:description\" content=\"The fullstack recipe creates an SSR app with API routes, a homepage, and a blog.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Fullstack Recipe"
+        
+        
+        
+        currentSlug="recipes/fullstack"
+        currentPath="/docs/recipes/fullstack"
+      >
+        <div slot="content">
+          <!--lit-part LQUAoFC7O28=--><p>The <code>fullstack</code> recipe creates a server-side rendered app with API routes.</p>
+<h2 id="scaffold">Scaffold</h2>
+<pre><code class="language-bash">pnpm create @beatzball/litro my-app
+# choose: fullstack
+</code></pre>
+<h2 id="structure">Structure</h2>
+<pre><code>my-app/
+  pages/
+    index.ts          ← home page
+    about.ts          ← about page
+  server/
+    api/
+      hello.ts        ← GET /api/hello
+  public/
+  app.ts
+  nitro.config.ts
+  vite.config.ts
+</code></pre>
+<h2 id="what-you-get">What You Get</h2>
+<ul>
+<li>SSR with streaming DSD on all pages</li>
+<li><code>/api/hello</code> API endpoint</li>
+<li><code>definePageData</code> server data fetching</li>
+<li>Light/dark theme toggle</li>
+<li><code>&#x3C;litro-link></code> for SPA navigation</li>
+</ul><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/litro-router" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->LitroRouter<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/recipes/11ty-blog" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->11ty Blog<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/recipes/fullstack.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

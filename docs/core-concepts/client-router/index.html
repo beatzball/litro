@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"client-router","title":"Client-Side Router","date":"2026-01-01T00:00:00.000Z","description":"LitroRouter is Litro's built-in client router using the native URLPattern API. No external dependency.","tags":[],"draft":false,"body":"<h1>Client-Side Router</h1>\n<p>Litro ships a built-in client-side router (<code>LitroRouter</code>) built on the native <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/URLPattern\">URLPattern API</a>. No external router dependency.</p>\n<h2>Navigation</h2>\n<p>Use <code>&#x3C;litro-link></code> for SPA navigation. Plain <code>&#x3C;a></code> tags cause full page reloads:</p>\n<pre><code class=\"language-html\">&#x3C;!-- SPA navigation — no full reload -->\n&#x3C;litro-link href=\"/docs/getting-started\">Getting Started&#x3C;/litro-link>\n\n&#x3C;!-- Full page reload (browser default) -->\n&#x3C;a href=\"/docs/getting-started\">Getting Started&#x3C;/a>\n</code></pre>\n<h2>Programmatic Navigation</h2>\n<pre><code class=\"language-ts\">import { LitroRouter } from '@beatzball/litro-router';\n\nLitroRouter.go('/docs/getting-started');\n</code></pre>\n<h2>Route Parameters</h2>\n<p>The router passes parsed parameters to <code>onBeforeEnter</code>:</p>\n<pre><code class=\"language-ts\">@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  _slug = '';\n\n  override onBeforeEnter(location: LitroLocation) {\n    this._slug = location.params.slug ?? '';\n  }\n\n  override render() {\n    return html`&#x3C;p>Slug: ${this._slug}&#x3C;/p>`;\n  }\n}\n</code></pre>\n<h2>Hash Navigation</h2>\n<p>The router handles <code>popstate</code> events from fragment links (#hash). It automatically scrolls to the target heading after mount, traversing shadow DOM roots to find the element.</p>\n<h2>SSG and the Router</h2>\n<p>The <code>crawlLinks</code> option does <strong>not</strong> find <code>LitroRouter</code> routes automatically. Add all static page routes to <code>prerender.routes</code> explicitly. Litro's SSG plugin handles this via <code>generateRoutes()</code> exports on page files.</p>","rawBody":"\n# Client-Side Router\n\nLitro ships a built-in client-side router (`LitroRouter`) built on the native [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern). No external router dependency.\n\n## Navigation\n\nUse `<litro-link>` for SPA navigation. Plain `<a>` tags cause full page reloads:\n\n```html\n<!-- SPA navigation — no full reload -->\n<litro-link href=\"/docs/getting-started\">Getting Started</litro-link>\n\n<!-- Full page reload (browser default) -->\n<a href=\"/docs/getting-started\">Getting Started</a>\n```\n\n## Programmatic Navigation\n\n```ts\nimport { LitroRouter } from '@beatzball/litro-router';\n\nLitroRouter.go('/docs/getting-started');\n```\n\n## Route Parameters\n\nThe router passes parsed parameters to `onBeforeEnter`:\n\n```ts\n@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  _slug = '';\n\n  override onBeforeEnter(location: LitroLocation) {\n    this._slug = location.params.slug ?? '';\n  }\n\n  override render() {\n    return html`<p>Slug: ${this._slug}</p>`;\n  }\n}\n```\n\n## Hash Navigation\n\nThe router handles `popstate` events from fragment links (#hash). It automatically scrolls to the target heading after mount, traversing shadow DOM roots to find the element.\n\n## SSG and the Router\n\nThe `crawlLinks` option does **not** find `LitroRouter` routes automatically. Add all static page routes to `prerender.routes` explicitly. Litro's SSG plugin handles this via `generateRoutes()` exports on page files.\n","url":"/content/docs/core-concepts/client-router","frontmatter":{"title":"Client-Side Router","description":"LitroRouter is Litro's built-in client router using the native URLPattern API. No external dependency.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>Litro ships a built-in client-side router (<code>LitroRouter</code>) built on the native <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/URLPattern\">URLPattern API</a>. No external router dependency.</p>\n<h2 id=\"navigation\">Navigation</h2>\n<p>Use <code>&#x3C;litro-link></code> for SPA navigation. Plain <code>&#x3C;a></code> tags cause full page reloads:</p>\n<pre><code class=\"language-html\">&#x3C;!-- SPA navigation — no full reload -->\n&#x3C;litro-link href=\"/docs/getting-started\">Getting Started&#x3C;/litro-link>\n\n&#x3C;!-- Full page reload (browser default) -->\n&#x3C;a href=\"/docs/getting-started\">Getting Started&#x3C;/a>\n</code></pre>\n<h2 id=\"programmatic-navigation\">Programmatic Navigation</h2>\n<pre><code class=\"language-ts\">import { LitroRouter } from '@beatzball/litro-router';\n\nLitroRouter.go('/docs/getting-started');\n</code></pre>\n<h2 id=\"route-parameters\">Route Parameters</h2>\n<p>The router passes parsed parameters to <code>onBeforeEnter</code>:</p>\n<pre><code class=\"language-ts\">@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  _slug = '';\n\n  override onBeforeEnter(location: LitroLocation) {\n    this._slug = location.params.slug ?? '';\n  }\n\n  override render() {\n    return html`&#x3C;p>Slug: ${this._slug}&#x3C;/p>`;\n  }\n}\n</code></pre>\n<h2 id=\"hash-navigation\">Hash Navigation</h2>\n<p>The router handles <code>popstate</code> events from fragment links (#hash). It automatically scrolls to the target heading after mount, traversing shadow DOM roots to find the element.</p>\n<h2 id=\"ssg-and-the-router\">SSG and the Router</h2>\n<p>The <code>crawlLinks</code> option does <strong>not</strong> find <code>LitroRouter</code> routes automatically. Add all static page routes to <code>prerender.routes</code> explicitly. Litro's SSG plugin handles this via <code>generateRoutes()</code> exports on page files.</p>","toc":[{"depth":2,"text":"Navigation","slug":"navigation"},{"depth":2,"text":"Programmatic Navigation","slug":"programmatic-navigation"},{"depth":2,"text":"Route Parameters","slug":"route-parameters"},{"depth":2,"text":"Hash Navigation","slug":"hash-navigation"},{"depth":2,"text":"SSG and the Router","slug":"ssg-and-the-router"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"core-concepts/client-router","prevDoc":{"label":"Data Fetching","href":"/docs/core-concepts/data-fetching"},"nextDoc":{"label":"API Routes","href":"/docs/api-routes"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/client-router.md","seoHead":"<meta name=\"description\" content=\"LitroRouter is Litro's built-in client router using the native URLPattern API. No external dependency.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/core-concepts/client-router\" />\n<meta property=\"og:title\" content=\"Client-Side Router — Litro\" />\n<meta property=\"og:description\" content=\"LitroRouter is Litro's built-in client router using the native URLPattern API. No external dependency.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/core-concepts/client-router\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Client-Side Router — Litro\" />\n<meta name=\"twitter:description\" content=\"LitroRouter is Litro's built-in client router using the native URLPattern API. No external dependency.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Client-Side Router"
+        
+        
+        
+        currentSlug="core-concepts/client-router"
+        currentPath="/docs/core-concepts/client-router"
+      >
+        <div slot="content">
+          <!--lit-part mQIaXo3SSxQ=--><p>Litro ships a built-in client-side router (<code>LitroRouter</code>) built on the native <a href="https://developer.mozilla.org/en-US/docs/Web/API/URLPattern">URLPattern API</a>. No external router dependency.</p>
+<h2 id="navigation">Navigation</h2>
+<p>Use <code>&#x3C;litro-link></code> for SPA navigation. Plain <code>&#x3C;a></code> tags cause full page reloads:</p>
+<pre><code class="language-html">&#x3C;!-- SPA navigation — no full reload -->
+&#x3C;litro-link href="/docs/getting-started">Getting Started&#x3C;/litro-link>
+
+&#x3C;!-- Full page reload (browser default) -->
+&#x3C;a href="/docs/getting-started">Getting Started&#x3C;/a>
+</code></pre>
+<h2 id="programmatic-navigation">Programmatic Navigation</h2>
+<pre><code class="language-ts">import { LitroRouter } from '@beatzball/litro-router';
+
+LitroRouter.go('/docs/getting-started');
+</code></pre>
+<h2 id="route-parameters">Route Parameters</h2>
+<p>The router passes parsed parameters to <code>onBeforeEnter</code>:</p>
+<pre><code class="language-ts">@customElement('page-blog-slug')
+export class BlogSlugPage extends LitroPage {
+  _slug = '';
+
+  override onBeforeEnter(location: LitroLocation) {
+    this._slug = location.params.slug ?? '';
+  }
+
+  override render() {
+    return html`&#x3C;p>Slug: ${this._slug}&#x3C;/p>`;
+  }
+}
+</code></pre>
+<h2 id="hash-navigation">Hash Navigation</h2>
+<p>The router handles <code>popstate</code> events from fragment links (#hash). It automatically scrolls to the target heading after mount, traversing shadow DOM roots to find the element.</p>
+<h2 id="ssg-and-the-router">SSG and the Router</h2>
+<p>The <code>crawlLinks</code> option does <strong>not</strong> find <code>LitroRouter</code> routes automatically. Add all static page routes to <code>prerender.routes</code> explicitly. Litro's SSG plugin handles this via <code>generateRoutes()</code> exports on page files.</p><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/data-fetching" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->Data Fetching<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/api-routes" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->API Routes<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/client-router.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

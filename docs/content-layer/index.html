@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"content-layer","title":"Content Layer","date":"2026-01-01T00:00:00.000Z","description":"The litro:content virtual module provides a Markdown content API compatible with 11ty data files.","tags":["docs"],"draft":false,"body":"<h1>Content Layer</h1>\n<p>The <code>litro:content</code> virtual module provides a server-side Markdown content API. It is compatible with 11ty's data cascade and frontmatter conventions.</p>\n<h2>Directory Structure</h2>\n<pre><code>content/\n  docs/\n    .11tydata.json      ← { \"tags\": [\"docs\"] }\n    getting-started.md\n    api-routes.md\n  blog/\n    .11tydata.json      ← { \"tags\": [\"blog\"] }\n    first-post.md\n  _data/\n    metadata.js         ← global data\n</code></pre>\n<h2>API</h2>\n<pre><code class=\"language-ts\">import { getPosts, getPost, getTags, getGlobalData } from 'litro:content';\n</code></pre>\n<h3><code>getPosts(filter?)</code></h3>\n<p>Returns all posts, optionally filtered by tag or other criteria:</p>\n<pre><code class=\"language-ts\">const posts = await getPosts();\nconst blogPosts = await getPosts({ tags: ['blog'] });\nconst docPages = await getPosts({ tags: ['docs'] });\n</code></pre>\n<h3><code>getPost(url)</code></h3>\n<p>Returns a single post by its URL:</p>\n<pre><code class=\"language-ts\">const post = await getPost('/content/docs/getting-started');\n</code></pre>\n<h3><code>getTags()</code></h3>\n<p>Returns all unique tags across all posts.</p>\n<h3><code>getGlobalData()</code></h3>\n<p>Returns the merged global data from <code>_data/</code> files.</p>\n<h2>Frontmatter</h2>\n<p>Each Markdown file can include YAML frontmatter:</p>\n<pre><code class=\"language-md\">---\ntitle: My Post\ndescription: A brief summary.\ndate: 2026-01-01\ntags:\n  - blog\n  - announcement\n---\n\n# My Post\n\nContent here...\n</code></pre>\n<h2>Post Shape</h2>\n<pre><code class=\"language-ts\">interface Post {\n  title: string;\n  description?: string;\n  date?: string;\n  tags: string[];\n  url: string;       // e.g. /content/docs/getting-started\n  body: string;      // rendered HTML\n  rawBody: string;   // raw Markdown\n}\n</code></pre>\n<h2>SSG + generateRoutes</h2>\n<p>For SSG, export <code>generateRoutes()</code> from your page file to tell the SSG plugin which dynamic routes to prerender:</p>\n<pre><code class=\"language-ts\">export async function generateRoutes(): Promise&#x3C;string[]> {\n  const posts = await getPosts({ tags: ['docs'] });\n  return posts.map(p => '/docs' + p.url.slice('/content/docs'.length));\n}\n</code></pre>","rawBody":"\n# Content Layer\n\nThe `litro:content` virtual module provides a server-side Markdown content API. It is compatible with 11ty's data cascade and frontmatter conventions.\n\n## Directory Structure\n\n```\ncontent/\n  docs/\n    .11tydata.json      ← { \"tags\": [\"docs\"] }\n    getting-started.md\n    api-routes.md\n  blog/\n    .11tydata.json      ← { \"tags\": [\"blog\"] }\n    first-post.md\n  _data/\n    metadata.js         ← global data\n```\n\n## API\n\n```ts\nimport { getPosts, getPost, getTags, getGlobalData } from 'litro:content';\n```\n\n### `getPosts(filter?)`\n\nReturns all posts, optionally filtered by tag or other criteria:\n\n```ts\nconst posts = await getPosts();\nconst blogPosts = await getPosts({ tags: ['blog'] });\nconst docPages = await getPosts({ tags: ['docs'] });\n```\n\n### `getPost(url)`\n\nReturns a single post by its URL:\n\n```ts\nconst post = await getPost('/content/docs/getting-started');\n```\n\n### `getTags()`\n\nReturns all unique tags across all posts.\n\n### `getGlobalData()`\n\nReturns the merged global data from `_data/` files.\n\n## Frontmatter\n\nEach Markdown file can include YAML frontmatter:\n\n```md\n---\ntitle: My Post\ndescription: A brief summary.\ndate: 2026-01-01\ntags:\n  - blog\n  - announcement\n---\n\n# My Post\n\nContent here...\n```\n\n## Post Shape\n\n```ts\ninterface Post {\n  title: string;\n  description?: string;\n  date?: string;\n  tags: string[];\n  url: string;       // e.g. /content/docs/getting-started\n  body: string;      // rendered HTML\n  rawBody: string;   // raw Markdown\n}\n```\n\n## SSG + generateRoutes\n\nFor SSG, export `generateRoutes()` from your page file to tell the SSG plugin which dynamic routes to prerender:\n\n```ts\nexport async function generateRoutes(): Promise<string[]> {\n  const posts = await getPosts({ tags: ['docs'] });\n  return posts.map(p => '/docs' + p.url.slice('/content/docs'.length));\n}\n```\n","url":"/content/docs/content-layer","frontmatter":{"tags":["docs"],"layout":"docs","title":"Content Layer","description":"The litro:content virtual module provides a Markdown content API compatible with 11ty data files.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>The <code>litro:content</code> virtual module provides a server-side Markdown content API. It is compatible with 11ty's data cascade and frontmatter conventions.</p>\n<h2 id=\"directory-structure\">Directory Structure</h2>\n<pre><code>content/\n  docs/\n    .11tydata.json      ← { \"tags\": [\"docs\"] }\n    getting-started.md\n    api-routes.md\n  blog/\n    .11tydata.json      ← { \"tags\": [\"blog\"] }\n    first-post.md\n  _data/\n    metadata.js         ← global data\n</code></pre>\n<h2 id=\"api\">API</h2>\n<pre><code class=\"language-ts\">import { getPosts, getPost, getTags, getGlobalData } from 'litro:content';\n</code></pre>\n<h3 id=\"getpostsfilter\"><code>getPosts(filter?)</code></h3>\n<p>Returns all posts, optionally filtered by tag or other criteria:</p>\n<pre><code class=\"language-ts\">const posts = await getPosts();\nconst blogPosts = await getPosts({ tags: ['blog'] });\nconst docPages = await getPosts({ tags: ['docs'] });\n</code></pre>\n<h3 id=\"getposturl\"><code>getPost(url)</code></h3>\n<p>Returns a single post by its URL:</p>\n<pre><code class=\"language-ts\">const post = await getPost('/content/docs/getting-started');\n</code></pre>\n<h3 id=\"gettags\"><code>getTags()</code></h3>\n<p>Returns all unique tags across all posts.</p>\n<h3 id=\"getglobaldata\"><code>getGlobalData()</code></h3>\n<p>Returns the merged global data from <code>_data/</code> files.</p>\n<h2 id=\"frontmatter\">Frontmatter</h2>\n<p>Each Markdown file can include YAML frontmatter:</p>\n<pre><code class=\"language-md\">---\ntitle: My Post\ndescription: A brief summary.\ndate: 2026-01-01\ntags:\n  - blog\n  - announcement\n---\n\n# My Post\n\nContent here...\n</code></pre>\n<h2 id=\"post-shape\">Post Shape</h2>\n<pre><code class=\"language-ts\">interface Post {\n  title: string;\n  description?: string;\n  date?: string;\n  tags: string[];\n  url: string;       // e.g. /content/docs/getting-started\n  body: string;      // rendered HTML\n  rawBody: string;   // raw Markdown\n}\n</code></pre>\n<h2 id=\"ssg-generateroutes\">SSG + generateRoutes</h2>\n<p>For SSG, export <code>generateRoutes()</code> from your page file to tell the SSG plugin which dynamic routes to prerender:</p>\n<pre><code class=\"language-ts\">export async function generateRoutes(): Promise&#x3C;string[]> {\n  const posts = await getPosts({ tags: ['docs'] });\n  return posts.map(p => '/docs' + p.url.slice('/content/docs'.length));\n}\n</code></pre>","toc":[{"depth":2,"text":"Directory Structure","slug":"directory-structure"},{"depth":2,"text":"API","slug":"api"},{"depth":3,"text":"`getPosts(filter?)`","slug":"getpostsfilter"},{"depth":3,"text":"`getPost(url)`","slug":"getposturl"},{"depth":3,"text":"`getTags()`","slug":"gettags"},{"depth":3,"text":"`getGlobalData()`","slug":"getglobaldata"},{"depth":2,"text":"Frontmatter","slug":"frontmatter"},{"depth":2,"text":"Post Shape","slug":"post-shape"},{"depth":2,"text":"SSG + generateRoutes","slug":"ssg-generateroutes"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"content-layer","prevDoc":{"label":"API Routes","href":"/docs/api-routes"},"nextDoc":{"label":"Static Generation","href":"/docs/ssg"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/content-layer.md","seoHead":"<meta name=\"description\" content=\"The litro:content virtual module provides a Markdown content API compatible with 11ty data files.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/content-layer\" />\n<meta property=\"og:title\" content=\"Content Layer — Litro\" />\n<meta property=\"og:description\" content=\"The litro:content virtual module provides a Markdown content API compatible with 11ty data files.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/content-layer\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Content Layer — Litro\" />\n<meta name=\"twitter:description\" content=\"The litro:content virtual module provides a Markdown content API compatible with 11ty data files.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Content Layer"
+        
+        
+        
+        currentSlug="content-layer"
+        currentPath="/docs/content-layer"
+      >
+        <div slot="content">
+          <!--lit-part yuqRIG2o95s=--><p>The <code>litro:content</code> virtual module provides a server-side Markdown content API. It is compatible with 11ty's data cascade and frontmatter conventions.</p>
+<h2 id="directory-structure">Directory Structure</h2>
+<pre><code>content/
+  docs/
+    .11tydata.json      ← { "tags": ["docs"] }
+    getting-started.md
+    api-routes.md
+  blog/
+    .11tydata.json      ← { "tags": ["blog"] }
+    first-post.md
+  _data/
+    metadata.js         ← global data
+</code></pre>
+<h2 id="api">API</h2>
+<pre><code class="language-ts">import { getPosts, getPost, getTags, getGlobalData } from 'litro:content';
+</code></pre>
+<h3 id="getpostsfilter"><code>getPosts(filter?)</code></h3>
+<p>Returns all posts, optionally filtered by tag or other criteria:</p>
+<pre><code class="language-ts">const posts = await getPosts();
+const blogPosts = await getPosts({ tags: ['blog'] });
+const docPages = await getPosts({ tags: ['docs'] });
+</code></pre>
+<h3 id="getposturl"><code>getPost(url)</code></h3>
+<p>Returns a single post by its URL:</p>
+<pre><code class="language-ts">const post = await getPost('/content/docs/getting-started');
+</code></pre>
+<h3 id="gettags"><code>getTags()</code></h3>
+<p>Returns all unique tags across all posts.</p>
+<h3 id="getglobaldata"><code>getGlobalData()</code></h3>
+<p>Returns the merged global data from <code>_data/</code> files.</p>
+<h2 id="frontmatter">Frontmatter</h2>
+<p>Each Markdown file can include YAML frontmatter:</p>
+<pre><code class="language-md">---
+title: My Post
+description: A brief summary.
+date: 2026-01-01
+tags:
+  - blog
+  - announcement
+---
+
+# My Post
+
+Content here...
+</code></pre>
+<h2 id="post-shape">Post Shape</h2>
+<pre><code class="language-ts">interface Post {
+  title: string;
+  description?: string;
+  date?: string;
+  tags: string[];
+  url: string;       // e.g. /content/docs/getting-started
+  body: string;      // rendered HTML
+  rawBody: string;   // raw Markdown
+}
+</code></pre>
+<h2 id="ssg-generateroutes">SSG + generateRoutes</h2>
+<p>For SSG, export <code>generateRoutes()</code> from your page file to tell the SSG plugin which dynamic routes to prerender:</p>
+<pre><code class="language-ts">export async function generateRoutes(): Promise&#x3C;string[]> {
+  const posts = await getPosts({ tags: ['docs'] });
+  return posts.map(p => '/docs' + p.url.slice('/content/docs'.length));
+}
+</code></pre><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/api-routes" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->API Routes<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/ssg" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Static Generation<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/content-layer.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"coolify","title":"Coolify","date":"2026-01-01T00:00:00.000Z","description":"Deploy your Litro site to Coolify using static site build pack or Docker.","tags":[],"draft":false,"body":"<h1>Coolify</h1>\n<p>Litro SSG builds can be deployed to <a href=\"https://coolify.io\">Coolify</a> as a static site or via Docker.</p>\n<h2>Static Site Build Pack</h2>\n<p>In your Coolify project:</p>\n<ul>\n<li><strong>Build command:</strong>\n<pre><code class=\"language-bash\">pnpm --filter @beatzball/litro-router build &#x26;&#x26; pnpm --filter @beatzball/litro build &#x26;&#x26; pnpm --filter @beatzball/litro-docs build\n</code></pre>\n</li>\n<li><strong>Publish directory:</strong> <code>docs/dist/static</code></li>\n<li><strong>Environment variables:</strong> Set <code>SITE_URL</code> to your domain.</li>\n</ul>\n<h2>Docker</h2>\n<p>Use the included <code>Dockerfile</code> + <code>nginx.conf</code> in <code>docs/</code>:</p>\n<pre><code class=\"language-bash\">docker build -f docs/Dockerfile -t litro-docs .\ndocker run -p 80:80 litro-docs\n</code></pre>\n<p>The Docker image:</p>\n<ul>\n<li>Builds the SSG output in a multi-stage Node.js build</li>\n<li>Copies <code>dist/static/</code> to nginx</li>\n<li>Configures clean-URL routing (directory index + try_files)</li>\n<li>Sets 1-year immutable caching headers for <code>/_litro/</code> and <code>/shoelace/</code> assets</li>\n</ul>","rawBody":"\n# Coolify\n\nLitro SSG builds can be deployed to [Coolify](https://coolify.io) as a static site or via Docker.\n\n## Static Site Build Pack\n\nIn your Coolify project:\n\n- **Build command:**\n  ```bash\n  pnpm --filter @beatzball/litro-router build && pnpm --filter @beatzball/litro build && pnpm --filter @beatzball/litro-docs build\n  ```\n- **Publish directory:** `docs/dist/static`\n- **Environment variables:** Set `SITE_URL` to your domain.\n\n## Docker\n\nUse the included `Dockerfile` + `nginx.conf` in `docs/`:\n\n```bash\ndocker build -f docs/Dockerfile -t litro-docs .\ndocker run -p 80:80 litro-docs\n```\n\nThe Docker image:\n- Builds the SSG output in a multi-stage Node.js build\n- Copies `dist/static/` to nginx\n- Configures clean-URL routing (directory index + try_files)\n- Sets 1-year immutable caching headers for `/_litro/` and `/shoelace/` assets\n","url":"/content/docs/deployment/coolify","frontmatter":{"title":"Coolify","description":"Deploy your Litro site to Coolify using static site build pack or Docker.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>Litro SSG builds can be deployed to <a href=\"https://coolify.io\">Coolify</a> as a static site or via Docker.</p>\n<h2 id=\"static-site-build-pack\">Static Site Build Pack</h2>\n<p>In your Coolify project:</p>\n<ul>\n<li><strong>Build command:</strong>\n<pre><code class=\"language-bash\">pnpm --filter @beatzball/litro-router build &#x26;&#x26; pnpm --filter @beatzball/litro build &#x26;&#x26; pnpm --filter @beatzball/litro-docs build\n</code></pre>\n</li>\n<li><strong>Publish directory:</strong> <code>docs/dist/static</code></li>\n<li><strong>Environment variables:</strong> Set <code>SITE_URL</code> to your domain.</li>\n</ul>\n<h2 id=\"docker\">Docker</h2>\n<p>Use the included <code>Dockerfile</code> + <code>nginx.conf</code> in <code>docs/</code>:</p>\n<pre><code class=\"language-bash\">docker build -f docs/Dockerfile -t litro-docs .\ndocker run -p 80:80 litro-docs\n</code></pre>\n<p>The Docker image:</p>\n<ul>\n<li>Builds the SSG output in a multi-stage Node.js build</li>\n<li>Copies <code>dist/static/</code> to nginx</li>\n<li>Configures clean-URL routing (directory index + try_files)</li>\n<li>Sets 1-year immutable caching headers for <code>/_litro/</code> and <code>/shoelace/</code> assets</li>\n</ul>","toc":[{"depth":2,"text":"Static Site Build Pack","slug":"static-site-build-pack"},{"depth":2,"text":"Docker","slug":"docker"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"deployment/coolify","prevDoc":{"label":"GitHub Pages","href":"/docs/deployment/github-pages"},"nextDoc":{"label":"Contributing","href":"/docs/contributing"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/deployment/coolify.md","seoHead":"<meta name=\"description\" content=\"Deploy your Litro site to Coolify using static site build pack or Docker.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/deployment/coolify\" />\n<meta property=\"og:title\" content=\"Coolify — Litro\" />\n<meta property=\"og:description\" content=\"Deploy your Litro site to Coolify using static site build pack or Docker.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/deployment/coolify\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Coolify — Litro\" />\n<meta name=\"twitter:description\" content=\"Deploy your Litro site to Coolify using static site build pack or Docker.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Coolify"
+        
+        
+        
+        currentSlug="deployment/coolify"
+        currentPath="/docs/deployment/coolify"
+      >
+        <div slot="content">
+          <!--lit-part Xz8sqxsVnP4=--><p>Litro SSG builds can be deployed to <a href="https://coolify.io">Coolify</a> as a static site or via Docker.</p>
+<h2 id="static-site-build-pack">Static Site Build Pack</h2>
+<p>In your Coolify project:</p>
+<ul>
+<li><strong>Build command:</strong>
+<pre><code class="language-bash">pnpm --filter @beatzball/litro-router build &#x26;&#x26; pnpm --filter @beatzball/litro build &#x26;&#x26; pnpm --filter @beatzball/litro-docs build
+</code></pre>
+</li>
+<li><strong>Publish directory:</strong> <code>docs/dist/static</code></li>
+<li><strong>Environment variables:</strong> Set <code>SITE_URL</code> to your domain.</li>
+</ul>
+<h2 id="docker">Docker</h2>
+<p>Use the included <code>Dockerfile</code> + <code>nginx.conf</code> in <code>docs/</code>:</p>
+<pre><code class="language-bash">docker build -f docs/Dockerfile -t litro-docs .
+docker run -p 80:80 litro-docs
+</code></pre>
+<p>The Docker image:</p>
+<ul>
+<li>Builds the SSG output in a multi-stage Node.js build</li>
+<li>Copies <code>dist/static/</code> to nginx</li>
+<li>Configures clean-URL routing (directory index + try_files)</li>
+<li>Sets 1-year immutable caching headers for <code>/_litro/</code> and <code>/shoelace/</code> assets</li>
+</ul><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/deployment/github-pages" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->GitHub Pages<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/contributing" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Contributing<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/deployment/coolify.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

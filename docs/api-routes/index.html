@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"api-routes","title":"API Routes","date":"2026-01-01T00:00:00.000Z","description":"Create API endpoints in server/api/ using standard Nitro/H3 handlers.","tags":["docs"],"draft":false,"body":"<h1>API Routes</h1>\n<p>API routes are standard Nitro/H3 event handlers placed in <code>server/api/</code>. No Lit involved.</p>\n<h2>Creating an API Route</h2>\n<pre><code class=\"language-ts\">// server/api/hello.ts\nimport { defineEventHandler } from 'h3';\n\nexport default defineEventHandler((event) => {\n  return { message: 'Hello from the API', timestamp: Date.now() };\n});\n</code></pre>\n<p>This file is automatically registered at <code>/api/hello</code> by Nitro's route scanner.</p>\n<h2>HTTP Methods</h2>\n<p>Use filename suffixes for method-specific handlers:</p>\n<pre><code>server/api/\n  posts.get.ts     → GET /api/posts\n  posts.post.ts    → POST /api/posts\n  posts/[id].ts    → /api/posts/:id (all methods)\n</code></pre>\n<h2>Reading Request Data</h2>\n<pre><code class=\"language-ts\">import { defineEventHandler, readBody, getQuery } from 'h3';\n\nexport default defineEventHandler(async (event) => {\n  const query = getQuery(event);\n  const body = await readBody(event);\n  return { query, body };\n});\n</code></pre>\n<h2>Error Responses</h2>\n<pre><code class=\"language-ts\">import { defineEventHandler, createError } from 'h3';\n\nexport default defineEventHandler((event) => {\n  const id = event.context.params?.id;\n  if (!id) throw createError({ statusCode: 400, message: 'Missing id' });\n  // ...\n});\n</code></pre>","rawBody":"\n# API Routes\n\nAPI routes are standard Nitro/H3 event handlers placed in `server/api/`. No Lit involved.\n\n## Creating an API Route\n\n```ts\n// server/api/hello.ts\nimport { defineEventHandler } from 'h3';\n\nexport default defineEventHandler((event) => {\n  return { message: 'Hello from the API', timestamp: Date.now() };\n});\n```\n\nThis file is automatically registered at `/api/hello` by Nitro's route scanner.\n\n## HTTP Methods\n\nUse filename suffixes for method-specific handlers:\n\n```\nserver/api/\n  posts.get.ts     → GET /api/posts\n  posts.post.ts    → POST /api/posts\n  posts/[id].ts    → /api/posts/:id (all methods)\n```\n\n## Reading Request Data\n\n```ts\nimport { defineEventHandler, readBody, getQuery } from 'h3';\n\nexport default defineEventHandler(async (event) => {\n  const query = getQuery(event);\n  const body = await readBody(event);\n  return { query, body };\n});\n```\n\n## Error Responses\n\n```ts\nimport { defineEventHandler, createError } from 'h3';\n\nexport default defineEventHandler((event) => {\n  const id = event.context.params?.id;\n  if (!id) throw createError({ statusCode: 400, message: 'Missing id' });\n  // ...\n});\n```\n","url":"/content/docs/api-routes","frontmatter":{"tags":["docs"],"layout":"docs","title":"API Routes","description":"Create API endpoints in server/api/ using standard Nitro/H3 handlers.","date":"2026-01-01T00:00:00.000Z"}},"body":"<p>API routes are standard Nitro/H3 event handlers placed in <code>server/api/</code>. No Lit involved.</p>\n<h2 id=\"creating-an-api-route\">Creating an API Route</h2>\n<pre><code class=\"language-ts\">// server/api/hello.ts\nimport { defineEventHandler } from 'h3';\n\nexport default defineEventHandler((event) => {\n  return { message: 'Hello from the API', timestamp: Date.now() };\n});\n</code></pre>\n<p>This file is automatically registered at <code>/api/hello</code> by Nitro's route scanner.</p>\n<h2 id=\"http-methods\">HTTP Methods</h2>\n<p>Use filename suffixes for method-specific handlers:</p>\n<pre><code>server/api/\n  posts.get.ts     → GET /api/posts\n  posts.post.ts    → POST /api/posts\n  posts/[id].ts    → /api/posts/:id (all methods)\n</code></pre>\n<h2 id=\"reading-request-data\">Reading Request Data</h2>\n<pre><code class=\"language-ts\">import { defineEventHandler, readBody, getQuery } from 'h3';\n\nexport default defineEventHandler(async (event) => {\n  const query = getQuery(event);\n  const body = await readBody(event);\n  return { query, body };\n});\n</code></pre>\n<h2 id=\"error-responses\">Error Responses</h2>\n<pre><code class=\"language-ts\">import { defineEventHandler, createError } from 'h3';\n\nexport default defineEventHandler((event) => {\n  const id = event.context.params?.id;\n  if (!id) throw createError({ statusCode: 400, message: 'Missing id' });\n  // ...\n});\n</code></pre>","toc":[{"depth":2,"text":"Creating an API Route","slug":"creating-an-api-route"},{"depth":2,"text":"HTTP Methods","slug":"http-methods"},{"depth":2,"text":"Reading Request Data","slug":"reading-request-data"},{"depth":2,"text":"Error Responses","slug":"error-responses"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"api-routes","prevDoc":{"label":"Client Router","href":"/docs/core-concepts/client-router"},"nextDoc":{"label":"Content Layer","href":"/docs/content-layer"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/api-routes.md","seoHead":"<meta name=\"description\" content=\"Create API endpoints in server/api/ using standard Nitro/H3 handlers.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/api-routes\" />\n<meta property=\"og:title\" content=\"API Routes — Litro\" />\n<meta property=\"og:description\" content=\"Create API endpoints in server/api/ using standard Nitro/H3 handlers.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/api-routes\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"API Routes — Litro\" />\n<meta name=\"twitter:description\" content=\"Create API endpoints in server/api/ using standard Nitro/H3 handlers.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="API Routes"
+        
+        
+        
+        currentSlug="api-routes"
+        currentPath="/docs/api-routes"
+      >
+        <div slot="content">
+          <!--lit-part SFnVwK1LfCE=--><p>API routes are standard Nitro/H3 event handlers placed in <code>server/api/</code>. No Lit involved.</p>
+<h2 id="creating-an-api-route">Creating an API Route</h2>
+<pre><code class="language-ts">// server/api/hello.ts
+import { defineEventHandler } from 'h3';
+
+export default defineEventHandler((event) => {
+  return { message: 'Hello from the API', timestamp: Date.now() };
+});
+</code></pre>
+<p>This file is automatically registered at <code>/api/hello</code> by Nitro's route scanner.</p>
+<h2 id="http-methods">HTTP Methods</h2>
+<p>Use filename suffixes for method-specific handlers:</p>
+<pre><code>server/api/
+  posts.get.ts     → GET /api/posts
+  posts.post.ts    → POST /api/posts
+  posts/[id].ts    → /api/posts/:id (all methods)
+</code></pre>
+<h2 id="reading-request-data">Reading Request Data</h2>
+<pre><code class="language-ts">import { defineEventHandler, readBody, getQuery } from 'h3';
+
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event);
+  const body = await readBody(event);
+  return { query, body };
+});
+</code></pre>
+<h2 id="error-responses">Error Responses</h2>
+<pre><code class="language-ts">import { defineEventHandler, createError } from 'h3';
+
+export default defineEventHandler((event) => {
+  const id = event.context.params?.id;
+  if (!id) throw createError({ statusCode: 400, message: 'Missing id' });
+  // ...
+});
+</code></pre><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/client-router" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->Client Router<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/content-layer" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Content Layer<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/api-routes.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

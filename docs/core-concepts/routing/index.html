@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"routing","title":"Routing","date":"2026-01-01T00:00:00.000Z","description":"Litro uses file-system routing — page filenames map directly to URL paths.","tags":[],"draft":false,"body":"<h1>Routing</h1>\n<h2>File-System Routing</h2>\n<p>Litro uses the <code>pages/</code> directory for routing. Filenames map to URL paths:</p>\n<table>\n<thead>\n<tr>\n<th>File</th>\n<th>Route</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>pages/index.ts</code></td>\n<td><code>/</code></td>\n</tr>\n<tr>\n<td><code>pages/about.ts</code></td>\n<td><code>/about</code></td>\n</tr>\n<tr>\n<td><code>pages/blog/index.ts</code></td>\n<td><code>/blog</code></td>\n</tr>\n<tr>\n<td><code>pages/blog/[slug].ts</code></td>\n<td><code>/blog/:slug</code></td>\n</tr>\n<tr>\n<td><code>pages/[...all].ts</code></td>\n<td><code>/*</code> (catch-all)</td>\n</tr>\n</tbody>\n</table>\n<h2>Page Components</h2>\n<p>Each page file exports a <strong>default</strong> Lit component class decorated with <code>@customElement</code>:</p>\n<pre><code class=\"language-ts\">import { html } from 'lit';\nimport { customElement } from 'lit/decorators.js';\nimport { LitroPage } from '@beatzball/litro/runtime';\n\n@customElement('page-about')\nexport class AboutPage extends LitroPage {\n  override render() {\n    return html`&#x3C;h1>About&#x3C;/h1>`;\n  }\n}\n\nexport default AboutPage;\n</code></pre>\n<h2>Route Parameters</h2>\n<p>Dynamic segments are available in <code>definePageData</code> via <code>event.context.params</code>:</p>\n<pre><code class=\"language-ts\">export const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  // ...\n});\n</code></pre>\n<p>On the client side, <code>onBeforeEnter(location)</code> receives the parsed route parameters:</p>\n<pre><code class=\"language-ts\">override onBeforeEnter(location: LitroLocation) {\n  this._slug = location.params.slug ?? '';\n}\n</code></pre>\n<h2>Route Metadata</h2>\n<p>Export a <code>routeMeta</code> object to control the page's <code>&#x3C;title></code> and inject extra <code>&#x3C;head></code> HTML:</p>\n<pre><code class=\"language-ts\">export const routeMeta = {\n  title: 'About — My Site',\n  head: '&#x3C;meta name=\"description\" content=\"About page\" />',\n};\n</code></pre>","rawBody":"\n# Routing\n\n## File-System Routing\n\nLitro uses the `pages/` directory for routing. Filenames map to URL paths:\n\n| File | Route |\n|---|---|\n| `pages/index.ts` | `/` |\n| `pages/about.ts` | `/about` |\n| `pages/blog/index.ts` | `/blog` |\n| `pages/blog/[slug].ts` | `/blog/:slug` |\n| `pages/[...all].ts` | `/*` (catch-all) |\n\n## Page Components\n\nEach page file exports a **default** Lit component class decorated with `@customElement`:\n\n```ts\nimport { html } from 'lit';\nimport { customElement } from 'lit/decorators.js';\nimport { LitroPage } from '@beatzball/litro/runtime';\n\n@customElement('page-about')\nexport class AboutPage extends LitroPage {\n  override render() {\n    return html`<h1>About</h1>`;\n  }\n}\n\nexport default AboutPage;\n```\n\n## Route Parameters\n\nDynamic segments are available in `definePageData` via `event.context.params`:\n\n```ts\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  // ...\n});\n```\n\nOn the client side, `onBeforeEnter(location)` receives the parsed route parameters:\n\n```ts\noverride onBeforeEnter(location: LitroLocation) {\n  this._slug = location.params.slug ?? '';\n}\n```\n\n## Route Metadata\n\nExport a `routeMeta` object to control the page's `<title>` and inject extra `<head>` HTML:\n\n```ts\nexport const routeMeta = {\n  title: 'About — My Site',\n  head: '<meta name=\"description\" content=\"About page\" />',\n};\n```\n","url":"/content/docs/core-concepts/routing","frontmatter":{"title":"Routing","description":"Litro uses file-system routing — page filenames map directly to URL paths.","date":"2026-01-01T00:00:00.000Z"}},"body":"<h2 id=\"file-system-routing\">File-System Routing</h2>\n<p>Litro uses the <code>pages/</code> directory for routing. Filenames map to URL paths:</p>\n<table>\n<thead>\n<tr>\n<th>File</th>\n<th>Route</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>pages/index.ts</code></td>\n<td><code>/</code></td>\n</tr>\n<tr>\n<td><code>pages/about.ts</code></td>\n<td><code>/about</code></td>\n</tr>\n<tr>\n<td><code>pages/blog/index.ts</code></td>\n<td><code>/blog</code></td>\n</tr>\n<tr>\n<td><code>pages/blog/[slug].ts</code></td>\n<td><code>/blog/:slug</code></td>\n</tr>\n<tr>\n<td><code>pages/[...all].ts</code></td>\n<td><code>/*</code> (catch-all)</td>\n</tr>\n</tbody>\n</table>\n<h2 id=\"page-components\">Page Components</h2>\n<p>Each page file exports a <strong>default</strong> Lit component class decorated with <code>@customElement</code>:</p>\n<pre><code class=\"language-ts\">import { html } from 'lit';\nimport { customElement } from 'lit/decorators.js';\nimport { LitroPage } from '@beatzball/litro/runtime';\n\n@customElement('page-about')\nexport class AboutPage extends LitroPage {\n  override render() {\n    return html`&#x3C;h1>About&#x3C;/h1>`;\n  }\n}\n\nexport default AboutPage;\n</code></pre>\n<h2 id=\"route-parameters\">Route Parameters</h2>\n<p>Dynamic segments are available in <code>definePageData</code> via <code>event.context.params</code>:</p>\n<pre><code class=\"language-ts\">export const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  // ...\n});\n</code></pre>\n<p>On the client side, <code>onBeforeEnter(location)</code> receives the parsed route parameters:</p>\n<pre><code class=\"language-ts\">override onBeforeEnter(location: LitroLocation) {\n  this._slug = location.params.slug ?? '';\n}\n</code></pre>\n<h2 id=\"route-metadata\">Route Metadata</h2>\n<p>Export a <code>routeMeta</code> object to control the page's <code>&#x3C;title></code> and inject extra <code>&#x3C;head></code> HTML:</p>\n<pre><code class=\"language-ts\">export const routeMeta = {\n  title: 'About — My Site',\n  head: '&#x3C;meta name=\"description\" content=\"About page\" />',\n};\n</code></pre>","toc":[{"depth":2,"text":"File-System Routing","slug":"file-system-routing"},{"depth":2,"text":"Page Components","slug":"page-components"},{"depth":2,"text":"Route Parameters","slug":"route-parameters"},{"depth":2,"text":"Route Metadata","slug":"route-metadata"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"core-concepts/routing","prevDoc":{"label":"Configuration","href":"/docs/configuration"},"nextDoc":{"label":"SSR","href":"/docs/core-concepts/ssr"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/routing.md","seoHead":"<meta name=\"description\" content=\"Litro uses file-system routing — page filenames map directly to URL paths.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/core-concepts/routing\" />\n<meta property=\"og:title\" content=\"Routing — Litro\" />\n<meta property=\"og:description\" content=\"Litro uses file-system routing — page filenames map directly to URL paths.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/core-concepts/routing\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Routing — Litro\" />\n<meta name=\"twitter:description\" content=\"Litro uses file-system routing — page filenames map directly to URL paths.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Routing"
+        
+        
+        
+        currentSlug="core-concepts/routing"
+        currentPath="/docs/core-concepts/routing"
+      >
+        <div slot="content">
+          <!--lit-part lJ9KZKIvfaU=--><h2 id="file-system-routing">File-System Routing</h2>
+<p>Litro uses the <code>pages/</code> directory for routing. Filenames map to URL paths:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Route</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pages/index.ts</code></td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td><code>pages/about.ts</code></td>
+<td><code>/about</code></td>
+</tr>
+<tr>
+<td><code>pages/blog/index.ts</code></td>
+<td><code>/blog</code></td>
+</tr>
+<tr>
+<td><code>pages/blog/[slug].ts</code></td>
+<td><code>/blog/:slug</code></td>
+</tr>
+<tr>
+<td><code>pages/[...all].ts</code></td>
+<td><code>/*</code> (catch-all)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="page-components">Page Components</h2>
+<p>Each page file exports a <strong>default</strong> Lit component class decorated with <code>@customElement</code>:</p>
+<pre><code class="language-ts">import { html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { LitroPage } from '@beatzball/litro/runtime';
+
+@customElement('page-about')
+export class AboutPage extends LitroPage {
+  override render() {
+    return html`&#x3C;h1>About&#x3C;/h1>`;
+  }
+}
+
+export default AboutPage;
+</code></pre>
+<h2 id="route-parameters">Route Parameters</h2>
+<p>Dynamic segments are available in <code>definePageData</code> via <code>event.context.params</code>:</p>
+<pre><code class="language-ts">export const pageData = definePageData(async (event) => {
+  const slug = event.context.params?.slug ?? '';
+  // ...
+});
+</code></pre>
+<p>On the client side, <code>onBeforeEnter(location)</code> receives the parsed route parameters:</p>
+<pre><code class="language-ts">override onBeforeEnter(location: LitroLocation) {
+  this._slug = location.params.slug ?? '';
+}
+</code></pre>
+<h2 id="route-metadata">Route Metadata</h2>
+<p>Export a <code>routeMeta</code> object to control the page's <code>&#x3C;title></code> and inject extra <code>&#x3C;head></code> HTML:</p>
+<pre><code class="language-ts">export const routeMeta = {
+  title: 'About — My Site',
+  head: '&#x3C;meta name="description" content="About page" />',
+};
+</code></pre><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/configuration" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->Configuration<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/ssr" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->SSR<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/routing.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

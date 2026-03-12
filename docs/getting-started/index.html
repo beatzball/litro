@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"getting-started","title":"Getting Started","date":"2026-01-01T00:00:00.000Z","description":"Create a new Litro project in minutes using the create-litro scaffolding CLI.","tags":["docs"],"draft":false,"body":"<h1>Getting Started</h1>\n<h2>Prerequisites</h2>\n<ul>\n<li>Node.js 20+</li>\n<li>pnpm 9+</li>\n</ul>\n<h2>Create a New Project</h2>\n<pre><code class=\"language-bash\">pnpm create @beatzball/litro my-app\n</code></pre>\n<p>This launches the interactive scaffolding wizard. Choose a recipe:</p>\n<ul>\n<li><strong>fullstack</strong> — SSR app with API routes</li>\n<li><strong>11ty-blog</strong> — Markdown blog with content layer</li>\n<li><strong>starlight</strong> — Documentation site with sidebar + TOC</li>\n</ul>\n<h2>Start the Dev Server</h2>\n<pre><code class=\"language-bash\">cd my-app\npnpm install\npnpm dev\n</code></pre>\n<p>The dev server starts on port 3000 (auto-increments if taken). Open <a href=\"http://localhost:3000\">http://localhost:3000</a>.</p>\n<h2>Build for Production</h2>\n<pre><code class=\"language-bash\">pnpm build\n</code></pre>\n<p>Output:</p>\n<ul>\n<li><code>dist/client/</code> — Vite-built client bundle</li>\n<li><code>dist/server/</code> — Nitro server bundle (SSR mode) or <code>dist/static/</code> (SSG mode)</li>\n</ul>\n<h2>Preview the Production Build</h2>\n<pre><code class=\"language-bash\">pnpm preview\n</code></pre>\n<p>Serves the production build locally. For SSG output, serves from <code>dist/static/</code>. For SSR, starts the Nitro server from <code>dist/server/server/index.mjs</code>.</p>","rawBody":"\n# Getting Started\n\n## Prerequisites\n\n- Node.js 20+\n- pnpm 9+\n\n## Create a New Project\n\n```bash\npnpm create @beatzball/litro my-app\n```\n\nThis launches the interactive scaffolding wizard. Choose a recipe:\n\n- **fullstack** — SSR app with API routes\n- **11ty-blog** — Markdown blog with content layer\n- **starlight** — Documentation site with sidebar + TOC\n\n## Start the Dev Server\n\n```bash\ncd my-app\npnpm install\npnpm dev\n```\n\nThe dev server starts on port 3000 (auto-increments if taken). Open [http://localhost:3000](http://localhost:3000).\n\n## Build for Production\n\n```bash\npnpm build\n```\n\nOutput:\n- `dist/client/` — Vite-built client bundle\n- `dist/server/` — Nitro server bundle (SSR mode) or `dist/static/` (SSG mode)\n\n## Preview the Production Build\n\n```bash\npnpm preview\n```\n\nServes the production build locally. For SSG output, serves from `dist/static/`. For SSR, starts the Nitro server from `dist/server/server/index.mjs`.\n","url":"/content/docs/getting-started","frontmatter":{"tags":["docs"],"layout":"docs","title":"Getting Started","description":"Create a new Litro project in minutes using the create-litro scaffolding CLI.","date":"2026-01-01T00:00:00.000Z"}},"body":"<h2 id=\"prerequisites\">Prerequisites</h2>\n<ul>\n<li>Node.js 20+</li>\n<li>pnpm 9+</li>\n</ul>\n<h2 id=\"create-a-new-project\">Create a New Project</h2>\n<pre><code class=\"language-bash\">pnpm create @beatzball/litro my-app\n</code></pre>\n<p>This launches the interactive scaffolding wizard. Choose a recipe:</p>\n<ul>\n<li><strong>fullstack</strong> — SSR app with API routes</li>\n<li><strong>11ty-blog</strong> — Markdown blog with content layer</li>\n<li><strong>starlight</strong> — Documentation site with sidebar + TOC</li>\n</ul>\n<h2 id=\"start-the-dev-server\">Start the Dev Server</h2>\n<pre><code class=\"language-bash\">cd my-app\npnpm install\npnpm dev\n</code></pre>\n<p>The dev server starts on port 3000 (auto-increments if taken). Open <a href=\"http://localhost:3000\">http://localhost:3000</a>.</p>\n<h2 id=\"build-for-production\">Build for Production</h2>\n<pre><code class=\"language-bash\">pnpm build\n</code></pre>\n<p>Output:</p>\n<ul>\n<li><code>dist/client/</code> — Vite-built client bundle</li>\n<li><code>dist/server/</code> — Nitro server bundle (SSR mode) or <code>dist/static/</code> (SSG mode)</li>\n</ul>\n<h2 id=\"preview-the-production-build\">Preview the Production Build</h2>\n<pre><code class=\"language-bash\">pnpm preview\n</code></pre>\n<p>Serves the production build locally. For SSG output, serves from <code>dist/static/</code>. For SSR, starts the Nitro server from <code>dist/server/server/index.mjs</code>.</p>","toc":[{"depth":2,"text":"Prerequisites","slug":"prerequisites"},{"depth":2,"text":"Create a New Project","slug":"create-a-new-project"},{"depth":2,"text":"Start the Dev Server","slug":"start-the-dev-server"},{"depth":2,"text":"Build for Production","slug":"build-for-production"},{"depth":2,"text":"Preview the Production Build","slug":"preview-the-production-build"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"getting-started","prevDoc":{"label":"Introduction","href":"/docs/introduction"},"nextDoc":{"label":"Configuration","href":"/docs/configuration"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/getting-started.md","seoHead":"<meta name=\"description\" content=\"Create a new Litro project in minutes using the create-litro scaffolding CLI.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/getting-started\" />\n<meta property=\"og:title\" content=\"Getting Started — Litro\" />\n<meta property=\"og:description\" content=\"Create a new Litro project in minutes using the create-litro scaffolding CLI.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/getting-started\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Getting Started — Litro\" />\n<meta name=\"twitter:description\" content=\"Create a new Litro project in minutes using the create-litro scaffolding CLI.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Getting Started"
+        
+        
+        
+        currentSlug="getting-started"
+        currentPath="/docs/getting-started"
+      >
+        <div slot="content">
+          <!--lit-part +gPy/lr0Chc=--><h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Node.js 20+</li>
+<li>pnpm 9+</li>
+</ul>
+<h2 id="create-a-new-project">Create a New Project</h2>
+<pre><code class="language-bash">pnpm create @beatzball/litro my-app
+</code></pre>
+<p>This launches the interactive scaffolding wizard. Choose a recipe:</p>
+<ul>
+<li><strong>fullstack</strong> — SSR app with API routes</li>
+<li><strong>11ty-blog</strong> — Markdown blog with content layer</li>
+<li><strong>starlight</strong> — Documentation site with sidebar + TOC</li>
+</ul>
+<h2 id="start-the-dev-server">Start the Dev Server</h2>
+<pre><code class="language-bash">cd my-app
+pnpm install
+pnpm dev
+</code></pre>
+<p>The dev server starts on port 3000 (auto-increments if taken). Open <a href="http://localhost:3000">http://localhost:3000</a>.</p>
+<h2 id="build-for-production">Build for Production</h2>
+<pre><code class="language-bash">pnpm build
+</code></pre>
+<p>Output:</p>
+<ul>
+<li><code>dist/client/</code> — Vite-built client bundle</li>
+<li><code>dist/server/</code> — Nitro server bundle (SSR mode) or <code>dist/static/</code> (SSG mode)</li>
+</ul>
+<h2 id="preview-the-production-build">Preview the Production Build</h2>
+<pre><code class="language-bash">pnpm preview
+</code></pre>
+<p>Serves the production build locally. For SSG output, serves from <code>dist/static/</code>. For SSR, starts the Nitro server from <code>dist/server/server/index.mjs</code>.</p><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/introduction" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->Introduction<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/configuration" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Configuration<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/getting-started.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

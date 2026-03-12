@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — Litro</title>
+  <!--
+    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
+    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
+    Must be a plain synchronous inline <script> — a type="module" script is deferred
+    by the browser and arrives after the parser has already processed the DSD templates,
+    making it too late to upgrade them.
+  -->
+  <script>(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();</script><link rel="icon" type="image/png" href="/logo.png" /><link rel="stylesheet" href="/shoelace/themes/light.css" /><link rel="stylesheet" href="/styles/starlight.css" /><script>(function(){var s=localStorage.getItem("sl-theme");var t=s||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+  <script type="application/json" id="__litro_data__">{"doc":{"slug":"data-fetching","title":"Data Fetching","date":"2026-01-01T00:00:00.000Z","description":"Use definePageData for server-side data fetching and getServerData to read it on the client.","tags":[],"draft":false,"body":"<h1>Data Fetching</h1>\n<h2><code>definePageData</code></h2>\n<p>Export a <code>pageData</code> constant using <code>definePageData</code> to fetch data server-side before the page renders:</p>\n<pre><code class=\"language-ts\">import { definePageData } from '@beatzball/litro';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPostBySlug(slug);\n  return { post };\n});\n</code></pre>\n<p>The <code>event</code> parameter is an H3 <code>H3Event</code>. You can read URL params, headers, cookies, and request bodies.</p>\n<h2>How Data Flows</h2>\n<ol>\n<li>The page handler calls <code>pageData.fetcher(event)</code> before rendering.</li>\n<li>The result is JSON-serialized and injected into the HTML as <code>&#x3C;script type=\"application/json\" id=\"__litro_data__\"></code>.</li>\n<li>During SSR, the data is passed as a <code>.serverData</code> property on the component so <code>render()</code> sees the real data immediately.</li>\n<li>On the client, the router reads the JSON from the DOM on first load and sets <code>this.serverData</code> on the component instance before mounting.</li>\n</ol>\n<h2>Reading Server Data</h2>\n<p>Access server data via <code>this.serverData</code> in your component:</p>\n<pre><code class=\"language-ts\">@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  override render() {\n    const data = this.serverData as { post: Post } | null;\n    if (!data) return html`&#x3C;p>Loading...&#x3C;/p>`;\n    return html`&#x3C;h1>${data.post.title}&#x3C;/h1>`;\n  }\n}\n</code></pre>\n<h2>Error Handling</h2>\n<p>Throw an H3 error to return a 404 or other error status:</p>\n<pre><code class=\"language-ts\">import { createError } from 'h3';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPost(slug);\n  if (!post) throw createError({ statusCode: 404, message: 'Post not found' });\n  return post;\n});\n</code></pre>","rawBody":"\n# Data Fetching\n\n## `definePageData`\n\nExport a `pageData` constant using `definePageData` to fetch data server-side before the page renders:\n\n```ts\nimport { definePageData } from '@beatzball/litro';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPostBySlug(slug);\n  return { post };\n});\n```\n\nThe `event` parameter is an H3 `H3Event`. You can read URL params, headers, cookies, and request bodies.\n\n## How Data Flows\n\n1. The page handler calls `pageData.fetcher(event)` before rendering.\n2. The result is JSON-serialized and injected into the HTML as `<script type=\"application/json\" id=\"__litro_data__\">`.\n3. During SSR, the data is passed as a `.serverData` property on the component so `render()` sees the real data immediately.\n4. On the client, the router reads the JSON from the DOM on first load and sets `this.serverData` on the component instance before mounting.\n\n## Reading Server Data\n\nAccess server data via `this.serverData` in your component:\n\n```ts\n@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  override render() {\n    const data = this.serverData as { post: Post } | null;\n    if (!data) return html`<p>Loading...</p>`;\n    return html`<h1>${data.post.title}</h1>`;\n  }\n}\n```\n\n## Error Handling\n\nThrow an H3 error to return a 404 or other error status:\n\n```ts\nimport { createError } from 'h3';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPost(slug);\n  if (!post) throw createError({ statusCode: 404, message: 'Post not found' });\n  return post;\n});\n```\n","url":"/content/docs/core-concepts/data-fetching","frontmatter":{"title":"Data Fetching","description":"Use definePageData for server-side data fetching and getServerData to read it on the client.","date":"2026-01-01T00:00:00.000Z"}},"body":"<h2 id=\"definepagedata\"><code>definePageData</code></h2>\n<p>Export a <code>pageData</code> constant using <code>definePageData</code> to fetch data server-side before the page renders:</p>\n<pre><code class=\"language-ts\">import { definePageData } from '@beatzball/litro';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPostBySlug(slug);\n  return { post };\n});\n</code></pre>\n<p>The <code>event</code> parameter is an H3 <code>H3Event</code>. You can read URL params, headers, cookies, and request bodies.</p>\n<h2 id=\"how-data-flows\">How Data Flows</h2>\n<ol>\n<li>The page handler calls <code>pageData.fetcher(event)</code> before rendering.</li>\n<li>The result is JSON-serialized and injected into the HTML as <code>&#x3C;script type=\"application/json\" id=\"__litro_data__\"></code>.</li>\n<li>During SSR, the data is passed as a <code>.serverData</code> property on the component so <code>render()</code> sees the real data immediately.</li>\n<li>On the client, the router reads the JSON from the DOM on first load and sets <code>this.serverData</code> on the component instance before mounting.</li>\n</ol>\n<h2 id=\"reading-server-data\">Reading Server Data</h2>\n<p>Access server data via <code>this.serverData</code> in your component:</p>\n<pre><code class=\"language-ts\">@customElement('page-blog-slug')\nexport class BlogSlugPage extends LitroPage {\n  override render() {\n    const data = this.serverData as { post: Post } | null;\n    if (!data) return html`&#x3C;p>Loading...&#x3C;/p>`;\n    return html`&#x3C;h1>${data.post.title}&#x3C;/h1>`;\n  }\n}\n</code></pre>\n<h2 id=\"error-handling\">Error Handling</h2>\n<p>Throw an H3 error to return a 404 or other error status:</p>\n<pre><code class=\"language-ts\">import { createError } from 'h3';\n\nexport const pageData = definePageData(async (event) => {\n  const slug = event.context.params?.slug ?? '';\n  const post = await fetchPost(slug);\n  if (!post) throw createError({ statusCode: 404, message: 'Post not found' });\n  return post;\n});\n</code></pre>","toc":[{"depth":2,"text":"`definePageData`","slug":"definepagedata"},{"depth":2,"text":"How Data Flows","slug":"how-data-flows"},{"depth":2,"text":"Reading Server Data","slug":"reading-server-data"},{"depth":2,"text":"Error Handling","slug":"error-handling"}],"sidebar":[{"label":"Getting Started","items":[{"label":"Introduction","slug":"introduction"},{"label":"Getting Started","slug":"getting-started"},{"label":"Configuration","slug":"configuration"}]},{"label":"Core Concepts","items":[{"label":"Routing","slug":"core-concepts/routing"},{"label":"SSR","slug":"core-concepts/ssr"},{"label":"Data Fetching","slug":"core-concepts/data-fetching"},{"label":"Client Router","slug":"core-concepts/client-router"}]},{"label":"Features","items":[{"label":"API Routes","slug":"api-routes"},{"label":"Content Layer","slug":"content-layer"},{"label":"Static Generation","slug":"ssg"},{"label":"LitroRouter","slug":"litro-router"}]},{"label":"Recipes","items":[{"label":"Fullstack App","slug":"recipes/fullstack"},{"label":"11ty Blog","slug":"recipes/11ty-blog"},{"label":"Starlight Docs","slug":"recipes/starlight"}]},{"label":"Deployment","items":[{"label":"GitHub Pages","slug":"deployment/github-pages"},{"label":"Coolify","slug":"deployment/coolify"}]},{"label":"Contributing","items":[{"label":"Contributing","slug":"contributing"}]}],"siteTitle":"Litro","currentSlug":"core-concepts/data-fetching","prevDoc":{"label":"SSR","href":"/docs/core-concepts/ssr"},"nextDoc":{"label":"Client Router","href":"/docs/core-concepts/client-router"},"nav":[{"label":"Docs","href":"/docs/introduction"},{"label":"Blog","href":"/blog"},{"label":"GitHub","href":"https://github.com/beatzball/litro"}],"editUrl":"https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/data-fetching.md","seoHead":"<meta name=\"description\" content=\"Use definePageData for server-side data fetching and getServerData to read it on the client.\" />\n<link rel=\"canonical\" href=\"https://beatzball.github.io/litro/docs/core-concepts/data-fetching\" />\n<meta property=\"og:title\" content=\"Data Fetching — Litro\" />\n<meta property=\"og:description\" content=\"Use definePageData for server-side data fetching and getServerData to read it on the client.\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:url\" content=\"https://beatzball.github.io/litro/docs/core-concepts/data-fetching\" />\n<meta property=\"og:image\" content=\"https://beatzball.github.io/litro/og-default.png\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:title\" content=\"Data Fetching — Litro\" />\n<meta name=\"twitter:description\" content=\"Use definePageData for server-side data fetching and getServerData to read it on the client.\" />\n<link rel=\"sitemap\" type=\"application/xml\" href=\"/sitemap.xml\" />"}</script>
+</head>
+<body>
+<litro-outlet>
+<!--lit-part xzzi7o5ZJaE=--><!--lit-node 0--><page-docs-slug ><template shadowroot="open" shadowrootmode="open"><!--lit-part 5YiTys4sm8c=-->
+      <!--lit-node 0--><starlight-page
+        siteTitle="Litro"
+        pageTitle="Data Fetching"
+        
+        
+        
+        currentSlug="core-concepts/data-fetching"
+        currentPath="/docs/core-concepts/data-fetching"
+      >
+        <div slot="content">
+          <!--lit-part PgUf7N8V/6I=--><h2 id="definepagedata"><code>definePageData</code></h2>
+<p>Export a <code>pageData</code> constant using <code>definePageData</code> to fetch data server-side before the page renders:</p>
+<pre><code class="language-ts">import { definePageData } from '@beatzball/litro';
+
+export const pageData = definePageData(async (event) => {
+  const slug = event.context.params?.slug ?? '';
+  const post = await fetchPostBySlug(slug);
+  return { post };
+});
+</code></pre>
+<p>The <code>event</code> parameter is an H3 <code>H3Event</code>. You can read URL params, headers, cookies, and request bodies.</p>
+<h2 id="how-data-flows">How Data Flows</h2>
+<ol>
+<li>The page handler calls <code>pageData.fetcher(event)</code> before rendering.</li>
+<li>The result is JSON-serialized and injected into the HTML as <code>&#x3C;script type="application/json" id="__litro_data__"></code>.</li>
+<li>During SSR, the data is passed as a <code>.serverData</code> property on the component so <code>render()</code> sees the real data immediately.</li>
+<li>On the client, the router reads the JSON from the DOM on first load and sets <code>this.serverData</code> on the component instance before mounting.</li>
+</ol>
+<h2 id="reading-server-data">Reading Server Data</h2>
+<p>Access server data via <code>this.serverData</code> in your component:</p>
+<pre><code class="language-ts">@customElement('page-blog-slug')
+export class BlogSlugPage extends LitroPage {
+  override render() {
+    const data = this.serverData as { post: Post } | null;
+    if (!data) return html`&#x3C;p>Loading...&#x3C;/p>`;
+    return html`&#x3C;h1>${data.post.title}&#x3C;/h1>`;
+  }
+}
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<p>Throw an H3 error to return a 404 or other error status:</p>
+<pre><code class="language-ts">import { createError } from 'h3';
+
+export const pageData = definePageData(async (event) => {
+  const slug = event.context.params?.slug ?? '';
+  const post = await fetchPost(slug);
+  if (!post) throw createError({ statusCode: 404, message: 'Post not found' });
+  return post;
+});
+</code></pre><!--/lit-part-->
+
+          <!--lit-part PhI25McQEB0=-->
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              <!--lit-part vcVgU1EgN90=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/ssr" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; <!--lit-part-->SSR<!--/lit-part-->
+                </a>
+              <!--/lit-part-->
+              <!--lit-part P5FjJy0pslE=-->
+                <!--lit-node 0--><a href="/docs/core-concepts/client-router" style="color:var(--sl-color-accent);text-decoration:none;">
+                  <!--lit-part-->Client Router<!--/lit-part--> &rarr;
+                </a>
+              <!--/lit-part-->
+            </nav>
+          <!--/lit-part-->
+
+          <!--lit-part Y0QtraezK4I=-->
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <!--lit-node 1--><a href="https://github.com/beatzball/litro/edit/main/docs/content/docs/core-concepts/data-fetching.md" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          <!--/lit-part-->
+        </div>
+      </starlight-page>
+    <!--/lit-part--></template></page-docs-slug><!--/lit-part--></litro-outlet>
+
+  <!--
+    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
+    first import inside app.ts, so the hydration patch runs before any
+    LitElement subclass is evaluated within this bundle.
+    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
+  -->
+  <script type="module" src="/litro/_litro/app.js"></script>
+</body>
+</html>
+<!-- /page-docs-slug -->

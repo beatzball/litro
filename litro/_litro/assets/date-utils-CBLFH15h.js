@@ -1,0 +1,1 @@
+function e(n){return(n instanceof Date?n:new Date(n)).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}function o(n){return(n instanceof Date?n:new Date(n)).toISOString().slice(0,10)}export{e as f,o as i};
