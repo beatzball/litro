@@ -246,6 +246,23 @@ describe('buildShell — structural validity', () => {
 });
 
 // ---------------------------------------------------------------------------
+// LITRO_BASE_PATH env var support (create-page-handler integration)
+// ---------------------------------------------------------------------------
+
+describe('LITRO_BASE_PATH env var — appScriptUrl derivation', () => {
+  it('default appScriptUrl is /_litro/app.js when no env var set', () => {
+    const { foot } = buildDefault('page-home');
+    expect(foot).toContain('src="/_litro/app.js"');
+  });
+
+  it('appScriptUrl option overrides the default (simulates basePath usage)', () => {
+    const { foot } = buildDefault('page-home', { appScriptUrl: '/litro/_litro/app.js' });
+    expect(foot).toContain('src="/litro/_litro/app.js"');
+    expect(foot).not.toContain('src="/_litro/app.js"');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Concatenation sanity check
 // ---------------------------------------------------------------------------
 

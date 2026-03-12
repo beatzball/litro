@@ -14,7 +14,7 @@
  *   - The fix: LitroOutlet.routes uses a property setter that calls
  *     setRoutes() directly when the router is already initialised. This avoids
  *     triggering Lit's update/render cycle (which would crash because
- *     firstUpdated() removes Lit's internal ChildPart marker nodes).
+ *     firstUpdated() does not drive any Lit render in LitroOutlet's light-DOM mode).
  *
  * Testing approach:
  *   - Mock `@beatzball/litro-router` so LitroRouter is a class whose
@@ -183,11 +183,11 @@ describe('LitroOutlet — routes set after first update (timing-race fix)', () =
 });
 
 // ---------------------------------------------------------------------------
-// SSR child-clearing behaviour
+// SSR child-preservation behaviour (FOUC prevention)
 // ---------------------------------------------------------------------------
 
-describe('LitroOutlet — clears SSR children on firstUpdated()', () => {
-  it('removes any children present before the router initialises', async () => {
+describe('LitroOutlet — preserves SSR children in firstUpdated() to prevent FOUC', () => {
+  it('does NOT remove children present before the router initialises', async () => {
     const el = document.createElement('litro-outlet') as InstanceType<typeof LitroOutlet>;
     // Simulate SSR-streamed content inside the outlet.
     const ssrNode = document.createElement('div');
@@ -197,6 +197,11 @@ describe('LitroOutlet — clears SSR children on firstUpdated()', () => {
     document.body.appendChild(el);
     await afterUpdate(el);
 
-    expect(el.childElementCount).toBe(0);
+    // SSR children must NOT be cleared here — the router's _resolve() clears
+    // them atomically (clear + appendChild in the same sync block) after the
+    // async onBeforeEnter() resolves. Clearing eagerly in firstUpdated() would
+    // blank the page for the duration of that async work (FOUC).
+    expect(el.childElementCount).toBe(1);
+    expect(el.firstElementChild).toBe(ssrNode);
   });
 });

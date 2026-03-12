@@ -55,14 +55,18 @@ my-app/
 ```
 litro/
   packages/
-    framework/        ← Core package (npm: litro)
+    framework/        ← Core package (npm: @beatzball/litro)
       src/
         plugins/      ← Nitro plugins (page scanner, etc.)
         vite/         ← Vite plugins
         runtime/      ← Client-side runtime (router bootstrap, hydration)
         cli/          ← litro dev/build/preview commands
+    litro-router/     ← Standalone router (npm: @beatzball/litro-router)
     create-litro/     ← Scaffolding CLI (npm create @beatzball/litro)
-  playground/         ← Test app using the framework locally
+  playground/         ← fullstack recipe test app
+  playground-11ty/    ← 11ty-blog recipe test app
+  playground-starlight/ ← starlight recipe test app
+  docs/               ← Official docs site (@beatzball/litro-docs, SSG → GitHub Pages)
   research/           ← Research agent findings (R-1 through R-4)
 ```
 
@@ -79,7 +83,8 @@ litro/
 - Research findings → `research/<agent-id>-findings.md` (e.g. `research/R-1-findings.md`)
 - Framework code → `packages/framework/`
 - Scaffolding CLI → `packages/create-litro/`
-- Test app → `playground/`
+- Test apps → `playground/`, `playground-11ty/`, `playground-starlight/`
+- Docs site → `docs/` (SSG, GitHub Pages)
 - Architecture doc → `ARCHITECTURE.md`
 - Decision log → `DECISIONS.md` (running log, all agents append)
 
@@ -169,7 +174,7 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
 - Recipe system + content layer: complete (`fullstack`, `11ty-blog`, `starlight` recipes, `litro:content` virtual module)
-- Tests: 215/215 passing across all packages + 32/32 Playwright e2e tests
+- Tests: 229/229 passing across all packages + 32/32 Playwright e2e tests
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -194,10 +199,14 @@ Verified working:
 - Hash-only `popstate` events (TOC/fragment links) no longer re-render pages — `LitroRouter` guards on `_lastPathname`
 - Scroll-to-hash after mount — `LitroRouter` traverses shadow DOM via `_findDeep()` to reach heading `id` attributes inside shadow roots
 - `routeMeta.head` injected into HTML shell via `buildShell()` — required for stylesheet links and FOUC-prevention scripts to reach the browser
+- `docs/` workspace — official documentation site built on the starlight recipe, deployed to GitHub Pages via `.github/workflows/docs.yml`
+- `LITRO_BASE_PATH` env var — prefixes `/_litro/app.js` script URL for GitHub Pages sub-path deployments (e.g. `LITRO_BASE_PATH=/litro`)
+- Starlight recipe UI primitives renamed `sl-*` → `litro-*` to avoid collision with Shoelace's `sl-*` custom element names
+- Shoelace `@shoelace-style/shoelace` integrated in starlight recipe + docs site; icon assets served at `/shoelace/assets/` with 1-week cache (no `immutable` — unhashed URLs)
 
 Test breakdown:
 - `packages/litro-router`: 16 tests
-- `packages/framework`: 182 tests
+- `packages/framework`: 196 tests
 - `packages/create-litro`: 17 tests
 - Playwright e2e: 32 tests across 3 playgrounds (dev mode)
 

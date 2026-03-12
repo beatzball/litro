@@ -57,12 +57,11 @@ export class LitroOutlet extends LitElement {
    * HTML attribute, so Lit's reactive property system is not needed here.
    *
    * Why not a Lit reactive property: Lit's createProperty() installs its own
-   * accessor that calls requestUpdate(), scheduling a render cycle. But
-   * firstUpdated() clears all children (including Lit's internal ChildPart
-   * marker nodes) so the router can own the element's subtree. Any subsequent
-   * render cycle crashes with "ChildPart has no parentNode". The plain setter
-   * forwards route changes directly to the router without touching Lit's
-   * render pipeline.
+   * accessor that calls requestUpdate(), scheduling a render cycle. Because
+   * LitroOutlet uses light DOM (no render()), Lit's ChildPart marker nodes are
+   * never written — but a requestUpdate() could still interfere with the router
+   * managing children. The plain setter forwards route changes directly to the
+   * router without touching Lit's render pipeline.
    *
    * Example:
    *   [
@@ -102,14 +101,14 @@ export class LitroOutlet extends LitElement {
    */
   override async firstUpdated() {
     const { LitroRouter } = await import('@beatzball/litro-router');
-    // Remove any SSR'd children before the router takes over. The SSR'd page
-    // component is streamed inside <litro-outlet> so content is visible before
-    // JS loads. The router renders a new instance and manages the outlet from
-    // here; the old SSR node must be cleared first or the router will append a
-    // second copy alongside it (duplicate content bug).
-    while (this.lastChild) {
-      this.removeChild(this.lastChild);
-    }
+    // Do NOT clear SSR'd children here. The router's _resolve() already does an
+    // atomic clear-then-append when it commits a navigation:
+    //   while (outlet.lastChild) outlet.removeChild(outlet.lastChild);
+    //   outlet.appendChild(el);
+    // Clearing here would blank the page for the duration of the async _resolve()
+    // (dynamic import + onBeforeEnter microtask), causing a visible FOUC on every
+    // initial page load. Leaving the SSR'd content in place means it stays visible
+    // until the router atomically swaps it out — no blank flash.
     this.router = new LitroRouter(this);
     this.router.setRoutes(this._routes);
   }

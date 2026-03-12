@@ -35,5 +35,9 @@ e2e/test-results/
 *.local
 .vscode/settings.json
 
+# Docs workspace generated files
+docs/server/stubs/
+docs/routes.generated.ts
+
 # Claude Code
 .claude/

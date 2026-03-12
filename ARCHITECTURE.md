@@ -5,17 +5,17 @@
 ```
 litro/                          ← Git repo root (pnpm workspace root)
   packages/
-    framework/                  ← Core package (npm: litro)
+    framework/                  ← Core package (npm: @beatzball/litro)
       src/
         plugins/                ← Nitro BUILD-TIME plugins (page scanner, ssg resolver)
         vite/                   ← Vite plugins (litro:content virtual module)
         content/                ← Content layer (ContentIndex, parser, Nitro plugin)
         runtime/                ← Client-side runtime (router bootstrap, hydration)
         cli/                    ← litro dev / build / preview CLI entry
-    litro-router/               ← Standalone router package (npm: litro-router)
+    litro-router/               ← Standalone router package (npm: @beatzball/litro-router)
       src/
         index.ts                ← LitroRouter, Route, LitroLocation, h3ToURLPattern
-    create-litro/               ← `npm create litro` scaffolding CLI
+    create-litro/               ← `npm create @beatzball/litro` scaffolding CLI
       src/
         index.ts                ← CLI entry (--recipe, --mode, --list-recipes flags)
         scaffold.ts             ← Recipe engine: copyTemplate, interpolate, listRecipes
@@ -27,7 +27,10 @@ litro/                          ← Git repo root (pnpm workspace root)
         11ty-blog/              ← Markdown blog recipe (11ty-compatible)
           recipe.config.ts
           template/
-  playground/                   ← Test app that uses the framework locally
+        starlight/              ← Docs + blog SSG recipe (Astro Starlight-inspired)
+          recipe.config.ts
+          template/
+  playground/                   ← fullstack recipe test app
     pages/                      ← Lit page components (filename = route)
     server/
       api/                      ← Plain Nitro/H3 API handlers
@@ -37,6 +40,17 @@ litro/                          ← Git repo root (pnpm workspace root)
     app.ts                      ← Client entry (hydration + router bootstrap)
     vite.config.ts
     nitro.config.ts
+  playground-11ty/              ← 11ty-blog recipe test app (SSG, content layer)
+  playground-starlight/         ← starlight recipe test app (SSG, docs + blog)
+  docs/                         ← Official documentation site (@beatzball/litro-docs, SSG)
+    content/docs/               ← Documentation Markdown files
+    content/blog/               ← Blog post Markdown files
+    pages/                      ← Page components (index, docs/[slug], blog/*)
+    src/components/             ← Layout + UI components (copied from starlight template)
+    src/seo.ts                  ← buildSeoHead() helper for per-page meta tags
+    public/.nojekyll            ← Required for GitHub Pages
+  .github/workflows/
+    docs.yml                    ← GitHub Actions: build + deploy docs to GitHub Pages
   package.json                  ← Workspace root (private, no deps)
   pnpm-workspace.yaml
   tsconfig.json
@@ -46,10 +60,13 @@ litro/                          ← Git repo root (pnpm workspace root)
 
 | Package | npm name | Purpose |
 |---|---|---|
-| `packages/framework` | `litro` | Core framework: Nitro plugins, Vite plugins, client runtime, CLI |
-| `packages/litro-router` | `litro-router` | Standalone URLPattern router; zero dependencies; consumed by `litro` and independently publishable |
-| `packages/create-litro` | `create-litro` | `npm create litro` — project scaffolding |
-| `playground` | (private) | Integration test app; exercises all framework features locally |
+| `packages/framework` | `@beatzball/litro` | Core framework: Nitro plugins, Vite plugins, client runtime, CLI |
+| `packages/litro-router` | `@beatzball/litro-router` | Standalone URLPattern router; zero dependencies; consumed by `litro` and independently publishable |
+| `packages/create-litro` | (create CLI) | `npm create @beatzball/litro` — project scaffolding |
+| `playground` | (private) | fullstack recipe integration test app |
+| `playground-11ty` | (private) | 11ty-blog recipe integration test app |
+| `playground-starlight` | (private) | starlight recipe integration test app |
+| `docs` | `@beatzball/litro-docs` | Official documentation site — SSG, deploys to GitHub Pages |
 
 ---
 
@@ -91,7 +108,7 @@ Nitro's `publicDir` option is silently ignored by edge adapters (Cloudflare Work
 
 Nitro's `resolveAssetsOptions` resolves `publicAssets[].dir` as `path.resolve(srcDir, dir)`. Because `srcDir` is an absolute path to `<rootDir>/server`, a bare `'dist/client'` string would resolve to `<rootDir>/server/dist/client` (wrong). Use `'../dist/client'` or an absolute path.
 
-Vite produces content-hashed filenames so the client bundle can be served with a `max-age` of 1 year (`31536000`).
+The entry file (`app.js`) uses a stable (non-hashed) filename configured via `entryFileNames: '[name].js'`. Dynamic import chunks (`/_litro/assets/…`) are content-hashed by Vite's default chunking. The entry file can still be served with a long `max-age` because every deploy overwrites it server-side; a stale cache resolves on the next full page load.
 
 ---
 
@@ -457,6 +474,13 @@ packages/create-litro/
     11ty-blog/
       recipe.config.ts
       template/
+    starlight/             ← Docs + blog SSG site (Astro Starlight-inspired)
+      recipe.config.ts
+      template/
+        src/components/    ← starlight-page, starlight-header, starlight-sidebar, starlight-toc
+                           ← litro-card, litro-badge, litro-tabs, litro-aside (Shoelace-safe names)
+        server/starlight.config.js ← site title, nav, sidebar groups, editUrlBase
+        public/styles/starlight.css ← full --sl-* token layer with dark/light mode
 ```
 
 At runtime, `listRecipes()` scans the `recipes/` directory adjacent to the compiled `dist/src/scaffold.js` file, dynamically imports each `recipe.config.js`, and returns `LitroRecipe[]`.

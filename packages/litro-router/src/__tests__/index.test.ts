@@ -221,7 +221,12 @@ describe('LitroRouter — setRoutes and resolve', () => {
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-catch');
   });
 
-  it('clears existing outlet children before mounting', async () => {
+  it('removes stale outlet children after the new element renders (FOUC prevention)', async () => {
+    // The new element is appended hidden alongside stale content while it
+    // renders, then stale content is removed and the new element is revealed.
+    // This prevents layout shifts caused by clearing before the new element
+    // is ready. The swap happens after a requestAnimationFrame; jsdom fires
+    // rAF via a ~16ms timeout, so we wait 50ms to be safe.
     history.replaceState(null, '', '/');
     const stale = document.createElement('span');
     outlet.appendChild(stale);
@@ -229,7 +234,7 @@ describe('LitroRouter — setRoutes and resolve', () => {
       customElements.define('rr-fresh', class extends HTMLElement {});
     }
     router.setRoutes([{ path: '/', component: 'rr-fresh' }]);
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 50));
     expect(outlet.querySelector('span')).toBeNull();
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-fresh');
   });

@@ -279,12 +279,12 @@ describe('scaffold', () => {
       expect(existsSync(join(targetDir, 'src/components/starlight-header.ts'))).toBe(true);
       expect(existsSync(join(targetDir, 'src/components/starlight-sidebar.ts'))).toBe(true);
       expect(existsSync(join(targetDir, 'src/components/starlight-toc.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-card.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-card-grid.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-badge.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-aside.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-tabs.ts'))).toBe(true);
-      expect(existsSync(join(targetDir, 'src/components/sl-tab-item.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-card.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-card-grid.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-badge.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-aside.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-tabs.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-tab-item.ts'))).toBe(true);
       // Content
       expect(existsSync(join(targetDir, 'content/docs/.11tydata.json'))).toBe(true);
       expect(existsSync(join(targetDir, 'content/docs/getting-started.md'))).toBe(true);

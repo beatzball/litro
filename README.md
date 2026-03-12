@@ -12,7 +12,7 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
 - **Any deployment target** — Node.js, Cloudflare Workers, Vercel Edge, static — via Nitro adapters
 
-> **Status**: Early development. Core SSR pipeline, content layer, and scaffolding are working. Playwright e2e tests not yet written.
+> **Status**: Early development. Core SSR pipeline, content layer, scaffolding, and Playwright e2e tests are all working.
 
 ---
 
@@ -24,7 +24,10 @@ litro/
     framework/        ← npm package: @beatzball/litro
     litro-router/     ← npm package: @beatzball/litro-router (standalone, zero-dependency)
     create-litro/     ← npm create @beatzball/litro (scaffolding)
-  playground/         ← test app
+  playground/         ← fullstack recipe test app
+  playground-11ty/    ← 11ty-blog recipe test app
+  playground-starlight/ ← starlight recipe test app
+  docs/               ← official documentation site (@beatzball/litro-docs)
 ```
 
 `@beatzball/litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).
@@ -102,7 +105,8 @@ The `starlight` recipe scaffolds an Astro Starlight-inspired docs + blog site:
 - `content/docs/*.md` — documentation pages with sidebar ordering frontmatter
 - `content/blog/*.md` — blog posts (title, date, tags, description)
 - Layout components: `<starlight-page>`, `<starlight-header>`, `<starlight-sidebar>`, `<starlight-toc>`
-- UI components: `<sl-card>`, `<sl-card-grid>`, `<sl-badge>`, `<sl-aside>`, `<sl-tabs>`
+- UI components: `<litro-card>`, `<litro-card-grid>`, `<litro-badge>`, `<litro-aside>`, `<litro-tabs>`
+- [Shoelace](https://shoelace.style) web components available (button, icon, badge, copy-button, details, tab-group) — `<sl-*>` names are reserved for Shoelace; Litro's primitives use `litro-*`
 - `server/starlight.config.js` — site title, nav links, sidebar groups
 - `public/styles/starlight.css` — full `--sl-*` CSS token layer with dark/light mode
 - SSG-only (no `--mode` flag needed — hardcoded to `ssg`)
@@ -231,17 +235,18 @@ export default defineEventHandler((event) => {
 ## Build
 
 ```bash
-# Build client (Vite) + server (Nitro) for Node.js
-pnpm build          # or: npx vite build && npx nitro build
+# Build client (Vite) + server (Nitro)
+pnpm build          # or: litro build
 
-# Build for static site generation (prerender all routes to HTML)
-LITRO_MODE=static pnpm build
+# For SSG: configure ssgPreset() in nitro.config.ts, then:
+pnpm build          # output goes to dist/static/ instead of dist/server/
 ```
 
 Output:
 
 - `dist/client/` — Vite client bundle (JS, assets)
-- `dist/server/` — Nitro server bundle
+- `dist/server/` — Nitro server bundle (SSR mode)
+- `dist/static/` — Prerendered HTML files (SSG mode)
 
 ---
 
@@ -266,19 +271,17 @@ See [Nitro deployment docs](https://nitro.unjs.io/deploy) for the full list.
 ```typescript
 import { defineNitroConfig } from "nitropack/config";
 import type { Nitro } from "nitropack";
-import { ssgPreset, ssrPreset } from "litro/config";
-import pagesPlugin from "litro/plugins";
-import ssgPlugin from "litro/plugins/ssg";
-
-const mode = process.env.LITRO_MODE ?? "server";
+import { ssgPreset } from "@beatzball/litro/config";
+import pagesPlugin from "@beatzball/litro/plugins";
+import ssgPlugin from "@beatzball/litro/plugins/ssg";
+import contentPlugin from "@beatzball/litro/content/plugin";
 
 export default defineNitroConfig({
-  ...(mode === "static" ? ssgPreset() : ssrPreset()),
+  ...ssgPreset(),   // omit for SSR mode (no spread)
   srcDir: "server",
   publicAssets: [
-    // Paths are resolved relative to srcDir ('server/'), so use '../' to reach
-    // the project root. Bare paths like 'dist/client' would incorrectly resolve
-    // to 'server/dist/client' and produce a 404 for all /_litro/** assets.
+    // Paths resolved relative to srcDir ('server/') — use '../' to reach root.
+    // Bare 'dist/client' resolves to 'server/dist/client' and 404s all /_litro/** assets.
     { dir: "../dist/client", baseURL: "/_litro/", maxAge: 31536000 },
     { dir: "../public", baseURL: "/", maxAge: 0 },
   ],
@@ -293,10 +296,15 @@ export default defineNitroConfig({
       },
     },
   },
+  ignore: ["**/middleware/vite-dev.ts"],
+  handlers: [
+    { middleware: true, handler: "./server/middleware/vite-dev.ts", env: "dev" },
+  ],
   hooks: {
     "build:before": async (nitro: Nitro) => {
+      await contentPlugin(nitro); // if using the content layer
       await pagesPlugin(nitro);
-      await ssgPlugin(nitro);
+      await ssgPlugin(nitro);     // if using ssgPreset()
     },
   },
 });
@@ -382,15 +390,20 @@ pnpm install                                    # install all workspace deps
 pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
 pnpm --filter @beatzball/litro build            # compile framework (required once)
 pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
-pnpm --filter @beatzball/litro test             # run framework unit tests (182 tests)
+pnpm --filter @beatzball/litro test             # run framework unit tests (196 tests)
 pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
+pnpm test:e2e                                   # Playwright e2e tests (32 tests, 3 playgrounds)
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
-cd playground
-litro dev                       # start dev server on :3030
-litro dev --port 8080           # start on a custom port
-litro build                     # full production build (vite + nitro)
-PORT=4000 node dist/server/server/index.mjs  # run production server
+# Playgrounds
+cd playground && litro dev      # fullstack playground on :3030
+pnpm dev:11ty                   # 11ty-blog playground
+pnpm dev:starlight              # starlight playground
+
+# Docs site
+pnpm dev:docs                   # docs dev server
+pnpm build:docs                 # build docs (SSG → docs/dist/static/)
+pnpm preview:docs               # preview built docs
 ```
 
 ---

@@ -372,3 +372,68 @@ The static server implements clean-URL resolution (tries `path`, `path.html`, `p
 **Recipe templates**: Each `create-litro` recipe template ships `playwright.config.ts` + `e2e/index.spec.ts` (3 starter tests). The `copyTemplate` recursive walk picks them up automatically — no scaffolding code changes needed.
 
 **CI**: An `e2e` job runs after `build`, installs Chromium, and runs `pnpm test:e2e` (dev mode only). Preview mode is available locally via `pnpm test:e2e:preview` but excluded from CI to avoid ~10 min of build time per run.
+
+---
+
+## Rename starlight recipe UI primitives from `sl-*` to `litro-*`
+
+**Decision**: The six UI primitive components in the starlight recipe template are renamed: `sl-card` → `litro-card`, `sl-card-grid` → `litro-card-grid`, `sl-badge` → `litro-badge`, `sl-tabs` → `litro-tabs`, `sl-tab-item` → `litro-tab-item`, `sl-aside` → `litro-aside`. Layout components (`starlight-page`, `starlight-header`, `starlight-sidebar`, `starlight-toc`) keep their names.
+
+**Rationale**: Shoelace registers custom elements under the `sl-*` namespace (e.g. `<sl-card>`, `<sl-badge>`). Importing Shoelace into a project that already defines `@customElement('sl-card')` throws `NotSupportedError: already registered` at runtime. The `sl-*` names were chosen without anticipating Shoelace's namespace. Renaming to `litro-*` resolves the conflict and makes it clear these components belong to Litro's design system rather than Shoelace.
+
+---
+
+## Shoelace integration in the starlight recipe and docs site
+
+**Decision**: Add `@shoelace-style/shoelace` to the starlight recipe template and the `docs/` workspace. Import tree-shaken components in `app.ts` (client-only). Serve Shoelace icon assets via a `publicAssets` entry pointing at `node_modules/@shoelace-style/shoelace/dist/assets`. Call `setBasePath('/shoelace/')` in `app.ts` to configure Shoelace's icon loader.
+
+**Rationale**: Shoelace provides a high-quality, accessible web component library (button, icon, badge, copy-button, details, tab-group) that complements Lit components. SSR safety is preserved — Shoelace imports are in `app.ts` (client entry only), so unknown `<sl-*>` elements render as empty passthroughs during SSR and are progressively upgraded on the client.
+
+---
+
+## Shoelace asset caching: 1 week without `immutable`
+
+**Decision**: Shoelace icon assets (`/shoelace/assets/**`) are served with `Cache-Control: public, max-age=604800` (1 week). The `immutable` directive is intentionally omitted.
+
+**Rationale**: `immutable` tells browsers the asset at that URL will never change and they should never revalidate. Shoelace icon assets use stable filenames (e.g. `/shoelace/assets/icons/arrow-right.svg`) with no content hash in the URL. Upgrading the `@shoelace-style/shoelace` npm package changes the file content but not the URL. With `immutable`, browsers would serve stale icons for up to a year after a package upgrade. 1 week without `immutable` allows the browser to revalidate (cheaply — nginx serves 304 for unchanged files) on a reasonable cadence.
+
+**Contrast**: `/_litro/` assets use 1 year + `immutable` because Vite's dynamic import chunks are content-hashed. The entry file (`app.js`) is stable-named but controlled by us, and every deploy overwrites it on the server.
+
+---
+
+## `LITRO_BASE_PATH` environment variable for sub-path deployments
+
+**Decision**: `create-page-handler.ts` reads `process.env.LITRO_BASE_PATH ?? ''` and prepends it to `/_litro/app.js` to produce the `<script type="module" src="...">` URL. The docs site `vite.config.ts` uses the same env var for Vite's `base` option. The docs site `nitro.config.ts` applies it to the `/_litro/` `publicAssets` `baseURL` and `routeRules` key.
+
+**Rationale**: GitHub Pages serves project sites at a sub-path (`beatzball.github.io/litro/`). Without `LITRO_BASE_PATH=/litro`, the hardcoded `/_litro/app.js` script URL resolves against the wrong origin. A single env var threaded through both the Vite build and the server-side shell builder fixes this without any code changes — switching to a custom domain (served at `/`) is a one-line CI env removal.
+
+**Migration to `litro.dev`**: Remove `LITRO_BASE_PATH` from the GitHub Actions env block and update `SITE_URL`. No other changes needed.
+
+---
+
+## `docs/` workspace: official documentation site
+
+**Decision**: Add a `docs/` workspace (`@beatzball/litro-docs`, `private: true`) at the repo root. It is scaffolded from the starlight recipe (with component renames and Shoelace integration applied). The site builds to `docs/dist/static/` as an SSG site and is deployed to GitHub Pages via `.github/workflows/docs.yml`.
+
+**Rationale**: The documentation site is part of the monorepo so it stays in sync with the framework source. Being a workspace member means it can reference `@beatzball/litro` and `@beatzball/litro-router` via `workspace:*` — no publishing step required for local development. The starlight recipe serves as the foundation since it already implements the docs+blog layout pattern Litro needs for its own docs.
+
+**Root scripts added**: `dev:docs`, `build:docs`, `preview:docs`, `prepare:docs` — following the existing `dev:starlight` / `build:starlight` naming convention. `clean` script updated to include `docs/node_modules`, `docs/dist`, `docs/server/stubs`, `docs/routes.generated.ts`.
+
+---
+
+## Recipe CSS: `:not(:defined)` FOUC prevention
+
+**Decision**: Every recipe that ships a global CSS file (`public/styles/*.css`) must include the following rule at the top of that file:
+
+```css
+/* FOUCE - https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
+:not(:defined) {
+  visibility: hidden;
+}
+```
+
+This rule is present in `starlight/template/public/styles/starlight.css`, `playground-starlight/public/styles/starlight.css`, and `docs/public/styles/starlight.css`.
+
+**Rationale**: Lit pages render as Declarative Shadow DOM on the server. Before the client JavaScript runs and registers custom elements, the browser briefly shows the raw DSD content with undefined elements in their unupgraded state — producing layout shifts and visual flashes. `visibility: hidden` on `:not(:defined)` keeps all unregistered custom elements invisible until their definitions load, eliminating the flash entirely. `visibility: hidden` (not `display: none`) is used to preserve layout space so there is no reflow when elements become visible.
+
+**Rule for new recipes**: Any recipe that includes a global stylesheet linked in its HTML shell (via `routeMeta.head` or equivalent) must add this rule. Recipes that render only light-DOM content without custom elements are exempt.

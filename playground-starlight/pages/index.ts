@@ -8,8 +8,8 @@ import { starlightHead } from '../src/route-meta.js';
 
 // Register components used in render()
 import '../src/components/starlight-header.js';
-import '../src/components/sl-card.js';
-import '../src/components/sl-card-grid.js';
+import '../src/components/litro-card.js';
+import '../src/components/litro-card-grid.js';
 
 export interface SplashData {
   siteTitle: string;
@@ -116,15 +116,15 @@ export class SplashPage extends LitroPage {
           </section>
 
           <section>
-            <sl-card-grid>
+            <litro-card-grid>
               ${features.map(f => html`
-                <sl-card
+                <litro-card
                   icon="${f.icon ?? ''}"
                   title="${f.title}"
                   description="${f.description}"
-                ></sl-card>
+                ></litro-card>
               `)}
-            </sl-card-grid>
+            </litro-card-grid>
           </section>
         </main>
       </div>

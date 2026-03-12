@@ -91,6 +91,41 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
     @state() loading = false;
 
     /**
+     * Pre-populate serverData before Lit's first render fires.
+     *
+     * When a page module is lazily imported by the router, the browser upgrades
+     * any already-connected SSR'd page element (customElements.define() triggers
+     * an upgrade + connectedCallback for elements already in the DOM). At that
+     * moment serverData is still null (default), so render() returns a
+     * structurally different template than the DSD (e.g., "<p>Loading</p>" vs
+     * "<starlight-page>"), causing a Lit hydration mismatch error.
+     *
+     * Fix: read the JSON script tag (WITHOUT removing it — getServerData() would
+     * remove it, breaking onBeforeEnter()) and set serverData synchronously
+     * after super.connectedCallback(). Lit batches requestUpdate() calls in the
+     * same microtask, so this assignment is included in the very first render.
+     *
+     * The script tag is left in place for onBeforeEnter() to read and remove
+     * normally when the router mounts the fresh page element.
+     *
+     * Guard: skipped when serverData is already non-null (i.e., this is a
+     * router-created element whose onBeforeEnter() ran before connection).
+     */
+    override connectedCallback(): void {
+      super.connectedCallback();
+      if (this.serverData === null && typeof document !== 'undefined') {
+        const scriptEl = document.getElementById('__litro_data__');
+        if (scriptEl) {
+          try {
+            this.serverData = JSON.parse(scriptEl.textContent || '');
+          } catch {
+            // malformed JSON — ignore; first render will use null
+          }
+        }
+      }
+    }
+
+    /**
      * LitroRouter lifecycle hook — called before the element enters the DOM.
      *
      * On first SSR load: reads server-serialized data from the script tag
