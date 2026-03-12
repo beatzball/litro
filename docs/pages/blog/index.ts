@@ -35,6 +35,7 @@ export const routeMeta = {
 
 @customElement('page-blog')
 export class BlogIndexPage extends LitroPage {
+
   override render() {
     const data = this.serverData as BlogIndexData | null;
     const { posts = [], siteTitle = 'Litro', nav = [] } = data ?? {};

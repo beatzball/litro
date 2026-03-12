@@ -45,6 +45,7 @@ export const routeMeta = {
 
 @customElement('page-blog-tags-tag')
 export class TagPage extends LitroPage {
+
   override render() {
     const data = this.serverData as TagPageData | null;
     const { tag = '', posts = [], siteTitle = 'Litro', nav = [] } = data ?? {};

@@ -90,30 +90,64 @@ export class SplashPage extends LitroPage {
           .nav="${nav}"
           currentPath="/"
         ></starlight-header>
-        <main style="
-          flex:1;
-          max-width:56rem;
-          margin:0 auto;
-          padding:4rem 1.5rem 3rem;
-          width:100%;
+
+        <section style="
+          position:relative;
+          text-align:center;
+          padding:5rem 1.5rem 5rem;
+          overflow:hidden;
+          background:
+            radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--sl-color-accent) 18%, transparent), transparent),
+            var(--sl-color-bg);
         ">
-          <section style="text-align:center;margin-bottom:4rem;">
+          <!-- dot texture overlay -->
+          <div style="
+            position:absolute;
+            inset:0;
+            background-image:radial-gradient(circle, color-mix(in srgb, var(--sl-color-accent) 25%, transparent) 1px, transparent 1px);
+            background-size:20px 20px;
+            opacity:0.5;
+            pointer-events:none;
+          "></div>
+
+          <!-- pill badge -->
+          <div style="
+            position:relative;
+            display:inline-block;
+            margin-bottom:1.5rem;
+            padding:0.3rem 0.9rem;
+            border:1px solid color-mix(in srgb, var(--sl-color-accent) 50%, transparent);
+            border-radius:9999px;
+            font-size:var(--sl-text-sm);
+            font-weight:500;
+            color:var(--sl-color-accent);
+            background:color-mix(in srgb, var(--sl-color-accent) 8%, transparent);
+          ">Fullstack Web Framework</div>
+
+          <div style="position:relative;">
             <img
               src="/logo.png"
               alt="Litro logo"
-              style="width:7rem;height:7rem;object-fit:contain;margin-bottom:1rem;"
+              style="
+                width:7rem;height:7rem;object-fit:contain;
+                display:block;margin:0 auto 1.25rem;
+                filter:drop-shadow(0 0 24px color-mix(in srgb, var(--sl-color-accent) 60%, transparent));
+              "
             />
             <h1 style="
-              font-size:clamp(2rem,5vw,3.5rem);
+              font-size:clamp(2.5rem,6vw,4rem);
               font-weight:800;
-              color:var(--sl-color-text);
-              margin:0 0 1rem;
-              line-height:1.1;
+              margin:0 0 1.25rem;
+              line-height:1.05;
+              background:linear-gradient(135deg, var(--sl-color-accent) 0%, color-mix(in srgb, var(--sl-color-accent) 60%, #38bdf8) 100%);
+              -webkit-background-clip:text;
+              -webkit-text-fill-color:transparent;
+              background-clip:text;
             ">${siteTitle}</h1>
             ${description ? html`
               <p style="
                 font-size:var(--sl-text-xl);
-                color:var(--sl-color-gray-4);
+                color:var(--sl-color-gray-5);
                 max-width:36rem;
                 margin:0 auto 2.5rem;
                 line-height:1.6;
@@ -123,20 +157,26 @@ export class SplashPage extends LitroPage {
               <sl-button variant="primary" size="medium" href="/docs/introduction">Get Started</sl-button>
               <sl-button variant="default" size="medium" href="/blog">Blog</sl-button>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section>
-            <litro-card-grid>
-              ${features.map(f => html`
-                <litro-card
-                  icon="${f.icon ?? ''}"
-                  iconSrc="${f.iconSrc ?? ''}"
-                  title="${f.title}"
-                  description="${f.description}"
-                ></litro-card>
-              `)}
-            </litro-card-grid>
-          </section>
+        <main style="
+          flex:1;
+          max-width:56rem;
+          margin:0 auto;
+          padding:3rem 1.5rem 4rem;
+          width:100%;
+        ">
+          <litro-card-grid>
+            ${features.map(f => html`
+              <litro-card
+                icon="${f.icon ?? ''}"
+                iconSrc="${f.iconSrc ?? ''}"
+                title="${f.title}"
+                description="${f.description}"
+              ></litro-card>
+            `)}
+          </litro-card-grid>
         </main>
       </div>
     `;
