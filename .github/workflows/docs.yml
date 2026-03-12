@@ -45,9 +45,6 @@ jobs:
         run: pnpm run prepare:docs
       - name: Build docs site
         run: pnpm run build:docs
-        env:
-          LITRO_BASE_PATH: /
-          SITE_URL: https://litro.dev
 
       # - name: Build docs site
       #   working-directory: docs
