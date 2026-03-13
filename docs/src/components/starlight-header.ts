@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement } from "lit/decorators.js";
 
 export interface NavItem {
   label: string;
@@ -10,12 +10,14 @@ export interface NavItem {
  * <starlight-header siteTitle="My Docs" .nav=${nav} currentPath="/docs/getting-started">
  *   Top navigation bar with site title, nav links, and dark/light theme toggle.
  */
-@customElement('starlight-header')
+@customElement("starlight-header")
 export class StarlightHeader extends LitElement {
   static override properties = {
     siteTitle: { type: String },
     nav: { type: Array },
     currentPath: { type: String },
+    navOpen: { type: Boolean },
+    hasSidebar: { type: Boolean },
     _theme: { type: String, state: true },
   };
 
@@ -34,7 +36,39 @@ export class StarlightHeader extends LitElement {
       display: flex;
       align-items: center;
       padding: 0 var(--sl-content-pad-x, 1.5rem);
-      gap: 1.5rem;
+      gap: 1rem;
+    }
+
+    .menu-btn {
+      display: none;
+      appearance: none;
+      background: none;
+      border: 1px solid var(--sl-color-border, #e8e8e8);
+      border-radius: var(--sl-border-radius, 0.375rem);
+      width: 2.25rem;
+      height: 2.25rem;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--sl-color-text, #23262f);
+      transition: background-color 0.15s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .menu-btn:hover {
+      background-color: var(--sl-color-gray-2, #e8e8e8);
+    }
+
+    .menu-btn svg {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+
+    @media (max-width: 72rem) {
+      .menu-btn {
+        display: flex;
+      }
     }
 
     .site-title {
@@ -48,7 +82,9 @@ export class StarlightHeader extends LitElement {
       white-space: nowrap;
     }
 
-    .site-title:hover { opacity: 0.85; }
+    .site-title:hover {
+      opacity: 0.85;
+    }
 
     .site-logo {
       width: 1.75rem;
@@ -71,7 +107,9 @@ export class StarlightHeader extends LitElement {
       color: var(--sl-color-gray-5, #4b4b4b);
       text-decoration: none;
       border-radius: var(--sl-border-radius, 0.375rem);
-      transition: color 0.15s, background-color 0.15s;
+      transition:
+        color 0.15s,
+        background-color 0.15s;
     }
 
     nav a:hover {
@@ -79,7 +117,7 @@ export class StarlightHeader extends LitElement {
       background-color: var(--sl-color-gray-2, #e8e8e8);
     }
 
-    nav a[aria-current='page'] {
+    nav a[aria-current="page"] {
       color: var(--sl-color-accent, #7c3aed);
       background-color: var(--sl-color-accent-low, #ede9fe);
     }
@@ -100,7 +138,9 @@ export class StarlightHeader extends LitElement {
       border-radius: var(--sl-border-radius, 0.375rem);
       color: var(--sl-color-gray-5, #4b4b4b);
       text-decoration: none;
-      transition: color 0.15s, background-color 0.15s;
+      transition:
+        color 0.15s,
+        background-color 0.15s;
     }
 
     .github-link:hover {
@@ -120,67 +160,138 @@ export class StarlightHeader extends LitElement {
     }
   `;
 
-  siteTitle = '';
+  siteTitle = "";
   nav: NavItem[] = [];
-  currentPath = '';
+  currentPath = "";
+  navOpen = false;
+  hasSidebar = false;
 
-  _theme = 'light';
+  _theme = "light";
 
   override firstUpdated() {
-    const stored = typeof localStorage !== 'undefined'
-      ? localStorage.getItem('sl-theme')
-      : null;
-    const resolved = stored ?? (
-      typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
-    );
+    const stored =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("sl-theme")
+        : null;
+    const resolved =
+      stored ??
+      (typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
     this._theme = resolved;
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', resolved);
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", resolved);
     }
   }
 
   private _toggleTheme() {
-    const next = this._theme === 'light' ? 'dark' : 'light';
+    const next = this._theme === "light" ? "dark" : "light";
     this._theme = next;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sl-theme', next);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("sl-theme", next);
     }
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', next);
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", next);
     }
   }
 
-  override render() {
-    const icon = this._theme === 'dark' ? 'sun' : 'moon';
-    const label = this._theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  private _toggleNav() {
+    this.dispatchEvent(
+      new CustomEvent("sl-nav-toggle", { bubbles: true, composed: true }),
+    );
+  }
 
-    const regularNav = this.nav.filter(item => !item.href.includes('github.com'));
-    const githubItem = this.nav.find(item => item.href.includes('github.com'));
+  override render() {
+    const icon = this._theme === "dark" ? "sun" : "moon";
+    const label =
+      this._theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+
+    const regularNav = this.nav.filter(
+      (item) => !item.href.includes("github.com"),
+    );
+    const githubItem = this.nav.find((item) =>
+      item.href.includes("github.com"),
+    );
 
     return html`
       <header>
+        ${this.hasSidebar
+          ? html`
+              <button
+                class="menu-btn"
+                aria-label="${this.navOpen
+                  ? "Close navigation"
+                  : "Open navigation"}"
+                aria-expanded="${this.navOpen}"
+                @click="${this._toggleNav}"
+              >
+                ${this.navOpen
+                  ? html`
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    `
+                  : html`
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                      </svg>
+                    `}
+              </button>
+            `
+          : ""}
         <a class="site-title" href="/">
           <img class="site-logo" src="/logo.png" alt="" aria-hidden="true" />
           ${this.siteTitle}
         </a>
         <nav aria-label="Main navigation">
-          ${regularNav.map(item => html`
-            <a
-              href="${item.href}"
-              aria-current="${this.currentPath.startsWith(item.href) ? 'page' : 'false'}"
-            >${item.label}</a>
-          `)}
+          ${regularNav.map(
+            (item) => html`
+              <a
+                href="${item.href}"
+                aria-current="${this.currentPath.startsWith(item.href)
+                  ? "page"
+                  : "false"}"
+                >${item.label}</a
+              >
+            `,
+          )}
         </nav>
         <div class="header-actions">
-          ${githubItem ? html`
-            <a class="github-link" href="${githubItem.href}" target="_blank" rel="noopener" aria-label="GitHub">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-              </svg>
-            </a>
-          ` : ''}
+          ${githubItem
+            ? html`
+                <a
+                  class="github-link"
+                  href="${githubItem.href}"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="GitHub"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+                    />
+                  </svg>
+                </a>
+              `
+            : ""}
           <sl-icon-button
             name="${icon}"
             label="${label}"
