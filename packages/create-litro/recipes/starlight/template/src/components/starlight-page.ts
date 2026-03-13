@@ -36,6 +36,7 @@ export class StarlightPage extends LitElement {
     currentSlug: { type: String },
     currentPath: { type: String },
     noSidebar:   { type: Boolean },
+    _navOpen:    { state: true },
   };
 
   static override styles = css`
@@ -102,6 +103,14 @@ export class StarlightPage extends LitElement {
       line-height: 1.15;
     }
 
+    .nav-backdrop {
+      position: fixed;
+      inset: 0;
+      top: var(--sl-nav-height, 3.5rem);
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 49;
+    }
+
     /* Responsive: hide sidebar and TOC on narrow screens */
     @media (max-width: 72rem) {
       .body {
@@ -110,7 +119,20 @@ export class StarlightPage extends LitElement {
       }
 
       .sidebar-wrap {
-        display: none;
+        grid-area: unset;
+        position: fixed;
+        top: var(--sl-nav-height, 3.5rem);
+        left: 0;
+        z-index: 50;
+        height: calc(100vh - var(--sl-nav-height, 3.5rem));
+        width: var(--sl-sidebar-width, 16rem);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
+      }
+
+      .sidebar-wrap.nav-open {
+        transform: translateX(0);
       }
     }
 
@@ -134,18 +156,40 @@ export class StarlightPage extends LitElement {
   currentSlug = '';
   currentPath = '';
   noSidebar = false;
+  _navOpen = false;
+
+  override updated(changed: Map<string, unknown>) {
+    if (changed.has('currentPath') && this._navOpen) {
+      this._navOpen = false;
+    }
+  }
+
+  private _handleNavToggle() {
+    this._navOpen = !this._navOpen;
+  }
+
+  private _closeNav() {
+    this._navOpen = false;
+  }
 
   override render() {
+    const hasSidebar = !this.noSidebar;
     return html`
       <div class="page-wrap">
         <starlight-header
           siteTitle="${this.siteTitle}"
           .nav="${this.nav}"
           currentPath="${this.currentPath}"
+          .navOpen="${this._navOpen}"
+          .hasSidebar="${hasSidebar}"
+          @sl-nav-toggle="${this._handleNavToggle}"
         ></starlight-header>
+        ${hasSidebar && this._navOpen ? html`
+          <div class="nav-backdrop" @click="${this._closeNav}"></div>
+        ` : ''}
         <div class="body${this.noSidebar ? ' no-sidebar' : ''}">
-          ${!this.noSidebar ? html`
-            <aside class="sidebar-wrap">
+          ${hasSidebar ? html`
+            <aside class="sidebar-wrap${this._navOpen ? ' nav-open' : ''}">
               <starlight-sidebar
                 .groups="${this.sidebar}"
                 currentSlug="${this.currentSlug}"
@@ -158,7 +202,7 @@ export class StarlightPage extends LitElement {
               <slot name="content"></slot>
             </div>
           </main>
-          ${!this.noSidebar ? html`
+          ${hasSidebar ? html`
             <aside class="toc-wrap">
               <starlight-toc .entries="${this.toc}"></starlight-toc>
             </aside>
