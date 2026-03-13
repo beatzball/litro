@@ -195,7 +195,7 @@ Verified working:
 - SSG plugin resolves `litro:content` via jiti alias so `generateRoutes()` can call content API
 - `LitroRouter` no longer intercepts plain `<a>` clicks — use `<litro-link>` for SPA navigation; plain `<a>` does full page reload
 - SSG navigation fix — `playground-11ty` pages use plain `<a>` tags so each navigation fetches fresh pre-rendered HTML with correct `__litro_data__`
-- `starlight` recipe — Astro Starlight-inspired docs+blog SSG site; `playground-starlight` workspace validates 11 prerendered routes
+- `starlight` recipe — Astro Starlight-inspired docs+blog SSG site; `playground-starlight` workspace validates 11 prerendered routes; syntax highlighting via `highlight.js` (fire theme, SSG build time, same as docs site)
 - Hash-only `popstate` events (TOC/fragment links) no longer re-render pages — `LitroRouter` guards on `_lastPathname`
 - Scroll-to-hash after mount — `LitroRouter` traverses shadow DOM via `_findDeep()` to reach heading `id` attributes inside shadow roots
 - `routeMeta.head` injected into HTML shell via `buildShell()` — required for stylesheet links and FOUC-prevention scripts to reach the browser
