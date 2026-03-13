@@ -238,6 +238,9 @@ importers:
       h3:
         specifier: ^1.13.0
         version: 1.15.5
+      highlight.js:
+        specifier: ^11.10.0
+        version: 11.11.1
       lit:
         specifier: ^3.2.1
         version: 3.3.2

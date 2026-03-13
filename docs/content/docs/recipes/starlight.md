@@ -62,6 +62,18 @@ export const siteConfig = {
 };
 ```
 
+## Syntax Highlighting
+
+Code blocks in Markdown are automatically syntax-highlighted at SSG build time using `highlight.js`. Fenced code blocks with a language tag are highlighted with the fire palette theme:
+
+````md
+```ts
+import { LitroPage } from '@beatzball/litro/runtime';
+```
+````
+
+The fire theme uses a dark background with orange keywords, sky-blue strings, and amber numbers — matching the overall Litro color palette. No client-side JavaScript is required; highlighting is baked into the prerendered HTML.
+
 ## Shoelace Integration
 
 The recipe includes Shoelace web components for enhanced UI elements (buttons, badges, copy buttons). Use Shoelace components directly in your Markdown via custom HTML, or in page components:

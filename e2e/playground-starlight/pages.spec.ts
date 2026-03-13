@@ -60,6 +60,14 @@ test('blog post renders', async ({ page }) => {
   await expect(page.locator('page-blog-slug h1')).toContainText('Welcome');
 });
 
+test('docs page applies syntax highlighting to code blocks', async ({ page }) => {
+  await page.goto('/docs/getting-started');
+  await page.waitForSelector('page-docs-slug');
+  // applyHighlighting replaces language-* class with hljs class
+  const highlighted = page.locator('page-docs-slug code.hljs');
+  await expect(highlighted.first()).toBeVisible();
+});
+
 test('all prerendered routes return 200', async ({ request }) => {
   for (const route of PRERENDERED_ROUTES) {
     const response = await request.get(route);
