@@ -24,6 +24,9 @@ const STATIC_ROUTES = [
   '/docs/deployment/github-pages',
   '/docs/deployment/coolify',
   '/docs/contributing',
+  '/docs/packages/litro',
+  '/docs/packages/litro-router',
+  '/docs/packages/create-litro',
 ];
 
 export default defineEventHandler((event) => {

@@ -49,6 +49,14 @@ export const siteConfig = {
       ],
     },
     {
+      label: 'Packages',
+      items: [
+        { label: '@beatzball/litro',        slug: 'packages/litro' },
+        { label: '@beatzball/litro-router', slug: 'packages/litro-router' },
+        { label: '@beatzball/create-litro', slug: 'packages/create-litro' },
+      ],
+    },
+    {
       label: 'Contributing',
       items: [
         { label: 'Contributing', slug: 'contributing' },
