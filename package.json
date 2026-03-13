@@ -20,6 +20,7 @@
     "preview:docs": "pnpm --filter @beatzball/litro-docs preview",
     "prepare:docs": "pnpm --filter @beatzball/litro-router build && pnpm --filter @beatzball/litro build",
     "test": "pnpm --filter @beatzball/litro test",
+    "test:docs": "pnpm --filter @beatzball/litro-docs test",
     "test:e2e": "playwright test",
     "test:e2e:preview": "playwright test --config playwright.preview.config.ts",
     "lint": "tsc --noEmit -p packages/framework/tsconfig.json",

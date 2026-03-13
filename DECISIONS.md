@@ -437,3 +437,17 @@ This rule is present in `starlight/template/public/styles/starlight.css`, `playg
 **Rationale**: Lit pages render as Declarative Shadow DOM on the server. Before the client JavaScript runs and registers custom elements, the browser briefly shows the raw DSD content with undefined elements in their unupgraded state — producing layout shifts and visual flashes. `visibility: hidden` on `:not(:defined)` keeps all unregistered custom elements invisible until their definitions load, eliminating the flash entirely. `visibility: hidden` (not `display: none`) is used to preserve layout space so there is no reflow when elements become visible.
 
 **Rule for new recipes**: Any recipe that includes a global stylesheet linked in its HTML shell (via `routeMeta.head` or equivalent) must add this rule. Recipes that render only light-DOM content without custom elements are exempt.
+
+---
+
+## `docs/` packages pages: changelog rendering from source
+
+**Decision**: Add `/docs/packages/{litro,litro-router,create-litro}` pages to the docs site. Each page reads `packages/{dir}/package.json` (version, description), `packages/{dir}/README.md`, and `packages/{dir}/CHANGELOG.md` at SSG build time via a server-side utility (`docs/src/packages.ts`). The markdown is rendered to HTML using the same `unified`/`remark`/`rehype` pipeline used by the content layer.
+
+**Rationale**: Changelogs are already maintained by Changesets in `packages/*/CHANGELOG.md` — reading them at build time avoids duplication and keeps the docs site always in sync with the published packages. The README provides a quick-start summary above the version history.
+
+**Vite browser stub pattern**: `packages.ts` uses `node:fs` and server-only markdown deps, so it cannot be bundled into the Vite client bundle. A `packagesStubPlugin()` in `docs/vite.config.ts` intercepts the import (matching by importer + specifier suffix) and returns a no-op stub (`getPackageInfo` returns null, `ALL_PACKAGE_SLUGS` is a static array). This is the same pattern the framework uses for `litro:content`. Real execution only happens server-side via `definePageData` and `generateRoutes`.
+
+**`@customElement` name must match `fileToComponentTag` output**: The tag name is derived from the file's full path relative to `pages/`. For `pages/docs/packages/[pkg].ts` the segments are `['docs', 'packages', 'pkg']` → `page-docs-packages-pkg`. Using a shorter name (e.g. `page-docs-pkg`) silently produces a no-op — the router mounts the element by the derived tag and finds it unregistered.
+
+**Test coverage**: Unit tests for `extractHeadings`, `addHeadingIds`, and `renderMarkdown` live in `docs/src/__tests__/`. The docs site is added as a 4th Playwright project (`e2e/docs/packages.spec.ts`, port 3033) covering route 200-checks, element rendering, version badge, icon links, install block, and sidebar active state.
