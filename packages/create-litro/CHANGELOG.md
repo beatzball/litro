@@ -1,5 +1,12 @@
 # create-litro
 
+## 0.4.0
+
+### Minor Changes
+
+- 1cd1e7f: Add syntax highlighting to the starlight recipe. Code blocks in Markdown docs are now automatically highlighted at SSG build time using `highlight.js` with the fire palette theme (dark background, orange keywords, sky-blue strings, amber numbers). The `DocPage` component includes `static override styles` with all `.hljs-*` token rules so highlighting works correctly inside the Lit shadow DOM.
+- 1a84fad: Add responsive hamburger menu to the starlight recipe. A hamburger button appears to the left of the site logo on screens ≤72rem where the sidebar is hidden. Clicking it opens/closes the sidebar as a fixed drawer overlay with a backdrop. The nav auto-closes on route change.
+
 ## 0.3.0
 
 ### Minor Changes
