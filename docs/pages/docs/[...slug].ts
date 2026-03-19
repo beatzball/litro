@@ -10,7 +10,7 @@ import { siteConfig } from '../../server/starlight.config.js';
 import { extractHeadings, addHeadingIds } from '../../src/extract-headings.js';
 import { applyHighlighting } from '../../src/highlight.js';
 import { starlightHead } from '../../src/route-meta.js';
-import { buildSeoHead } from '../../src/seo.js';
+import { buildSeoHead, buildJsonLd } from '../../src/seo.js';
 
 // Register components used in render()
 import '../../src/components/starlight-page.js';
@@ -27,6 +27,7 @@ export interface DocPageData {
   nav: typeof siteConfig.nav;
   editUrl: string | null;
   seoHead: string;
+  seoTitle: string;
 }
 
 function computePrevNext(
@@ -67,11 +68,21 @@ export const pageData = definePageData(async (event) => {
     ? `${siteConfig.editUrlBase}/content/docs/${slug}.md`
     : null;
 
+  const docDescription = (doc as Post & { description?: string }).description ?? siteConfig.description;
+  const seoTitle = `${doc.title} — Litro`;
   const seoHead = buildSeoHead({
-    title: `${doc.title} — Litro`,
-    description: (doc as Post & { description?: string }).description ?? siteConfig.description,
+    title: seoTitle,
+    description: docDescription,
     path: `/docs/${slug}`,
     type: 'article',
+  }) + buildJsonLd({
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": seoTitle,
+    "description": docDescription,
+    "url": `https://litro.dev/docs/${slug}`,
+    "author": { "@type": "Organization", "name": "beatzball" },
+    "isPartOf": { "@type": "WebSite", "name": "Litro Documentation", "url": "https://litro.dev" },
   });
 
   return {
@@ -86,6 +97,7 @@ export const pageData = definePageData(async (event) => {
     nav: siteConfig.nav,
     editUrl,
     seoHead,
+    seoTitle,
   } satisfies DocPageData;
 });
 

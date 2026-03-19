@@ -39,7 +39,7 @@ export async function generateRoutes(): Promise<string[]> {
 }
 
 export const routeMeta = {
-  head: starlightHead,
+  head: starlightHead + '<meta name="robots" content="noindex, follow" />',
   title: 'Tags — Litro',
 };
 

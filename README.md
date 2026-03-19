@@ -16,6 +16,22 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 ---
 
+## How It Compares
+
+|                     | Litro       | Next.js     | Nuxt.js     |
+|---------------------|-------------|-------------|-------------|
+| Component model     | Lit         | React       | Vue         |
+| File-based routing  | ✓           | ✓           | ✓           |
+| SSR / SSG           | ✓           | ✓           | ✓           |
+| Server engine       | Nitro       | custom      | Nitro       |
+| Hello World JS      | ~8 kB       | ~90 kB      | ~60 kB      |
+| Virtual DOM         | —           | ✓           | ✓           |
+| W3C standard comps  | ✓           | —           | —           |
+
+[Full comparison →](https://litro.dev/compare/nextjs)
+
+---
+
 ## Monorepo structure
 
 ```

@@ -1,7 +1,7 @@
 {
   "name": "@beatzball/litro",
   "version": "0.2.0",
-  "description": "Litro — fullstack Lit framework powered by Nitro",
+  "description": "Fullstack web framework for Lit components — file-based routing, streaming SSR, SSG, and Nitro deployment adapters. A standards-based Next.js / Nuxt.js alternative.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -116,6 +116,23 @@
     "vitest": "^2.1.8",
     "jsdom": "^25.0.0"
   },
+  "keywords": [
+    "lit",
+    "web-components",
+    "ssr",
+    "ssg",
+    "static-site-generation",
+    "server-side-rendering",
+    "fullstack",
+    "framework",
+    "nitro",
+    "vite",
+    "file-based-routing",
+    "declarative-shadow-dom",
+    "nextjs-alternative",
+    "nuxt-alternative",
+    "typescript"
+  ],
   "peerDependencies": {
     "typescript": "^5.x"
   }

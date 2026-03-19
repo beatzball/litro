@@ -9,6 +9,7 @@ import { getPosts } from 'litro:content';
 import { siteConfig } from '../../server/starlight.config.js';
 import { extractHeadings, addHeadingIds } from '../../src/extract-headings.js';
 import { starlightHead } from '../../src/route-meta.js';
+import { buildSeoHead, buildJsonLd } from '../../src/seo.js';
 import { formatDate, isoDate } from '../../src/date-utils.js';
 
 // Register components used in render()
@@ -20,6 +21,8 @@ export interface BlogPostData {
   toc: Array<{ depth: number; text: string; slug: string }>;
   siteTitle: string;
   nav: typeof siteConfig.nav;
+  seoHead: string;
+  seoTitle: string;
 }
 
 export const pageData = definePageData(async (event) => {
@@ -35,6 +38,24 @@ export const pageData = definePageData(async (event) => {
 
   const toc = extractHeadings(post.rawBody);
   const body = addHeadingIds(post.body);
+  const blogSlug = post.url.slice('/content/blog/'.length);
+  const postDescription = (post as Post & { description?: string }).description ?? '';
+  const seoTitle = `${post.title} — Litro Blog`;
+  const seoHead = buildSeoHead({
+    title: seoTitle,
+    description: postDescription,
+    path: `/blog/${blogSlug}`,
+    type: 'article',
+  }) + buildJsonLd({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": postDescription,
+    "datePublished": isoDate(post.date),
+    "url": `https://litro.dev/blog/${blogSlug}`,
+    "author": { "@type": "Organization", "name": "beatzball" },
+    "keywords": post.tags.join(', '),
+  });
 
   return {
     post,
@@ -42,6 +63,8 @@ export const pageData = definePageData(async (event) => {
     toc,
     siteTitle: siteConfig.title,
     nav: siteConfig.nav,
+    seoHead,
+    seoTitle,
   } satisfies BlogPostData;
 });
 

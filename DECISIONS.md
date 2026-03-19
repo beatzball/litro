@@ -451,3 +451,23 @@ This rule is present in `starlight/template/public/styles/starlight.css`, `playg
 **`@customElement` name must match `fileToComponentTag` output**: The tag name is derived from the file's full path relative to `pages/`. For `pages/docs/packages/[pkg].ts` the segments are `['docs', 'packages', 'pkg']` → `page-docs-packages-pkg`. Using a shorter name (e.g. `page-docs-pkg`) silently produces a no-op — the router mounts the element by the derived tag and finds it unregistered.
 
 **Test coverage**: Unit tests for `extractHeadings`, `addHeadingIds`, and `renderMarkdown` live in `docs/src/__tests__/`. The docs site is added as a 4th Playwright project (`e2e/docs/packages.spec.ts`, port 3033) covering route 200-checks, element rendering, version badge, icon links, install block, and sidebar active state.
+
+---
+
+## SEO Phase 1: seoHead / seoTitle injection via pageData
+
+**Decision**: Pages return `seoHead` (HTML string of meta tags and JSON-LD) and optionally `seoTitle` from `definePageData()`. `create-page-handler.ts` extracts these at request time and passes them to `buildShell()` — injecting them into the actual `<head>` element of the HTML response.
+
+**Rationale**: Per-page SEO meta tags (description, OG, JSON-LD structured data) must be in the real `<head>` to be visible to crawlers. The previous pattern of returning them via `pageData` buried them inside the `<script type="application/json" id="__litro_data__">` blob, which search engines don't parse as metadata.
+
+**Implementation**: `create-page-handler.ts` checks `typeof d.seoHead === 'string'` and `typeof d.seoTitle === 'string'` after the data fetch. `dynamicHead` is concatenated with `routeMeta.head` (static head from the page component's `routeMeta` export) — static head comes first. `dynamicTitle` takes precedence over `routeMeta.title` via `dynamicTitle ?? routeMeta?.title`. An empty final string (`'' + '' === ''`, falsy) resolves to `undefined` so `buildShell` receives no head option rather than an empty string.
+
+---
+
+## SEO Phase 1: Dedicated Nitro server routes for sitemap.xml and RSS
+
+**Decision**: `docs/server/routes/sitemap.xml.ts` and `docs/server/routes/blog/rss.xml.ts` are implemented as dedicated Nitro server routes rather than Lit page components under `pages/`.
+
+**Rationale**: The catch-all `server/routes/[...].ts` handler wraps every route in an HTML shell via `createPageHandler`. A `pages/sitemap.xml.ts` would produce an HTML document (not valid XML) because it goes through the same handler. Nitro's specific route files (`server/routes/sitemap.xml.ts`) take priority over the catch-all, allowing the handlers to set `content-type: application/xml` and return raw XML strings directly. The same principle applies to the RSS feed.
+
+**Prerendering**: `/blog/rss.xml` is explicitly added to `prerender.routes` in `docs/nitro.config.ts` because `crawlLinks` does not follow `<link rel="alternate">` tags reliably. `/sitemap.xml` is discovered via `<link rel="sitemap">` in `starlightHead`.

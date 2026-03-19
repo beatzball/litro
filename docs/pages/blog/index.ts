@@ -6,6 +6,7 @@ import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
 import { siteConfig } from '../../server/starlight.config.js';
 import { starlightHead } from '../../src/route-meta.js';
+import { buildSeoHead } from '../../src/seo.js';
 import { formatDate, isoDate } from '../../src/date-utils.js';
 
 // Register components used in render()
@@ -15,16 +16,24 @@ export interface BlogIndexData {
   posts: Post[];
   siteTitle: string;
   nav: typeof siteConfig.nav;
+  seoHead: string;
 }
 
 export const pageData = definePageData(async (_event) => {
   const all = await getPosts();
   // Filter to only blog posts (URL prefix from contentDir='content')
   const posts = all.filter(p => p.url.startsWith('/content/blog/'));
+  const seoHead = buildSeoHead({
+    title: 'Blog — Litro',
+    description: 'Technical articles on web components, SSR, standards-based development, and the Litro framework.',
+    path: '/blog',
+    type: 'website',
+  });
   return {
     posts,
     siteTitle: siteConfig.title,
     nav: siteConfig.nav,
+    seoHead,
   } satisfies BlogIndexData;
 });
 

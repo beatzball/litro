@@ -90,11 +90,20 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // call the fetcher now, before rendering, and serialize the result into
       // the HTML shell. The client reads this via getServerData() on first load.
       let serverDataJson: string | undefined;
+      let dynamicHead = '';
+      let dynamicTitle: string | undefined;
       const pageDataExport = mod.pageData as PageDataFetcher<unknown> | undefined;
       if (pageDataExport?.__litroPageData === true) {
         try {
           const data = await pageDataExport.fetcher(event);
           serverDataJson = JSON.stringify(data);
+          // Extract seoHead / seoTitle from page data for injection into <head>.
+          // Pages return these strings from definePageData() so that per-request
+          // meta tags (description, OG, JSON-LD) land in the actual <head> rather
+          // than being buried inside the __litro_data__ JSON blob.
+          const d = data as Record<string, unknown>;
+          if (typeof d.seoHead === 'string') dynamicHead = d.seoHead;
+          if (typeof d.seoTitle === 'string') dynamicTitle = d.seoTitle;
         } catch (dataErr) {
           // Data fetch failure is non-fatal: log a warning and render without
           // data. The client will call fetchData() as a fallback on navigation.
@@ -117,9 +126,10 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // and foot so we can stream the SSR output between the two halves.
       // serverDataJson is passed here so it is injected into the <head> as
       // <script type="application/json" id="__litro_data__">.
+      const staticHead = typeof routeMeta?.head === 'string' ? routeMeta.head : '';
       const shell = buildShell(route.componentTag, '', {
-        title: routeMeta?.title,
-        head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
+        title: dynamicTitle ?? routeMeta?.title,
+        head: staticHead + dynamicHead || undefined,
         serverDataJson,
         appScriptUrl,
       });
