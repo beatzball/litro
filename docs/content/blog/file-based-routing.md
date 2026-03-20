@@ -1,7 +1,7 @@
 ---
 title: File-Based Routing with Lit — A Next.js Developer's Guide
 description: Everything you know about file-based routing from Next.js applies to Litro. Here's how the page conventions map, how data fetching works, and how to navigate between routes in a Lit-based app.
-date: 2026-03-24
+date: 2026-03-20
 tags: [routing, nextjs, lit, tutorial]
 ---
 
