@@ -96,14 +96,25 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       if (pageDataExport?.__litroPageData === true) {
         try {
           const data = await pageDataExport.fetcher(event);
-          serverDataJson = JSON.stringify(data);
           // Extract seoHead / seoTitle from page data for injection into <head>.
           // Pages return these strings from definePageData() so that per-request
           // meta tags (description, OG, JSON-LD) land in the actual <head> rather
           // than being buried inside the __litro_data__ JSON blob.
+          //
+          // IMPORTANT: seoHead must NOT be included in the serialized JSON.
+          // It typically contains a <script type="application/ld+json">...</script>
+          // tag. The closing </script> inside a JSON string inside
+          // <script type="application/json"> causes the browser HTML parser to
+          // terminate the outer script element early, leaking the rest of the
+          // JSON as visible text and breaking getServerData() on the client.
           const d = data as Record<string, unknown>;
           if (typeof d.seoHead === 'string') dynamicHead = d.seoHead;
           if (typeof d.seoTitle === 'string') dynamicTitle = d.seoTitle;
+          // Strip seoHead and seoTitle before serializing to avoid the </script>
+          // injection issue described above. The client doesn't need these fields
+          // — they were only needed server-side to build the <head>.
+          const { seoHead: _h, seoTitle: _t, ...clientData } = d;
+          serverDataJson = JSON.stringify(clientData);
         } catch (dataErr) {
           // Data fetch failure is non-fatal: log a warning and render without
           // data. The client will call fetchData() as a fallback on navigation.

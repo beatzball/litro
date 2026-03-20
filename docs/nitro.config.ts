@@ -11,13 +11,14 @@ const ssg = ssgPreset();
 
 export default defineNitroConfig({
   ...ssg,
-  // Extend ssgPreset's prerender config to explicitly include XML routes.
-  // /sitemap.xml is also discovered via crawlLinks (<link rel="sitemap">),
-  // but /blog/rss.xml needs explicit registration since crawlLinks may not
-  // follow <link rel="alternate"> tags in all Nitro versions.
+  // Nitro defaults to crawling from '/' when prerender.routes is empty.
+  // Explicit routes are required for non-HTML responses that crawlLinks
+  // cannot discover (XML files have no anchor tags to follow).
+  // '/' is included so crawlLinks has a starting point regardless of
+  // whether the default behaviour holds across Nitro versions.
   prerender: {
     ...ssg.prerender,
-    routes: [...(ssg.prerender?.routes ?? []), '/blog/rss.xml'],
+    routes: ['/', '/sitemap.xml', '/blog/rss.xml'],
   },
 
   srcDir: 'server',

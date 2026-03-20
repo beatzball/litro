@@ -19,6 +19,7 @@ const umamiScript = process.env.UMAMI_WEBSITE_ID
 export const starlightHead = [
   '<link rel="icon" type="image/png" href="/logo.png" />',
   '<link rel="alternate" type="application/rss+xml" title="Litro Blog" href="/blog/rss.xml" />',
+  '<link rel="sitemap" type="application/xml" href="/sitemap.xml" />',
   '<link rel="stylesheet" href="/shoelace/themes/light.css" />',
   '<link rel="stylesheet" href="/styles/starlight.css" />',
   '<link rel="stylesheet" href="/styles/highlight.css" />',
