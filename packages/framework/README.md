@@ -13,21 +13,69 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 ---
 
-## Documentation
-
-Full documentation, quick start, and API reference are in the [repository README](https://github.com/beatzball/litro#readme).
-
----
-
 ## Quick start
 
 ```bash
-# Scaffold a new app (once published to npm)
 npm create @beatzball/litro@latest my-app
 cd my-app
 npm install
 npm run dev
 ```
+
+---
+
+## Hello World
+
+```typescript
+// pages/index.ts
+import { LitroPage, definePageData, html } from '@beatzball/litro/runtime';
+import { customElement } from 'lit/decorators.js';
+
+const pageData = definePageData(async () => ({
+  message: 'Hello from the server!',
+}));
+
+@customElement('page-index')
+export default class IndexPage extends LitroPage {
+  override render() {
+    const data = this.serverData as typeof pageData | null;
+    return html`<h1>${data?.message}</h1>`;
+  }
+}
+```
+
+---
+
+## How It Compares
+
+|                     | Litro       | Next.js     | Nuxt.js     |
+|---------------------|-------------|-------------|-------------|
+| Component model     | Lit         | React       | Vue         |
+| File-based routing  | ✓           | ✓           | ✓           |
+| SSR / SSG           | ✓           | ✓           | ✓           |
+| Server engine       | Nitro       | custom      | Nitro       |
+| Hello World JS      | ~8kB        | ~90kB       | ~60kB       |
+| Virtual DOM         | —           | ✓           | ✓           |
+| W3C standard comps  | ✓           | —           | —           |
+
+> **Note on Hello World JS figures**: approximate figures based on widely-cited community benchmarks and published framework documentation — not independently measured by this project. Lit's ~5 kB runtime size is documented on [lit.dev](https://lit.dev). Next.js and Nuxt.js figures reflect commonly reported baseline JS payloads for a minimal page and vary by framework version and configuration.
+
+---
+
+## SEO
+
+Litro renders all pages server-side via Declarative Shadow DOM before sending HTML to the
+browser. Search engines receive fully-rendered content — the same approach used by Next.js
+and Nuxt.js. Client-side-only web components have SEO limitations; Litro's SSR eliminates
+them by default.
+
+[How this works →](https://litro.dev/docs/core-concepts/ssr)
+
+---
+
+## Documentation
+
+Full documentation at [litro.dev](https://litro.dev).
 
 ---
 

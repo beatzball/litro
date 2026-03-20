@@ -3,7 +3,7 @@
   "version": "0.1.4",
   "type": "module",
   "types": "./dist/index.d.ts",
-  "description": "Zero-dependency URLPattern client-side router for web components",
+  "description": "Client-side router for Lit web components. Built on the native URLPattern API. Zero dependencies. Works standalone or as part of the Litro framework.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -15,10 +15,16 @@
   },
   "keywords": [
     "router",
+    "client-side-routing",
+    "urlpattern",
     "web-components",
-    "url-pattern",
     "lit",
-    "client-side-routing"
+    "lit-element",
+    "spa",
+    "history-api",
+    "custom-elements",
+    "zero-dependencies",
+    "typescript"
   ],
   "exports": {
     ".": {

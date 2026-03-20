@@ -7,9 +7,18 @@ import ssgPlugin from '@beatzball/litro/plugins/ssg';
 import contentPlugin from '@beatzball/litro/content/plugin';
 
 const basePath = process.env.LITRO_BASE_PATH ?? '';
+const ssg = ssgPreset();
 
 export default defineNitroConfig({
-  ...ssgPreset(),
+  ...ssg,
+  // Extend ssgPreset's prerender config to explicitly include XML routes.
+  // /sitemap.xml is also discovered via crawlLinks (<link rel="sitemap">),
+  // but /blog/rss.xml needs explicit registration since crawlLinks may not
+  // follow <link rel="alternate"> tags in all Nitro versions.
+  prerender: {
+    ...ssg.prerender,
+    routes: [...(ssg.prerender?.routes ?? []), '/blog/rss.xml'],
+  },
 
   srcDir: 'server',
 

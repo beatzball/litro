@@ -5,7 +5,7 @@ import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
 import { siteConfig } from "../server/starlight.config.js";
 import { starlightHead } from "../src/route-meta.js";
-import { buildSeoHead } from "../src/seo.js";
+import { buildSeoHead, buildJsonLd } from "../src/seo.js";
 
 // Register components used in render()
 import "../src/components/starlight-header.js";
@@ -35,6 +35,19 @@ export const pageData = definePageData(async (_event) => {
     description,
     path: "/",
     type: "website",
+  }) + buildJsonLd({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Litro",
+    "description": "A fullstack web framework combining Lit web components, Nitro server, and Vite. File-based routing, streaming SSR, SSG, and Declarative Shadow DOM.",
+    "url": "https://litro.dev",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Node.js",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "beatzball", "url": "https://github.com/beatzball" },
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "codeRepository": "https://github.com/beatzball/litro",
+    "programmingLanguage": ["TypeScript", "JavaScript"],
   });
 
   return {

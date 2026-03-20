@@ -16,6 +16,22 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 ---
 
+## How It Compares
+
+|                     | Litro       | Next.js     | Nuxt.js     |
+|---------------------|-------------|-------------|-------------|
+| Component model     | Lit         | React       | Vue         |
+| File-based routing  | ✓           | ✓           | ✓           |
+| SSR / SSG           | ✓           | ✓           | ✓           |
+| Server engine       | Nitro       | custom      | Nitro       |
+| Hello World JS      | ~8 kB       | ~90 kB      | ~60 kB      |
+| Virtual DOM         | —           | ✓           | ✓           |
+| W3C standard comps  | ✓           | —           | —           |
+
+> **Note on Hello World JS figures**: these are approximate figures based on widely-cited community benchmarks and published framework documentation — they were not independently measured by this project. Lit's ~5 kB runtime size is documented on [lit.dev](https://lit.dev). The Next.js and Nuxt.js figures reflect commonly reported baseline JS payloads for a minimal page and vary by framework version and configuration.
+
+---
+
 ## Monorepo structure
 
 ```
