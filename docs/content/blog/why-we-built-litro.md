@@ -70,7 +70,7 @@ Given Lit (component model) and Nitro (server), what does the framework add?
 
 ## On Bundle Size
 
-A Litro hello-world page sends roughly 8 kB of JavaScript to the browser. Widely-cited figures for Next.js put the baseline JS payload at roughly 90 kB; for Nuxt, roughly 60 kB. These are approximations that vary with version and configuration, but the order-of-magnitude difference reflects a structural one.
+A Litro hello-world page sends roughly 8 kB of JavaScript to the browser. Community benchmarks and published framework documentation commonly cite the baseline JS payload for Next.js at roughly 90 kB and for Nuxt at roughly 60 kB — we have not independently measured these figures, and they vary by framework version and configuration. Lit's ~5 kB runtime size is documented on [lit.dev](https://lit.dev). The order-of-magnitude difference nonetheless reflects something structural.
 
 The difference comes from what each framework carries. React's runtime is inherently in the bundle. The virtual DOM reconciler, the fiber scheduler, the event delegation system, the concurrent mode infrastructure — all of it ships to every user. Lit's runtime is about 5 kB. The client router adds a little more. That's the ceiling.
 

@@ -58,6 +58,8 @@ export default class IndexPage extends LitroPage {
 | Virtual DOM         | —           | ✓           | ✓           |
 | W3C standard comps  | ✓           | —           | —           |
 
+> **Note on Hello World JS figures**: approximate figures based on widely-cited community benchmarks and published framework documentation — not independently measured by this project. Lit's ~5 kB runtime size is documented on [lit.dev](https://lit.dev). Next.js and Nuxt.js figures reflect commonly reported baseline JS payloads for a minimal page and vary by framework version and configuration.
+
 ---
 
 ## SEO
