@@ -1,5 +1,28 @@
 # litro
 
+## 0.3.0
+
+### Minor Changes
+
+- 619ec3c: feat(seo): inject seoHead and seoTitle from pageData into HTML shell
+
+  Pages can now return `seoHead` (a string of meta/JSON-LD tags) and `seoTitle` from `definePageData()`. The framework extracts these at request time and injects them into the actual `<head>` element of the HTML response — not buried in the `__litro_data__` JSON blob.
+
+  Also bumps the `h3` dependency to `>=1.15.6` to patch CVE GHSA-22cc-p3c6-wpvm.
+
+  Also improves npm discoverability: updated descriptions and keywords for all three packages, and rewrote the framework README with a Hello World example, comparison table, and SEO section.
+
+### Patch Changes
+
+- d5d0b41: fix: strip seoHead/seoTitle from **litro_data** JSON; add .xml MIME type to litro preview
+
+  Pages returning `seoHead` from `definePageData()` commonly include a JSON-LD `<script>` block. The closing `</script>` inside the JSON string caused the browser HTML parser to terminate the outer `<script type="application/json">` element early, leaking the remainder of the JSON as visible text and causing `getServerData()` to return null. Fixed by destructuring `seoHead` and `seoTitle` out of the page data before `JSON.stringify` — these fields are only needed server-side to build the `<head>`.
+
+  Also adds `.xml` to the MIME type map in `litro preview`'s static file server, preventing browsers from prompting a download for `.xml` routes (e.g. RSS feeds, sitemaps) when previewing an SSG build locally.
+
+- Updated dependencies [619ec3c]
+  - @beatzball/litro-router@0.1.5
+
 ## 0.2.0
 
 ### Minor Changes
