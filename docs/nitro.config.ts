@@ -7,9 +7,19 @@ import ssgPlugin from '@beatzball/litro/plugins/ssg';
 import contentPlugin from '@beatzball/litro/content/plugin';
 
 const basePath = process.env.LITRO_BASE_PATH ?? '';
+const ssg = ssgPreset();
 
 export default defineNitroConfig({
-  ...ssgPreset(),
+  ...ssg,
+  // Nitro defaults to crawling from '/' when prerender.routes is empty.
+  // Explicit routes are required for non-HTML responses that crawlLinks
+  // cannot discover (XML files have no anchor tags to follow).
+  // '/' is included so crawlLinks has a starting point regardless of
+  // whether the default behaviour holds across Nitro versions.
+  prerender: {
+    ...ssg.prerender,
+    routes: ['/', '/sitemap.xml', '/blog/rss.xml'],
+  },
 
   srcDir: 'server',
 
@@ -48,21 +58,6 @@ export default defineNitroConfig({
       await contentPlugin(nitro);
       await pagesPlugin(nitro);
       await ssgPlugin(nitro);
-      // XML routes that aren't discovered by crawlLinks must be added here
-      // (in build:before), not in the static config. Nitro snapshots explicit
-      // prerender.routes from the config before build:before fires — anything
-      // set there bypasses the hook-populated route list entirely.
-      // /sitemap.xml — moved from pages/ to server/routes/ (no longer a scanned page).
-      // /blog/rss.xml — <link rel="alternate"> is not followed by crawlLinks.
-      if (!nitro.options.prerender) {
-        (nitro.options as Record<string, unknown>).prerender = {};
-      }
-      nitro.options.prerender.routes ??= [];
-      for (const r of ['/sitemap.xml', '/blog/rss.xml']) {
-        if (!nitro.options.prerender.routes.includes(r)) {
-          nitro.options.prerender.routes.push(r);
-        }
-      }
     },
   },
 
