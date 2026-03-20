@@ -57,6 +57,14 @@ export const siteConfig = {
       ],
     },
     {
+      label: 'Migrate',
+      items: [
+        { label: 'From Next.js', slug: 'migrate/from-nextjs' },
+        { label: 'From Nuxt.js', slug: 'migrate/from-nuxt' },
+        { label: 'From React (to Lit)', slug: 'migrate/from-react' },
+      ],
+    },
+    {
       label: 'Contributing',
       items: [
         { label: 'Contributing', slug: 'contributing' },

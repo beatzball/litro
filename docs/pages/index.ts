@@ -213,6 +213,14 @@ export class SplashPage extends LitroPage {
                 >Blog</sl-button
               >
             </div>
+            <div
+              style="display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;font-size:var(--sl-text-sm);"
+            >
+              <a href="/compare/nextjs" style="color:var(--sl-color-gray-5);text-decoration:none;">vs Next.js</a>
+              <a href="/compare/nuxt" style="color:var(--sl-color-gray-5);text-decoration:none;">vs Nuxt.js</a>
+              <a href="/compare/enhance" style="color:var(--sl-color-gray-5);text-decoration:none;">vs Enhance</a>
+              <a href="/why-web-components" style="color:var(--sl-color-gray-5);text-decoration:none;">Why Web Components?</a>
+            </div>
           </div>
         </section>
 
