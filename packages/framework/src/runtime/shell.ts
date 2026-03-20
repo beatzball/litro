@@ -109,8 +109,14 @@ export function buildShell(
   const title = options?.title ?? 'Litro';
   const extraHead = options?.head ?? '';
   const bodyAttrs = options?.bodyAttrs ? ` ${options.bodyAttrs}` : '';
+  // Escape </script sequences so the HTML parser does not terminate the
+  // <script type="application/json"> element early. This happens when page
+  // data includes rendered HTML (e.g. CHANGELOG entries mentioning </script>
+  // in code spans). JSON parsers treat \/ as /, so the data round-trips
+  // correctly: JSON.parse('<\/script>') === '</script>'.
+  const safeJson = options?.serverDataJson?.replace(/<\/script/gi, '<\\/script') ?? '';
   const serverDataScript = options?.serverDataJson
-    ? `\n  <script type="application/json" id="__litro_data__">${options.serverDataJson}</script>`
+    ? `\n  <script type="application/json" id="__litro_data__">${safeJson}</script>`
     : '';
   const appScriptUrl = options?.appScriptUrl ?? '/_litro/app.js';
 

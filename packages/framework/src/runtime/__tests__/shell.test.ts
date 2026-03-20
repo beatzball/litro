@@ -137,6 +137,21 @@ describe('buildShell — head: serverDataJson', () => {
     expect(head).toContain('type="application/json"');
   });
 
+  it('escapes </script sequences in the JSON to prevent early script termination', () => {
+    // If page data (e.g. rendered CHANGELOG HTML) contains </script, the HTML
+    // parser would terminate the <script type="application/json"> element early,
+    // corrupting the JSON and causing getServerData() to return null.
+    // The fix: replace </script with <\/script (valid JSON escape, safe in HTML).
+    const json = JSON.stringify({ html: '<code>&lt;/script&gt;</code>', raw: '</script>' });
+    const { head } = buildDefault('page-home', { serverDataJson: json });
+    // Must not contain the literal </script sequence inside the data element
+    const dataScript = head.match(/<script type="application\/json"[^>]*>([\s\S]*?)<\/script>/)?.[1] ?? '';
+    expect(dataScript).not.toMatch(/<\/script/i);
+    // Must still be parseable JSON that round-trips correctly
+    const parsed = JSON.parse(dataScript) as { html: string; raw: string };
+    expect(parsed.raw).toBe('</script>');
+  });
+
   it('the data script appears inside <head> (before </head>)', () => {
     const { head } = buildDefault('page-home', { serverDataJson: '{"x":1}' });
     const dataIdx = head.indexOf('__litro_data__');
