@@ -33,8 +33,10 @@ test('blog post renders title', async ({ page }) => {
 test('blog post has rendered HTML body', async ({ page }) => {
   await page.goto('/blog/hello-world');
   await page.waitForSelector('page-blog-slug');
-  // The post body is inside shadow DOM — use evaluate to reach shadow root text
-  const text = await page.locator('page-blog-slug').evaluate(
+  // The post body is inside shadow DOM — use evaluate to reach shadow root text.
+  // Use .first() to avoid a strict-mode violation during the router's atomic
+  // DOM swap, when a hidden new element briefly coexists with the SSR'd one.
+  const text = await page.locator('page-blog-slug').first().evaluate(
     el => (el.shadowRoot?.textContent ?? '').trim(),
   );
   expect(text.length).toBeGreaterThan(0);
