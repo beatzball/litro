@@ -1,7 +1,7 @@
 ---
 title: Shadow DOM and SEO — The Problem and Litro's Solution
 description: Web components have an SEO problem — content inside Shadow DOM is invisible to crawlers. Here's why that happens, why it matters less than you think, and how Litro eliminates the issue entirely with server-side Declarative Shadow DOM.
-date: 2026-02-01
+date: 2026-03-10
 tags:
   - blog
   - seo

@@ -1,7 +1,7 @@
 ---
 title: Why We Built Litro — The Case for Standards-Based Development
 description: React and Vue solved real problems in 2013. But the web platform has caught up. Here's why we think web components, URLPattern, and Declarative Shadow DOM are the right foundation for a modern fullstack framework.
-date: 2026-02-15
+date: 2026-03-17
 tags:
   - blog
   - announcement
