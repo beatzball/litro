@@ -1,7 +1,7 @@
 ---
 title: Welcome to Litro
 description: Introducing Litro — a fullstack web framework built on Lit, Nitro, and Vite.
-date: 2026-01-01
+date: 2026-03-12
 tags:
   - blog
   - announcement
