@@ -58,8 +58,6 @@ export default class IndexPage extends LitroPage {
 | Virtual DOM         | —           | ✓           | ✓           |
 | W3C standard comps  | ✓           | —           | —           |
 
-[Full comparison →](https://litro.dev/compare/nextjs)
-
 ---
 
 ## SEO

@@ -28,8 +28,6 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 | Virtual DOM         | —           | ✓           | ✓           |
 | W3C standard comps  | ✓           | —           | —           |
 
-[Full comparison →](https://litro.dev/compare/nextjs)
-
 ---
 
 ## Monorepo structure
