@@ -96,7 +96,7 @@
     "@beatzball/litro-router": "workspace:*",
     "execa": "^8.0.1",
     "nitropack": "^2.13.1",
-    "h3": "^1.13.0",
+    "h3": "^1.15.6",
     "vite": "^5.4.11",
     "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",

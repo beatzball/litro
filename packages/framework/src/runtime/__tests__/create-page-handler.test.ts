@@ -63,7 +63,13 @@ import { createPageHandler } from '../create-page-handler.js';
 // ---------------------------------------------------------------------------
 
 function makeRoute(tag = 'page-test') {
-  return { filePath: '/fake/page.ts', componentTag: tag, path: '/', pattern: '/' };
+  return {
+    filePath: '/fake/page.ts',
+    componentTag: tag,
+    path: '/',
+    isDynamic: false,
+    isCatchAll: false,
+  };
 }
 
 function makePageData(fetcher: (event: unknown) => Promise<unknown>) {
