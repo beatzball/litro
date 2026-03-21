@@ -1,5 +1,4 @@
 ---
-'@beatzball/litro-docs': minor
 '@beatzball/litro': patch
 ---
 
