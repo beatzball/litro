@@ -9,8 +9,9 @@ function toLocalDate(date: Date | string): Date {
   if (date instanceof Date) {
     return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
   }
-  // "YYYY-MM-DD" string — parse as local noon to avoid UTC-offset day shifts
-  const m = (date as string).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  // Match YYYY-MM-DD at the start of any ISO string (e.g. "2026-03-21" or "2026-03-21T00:00:00.000Z")
+  // and construct as local noon to avoid UTC-offset day shifts on the client after JSON deserialization.
+  const m = (date as string).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return new Date(+m[1], +m[2] - 1, +m[3], 12);
   return new Date(date as string);
 }
