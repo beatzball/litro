@@ -4,8 +4,12 @@
  * regardless of the runtime's UTC offset.
  */
 function toLocalDate(date: Date | string): Date {
-  if (date instanceof Date) return date;
-  // "YYYY-MM-DD" — parse as local noon to avoid UTC-offset day shifts
+  // gray-matter/js-yaml parses YAML date fields as UTC midnight Date objects.
+  // Re-construct using UTC parts so UTC-behind timezones don't shift the day back.
+  if (date instanceof Date) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
+  }
+  // "YYYY-MM-DD" string — parse as local noon to avoid UTC-offset day shifts
   const m = (date as string).match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (m) return new Date(+m[1], +m[2] - 1, +m[3], 12);
   return new Date(date as string);
