@@ -6,6 +6,10 @@ const SITE_URL = (process.env.SITE_URL ?? 'https://litro.dev').replace(/\/$/, ''
 // Static routes that are always present. Blog posts are added dynamically.
 const STATIC_ROUTES: Array<{ path: string; priority: string }> = [
   { path: '/', priority: '1.0' },
+  { path: '/why-web-components', priority: '0.9' },
+  { path: '/compare/nextjs', priority: '0.9' },
+  { path: '/compare/nuxt', priority: '0.9' },
+  { path: '/compare/enhance', priority: '0.9' },
   { path: '/blog', priority: '0.8' },
   { path: '/docs/introduction', priority: '0.8' },
   { path: '/docs/getting-started', priority: '0.8' },
@@ -23,6 +27,9 @@ const STATIC_ROUTES: Array<{ path: string; priority: string }> = [
   { path: '/docs/recipes/starlight', priority: '0.8' },
   { path: '/docs/deployment/github-pages', priority: '0.8' },
   { path: '/docs/deployment/coolify', priority: '0.8' },
+  { path: '/docs/migrate/from-nextjs', priority: '0.8' },
+  { path: '/docs/migrate/from-nuxt', priority: '0.8' },
+  { path: '/docs/migrate/from-react', priority: '0.8' },
   { path: '/docs/contributing', priority: '0.6' },
   { path: '/docs/packages/litro', priority: '0.6' },
   { path: '/docs/packages/litro-router', priority: '0.6' },

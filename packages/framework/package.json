@@ -94,27 +94,28 @@
   ],
   "dependencies": {
     "@beatzball/litro-router": "workspace:*",
-    "execa": "^8.0.1",
-    "nitropack": "^2.13.1",
-    "h3": "^1.15.6",
-    "vite": "^5.4.11",
-    "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
-    "pathe": "^1.1.2",
+    "execa": "^8.0.1",
     "fast-glob": "^3.3.3",
-    "jiti": "^2.0.0",
     "gray-matter": "^4.0.3",
-    "unified": "^11.0.5",
-    "remark-parse": "^11.0.0",
+    "h3": "^1.15.6",
+    "jiti": "^2.0.0",
+    "lit": "^3.2.1",
+    "nitropack": "^2.13.1",
+    "pathe": "^1.1.2",
+    "rehype-raw": "^7.0.0",
+    "rehype-stringify": "^10.0.1",
     "remark-gfm": "^4.0.0",
+    "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
-    "rehype-stringify": "^10.0.1"
+    "unified": "^11.0.5",
+    "vite": "^5.4.11"
   },
   "devDependencies": {
+    "jsdom": "^25.0.0",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8",
-    "jsdom": "^25.0.0"
+    "vitest": "^2.1.8"
   },
   "keywords": [
     "lit",

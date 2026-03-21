@@ -43,3 +43,18 @@ Nitro Server
 - Content layer for Markdown (11ty-compatible)
 - SSG (static site generation) via the `ssgPreset`
 - Recipes for common project types (fullstack, 11ty blog, Starlight docs)
+
+## Coming from Another Framework?
+
+If you're evaluating Litro from the perspective of a framework you already know:
+
+- **[Litro vs Next.js](/compare/nextjs)** — same file-based routing and SSR, different component model
+- **[Litro vs Nuxt.js](/compare/nuxt)** — shared Nitro server engine; migration is primarily replacing Vue with Lit
+- **[Litro vs Enhance](/compare/enhance)** — both render web components server-first; different authoring model and deployment story
+- **[Why Web Components?](/why-web-components)** — the philosophical case for standards-based development
+
+Migration guides with step-by-step code walkthroughs:
+
+- [Migrating from Next.js](/docs/migrate/from-nextjs)
+- [Migrating from Nuxt.js](/docs/migrate/from-nuxt)
+- [From React to Lit](/docs/migrate/from-react)

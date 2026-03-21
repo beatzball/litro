@@ -237,6 +237,188 @@ export class SplashPage extends LitroPage {
               `,
             )}
           </litro-card-grid>
+
+          <!-- Why Web Components blurb -->
+          <div
+            style="
+            margin:3rem 1.5rem 0;
+            padding:2rem;
+            border-radius:0.75rem;
+            border:1px solid var(--sl-color-hairline);
+            background:color-mix(in srgb, var(--sl-color-accent) 4%, var(--sl-color-bg));
+            text-align:center;
+          "
+          >
+            <p
+              style="
+              font-size:var(--sl-text-sm);
+              font-weight:600;
+              text-transform:uppercase;
+              letter-spacing:0.08em;
+              color:var(--sl-color-accent);
+              margin:0 0 0.5rem;
+            "
+            >
+              Built on the Web Platform
+            </p>
+            <h2
+              style="
+              font-size:clamp(1.25rem,3vw,1.75rem);
+              font-weight:700;
+              margin:0 0 0.75rem;
+              color:var(--sl-color-text);
+            "
+            >
+              Why Web Components?
+            </h2>
+            <p
+              style="
+              font-size:var(--sl-text-base);
+              color:var(--sl-color-gray-5);
+              max-width:32rem;
+              margin:0 auto 1.5rem;
+              line-height:1.6;
+            "
+            >
+              Custom Elements, Shadow DOM, and slots are W3C specifications native to every
+              major browser — the same layer as <code style="font-size:0.9em;">&lt;video&gt;</code>,
+              CSS Grid, and Fetch. Standards that get added to the platform stay there.
+            </p>
+            <a
+              href="/why-web-components"
+              style="
+              display:inline-flex;align-items:center;gap:0.375rem;
+              font-size:var(--sl-text-sm);font-weight:600;
+              color:var(--sl-color-accent);text-decoration:none;
+            "
+            >
+              Learn more about web standards longevity
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+              </svg>
+            </a>
+          </div>
+
+          <!-- vs comparison widget -->
+          <div
+            style="
+            margin:2rem 1.5rem 0;
+            padding:2rem;
+            border-radius:0.75rem;
+            border:1px solid var(--sl-color-hairline);
+            background:var(--sl-color-bg-nav);
+          "
+          >
+            <p
+              style="
+              text-align:center;
+              font-size:var(--sl-text-sm);
+              font-weight:600;
+              text-transform:uppercase;
+              letter-spacing:0.08em;
+              color:var(--sl-color-gray-5);
+              margin:0 0 1.5rem;
+            "
+            >
+              How Litro Compares
+            </p>
+            <div
+              style="
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:2rem;
+              flex-wrap:wrap;
+            "
+            >
+              <!-- Litro side -->
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;min-width:6rem;">
+                <img
+                  src="/logo.png"
+                  alt="Litro"
+                  style="width:3.5rem;height:3.5rem;object-fit:contain;filter:drop-shadow(0 0 12px color-mix(in srgb, var(--sl-color-accent) 50%, transparent));"
+                />
+                <span style="font-size:var(--sl-text-sm);font-weight:700;color:var(--sl-color-text);">Litro</span>
+              </div>
+
+              <!-- vs divider -->
+              <div
+                style="
+                display:flex;align-items:center;justify-content:center;
+                width:2.5rem;height:2.5rem;
+                border-radius:50%;
+                border:2px solid var(--sl-color-hairline);
+                background:var(--sl-color-bg);
+                font-size:var(--sl-text-sm);font-weight:700;
+                color:var(--sl-color-gray-5);
+                flex-shrink:0;
+              "
+              >
+                vs
+              </div>
+
+              <!-- Frameworks side -->
+              <div style="display:flex;flex-direction:column;gap:0.5rem;min-width:10rem;">
+                <a
+                  href="/compare/nextjs"
+                  style="
+                  display:flex;align-items:center;justify-content:space-between;
+                  padding:0.6rem 0.875rem;
+                  border-radius:0.5rem;
+                  border:1px solid var(--sl-color-hairline);
+                  background:var(--sl-color-bg);
+                  text-decoration:none;
+                  color:var(--sl-color-text);
+                  font-size:var(--sl-text-sm);font-weight:500;
+                  transition:border-color 0.15s,background 0.15s;
+                "
+                >
+                  <span>Next.js</span>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style="color:var(--sl-color-gray-5);">
+                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </a>
+                <a
+                  href="/compare/nuxt"
+                  style="
+                  display:flex;align-items:center;justify-content:space-between;
+                  padding:0.6rem 0.875rem;
+                  border-radius:0.5rem;
+                  border:1px solid var(--sl-color-hairline);
+                  background:var(--sl-color-bg);
+                  text-decoration:none;
+                  color:var(--sl-color-text);
+                  font-size:var(--sl-text-sm);font-weight:500;
+                  transition:border-color 0.15s,background 0.15s;
+                "
+                >
+                  <span>Nuxt.js</span>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style="color:var(--sl-color-gray-5);">
+                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </a>
+                <a
+                  href="/compare/enhance"
+                  style="
+                  display:flex;align-items:center;justify-content:space-between;
+                  padding:0.6rem 0.875rem;
+                  border-radius:0.5rem;
+                  border:1px solid var(--sl-color-hairline);
+                  background:var(--sl-color-bg);
+                  text-decoration:none;
+                  color:var(--sl-color-text);
+                  font-size:var(--sl-text-sm);font-weight:500;
+                  transition:border-color 0.15s,background 0.15s;
+                "
+                >
+                  <span>Enhance</span>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style="color:var(--sl-color-gray-5);">
+                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
         </main>
       </div>
     `;

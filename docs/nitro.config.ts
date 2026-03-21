@@ -18,7 +18,18 @@ export default defineNitroConfig({
   // whether the default behaviour holds across Nitro versions.
   prerender: {
     ...ssg.prerender,
-    routes: ['/', '/sitemap.xml', '/blog/rss.xml'],
+    // '/' seeds crawlLinks to discover all HTML pages linked from the site.
+    // Non-HTML routes and pages not reachable via <a> links must be listed
+    // explicitly — crawlLinks cannot discover them.
+    routes: [
+      '/',
+      '/why-web-components',
+      '/compare/nextjs',
+      '/compare/nuxt',
+      '/compare/enhance',
+      '/sitemap.xml',
+      '/blog/rss.xml',
+    ],
   },
 
   srcDir: 'server',

@@ -1,7 +1,7 @@
 ---
 title: Shadow DOM and SEO — The Problem and Litro's Solution
 description: Web components have an SEO problem — content inside Shadow DOM is invisible to crawlers. Here's why that happens, why it matters less than you think, and how Litro eliminates the issue entirely with server-side Declarative Shadow DOM.
-date: 2026-03-10
+date: 2026-03-20
 tags:
   - blog
   - seo
@@ -11,7 +11,7 @@ tags:
 
 # Shadow DOM and SEO — The Problem and Litro's Solution
 
-Web components have a reputation for being bad for SEO. It comes up every time someone evaluates Lit, every time a team considers moving away from React. The concern is real — but it applies specifically to *client-side-only* web components. Litro's SSR model eliminates the problem entirely.
+Web components have a reputation for being bad for SEO. It comes up every time someone evaluates Lit, every time a team considers moving away from React. The concern is real — but it applies specifically to _client-side-only_ web components. Litro's SSR model eliminates the problem entirely.
 
 Here's how.
 
@@ -58,7 +58,7 @@ The browser parses this natively — no JavaScript needed. The shadow DOM is att
 Lit's SSR library renders Lit components to Declarative Shadow DOM on the server. Given:
 
 ```typescript
-@customElement('my-component')
+@customElement("my-component")
 class MyComponent extends LitElement {
   override render() {
     return html`<h1>Hello from the server!</h1>`;
@@ -66,7 +66,7 @@ class MyComponent extends LitElement {
 }
 ```
 
-`@lit-labs/ssr` produces the DSD template string above. The client then *hydrates* — `@lit-labs/ssr-client` takes over the existing DOM rather than re-rendering it, eliminating the flicker and double-render you'd get with naive SSR.
+`@lit-labs/ssr` produces the DSD template string above. The client then _hydrates_ — `@lit-labs/ssr-client` takes over the existing DOM rather than re-rendering it, eliminating the flicker and double-render you'd get with naive SSR.
 
 This is streaming, too. Nitro pipes the DSD output through Node.js streams directly to the response — the browser starts rendering before the full page has been generated.
 
@@ -89,7 +89,7 @@ The litro.dev documentation site you're reading right now is built this way. Eve
 
 ## What About `<slot>` and Distributed Content?
 
-One subtlety: content passed into a component via `<slot>` sits in the *light* DOM (outside the shadow root) and is always visible to crawlers regardless of SSR. Only content generated *inside* the shadow root needs DSD to be crawler-visible. If your components receive their text content via slots, client-side-only rendering is less of a crawlability problem — though SSR still helps with above-the-fold render performance.
+One subtlety: content passed into a component via `<slot>` sits in the _light_ DOM (outside the shadow root) and is always visible to crawlers regardless of SSR. Only content generated _inside_ the shadow root needs DSD to be crawler-visible. If your components receive their text content via slots, client-side-only rendering is less of a crawlability problem — though SSR still helps with above-the-fold render performance.
 
 ## Summary
 
