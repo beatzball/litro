@@ -35,7 +35,7 @@ Supporting changes:
 - `sitemap.xml.ts` — new compare/why/migrate routes at priority 0.9/0.8
 - `starlight.config.js` — "Migrate" section added to docs sidebar
 - `docs/content/docs/introduction.md` — "Coming from another framework?" section
-- `docs/pages/index.ts` — comparison links added below CTA buttons
+- `docs/pages/index.ts` — "Why Web Components?" blurb + "How Litro Compares" vs widget (Litro logo / vs / Next.js, Nuxt.js, Enhance stacked links) added after feature cards
 - `docs/nitro.config.ts` — explicit prerender routes for compare/* and why-web-components
 
 Prerendered routes: 52 total (up from 33). Sitemap updated.
