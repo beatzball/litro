@@ -6,31 +6,34 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
-import { siteConfig } from '../server/starlight.config.js';
-import { starlightHead } from '../src/route-meta.js';
-import { buildSeoHead, buildJsonLd } from '../src/seo.js';
-import { addHeadingIds } from '../src/extract-headings.js';
-import { applyHighlighting } from '../src/highlight.js';
-import { compareStyles } from '../src/compare-styles.js';
+import { siteConfig } from '../../server/starlight.config.js';
+import { starlightHead } from '../../src/route-meta.js';
+import { buildSeoHead, buildJsonLd } from '../../src/seo.js';
+import { addHeadingIds } from '../../src/extract-headings.js';
+import { applyHighlighting } from '../../src/highlight.js';
+import { compareStyles } from '../../src/compare-styles.js';
 
 // Register components used in render()
-import '../src/components/starlight-header.js';
+import '../../src/components/starlight-header.js';
 
-export interface WhyWebComponentsData {
+export interface ComparePageData {
   post: Post;
   body: string;
   siteTitle: string;
   nav: typeof siteConfig.nav;
   seoHead: string;
   seoTitle: string;
+  slug: string;
 }
 
-export const pageData = definePageData(async (_event) => {
+export const pageData = definePageData(async (event) => {
+  const slug = event.context.params?.slug ?? '';
+
   const posts = await getPosts();
-  const post = posts.find(p => p.url === '/content/why-web-components');
+  const post = posts.find(p => p.url === `/content/compare/${slug}`);
 
   if (!post) {
-    throw createError({ statusCode: 404, message: 'why-web-components content not found' });
+    throw createError({ statusCode: 404, message: `Compare page not found: ${slug}` });
   }
 
   const body = applyHighlighting(addHeadingIds(post.body));
@@ -40,16 +43,14 @@ export const pageData = definePageData(async (_event) => {
   const seoHead = buildSeoHead({
     title: seoTitle,
     description,
-    path: '/why-web-components',
+    path: `/compare/${slug}`,
     type: 'article',
   }) + buildJsonLd({
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    'headline': seoTitle,
+    '@type': 'WebPage',
+    'name': seoTitle,
     'description': description,
-    'url': 'https://litro.dev/why-web-components',
-    'author': { '@type': 'Organization', 'name': 'beatzball' },
-    'publisher': { '@type': 'Organization', 'name': 'Litro', 'url': 'https://litro.dev' },
+    'url': `https://litro.dev/compare/${slug}`,
   });
 
   return {
@@ -59,16 +60,24 @@ export const pageData = definePageData(async (_event) => {
     nav: siteConfig.nav,
     seoHead,
     seoTitle,
-  } satisfies WhyWebComponentsData;
+    slug,
+  } satisfies ComparePageData;
 });
+
+export async function generateRoutes(): Promise<string[]> {
+  const posts = await getPosts();
+  return posts
+    .filter(p => p.url.startsWith('/content/compare/'))
+    .map(p => '/compare' + p.url.slice('/content/compare'.length));
+}
 
 export const routeMeta = {
   head: starlightHead,
-  title: 'Why Web Components? — Litro',
+  title: 'Compare — Litro',
 };
 
-@customElement('page-why-web-components')
-export class WhyWebComponentsPage extends LitroPage {
+@customElement('page-compare-slug')
+export class CompareSlugPage extends LitroPage {
   static override styles = [
     compareStyles,
     css`
@@ -94,7 +103,7 @@ export class WhyWebComponentsPage extends LitroPage {
   ];
 
   override render() {
-    const data = this.serverData as WhyWebComponentsData | null;
+    const data = this.serverData as ComparePageData | null;
     if (!data) return html`<p>Loading&hellip;</p>`;
 
     return html`
@@ -102,7 +111,7 @@ export class WhyWebComponentsPage extends LitroPage {
         <starlight-header
           siteTitle="${data.siteTitle}"
           .nav="${data.nav}"
-          currentPath="/why-web-components"
+          currentPath="/compare/${data.slug}"
         ></starlight-header>
         <main>
           ${unsafeHTML(data.body)}
@@ -112,4 +121,4 @@ export class WhyWebComponentsPage extends LitroPage {
   }
 }
 
-export default WhyWebComponentsPage;
+export default CompareSlugPage;

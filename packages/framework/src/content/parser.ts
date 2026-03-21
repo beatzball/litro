@@ -5,6 +5,7 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
+import rehypeRaw from 'rehype-raw';
 import rehypeStringify from 'rehype-stringify';
 import type { Post } from './types.js';
 
@@ -108,6 +109,7 @@ export async function parseMarkdownFile(
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
     .use(rehypeStringify, { allowDangerousHtml: true });
 
   const vfile = await processor.process(rawBody);

@@ -161,4 +161,28 @@ export const compareStyles = css`
     padding-top: 2rem;
     border-top: 1px solid var(--sl-color-border, #e2e8f0);
   }
+
+  /* ── CTA buttons ─────────────────────────────────────────────────── */
+  .btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.25rem;
+    border-radius: 0.375rem;
+    font-size: var(--sl-text-sm, 0.875rem);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-primary {
+    background: var(--sl-color-accent, #ea580c);
+    color: #fff;
+    border: 2px solid var(--sl-color-accent, #ea580c);
+  }
+  .btn-primary:hover { background: var(--sl-color-accent-high, #c2410c); border-color: var(--sl-color-accent-high, #c2410c); text-decoration: none; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--sl-color-text);
+    border: 2px solid var(--sl-color-border, #e2e8f0);
+  }
+  .btn-secondary:hover { border-color: var(--sl-color-accent, #ea580c); color: var(--sl-color-accent, #ea580c); text-decoration: none; }
 `;
