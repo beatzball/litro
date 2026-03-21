@@ -1,7 +1,7 @@
 ---
 title: Building a Blog with Litro's Content Layer
 description: A step-by-step tutorial for building a Markdown blog with Litro's content layer — getPosts(), frontmatter, tag pages, static generation, and deploying to GitHub Pages.
-date: 2026-03-20
+date: 2026-03-21
 tags: [tutorial, content-layer, ssg, blog]
 ---
 
@@ -37,7 +37,7 @@ Litro uses 11ty-compatible frontmatter. A blog post looks like this:
 ---
 title: My First Post
 description: A short summary for SEO and the blog index.
-date: 2026-03-20
+date: 2026-03-21
 tags: [tutorial, web-components]
 ---
 

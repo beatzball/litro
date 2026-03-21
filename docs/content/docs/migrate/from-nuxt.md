@@ -1,7 +1,7 @@
 ---
 title: Migrating from Nuxt.js to Litro
 description: A practical guide to migrating a Nuxt.js application to Litro. Both frameworks share the same Nitro server engine — migration is primarily replacing Vue SFCs with Lit class components. H3 API routes copy verbatim.
-date: 2026-01-01
+date: 2026-03-21
 ---
 
 # Migrating from Nuxt.js to Litro

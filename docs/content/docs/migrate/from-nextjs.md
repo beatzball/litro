@@ -1,7 +1,7 @@
 ---
 title: Migrating from Next.js to Litro
 description: A practical guide to migrating a Next.js application to Litro. Covers file-based routing, server-side data fetching, API routes, navigation, and CSS scoping with step-by-step before/after code examples.
-date: 2026-01-01
+date: 2026-03-21
 ---
 
 # Migrating from Next.js to Litro

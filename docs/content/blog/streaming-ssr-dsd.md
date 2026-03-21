@@ -1,7 +1,7 @@
 ---
 title: Streaming SSR with Declarative Shadow DOM — How It Works
 description: How Litro streams server-rendered Lit components to the browser using Declarative Shadow DOM, @lit-labs/ssr, and Nitro's sendStream(). What the wire format looks like, why it matters for Core Web Vitals, and how hydration works.
-date: 2026-03-20
+date: 2026-03-21
 tags: [ssr, streaming, declarative-shadow-dom, performance]
 ---
 

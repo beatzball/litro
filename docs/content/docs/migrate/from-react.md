@@ -1,7 +1,7 @@
 ---
 title: From React to Lit — A Component Migration Guide
 description: A practical guide to migrating React components to Lit web components. Covers state, lifecycle, props, slots, context, CSS scoping, and the mental model shift from function components to class components.
-date: 2026-01-01
+date: 2026-03-21
 ---
 
 # From React to Lit — A Component Migration Guide
