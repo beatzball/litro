@@ -50,9 +50,56 @@ litro/
 
 ---
 
-## Quick start — scaffold a new app (local)
+## Quick start — scaffold a new app
 
-**Step 1 — build the framework and scaffolder from source:**
+```bash
+# npm
+npm create @beatzball/litro@latest my-app
+
+# pnpm
+pnpm create @beatzball/litro my-app
+
+# yarn
+yarn create @beatzball/litro my-app
+
+# bun
+bun create @beatzball/litro my-app
+
+# deno
+deno create npm:@beatzball/litro@latest -- my-app
+```
+
+Follow the interactive prompts to choose a recipe and rendering mode, or pass flags to skip them:
+
+```bash
+# Non-interactive — fullstack SSR app:
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
+
+# Non-interactive — 11ty-compatible Markdown blog, static output:
+npm create @beatzball/litro@latest my-app -- --recipe 11ty-blog --mode ssg
+
+# Non-interactive — Starlight docs + blog, static output:
+npm create @beatzball/litro@latest my-docs -- --recipe starlight
+
+# List all available recipes:
+npm create @beatzball/litro@latest -- --list-recipes
+```
+
+Then:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev           # dev server on http://localhost:3030
+pnpm build         # Stage 0: page scan → Stage 1: vite build → Stage 2: nitro build
+pnpm preview       # preview the production build
+```
+
+---
+
+## Quick start — from source (monorepo contributors)
+
+**Step 1 — build the framework and scaffolder:**
 
 ```bash
 git clone <this-repo> litro
@@ -63,7 +110,7 @@ pnpm --filter @beatzball/litro build          # compiles packages/framework → 
 pnpm --filter @beatzball/create-litro build   # compiles packages/create-litro → dist/
 ```
 
-**Step 2 — scaffold your app:**
+**Step 2 — scaffold your app from the local build:**
 
 ```bash
 cd /path/to/your/projects
@@ -272,10 +319,14 @@ Litro delegates all deployment to Nitro's adapter system. Set `NITRO_PRESET` or 
 
 | Target                | Preset                            |
 | --------------------- | --------------------------------- |
-| Node.js server        | `node-server` (default)           |
+| Node.js server        | `node` (default)                  |
 | Cloudflare Workers    | `cloudflare-workers`              |
-| Vercel Edge           | `vercel-edge`                     |
-| Netlify Edge          | `netlify-edge`                    |
+| Cloudflare Pages      | `cloudflare-pages`                |
+| Vercel                | `vercel`                          |
+| Netlify               | `netlify`                         |
+| AWS Lambda            | `aws-lambda`                      |
+| Deno Deploy           | `deno-deploy`                     |
+| Bun                   | `bun`                             |
 | Static / GitHub Pages | `static` (or `LITRO_MODE=static`) |
 
 See [Nitro deployment docs](https://nitro.unjs.io/deploy) for the full list.
@@ -408,7 +459,8 @@ pnpm --filter @beatzball/litro build            # compile framework (required on
 pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
 pnpm --filter @beatzball/litro test             # run framework unit tests (196 tests)
 pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
-pnpm test:e2e                                   # Playwright e2e tests (32 tests, 3 playgrounds)
+pnpm test:docs                                  # run docs unit tests (97 tests)
+pnpm test:e2e                                   # Playwright e2e tests (32 tests, 4 projects: playground/11ty/starlight/docs)
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 # Playgrounds

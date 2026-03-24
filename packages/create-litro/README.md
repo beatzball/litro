@@ -5,21 +5,33 @@ Scaffold a new [Litro](https://github.com/beatzball/litro) app.
 ## Usage
 
 ```bash
+# npm
 npm create @beatzball/litro@latest my-app
-# or
+
+# pnpm
 pnpm create @beatzball/litro my-app
-# or
+
+# yarn
 yarn create @beatzball/litro my-app
+
+# bun
+bun create @beatzball/litro my-app
+
+# deno
+deno create npm:@beatzball/litro@latest -- my-app
 ```
 
 Follow the interactive prompts to choose a recipe and rendering mode, or pass flags directly to skip them:
 
 ```bash
 # Fullstack SSR app (default)
-npm create @beatzball/litro@latest my-app --recipe fullstack --mode ssr
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
 
-# 11ty-compatible blog (SSG or SSR)
-npm create @beatzball/litro@latest my-app --recipe 11ty-blog --mode ssg
+# 11ty-compatible Markdown blog, static output
+npm create @beatzball/litro@latest my-app -- --recipe 11ty-blog --mode ssg
+
+# Starlight docs + blog, static output
+npm create @beatzball/litro@latest my-docs -- --recipe starlight
 
 # List all available recipes
 npm create @beatzball/litro@latest -- --list-recipes
@@ -52,18 +64,34 @@ Generated app includes:
 - `server/api/posts.ts` — JSON API for posts (optional `?tag=` filter)
 - `litro.recipe.json` — written to the project root so the content plugin knows where to find posts
 
+### `starlight`
+
+An Astro Starlight-inspired docs + blog site. SSG-only (no `--mode` flag needed).
+
+Generated app includes:
+- `content/docs/*.md` — documentation pages with sidebar ordering frontmatter
+- `content/blog/*.md` — blog posts with title, date, tags, description
+- Layout components: `<starlight-page>`, `<starlight-header>`, `<starlight-sidebar>`, `<starlight-toc>`
+- UI components: `<litro-card>`, `<litro-card-grid>`, `<litro-badge>`, `<litro-aside>`, `<litro-tabs>`
+- [Shoelace](https://shoelace.style) web components available (`<sl-*>` names reserved for Shoelace; Litro's own primitives use `litro-*`)
+- `server/starlight.config.js` — site title, nav links, sidebar groups
+- `public/styles/starlight.css` — full `--sl-*` CSS token layer with dark/light mode
+- Syntax highlighting via `highlight.js` (fire theme, applied at SSG build time)
+
 ## After scaffolding
 
 ```bash
 cd my-app
 pnpm install
 pnpm dev      # start dev server on http://localhost:3030
+pnpm build    # production build
+pnpm preview  # preview the production build
 ```
 
-For static site generation:
+For static site generation (SSG):
 
 ```bash
-LITRO_MODE=static pnpm build   # prerenders all routes to HTML
+LITRO_MODE=static pnpm build   # prerenders all routes to HTML → dist/static/
 ```
 
 ## The `litro:content` virtual module

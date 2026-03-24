@@ -50,7 +50,8 @@ litro/                          ← Git repo root (pnpm workspace root)
     src/seo.ts                  ← buildSeoHead() helper for per-page meta tags
     public/.nojekyll            ← Required for GitHub Pages
   .github/workflows/
-    docs.yml                    ← GitHub Actions: build + deploy docs to GitHub Pages
+    ci.yml                      ← GitHub Actions: test, build, dependency audit on PRs
+    release.yml                 ← GitHub Actions: publish packages to npm via Changesets
   package.json                  ← Workspace root (private, no deps)
   pnpm-workspace.yaml
   tsconfig.json

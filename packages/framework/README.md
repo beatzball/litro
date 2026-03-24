@@ -16,10 +16,26 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 ## Quick start
 
 ```bash
+# npm
 npm create @beatzball/litro@latest my-app
+
+# pnpm
+pnpm create @beatzball/litro my-app
+
+# yarn
+yarn create @beatzball/litro my-app
+
+# bun
+bun create @beatzball/litro my-app
+
+# deno
+deno create npm:@beatzball/litro@latest -- my-app
+```
+
+```bash
 cd my-app
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ---
@@ -28,17 +44,19 @@ npm run dev
 
 ```typescript
 // pages/index.ts
-import { LitroPage, definePageData, html } from '@beatzball/litro/runtime';
+import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { LitroPage } from '@beatzball/litro/runtime';
+import { definePageData } from '@beatzball/litro';
 
-const pageData = definePageData(async () => ({
+export const pageData = definePageData(async () => ({
   message: 'Hello from the server!',
 }));
 
 @customElement('page-index')
 export default class IndexPage extends LitroPage {
   override render() {
-    const data = this.serverData as typeof pageData | null;
+    const data = this.serverData as { message: string } | null;
     return html`<h1>${data?.message}</h1>`;
   }
 }
@@ -85,7 +103,7 @@ Full documentation at [litro.dev](https://litro.dev).
 |---|---|
 | `@beatzball/litro` | This package — core framework |
 | [`@beatzball/litro-router`](https://www.npmjs.com/package/@beatzball/litro-router) | Standalone URLPattern router (zero dependencies) |
-| `@beatzball/create-litro` | `npm create @beatzball/litro` scaffolding CLI |
+| `@beatzball/create-litro` | `npm create @beatzball/litro` scaffolding CLI — `fullstack`, `11ty-blog`, and `starlight` recipes |
 
 ---
 
