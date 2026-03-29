@@ -39,7 +39,9 @@
   "pnpm": {
     "overrides": {
       "serialize-javascript": ">=7.0.3",
-      "tar": ">=7.5.11"
+      "tar": ">=7.5.11",
+      "node-forge": ">=1.4.0",
+      "picomatch": ">=4.0.4"
     }
   }
 }

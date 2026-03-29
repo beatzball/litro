@@ -1,5 +1,5 @@
 ---
-title: Welcome to Litros
+title: Welcome to Litro
 description: Introducing Litro — a fullstack web framework built on Lit, Nitro, and Vite.
 date: 2026-03-12
 tags:
@@ -7,7 +7,7 @@ tags:
   - announcement
 ---
 
-# Welcome to Litrosss
+# Welcome to Litro
 
 We're excited to introduce **Litro** — a fullstack web framework that combines the best of:
 
