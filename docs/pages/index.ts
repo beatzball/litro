@@ -4,13 +4,13 @@ import { LitroPage } from "@beatzball/litro/runtime";
 import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
 import { siteConfig } from "../server/starlight.config.js";
-import { starlightHead } from "../src/route-meta.js";
-import { buildSeoHead, buildJsonLd } from "../src/seo.js";
+import { starlightHead } from "@beatzball/litro-docs-ui/src/route-meta.js";
+import { buildSeoHead, buildJsonLd } from "@beatzball/litro-docs-ui/src/seo.js";
 
 // Register components used in render()
-import "../src/components/starlight-header.js";
-import "../src/components/litro-card.js";
-import "../src/components/litro-card-grid.js";
+import "@beatzball/litro-docs-ui/src/components/starlight-header.js";
+import "@beatzball/litro-docs-ui/src/components/litro-card.js";
+import "@beatzball/litro-docs-ui/src/components/litro-card-grid.js";
 
 export interface SplashData {
   siteTitle: string;

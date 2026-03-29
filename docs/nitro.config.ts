@@ -5,6 +5,7 @@ import { ssgPreset } from '@beatzball/litro/config';
 import pagesPlugin from '@beatzball/litro/plugins';
 import ssgPlugin from '@beatzball/litro/plugins/ssg';
 import contentPlugin from '@beatzball/litro/content/plugin';
+import { CONTENT_DIR } from '@beatzball/litro-docs-content';
 
 const basePath = process.env.LITRO_BASE_PATH ?? '';
 const ssg = ssgPreset();
@@ -37,12 +38,12 @@ export default defineNitroConfig({
   publicAssets: [
     { dir: '../dist/client', baseURL: `${basePath}/_litro/`, maxAge: 31536000 },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
-    { dir: '../content',     baseURL: '/content/', maxAge: 86400 },
+    { dir: CONTENT_DIR,      baseURL: '/content/', maxAge: 86400 },
     { dir: '../node_modules/@shoelace-style/shoelace/dist/assets', baseURL: '/shoelace/assets/', maxAge: 604800 },
     { dir: '../node_modules/@shoelace-style/shoelace/dist/themes', baseURL: '/shoelace/themes/', maxAge: 604800 },
   ],
 
-  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client'] },
+  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client', '@beatzball/litro-docs-ui'] },
 
   esbuild: {
     options: {

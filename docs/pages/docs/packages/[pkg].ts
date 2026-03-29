@@ -5,14 +5,14 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { siteConfig } from '../../../server/starlight.config.js';
-import { extractHeadings, addHeadingIds } from '../../../src/extract-headings.js';
-import { applyHighlighting } from '../../../src/highlight.js';
-import { starlightHead } from '../../../src/route-meta.js';
-import { buildSeoHead } from '../../../src/seo.js';
-import { getPackageInfo, ALL_PACKAGE_SLUGS } from '../../../src/packages.js';
-import type { PackageInfo } from '../../../src/packages.js';
+import { extractHeadings, addHeadingIds } from '@beatzball/litro-docs-ui/src/extract-headings.js';
+import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
+import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
+import { buildSeoHead } from '@beatzball/litro-docs-ui/src/seo.js';
+import { getPackageInfo, ALL_PACKAGE_SLUGS } from '@beatzball/litro-docs-ui/src/packages.js';
+import type { PackageInfo } from '@beatzball/litro-docs-ui/src/packages.js';
 
-import '../../../src/components/starlight-page.js';
+import '@beatzball/litro-docs-ui/src/components/starlight-page.js';
 
 export interface PkgPageData {
   pkg: PackageInfo;

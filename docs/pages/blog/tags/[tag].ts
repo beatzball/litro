@@ -5,11 +5,11 @@ import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
 import { siteConfig } from '../../../server/starlight.config.js';
-import { starlightHead } from '../../../src/route-meta.js';
-import { formatDate, isoDate } from '../../../src/date-utils.js';
+import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
+import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js';
 
 // Register components used in render()
-import '../../../src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
 
 export interface TagPageData {
   tag: string;
