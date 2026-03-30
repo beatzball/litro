@@ -158,6 +158,21 @@ export class StarlightHeader extends LitElement {
       font-size: 1.1rem;
       color: var(--sl-color-text, #23262f);
     }
+
+    @media (scripting: enabled) {
+      sl-icon-button:not(:defined) {
+        visibility: hidden;
+      }
+    }
+
+    @media (scripting: none) {
+      .menu-btn {
+        display: none;
+      }
+      sl-icon-button {
+        display: none;
+      }
+    }
   `;
 
   siteTitle = "";
