@@ -76,7 +76,7 @@ switch (command) {
 
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
-    run('nitro', ['dev', '--port', String(port)], { LITRO_MODE: 'server' });
+    run('nitro', ['dev', '--port', String(port)], { LITRO_MODE: 'server', LITRO_DEV: 'true' });
     break;
   }
 

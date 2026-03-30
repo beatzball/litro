@@ -1,6 +1,8 @@
 /* FOUCE - https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
-:not(:defined) {
-  visibility: hidden;
+@media (scripting: enabled) {
+  :not(:defined) {
+    visibility: hidden;
+  }
 }
 
 /* Shoelace color bridge — maps Shoelace's primary palette to Litro accent */

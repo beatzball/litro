@@ -1,16 +1,16 @@
-import { html } from "lit";
+import { html, css } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitroPage } from "@beatzball/litro/runtime";
 import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
 import { siteConfig } from "../server/starlight.config.js";
-import { starlightHead } from "../src/route-meta.js";
-import { buildSeoHead, buildJsonLd } from "../src/seo.js";
+import { starlightHead } from "@beatzball/litro-docs-ui/src/route-meta.js";
+import { buildSeoHead, buildJsonLd } from "@beatzball/litro-docs-ui/src/seo.js";
 
 // Register components used in render()
-import "../src/components/starlight-header.js";
-import "../src/components/litro-card.js";
-import "../src/components/litro-card-grid.js";
+import "@beatzball/litro-docs-ui/src/components/starlight-header.js";
+import "@beatzball/litro-docs-ui/src/components/litro-card.js";
+import "@beatzball/litro-docs-ui/src/components/litro-card-grid.js";
 
 export interface SplashData {
   siteTitle: string;
@@ -103,6 +103,38 @@ export const routeMeta = {
 
 @customElement("page-home")
 export class SplashPage extends LitroPage {
+  static override styles = css`
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1.125rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      line-height: 1.5;
+      transition: filter 0.15s, background 0.15s;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .cta-btn-primary {
+      background: var(--sl-color-primary-600, #ea580c);
+      color: #fff;
+      border: 1px solid transparent;
+    }
+    .cta-btn-primary:hover {
+      filter: brightness(1.08);
+    }
+    .cta-btn-default {
+      background: transparent;
+      color: var(--sl-color-text, #23262f);
+      border: 1px solid var(--sl-color-border, #e8e8e8);
+    }
+    .cta-btn-default:hover {
+      background: var(--sl-color-gray-2, #e8e8e8);
+    }
+  `;
+
   override render() {
     const data = this.serverData as SplashData | null;
     const {
@@ -203,15 +235,8 @@ export class SplashPage extends LitroPage {
             <div
               style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;"
             >
-              <sl-button
-                variant="primary"
-                size="medium"
-                href="/docs/introduction"
-                >Get Started</sl-button
-              >
-              <sl-button variant="default" size="medium" href="/blog"
-                >Blog</sl-button
-              >
+              <a href="/docs/introduction" class="cta-btn cta-btn-primary">Get Started</a>
+              <a href="/blog" class="cta-btn cta-btn-default">Blog</a>
             </div>
           </div>
         </section>

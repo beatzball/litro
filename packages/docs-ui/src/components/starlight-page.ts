@@ -146,6 +146,39 @@ export class StarlightPage extends LitElement {
         display: none;
       }
     }
+
+    /* No-JS: sidebar is always visible — no drawer toggle needed */
+    @media (scripting: none) and (max-width: 72rem) {
+      .body {
+        grid-template-columns: var(--sl-sidebar-width, 16rem) 1fr;
+        grid-template-areas: 'sidebar content';
+      }
+
+      .sidebar-wrap {
+        position: sticky;
+        top: var(--sl-nav-height, 3.5rem);
+        height: calc(100vh - var(--sl-nav-height, 3.5rem));
+        overflow-y: auto;
+        transform: none;
+        grid-area: sidebar;
+        width: auto;
+        box-shadow: none;
+      }
+    }
+
+    @media (scripting: none) and (max-width: 48rem) {
+      .body {
+        grid-template-columns: 1fr;
+        grid-template-areas: 'sidebar' 'content';
+      }
+
+      .sidebar-wrap {
+        position: static;
+        height: auto;
+        overflow-y: visible;
+        top: auto;
+      }
+    }
   `;
 
   siteTitle = '';

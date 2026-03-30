@@ -81,6 +81,13 @@ export interface ShellOptions {
    * serves and hot-reloads the entry module directly (no pre-built bundle).
    */
   appScriptUrl?: string;
+  /**
+   * When true, injects a polling script that checks /_litro/_litro-version.json
+   * every 300 ms. Written by the Vite content plugin on each Markdown change;
+   * served at /_litro/ by the existing publicAssets handler. When v changes the
+   * browser calls location.reload(). Only injected in dev mode.
+   */
+  devMode?: boolean;
 }
 
 /**
@@ -119,6 +126,9 @@ export function buildShell(
     ? `\n  <script type="application/json" id="__litro_data__">${safeJson}</script>`
     : '';
   const appScriptUrl = options?.appScriptUrl ?? '/_litro/app.js';
+  const devReloadScript = options?.devMode
+    ? `\n  <script>(function(){var v=null;setInterval(function(){fetch('/_litro/_litro-version.json?_t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(v===null){v=d.v}else if(v!==d.v){location.reload()}}).catch(function(){})},2500)})();</script>`
+    : '';
 
   const head = `<!DOCTYPE html>
 <html lang="en">
@@ -133,7 +143,7 @@ export function buildShell(
     by the browser and arrives after the parser has already processed the DSD templates,
     making it too late to upgrade them.
   -->
-  <script>${DSD_POLYFILL}</script>${extraHead}${serverDataScript}
+  <script>${DSD_POLYFILL}</script>${extraHead}${serverDataScript}${devReloadScript}
 </head>
 <body${bodyAttrs}>
 <litro-outlet>

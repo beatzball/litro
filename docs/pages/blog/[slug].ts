@@ -7,14 +7,14 @@ import { createError } from 'h3';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
 import { siteConfig } from '../../server/starlight.config.js';
-import { extractHeadings, addHeadingIds } from '../../src/extract-headings.js';
-import { applyHighlighting } from '../../src/highlight.js';
-import { starlightHead } from '../../src/route-meta.js';
-import { buildSeoHead, buildJsonLd } from '../../src/seo.js';
-import { formatDate, isoDate } from '../../src/date-utils.js';
+import { extractHeadings, addHeadingIds } from '@beatzball/litro-docs-ui/src/extract-headings.js';
+import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
+import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
+import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
+import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js';
 
 // Register components used in render()
-import '../../src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
 
 export interface BlogPostData {
   post: Post;

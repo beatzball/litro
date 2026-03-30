@@ -13,7 +13,8 @@
  */
 
 import type { Plugin, ResolvedConfig } from 'vite';
-import { resolve } from 'pathe';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { resolve, join } from 'pathe';
 import { resolveContentDir } from '../content/resolve-content-dir.js';
 
 const VIRTUAL_ID = 'litro:content';
@@ -24,11 +25,23 @@ function generateModuleSource(): string {
   // definePageData → serverData (injected JSON). These no-op stubs satisfy the
   // static import at the top of page files without pulling in Node.js modules
   // (node:fs, fast-glob, gray-matter, etc.) that would break Vite's dep optimizer.
+  //
+  // In dev mode, Vite sends a 'litro:content-update' WebSocket event when any
+  // Markdown file in the content directory changes. The browser reloads so the
+  // server can serve fresh page data (the stub resets _buildPromise on every
+  // request in dev mode). import.meta.hot is undefined in production builds so
+  // this block is dead code and tree-shaken by Rollup.
   return `// litro:content — browser stub (server data comes via definePageData → serverData)
 export async function getPosts(_options) { return []; }
 export async function getPost(_slug) { return null; }
 export async function getTags() { return []; }
 export async function getGlobalData() { return {}; }
+
+if (import.meta.hot) {
+  import.meta.hot.on('litro:content-update', () => {
+    location.reload();
+  });
+}
 `;
 }
 
@@ -57,29 +70,48 @@ export function litroContentPlugin(): Plugin {
     },
 
     configureServer(server) {
-      // Watch content directory for Markdown changes; invalidate the virtual module.
+      // Watch content directory for Markdown changes and invalidate the virtual
+      // module so Vite's module graph stays consistent.
       const watchDir = resolvedContentDir;
       if (!watchDir) return;
 
+      // Explicitly add the content dir — it may be outside Vite's project root
+      // (e.g. a shared packages/docs-content/ workspace package).
       server.watcher.add(watchDir);
 
-      server.watcher.on('change', (file) => {
-        if (!file.startsWith(watchDir + '/')) return;
-        const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
-        if (mod) {
-          server.moduleGraph.invalidateModule(mod);
-          server.ws.send({ type: 'full-reload' });
-        }
-      });
+      // Version file for the browser polling script — same mechanism as the
+      // Nitro content plugin uses, but driven by Vite's chokidar watcher (which
+      // reliably fires in this process context). Written to dist/client/ so it
+      // is served at /_litro/_litro-version.json by Nitro's publicAssets handler.
+      const clientDir = resolve(config.root, 'dist', 'client');
+      const versionFile = join(clientDir, '_litro-version.json');
+      const writeVersion = async () => {
+        await mkdir(clientDir, { recursive: true });
+        await writeFile(versionFile, JSON.stringify({ v: Date.now() }), 'utf-8');
+      };
 
-      server.watcher.on('add', (file) => {
+      // Write the initial version file so the polling script gets a 200 from
+      // the first request rather than a 404 on a clean dist/.
+      writeVersion().catch(() => {});
+
+      const onContentFileEvent = (file: string) => {
         if (!file.startsWith(watchDir + '/')) return;
+        // Basename check — skip dotfiles (.conform.*.md, .DS_Store, etc.)
+        const base = file.split('/').pop() ?? '';
+        if (!base || base.startsWith('.') || !/\.(md|markdown)$/.test(base)) return;
+        // Invalidate the cached virtual module so Vite's module graph stays consistent.
         const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
-        if (mod) {
-          server.moduleGraph.invalidateModule(mod);
-          server.ws.send({ type: 'full-reload' });
-        }
-      });
+        if (mod) server.moduleGraph.invalidateModule(mod);
+        // Write the version file so the browser polling script picks up the change.
+        // Also send a Vite WS event as best-effort for environments where the
+        // WebSocket connection is available (e.g. standalone Vite server).
+        writeVersion().catch(() => {});
+        server.ws.send({ type: 'custom', event: 'litro:content-update' });
+      };
+
+      server.watcher.on('add', onContentFileEvent);
+      server.watcher.on('change', onContentFileEvent);
+      server.watcher.on('unlink', onContentFileEvent);
     },
   };
 }

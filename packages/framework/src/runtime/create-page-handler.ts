@@ -143,6 +143,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         head: staticHead + dynamicHead || undefined,
         serverDataJson,
         appScriptUrl,
+        devMode: process.env.LITRO_DEV === 'true',
       });
 
       // Construct the Lit template for this component. Dynamic tag names in

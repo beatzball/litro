@@ -7,14 +7,14 @@ import { createError } from 'h3';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
 import { siteConfig } from '../server/starlight.config.js';
-import { starlightHead } from '../src/route-meta.js';
-import { buildSeoHead, buildJsonLd } from '../src/seo.js';
-import { addHeadingIds } from '../src/extract-headings.js';
-import { applyHighlighting } from '../src/highlight.js';
-import { compareStyles } from '../src/compare-styles.js';
+import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
+import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
+import { addHeadingIds } from '@beatzball/litro-docs-ui/src/extract-headings.js';
+import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
+import { compareStyles } from '@beatzball/litro-docs-ui/src/compare-styles.js';
 
 // Register components used in render()
-import '../src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
 
 export interface WhyWebComponentsData {
   post: Post;
