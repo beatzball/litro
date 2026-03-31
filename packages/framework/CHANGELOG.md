@@ -1,5 +1,34 @@
 # litro
 
+## 0.4.0
+
+### Minor Changes
+
+- 8dfa849: Add shared content + UI packages and dev-mode content live reload
+
+  - Extract `docs/content/` into new private workspace `@beatzball/litro-docs-content` so both the SSG docs site and the upcoming SSR docs site can share the same Markdown source
+  - Extract `docs/src/` into new private workspace `@beatzball/litro-docs-ui` (Lit components, SEO utilities, highlight helpers) for the same reason
+  - Add `devMode` option to `buildShell` / `ShellOptions`: when true, injects a polling script that fetches `/_litro/_litro-version.json` every 2.5 s and reloads the browser when the version changes
+  - Vite content plugin (`litroContentPlugin`) now writes `dist/client/_litro-version.json` on every Markdown file change and sends a `litro:content-update` WebSocket event, enabling live browser reload on content edits in dev mode
+  - Fix: add `"sideEffects": ["./src/components/*.ts"]` to `@beatzball/litro-docs-ui` so Rollup does not tree-shake side-effect-only custom element registration imports
+
+- f8b1e6d: Phase 2: docs-ssr fullstack SSR site, LitroLink styles, router scroll-to-top, content plugin production fix
+
+  - Scaffold `docs-ssr/` workspace — fullstack SSR replica of the docs site using shared `docs-content` and `docs-ui` packages
+  - LitroLink: add `static override styles` with text-only inheritance (fixes double anchor point on CTA buttons)
+  - LitroRouter: scroll to top after SPA page swap (unless hash fragment present)
+  - Content plugin: embed absolute path fallback for production builds where `import.meta.url` resolves incorrectly after Rollup bundling
+  - CLI: pass `PORT` env var alongside `--port` flag for reliable dev server port binding
+  - Shared components: `?hidden` attribute pattern replaces structural ternaries for SSR hydration safety; `spaNav` prop enables SPA navigation in SSR contexts
+  - Blog pages: strip duplicate h1 from markdown body (title already rendered from frontmatter)
+  - Content negotiation: `Accept: application/json` returns pageData as JSON for client-side SPA data fetching
+  - SSR preset: `ssrPreset()` required in nitro.config.ts for correct production output directory
+
+### Patch Changes
+
+- Updated dependencies [f8b1e6d]
+  - @beatzball/litro-router@0.1.6
+
 ## 0.3.2
 
 ### Patch Changes
