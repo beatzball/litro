@@ -2,7 +2,9 @@
   "name": "@beatzball/litro-docs-ui",
   "private": true,
   "type": "module",
-  "sideEffects": ["./src/components/*.ts"],
+  "sideEffects": [
+    "./src/components/*.ts"
+  ],
   "exports": {
     "./src/*.js": {
       "source": "./src/*.ts",
