@@ -1,0 +1,36 @@
+{
+  "name": "@beatzball/litro-docs-ssr",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#litro/page-manifest": "./server/stubs/page-manifest.ts"
+  },
+  "scripts": {
+    "dev": "litro dev --port 3034",
+    "build": "litro build",
+    "preview": "litro preview"
+  },
+  "dependencies": {
+    "@beatzball/litro": "workspace:*",
+    "@beatzball/litro-router": "workspace:*",
+    "@beatzball/litro-docs-content": "workspace:*",
+    "@beatzball/litro-docs-ui": "workspace:*",
+    "@shoelace-style/shoelace": "^2.19.0",
+    "highlight.js": "^11.10.0",
+    "unified": "^11.0.5",
+    "remark-parse": "^11.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-rehype": "^11.1.1",
+    "rehype-stringify": "^10.0.1",
+    "pathe": "^1.1.2",
+    "lit": "^3.2.1",
+    "@lit-labs/ssr": "^3.3.0",
+    "@lit-labs/ssr-client": "^1.1.7",
+    "h3": "^1.15.6"
+  },
+  "devDependencies": {
+    "nitropack": "^2.13.1",
+    "vite": "^5.4.11",
+    "typescript": "^5.7.3"
+  }
+}

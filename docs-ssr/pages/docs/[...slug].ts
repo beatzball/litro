@@ -11,82 +11,117 @@ import { extractHeadings, addHeadingIds } from '@beatzball/litro-docs-ui/src/ext
 import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
 import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
-import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js';
 
 // Register components used in render()
-import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/starlight-page.js';
 
-export interface BlogPostData {
-  post: Post;
+export interface DocPageData {
+  doc: Post;
   body: string;
   toc: Array<{ depth: number; text: string; slug: string }>;
+  sidebar: typeof siteConfig.sidebar;
   siteTitle: string;
+  currentSlug: string;
+  prevDoc: { label: string; href: string } | null;
+  nextDoc: { label: string; href: string } | null;
   nav: typeof siteConfig.nav;
+  editUrl: string | null;
   seoHead: string;
   seoTitle: string;
+}
+
+function computePrevNext(
+  sidebar: typeof siteConfig.sidebar,
+  currentSlug: string,
+): { prevDoc: DocPageData['prevDoc']; nextDoc: DocPageData['nextDoc'] } {
+  const flat = sidebar.flatMap(g => g.items);
+  const idx = flat.findIndex(item => item.slug === currentSlug);
+  return {
+    prevDoc: idx > 0
+      ? { label: flat[idx - 1].label, href: `/docs/${flat[idx - 1].slug}` }
+      : null,
+    nextDoc: idx < flat.length - 1
+      ? { label: flat[idx + 1].label, href: `/docs/${flat[idx + 1].slug}` }
+      : null,
+  };
 }
 
 export const pageData = definePageData(async (event) => {
   const slug = event.context.params?.slug ?? '';
 
-  // Content URLs are /content/blog/<slug> (contentDir = 'content')
   const posts = await getPosts();
-  const post = posts.find(p => p.url === `/content/blog/${slug}`);
+  const doc = posts.find(p => p.url === `/content/docs/${slug}`);
 
-  if (!post) {
-    throw createError({ statusCode: 404, message: `Post not found: ${slug}` });
+  if (!doc) {
+    throw createError({ statusCode: 404, message: `Doc not found: ${slug}` });
   }
 
-  const toc = extractHeadings(post.rawBody);
+  const toc = extractHeadings(doc.rawBody);
+  // Strip the first <h1> from the HTML body — starlight-page renders the
+  // page title from the frontmatter `title` field as its own styled <h1>.
+  // Keeping the Markdown's leading # heading would produce duplicate <h1>s.
   const body = applyHighlighting(
-    addHeadingIds(post.body).replace(/^<h1[^>]*>.*?<\/h1>\s*/is, ''),
+    addHeadingIds(doc.body).replace(/^<h1[^>]*>.*?<\/h1>\s*/is, ''),
   );
-  const blogSlug = post.url.slice('/content/blog/'.length);
-  const postDescription = (post as Post & { description?: string }).description ?? '';
-  const seoTitle = `${post.title} — Litro Blog`;
+  const { prevDoc, nextDoc } = computePrevNext(siteConfig.sidebar, slug);
+  const editUrl = siteConfig.editUrlBase
+    ? `${siteConfig.editUrlBase}/content/docs/${slug}.md`
+    : null;
+
+  const docDescription = (doc as Post & { description?: string }).description ?? siteConfig.description;
+  const seoTitle = `${doc.title} — Litro`;
   const seoHead = buildSeoHead({
     title: seoTitle,
-    description: postDescription,
-    path: `/blog/${blogSlug}`,
+    description: docDescription,
+    path: `/docs/${slug}`,
     type: 'article',
   }) + buildJsonLd({
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": post.title,
-    "description": postDescription,
-    "datePublished": isoDate(post.date),
-    "url": `https://litro.dev/blog/${blogSlug}`,
+    "@type": "TechArticle",
+    "headline": seoTitle,
+    "description": docDescription,
+    "url": `https://litro.dev/docs/${slug}`,
     "author": { "@type": "Organization", "name": "beatzball" },
-    "keywords": post.tags.join(', '),
+    "isPartOf": { "@type": "WebSite", "name": "Litro Documentation", "url": "https://litro.dev" },
   });
 
   return {
-    post,
+    doc,
     body,
     toc,
+    sidebar: siteConfig.sidebar,
     siteTitle: siteConfig.title,
+    currentSlug: slug,
+    prevDoc,
+    nextDoc,
     nav: siteConfig.nav,
+    editUrl,
     seoHead,
     seoTitle,
-  } satisfies BlogPostData;
+  } satisfies DocPageData;
 });
 
 export async function generateRoutes(): Promise<string[]> {
   const posts = await getPosts();
   return posts
-    .filter(p => p.url.startsWith('/content/blog/'))
-    .map(p => '/blog' + p.url.slice('/content/blog'.length));
+    .filter(p => p.url.startsWith('/content/docs/'))
+    .map(p => '/docs' + p.url.slice('/content/docs'.length));
 }
 
 export const routeMeta = {
   head: starlightHead,
-  title: 'Blog — Litro',
+  title: 'Docs — Litro',
 };
 
-@customElement('page-blog-slug')
-export class BlogPostPage extends LitroPage {
+@customElement('page-docs-slug')
+export class DocPage extends LitroPage {
+  /**
+   * Styles injected into page-docs-slug's shadow root so they reach the
+   * <div slot="content"> subtree. Global stylesheets (starlight.css,
+   * highlight.css) cannot pierce shadow DOM boundaries.
+   */
   static override styles = css`
-    /* ── Typography ──────────────────────────────────────────────────── */
+    /* ── Typography for slotted doc content ─────────────────────────── */
     h1, h2, h3, h4, h5, h6 {
       margin-top: 1.5em; margin-bottom: 0.5em;
       font-weight: 600; line-height: 1.25;
@@ -153,66 +188,56 @@ export class BlogPostPage extends LitroPage {
   `;
 
   override render() {
-    const data = this.serverData as BlogPostData | null;
-    if (!data?.post) return html`<p>Loading&hellip;</p>`;
-
-    const { post, body, siteTitle, nav } = data;
-    const blogSlug = post.url.slice('/content/blog/'.length);
+    const data = this.serverData as DocPageData | null;
+    if (!data?.doc) return html`<p>Loading&hellip;</p>`;
 
     return html`
-      <div style="min-height:100vh;display:flex;flex-direction:column;">
-        <starlight-header
-          siteTitle="${siteTitle}"
-          .nav="${nav}"
-          currentPath="/blog/${blogSlug}"
-        ></starlight-header>
-        <main style="
-          flex:1;
-          max-width:52rem;
-          margin:0 auto;
-          padding:var(--sl-content-pad-y,2rem) var(--sl-content-pad-x,1.5rem);
-          width:100%;
-        ">
-          <article>
-            <header style="margin-bottom:2rem;">
-              <h1 style="font-size:var(--sl-text-4xl);font-weight:700;margin:0 0 0.75rem;line-height:1.15;">
-                ${post.title}
-              </h1>
-              <time
-                datetime="${isoDate(post.date)}"
-                style="font-size:var(--sl-text-sm);color:var(--sl-color-gray-4);"
-              >${formatDate(post.date)}</time>
-              ${post.tags.filter(t => t !== 'posts').length > 0 ? html`
-                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.75rem;">
-                  ${post.tags.filter(t => t !== 'posts').map(tag => html`
-                    <a href="/blog/tags/${tag}" style="
-                      display:inline-block;
-                      padding:0.15em 0.55em;
-                      font-size:var(--sl-text-xs);
-                      border-radius:9999px;
-                      background:var(--sl-color-accent-low);
-                      color:var(--sl-color-accent-high,#5b21b6);
-                      text-decoration:none;
-                      font-weight:600;
-                    ">#${tag}</a>
-                  `)}
-                </div>
+      <starlight-page
+        siteTitle="${data.siteTitle}"
+        pageTitle="${data.doc.title}"
+        .nav="${data.nav}"
+        .sidebar="${data.sidebar}"
+        .toc="${data.toc}"
+        currentSlug="${data.currentSlug}"
+        currentPath="/docs/${data.currentSlug}"
+        .spaNav="${true}"
+      >
+        <div slot="content">
+          ${unsafeHTML(data.body)}
+
+          ${data.prevDoc || data.nextDoc ? html`
+            <nav style="
+              display:flex;
+              justify-content:space-between;
+              padding-top:2rem;
+              margin-top:2rem;
+              border-top:1px solid var(--sl-color-border);
+              font-size:var(--sl-text-sm);
+            " aria-label="Previous and next pages">
+              ${data.prevDoc ? html`
+                <litro-link href="${data.prevDoc.href}" style="color:var(--sl-color-accent);text-decoration:none;">
+                  &larr; ${data.prevDoc.label}
+                </litro-link>
+              ` : html`<span></span>`}
+              ${data.nextDoc ? html`
+                <litro-link href="${data.nextDoc.href}" style="color:var(--sl-color-accent);text-decoration:none;">
+                  ${data.nextDoc.label} &rarr;
+                </litro-link>
               ` : ''}
-            </header>
-            <!-- unsafeHTML renders the Markdown-generated HTML directly.
-                 The content directory is trusted-author-only; do not place
-                 user-submitted or untrusted content here without sanitizing. -->
-            ${unsafeHTML(body)}
-          </article>
-          <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--sl-color-border);">
-            <a href="/blog" style="font-size:var(--sl-text-sm);color:var(--sl-color-accent);text-decoration:none;">
-              &larr; Back to Blog
-            </a>
-          </footer>
-        </main>
-      </div>
+            </nav>
+          ` : ''}
+
+          ${data.editUrl ? html`
+            <p style="margin-top:1.5rem;font-size:var(--sl-text-xs);color:var(--sl-color-gray-4);">
+              <a href="${data.editUrl}" style="color:var(--sl-color-accent);" target="_blank" rel="noopener">
+                Edit this page
+              </a>
+            </p>
+          ` : ''}
+        </div>
+      </starlight-page>
     `;
   }
 }
 
-export default BlogPostPage;
+export default DocPage;

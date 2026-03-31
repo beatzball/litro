@@ -20,6 +20,16 @@ import { LitroRouter, h3ToURLPattern } from '../index.js';
 //   /:all*                  — catch-all (produced by h3ToURLPattern)
 // ---------------------------------------------------------------------------
 beforeAll(() => {
+  // jsdom doesn't implement scrollTo or CSS.escape — provide no-op stubs.
+  if (typeof window.scrollTo !== 'function' || (window.scrollTo as unknown) === undefined) {
+    window.scrollTo = (() => {}) as typeof window.scrollTo;
+  }
+  if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
+    (globalThis as Record<string, unknown>).CSS = {
+      escape: (s: string) => s.replace(/([^\w-])/g, '\\$1'),
+    };
+  }
+
   if (typeof (globalThis as Record<string, unknown>).URLPattern !== 'undefined') return;
 
   (globalThis as Record<string, unknown>).URLPattern = class MinimalURLPattern {
@@ -265,6 +275,32 @@ describe('LitroRouter — setRoutes and resolve', () => {
     expect(outlet.children.length).toBe(0);
   });
 
+  it('scrolls to top after mounting a new page', async () => {
+    history.replaceState(null, '', '/');
+    if (!customElements.get('rr-scroll-top')) {
+      customElements.define('rr-scroll-top', class extends HTMLElement {});
+    }
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    router.setRoutes([{ path: '/', component: 'rr-scroll-top' }]);
+    await new Promise(r => setTimeout(r, 50));
+    expect(scrollSpy).toHaveBeenCalledWith(0, 0);
+    scrollSpy.mockRestore();
+  });
+
+  it('does not scroll to top when URL has a hash fragment', async () => {
+    // Navigate to a path with a hash fragment
+    history.replaceState(null, '', '/#section');
+    if (!customElements.get('rr-scroll-hash')) {
+      customElements.define('rr-scroll-hash', class extends HTMLElement {});
+    }
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    router.setRoutes([{ path: '/', component: 'rr-scroll-hash' }]);
+    await new Promise(r => setTimeout(r, 50));
+    // scrollTo(0, 0) should NOT be called — _scrollToHash runs instead
+    expect(scrollSpy).not.toHaveBeenCalledWith(0, 0);
+    scrollSpy.mockRestore();
+  });
+
   it('re-resolves when LitroRouter.go() triggers popstate', async () => {
     if (!customElements.get('rr-nav')) {
       customElements.define('rr-nav', class extends HTMLElement {});
@@ -274,7 +310,7 @@ describe('LitroRouter — setRoutes and resolve', () => {
     await new Promise(r => setTimeout(r, 0)); // initial resolve (no match)
 
     LitroRouter.go('/nav-target');
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 50));
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-nav');
   });
 });

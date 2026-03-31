@@ -37,7 +37,7 @@ test('LitroLink click triggers SPA navigation', async ({ page }) => {
 
   // /blog has litro-link elements pointing to individual posts
   await page.goto('/blog');
-  await page.waitForSelector('page-blog');
+  await page.waitForSelector('page-blog:not([hidden])');
 
   // Click the first litro-link (e.g. /blog/hello-world)
   await page.click('litro-link[href="/blog/hello-world"]');

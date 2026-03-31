@@ -201,12 +201,14 @@ export class LitroRouter {
       }
       el.removeAttribute('hidden');
 
-      // Scroll to hash after the component finishes rendering. Heading elements
-      // injected via unsafeHTML live inside shadow roots, so native fragment
-      // scrolling can't reach them — we traverse the shadow tree manually.
+      // Scroll to top of the new page, then override with hash target if present.
+      // Heading elements injected via unsafeHTML live inside shadow roots, so
+      // native fragment scrolling can't reach them — we traverse the shadow tree.
       const hash = location.hash;
       if (hash) {
         this._scrollToHash(hash);
+      } else {
+        window.scrollTo(0, 0);
       }
       return;
     }

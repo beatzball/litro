@@ -36,6 +36,7 @@ export class StarlightPage extends LitElement {
     currentSlug: { type: String },
     currentPath: { type: String },
     noSidebar:   { type: Boolean },
+    spaNav:      { type: Boolean },
     _navOpen:    { state: true },
   };
 
@@ -109,6 +110,22 @@ export class StarlightPage extends LitElement {
       top: var(--sl-nav-height, 3.5rem);
       background: rgba(0, 0, 0, 0.4);
       z-index: 49;
+    }
+
+    .nav-backdrop[hidden] {
+      display: none;
+    }
+
+    .sidebar-wrap[hidden] {
+      display: none;
+    }
+
+    .toc-wrap[hidden] {
+      display: none;
+    }
+
+    .page-title[hidden] {
+      display: none;
     }
 
     /* Responsive: hide sidebar and TOC on narrow screens */
@@ -189,6 +206,7 @@ export class StarlightPage extends LitElement {
   currentSlug = '';
   currentPath = '';
   noSidebar = false;
+  spaNav = false;
   _navOpen = false;
 
   override updated(changed: Map<string, unknown>) {
@@ -215,31 +233,34 @@ export class StarlightPage extends LitElement {
           currentPath="${this.currentPath}"
           .navOpen="${this._navOpen}"
           .hasSidebar="${hasSidebar}"
+          .spaNav="${this.spaNav}"
           @sl-nav-toggle="${this._handleNavToggle}"
         ></starlight-header>
-        ${hasSidebar && this._navOpen ? html`
-          <div class="nav-backdrop" @click="${this._closeNav}"></div>
-        ` : ''}
+        <div
+          class="nav-backdrop"
+          ?hidden="${!(hasSidebar && this._navOpen)}"
+          @click="${this._closeNav}"
+        ></div>
         <div class="body${this.noSidebar ? ' no-sidebar' : ''}">
-          ${hasSidebar ? html`
-            <aside class="sidebar-wrap${this._navOpen ? ' nav-open' : ''}">
-              <starlight-sidebar
-                .groups="${this.sidebar}"
-                currentSlug="${this.currentSlug}"
-              ></starlight-sidebar>
-            </aside>
-          ` : ''}
+          <aside
+            class="sidebar-wrap${this._navOpen ? ' nav-open' : ''}"
+            ?hidden="${!hasSidebar}"
+          >
+            <starlight-sidebar
+              .groups="${this.sidebar}"
+              currentSlug="${this.currentSlug}"
+              .spaNav="${this.spaNav}"
+            ></starlight-sidebar>
+          </aside>
           <main class="content-wrap">
             <div class="content-inner">
-              ${this.pageTitle ? html`<h1 class="page-title">${this.pageTitle}</h1>` : ''}
+              <h1 class="page-title" ?hidden="${!this.pageTitle}">${this.pageTitle}</h1>
               <slot name="content"></slot>
             </div>
           </main>
-          ${hasSidebar ? html`
-            <aside class="toc-wrap">
-              <starlight-toc .entries="${this.toc}"></starlight-toc>
-            </aside>
-          ` : ''}
+          <aside class="toc-wrap" ?hidden="${!hasSidebar}">
+            <starlight-toc .entries="${this.toc}"></starlight-toc>
+          </aside>
         </div>
       </div>
     `;

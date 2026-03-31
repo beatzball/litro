@@ -23,20 +23,20 @@ test('all package routes return 200', async ({ request }) => {
 
 test('litro package page renders the custom element', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  await expect(page.locator('page-docs-packages-pkg')).toBeVisible();
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  await expect(page.locator('page-docs-packages-pkg:not([hidden])')).toBeVisible();
 });
 
 test('litro package page renders package name in h1', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  await expect(page.locator('page-docs-packages-pkg h1')).toContainText('@beatzball/litro');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  await expect(page.locator('page-docs-packages-pkg:not([hidden]) h1')).toContainText('@beatzball/litro');
 });
 
 test('litro package page shows version badge', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  const badge = page.locator('page-docs-packages-pkg .pkg-version');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  const badge = page.locator('page-docs-packages-pkg:not([hidden]) .pkg-version');
   await expect(badge).toBeVisible();
   // Badge should contain a semver-style version
   await expect(badge).toContainText(/v\d+\.\d+/);
@@ -44,10 +44,10 @@ test('litro package page shows version badge', async ({ page }) => {
 
 test('litro package page shows GitHub and npm icon links', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
   // Both icon links are inside .pkg-meta
-  const githubLink = page.locator('page-docs-packages-pkg .pkg-meta a[title="GitHub source"]');
-  const npmLink    = page.locator('page-docs-packages-pkg .pkg-meta a[title="View on npm"]');
+  const githubLink = page.locator('page-docs-packages-pkg:not([hidden]) .pkg-meta a[title="GitHub source"]');
+  const npmLink    = page.locator('page-docs-packages-pkg:not([hidden]) .pkg-meta a[title="View on npm"]');
   await expect(githubLink).toBeVisible();
   await expect(npmLink).toBeVisible();
   await expect(githubLink).toHaveAttribute('href', /github\.com/);
@@ -56,8 +56,8 @@ test('litro package page shows GitHub and npm icon links', async ({ page }) => {
 
 test('litro package page shows combined install block', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  const installPre = page.locator('page-docs-packages-pkg .pkg-install pre');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  const installPre = page.locator('page-docs-packages-pkg:not([hidden]) .pkg-install pre');
   await expect(installPre).toBeVisible();
   const text = await installPre.textContent();
   expect(text).toContain('npm install @beatzball/litro');
@@ -66,8 +66,8 @@ test('litro package page shows combined install block', async ({ page }) => {
 
 test('litro package page shows Changelog section heading', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  await expect(page.locator('page-docs-packages-pkg .section-heading')).toBeVisible();
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  await expect(page.locator('page-docs-packages-pkg:not([hidden]) .section-heading').first()).toBeVisible();
 });
 
 // ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ test('litro package page shows Changelog section heading', async ({ page }) => {
 
 test('sidebar shows Packages group', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
   // starlight-sidebar is inside starlight-page inside page-docs-packages-pkg
   const sidebar = page.locator('starlight-sidebar');
   await expect(sidebar).toBeVisible();
@@ -86,7 +86,7 @@ test('sidebar shows Packages group', async ({ page }) => {
 
 test('sidebar highlights the active package item', async ({ page }) => {
   await page.goto('/docs/packages/litro');
-  await page.waitForSelector('page-docs-packages-pkg');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
   // The active link should have aria-current="page"
   const activeLink = await page.locator('starlight-sidebar').evaluate((el) => {
     const link = el.shadowRoot?.querySelector('a[aria-current="page"]');
@@ -101,12 +101,12 @@ test('sidebar highlights the active package item', async ({ page }) => {
 
 test('litro-router package page renders', async ({ page }) => {
   await page.goto('/docs/packages/litro-router');
-  await page.waitForSelector('page-docs-packages-pkg');
-  await expect(page.locator('page-docs-packages-pkg h1')).toContainText('@beatzball/litro-router');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  await expect(page.locator('page-docs-packages-pkg:not([hidden]) h1')).toContainText('@beatzball/litro-router');
 });
 
 test('create-litro package page renders', async ({ page }) => {
   await page.goto('/docs/packages/create-litro');
-  await page.waitForSelector('page-docs-packages-pkg');
-  await expect(page.locator('page-docs-packages-pkg h1')).toContainText('@beatzball/create-litro');
+  await page.waitForSelector('page-docs-packages-pkg:not([hidden])');
+  await expect(page.locator('page-docs-packages-pkg:not([hidden]) h1')).toContainText('@beatzball/create-litro');
 });

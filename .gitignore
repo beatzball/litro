@@ -38,6 +38,8 @@ e2e/test-results/
 # Docs workspace generated files
 docs/server/stubs/
 docs/routes.generated.ts
+docs-ssr/server/stubs/
+docs-ssr/routes.generated.ts
 
 # Claude Code
 .claude/

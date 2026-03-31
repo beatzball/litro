@@ -40,10 +40,17 @@ vi.mock('@lit-labs/ssr/lib/render-result-readable.js', async () => {
   };
 });
 
+// requestHeaders map — must be declared via vi.hoisted() so it is available
+// inside the vi.mock() factory, which is hoisted to the top of the file.
+const { mockRequestHeaders } = vi.hoisted(() => ({
+  mockRequestHeaders: { current: {} as Record<string, string> },
+}));
+
 vi.mock('h3', () => ({
   defineEventHandler: (fn: Function) => fn,
   setResponseHeader: vi.fn(),
   sendStream: vi.fn().mockResolvedValue(undefined),
+  getRequestHeader: vi.fn((_: unknown, name: string) => mockRequestHeaders.current[name.toLowerCase()] ?? undefined),
 }));
 
 vi.mock('lit/static-html.js', () => ({
@@ -57,6 +64,7 @@ vi.mock('lit/static-html.js', () => ({
 
 import { buildShell } from '../shell.js';
 import { createPageHandler } from '../create-page-handler.js';
+import { setResponseHeader, getRequestHeader } from 'h3';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -79,6 +87,11 @@ function makePageData(fetcher: (event: unknown) => Promise<unknown>) {
 // Call the handler with a minimal fake H3 event.
 async function callHandler(handler: unknown): Promise<void> {
   await (handler as (event: unknown) => Promise<void>)({});
+}
+
+// Call the handler and return its result (needed for JSON branch tests).
+async function callHandlerWithResult(handler: unknown): Promise<unknown> {
+  return (handler as (event: unknown) => Promise<unknown>)({});
 }
 
 // Return the options object passed to buildShell in the last call.
@@ -302,5 +315,182 @@ describe('createPageHandler — pageData.fetcher failure', () => {
     await callHandler(handler);
 
     expect(lastBuildShellOpts()?.head).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Content negotiation — Accept: application/json
+// ---------------------------------------------------------------------------
+
+describe('createPageHandler — Accept: application/json content negotiation', () => {
+  beforeEach(() => {
+    vi.mocked(buildShell).mockClear();
+    vi.mocked(setResponseHeader).mockClear();
+    vi.mocked(getRequestHeader).mockClear();
+    mockRequestHeaders.current = {};
+  });
+
+  it('returns pageData result as JSON when Accept: application/json is sent', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const payload = { title: 'Hello', count: 3 };
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => payload) },
+    });
+
+    const result = await callHandlerWithResult(handler);
+
+    expect(result).toEqual(payload);
+  });
+
+  it('sets content-type: application/json on JSON requests', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ x: 1 })) },
+    });
+
+    await callHandlerWithResult(handler);
+
+    expect(vi.mocked(setResponseHeader)).toHaveBeenCalledWith(
+      expect.anything(),
+      'content-type',
+      'application/json; charset=utf-8',
+    );
+  });
+
+  it('sets vary: Accept on JSON requests', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ x: 1 })) },
+    });
+
+    await callHandlerWithResult(handler);
+
+    expect(vi.mocked(setResponseHeader)).toHaveBeenCalledWith(
+      expect.anything(),
+      'vary',
+      'Accept',
+    );
+  });
+
+  it('returns {} when there is no pageData export and Accept: application/json', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    // pageModule with no pageData
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: {},
+    });
+
+    const result = await callHandlerWithResult(handler);
+
+    expect(result).toEqual({});
+  });
+
+  it('returns {} when pageModule is absent and Accept: application/json', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const handler = createPageHandler({
+      route: makeRoute(),
+    });
+
+    const result = await callHandlerWithResult(handler);
+
+    expect(result).toEqual({});
+  });
+
+  it('returns {} when pageData.fetcher throws on a JSON request', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const handler = createPageHandler({
+      route: makeRoute('page-err'),
+      pageModule: {
+        pageData: makePageData(async () => {
+          throw new Error('boom');
+        }),
+      },
+    });
+
+    const result = await callHandlerWithResult(handler);
+
+    expect(result).toEqual({});
+  });
+
+  it('emits console.warn with the component tag when fetcher throws on JSON request', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const handler = createPageHandler({
+      route: makeRoute('page-warn-tag'),
+      pageModule: {
+        pageData: makePageData(async () => {
+          throw new Error('failure');
+        }),
+      },
+    });
+
+    await callHandlerWithResult(handler);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[litro] pageData.fetcher failed (JSON request) for',
+      'page-warn-tag',
+      expect.any(Error),
+    );
+  });
+
+  it('does NOT call buildShell or sendStream on JSON requests', async () => {
+    mockRequestHeaders.current = { accept: 'application/json' };
+    const { sendStream } = await import('h3');
+    vi.mocked(sendStream).mockClear();
+
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ msg: 'hi' })) },
+    });
+
+    await callHandlerWithResult(handler);
+
+    expect(vi.mocked(buildShell)).not.toHaveBeenCalled();
+    expect(vi.mocked(sendStream)).not.toHaveBeenCalled();
+  });
+
+  it('also matches Accept header containing application/json among other types', async () => {
+    mockRequestHeaders.current = { accept: 'text/html,application/json,*/*' };
+    const payload = { found: true };
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => payload) },
+    });
+
+    const result = await callHandlerWithResult(handler);
+
+    expect(result).toEqual(payload);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// HTML path — vary: Accept header
+// ---------------------------------------------------------------------------
+
+describe('createPageHandler — vary: Accept on HTML path', () => {
+  beforeEach(() => {
+    vi.mocked(buildShell).mockClear();
+    vi.mocked(setResponseHeader).mockClear();
+    mockRequestHeaders.current = {};
+  });
+
+  it('sets vary: Accept header on normal HTML responses', async () => {
+    // No Accept: application/json — normal HTML path
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hi' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(vi.mocked(setResponseHeader)).toHaveBeenCalledWith(
+      expect.anything(),
+      'vary',
+      'Accept',
+    );
   });
 });

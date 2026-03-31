@@ -20,7 +20,7 @@
  * Run with: pnpm --filter litro test
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { LitroPage, LitroPageMixin } from '../LitroPage.js';
 import { LitElement } from 'lit';
 import type { LitroLocation } from '@beatzball/litro-router';
@@ -180,13 +180,25 @@ describe('LitroPageMixin — client navigation path', () => {
     expect(page.loading).toBe(false);
   });
 
-  it('default fetchData() returns null (no-op)', async () => {
+  it('default fetchData() fetches the pathname with Accept: application/json', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ posts: ['a'] }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
     class TestPage extends LitroPageMixin(LitElement) {}
     customElements.define(uniqueTag('lp-client-5'), TestPage);
     const page = new TestPage();
-    await page.onBeforeEnter(makeLocation());
+    await page.onBeforeEnter(makeLocation('/blog'));
 
-    expect(page.serverData).toBeNull();
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(mockFetch).toHaveBeenCalledWith('/blog', {
+      headers: { Accept: 'application/json' },
+    });
+    expect(page.serverData).toEqual({ posts: ['a'] });
+
+    vi.unstubAllGlobals();
   });
 });
 
@@ -217,11 +229,99 @@ describe('LitroPage convenience base class', () => {
     expect(typeof LitroPage.prototype.onBeforeEnter).toBe('function');
   });
 
-  it('fetchData() is a function that returns null by default', async () => {
+  it('fetchData() is a function that calls fetch with Accept: application/json by default', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ hello: 'world' }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
     class MyPage extends LitroPage {}
     customElements.define(uniqueTag('lp-base-3'), MyPage);
     const page = new MyPage();
-    const result = await page.fetchData(makeLocation());
+    const result = await page.fetchData(makeLocation('/'));
+
+    expect(mockFetch).toHaveBeenCalledWith('/', {
+      headers: { Accept: 'application/json' },
+    });
+    expect(result).toEqual({ hello: 'world' });
+
+    vi.unstubAllGlobals();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LitroPage — default fetchData() content-negotiation behaviour
+// ---------------------------------------------------------------------------
+
+describe('LitroPage default fetchData() — content negotiation', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('calls fetch with the location pathname and Accept: application/json', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ slug: 'intro' }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    class TestPage extends LitroPageMixin(LitElement) {}
+    customElements.define(uniqueTag('lp-fetch-1'), TestPage);
+    const page = new TestPage();
+
+    const result = await page.fetchData(makeLocation('/docs/intro'));
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(mockFetch).toHaveBeenCalledWith('/docs/intro', {
+      headers: { Accept: 'application/json' },
+    });
+    expect(result).toEqual({ slug: 'intro' });
+  });
+
+  it('returns null when fetch response is not ok', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    class TestPage extends LitroPageMixin(LitElement) {}
+    customElements.define(uniqueTag('lp-fetch-2'), TestPage);
+    const page = new TestPage();
+
+    const result = await page.fetchData(makeLocation('/missing'));
+
     expect(result).toBeNull();
+  });
+
+  it('returns null when fetch throws (network error)', async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', mockFetch);
+
+    class TestPage extends LitroPageMixin(LitElement) {}
+    customElements.define(uniqueTag('lp-fetch-3'), TestPage);
+    const page = new TestPage();
+
+    const result = await page.fetchData(makeLocation('/network-error'));
+
+    expect(result).toBeNull();
+  });
+
+  it('returns parsed JSON body on success', async () => {
+    const body = { posts: [{ id: 1, title: 'Hello' }] };
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => body,
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    class TestPage extends LitroPageMixin(LitElement) {}
+    customElements.define(uniqueTag('lp-fetch-4'), TestPage);
+    const page = new TestPage();
+
+    const result = await page.fetchData(makeLocation('/blog'));
+
+    expect(result).toEqual(body);
   });
 });

@@ -43,7 +43,8 @@ litro/
   playground/         ← fullstack recipe test app
   playground-11ty/    ← 11ty-blog recipe test app
   playground-starlight/ ← starlight recipe test app
-  docs/               ← official documentation site (@beatzball/litro-docs)
+  docs/               ← official documentation site (@beatzball/litro-docs, SSG)
+  docs-ssr/           ← SSR replica of docs site (@beatzball/litro-docs-ssr, fullstack)
 ```
 
 `@beatzball/litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).

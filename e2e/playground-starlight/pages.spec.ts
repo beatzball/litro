@@ -14,19 +14,19 @@ const PRERENDERED_ROUTES = [
 
 test('home page renders site title in h1', async ({ page }) => {
   await page.goto('/');
-  await page.waitForSelector('page-home');
-  await expect(page.locator('page-home h1')).toContainText('playground-starlight');
+  await page.waitForSelector('page-home:not([hidden])');
+  await expect(page.locator('page-home:not([hidden]) h1')).toContainText('playground-starlight');
 });
 
 test('home page renders starlight-header', async ({ page }) => {
   await page.goto('/');
-  await page.waitForSelector('page-home');
+  await page.waitForSelector('page-home:not([hidden])');
   await expect(page.locator('starlight-header')).toBeVisible();
 });
 
 test('home page renders feature cards', async ({ page }) => {
   await page.goto('/');
-  await page.waitForSelector('page-home');
+  await page.waitForSelector('page-home:not([hidden])');
   const cards = page.locator('litro-card');
   await expect(cards.first()).toBeVisible();
   expect(await cards.count()).toBe(4);
@@ -34,7 +34,7 @@ test('home page renders feature cards', async ({ page }) => {
 
 test('feature card renders icon and title inline', async ({ page }) => {
   await page.goto('/');
-  await page.waitForSelector('page-home');
+  await page.waitForSelector('page-home:not([hidden])');
   // card-header lives inside litro-card's shadow root
   const hasCardHeader = await page.locator('litro-card').first().evaluate(
     (el) => !!el.shadowRoot?.querySelector('.card-header'),
@@ -44,27 +44,27 @@ test('feature card renders icon and title inline', async ({ page }) => {
 
 test('docs getting-started page renders', async ({ page }) => {
   await page.goto('/docs/getting-started');
-  await page.waitForSelector('page-docs-slug');
-  await expect(page.locator('page-docs-slug h1')).toContainText('Getting Started');
+  await page.waitForSelector('page-docs-slug:not([hidden])');
+  await expect(page.locator('page-docs-slug:not([hidden]) h1')).toContainText('Getting Started');
 });
 
 test('blog index renders', async ({ page }) => {
   await page.goto('/blog');
-  await page.waitForSelector('page-blog');
-  await expect(page.locator('page-blog h1')).toBeVisible();
+  await page.waitForSelector('page-blog:not([hidden])');
+  await expect(page.locator('page-blog:not([hidden]) h1')).toBeVisible();
 });
 
 test('blog post renders', async ({ page }) => {
   await page.goto('/blog/welcome');
-  await page.waitForSelector('page-blog-slug');
-  await expect(page.locator('page-blog-slug h1')).toContainText('Welcome');
+  await page.waitForSelector('page-blog-slug:not([hidden])');
+  await expect(page.locator('page-blog-slug:not([hidden]) h1')).toContainText('Welcome');
 });
 
 test('docs page applies syntax highlighting to code blocks', async ({ page }) => {
   await page.goto('/docs/getting-started');
-  await page.waitForSelector('page-docs-slug');
+  await page.waitForSelector('page-docs-slug:not([hidden])');
   // applyHighlighting replaces language-* class with hljs class
-  const highlighted = page.locator('page-docs-slug code.hljs');
+  const highlighted = page.locator('page-docs-slug:not([hidden]) code.hljs');
   await expect(highlighted.first()).toBeVisible();
 });
 

@@ -471,3 +471,59 @@ This rule is present in `starlight/template/public/styles/starlight.css`, `playg
 **Rationale**: The catch-all `server/routes/[...].ts` handler wraps every route in an HTML shell via `createPageHandler`. A `pages/sitemap.xml.ts` would produce an HTML document (not valid XML) because it goes through the same handler. Nitro's specific route files (`server/routes/sitemap.xml.ts`) take priority over the catch-all, allowing the handlers to set `content-type: application/xml` and return raw XML strings directly. The same principle applies to the RSS feed.
 
 **Prerendering**: `/blog/rss.xml` is explicitly added to `prerender.routes` in `docs/nitro.config.ts` because `crawlLinks` does not follow `<link rel="alternate">` tags reliably. `/sitemap.xml` is discovered via `<link rel="sitemap">` in `starlightHead`.
+
+---
+
+## `docs-ssr/` uses `<litro-link>` for SPA navigation
+
+**Decision**: All internal navigation links in `docs-ssr/` page components use `<litro-link href="...">` instead of plain `<a>` tags. Shared layout components (`starlight-header`, `starlight-sidebar`) accept a `spaNav` boolean prop and call `LitroRouter.go()` in their `@click` handlers when enabled.
+
+**Rationale**: `docs-ssr/` is a fullstack SSR site where each page is rendered on-demand by Nitro. Unlike SSG, the server always produces fresh HTML with correct `__litro_data__`. Client-side SPA navigation avoids full page reloads, providing instant transitions. `<litro-link>` is the standard Litro mechanism for opt-in SPA navigation — it wraps a shadow `<a>` for progressive enhancement and calls `LitroRouter.go()` on click. Shared components use `spaNav` prop so the same component works in both SSG (`spaNav=false`, full reloads) and SSR (`spaNav=true`, SPA transitions) contexts.
+
+---
+
+## LitroLink style inheritance — text-only
+
+**Decision**: `LitroLink`'s `static override styles` sets `:host { display: inline; cursor: pointer; }` and the inner shadow `<a>` inherits only text properties: `color: inherit; text-decoration: inherit; font: inherit; cursor: inherit;`.
+
+**Rationale**: Earlier versions inherited box-model properties (padding, display, border-radius, etc.) from the host element. When `<litro-link>` was styled as a CTA button (e.g. `.btn-primary { padding: 0.75rem 1.5rem; ... }`), the inner shadow `<a>` also received padding/display, creating a visible double anchor point — two clickable areas stacked inside one link. By limiting inheritance to text properties, the shadow `<a>` is invisible/transparent and defers all visual presentation to the host element's light-DOM styling.
+
+---
+
+## LitroRouter scroll-to-top after SPA page swap
+
+**Decision**: After mounting a new page element in `_resolve()`, `LitroRouter` calls `window.scrollTo(0, 0)` unless the URL contains a hash fragment (in which case `_scrollToHash()` is called instead).
+
+**Rationale**: Without explicit scroll management, SPA navigation preserves the scroll position of the previous page. If a user scrolls halfway down page A and clicks a link to page B, page B appears at the same scroll offset — often showing the middle or bottom of the new page content. Full page reloads naturally reset scroll to top; SPA navigation must do this explicitly.
+
+---
+
+## PORT env var for reliable dev server port
+
+**Decision**: The `litro dev` CLI command passes `PORT` as an environment variable alongside the `--port` CLI flag when spawning Nitro.
+
+**Rationale**: Nitro's `get-port-please` reads `process.env.PORT` as a fallback when the CLI `--port` flag doesn't propagate reliably through `listhenOptions`. Passing both ensures the dev server always binds to the resolved port. Previously, killing and restarting `litro dev` could cause the server to fall back to port 3000 even when another service occupied it, because `get-port-please` wasn't seeing the intended port.
+
+---
+
+## `ssrPreset()` required for SSR production builds
+
+**Decision**: `docs-ssr/nitro.config.ts` spreads `...ssrPreset()` (from `@beatzball/litro/config`) at the top of the config object.
+
+**Rationale**: `ssrPreset()` sets `output.dir = 'dist/server'`, which is where `litro preview` expects to find the production server entry (`dist/server/server/index.mjs`). Without it, Nitro uses its default output directory (`.output/`), and `litro preview` exits with "No production build found".
+
+---
+
+## Content plugin absolute path fallback for production
+
+**Decision**: The content plugin's generated stub (`server/stubs/litro-content.js`) embeds both a relative path (via `import.meta.url`) and an absolute path to the content directory. At runtime it uses `existsSync` to pick the correct one.
+
+**Rationale**: In development, `import.meta.url` resolves correctly relative to the stub's original location. In production, Rollup bundles the stub into a chunk at a different filesystem path (e.g. `dist/server/chunks/...`), so the `import.meta.url`-relative path resolves to a non-existent directory. The absolute path (embedded at build time) serves as a reliable fallback. The `existsSync` check allows the dev path to win when it's valid, avoiding hardcoded paths during development.
+
+---
+
+## `?hidden` attribute over structural ternaries for SSR hydration safety
+
+**Decision**: Shared layout components (`starlight-header`, `starlight-page`) use `?hidden=${!condition}` attribute bindings instead of structural ternaries (`${condition ? html\`<el>\` : ''}`) for conditionally visible elements.
+
+**Rationale**: Structural ternaries (`${cond ? html\`<el>\` : ''}`) create different value types (TemplateResult vs string) at the same template position. If the server renders one branch and the client evaluates the other (due to stale bundles or timing differences), `@lit-labs/ssr-client` reports a "Hydration value mismatch" and falls back to full client rendering. The `?hidden` pattern always renders the element, toggling visibility via the HTML `hidden` attribute — the template structure is identical on server and client regardless of the condition value. Corresponding CSS (`[hidden] { display: none }`) is added for each hidden-able element.

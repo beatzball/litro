@@ -30,6 +30,13 @@ litro/                          ← Git repo root (pnpm workspace root)
         starlight/              ← Docs + blog SSG recipe (Astro Starlight-inspired)
           recipe.config.ts
           template/
+  packages/
+    docs-content/               ← Shared Markdown content (@beatzball/litro-docs-content)
+      content/                  ← docs/, blog/, compare/ Markdown files
+    docs-ui/                    ← Shared Lit components + utilities (@beatzball/litro-docs-ui)
+      src/
+        components/             ← starlight-page, starlight-header, starlight-sidebar, etc.
+        seo.ts, highlight.ts    ← SEO head builder, syntax highlighting
   playground/                   ← fullstack recipe test app
     pages/                      ← Lit page components (filename = route)
     server/
@@ -43,12 +50,11 @@ litro/                          ← Git repo root (pnpm workspace root)
   playground-11ty/              ← 11ty-blog recipe test app (SSG, content layer)
   playground-starlight/         ← starlight recipe test app (SSG, docs + blog)
   docs/                         ← Official documentation site (@beatzball/litro-docs, SSG)
-    content/docs/               ← Documentation Markdown files
-    content/blog/               ← Blog post Markdown files
     pages/                      ← Page components (index, docs/[slug], blog/*)
-    src/components/             ← Layout + UI components (copied from starlight template)
-    src/seo.ts                  ← buildSeoHead() helper for per-page meta tags
     public/.nojekyll            ← Required for GitHub Pages
+  docs-ssr/                     ← SSR replica of docs site (@beatzball/litro-docs-ssr)
+    pages/                      ← Same page components as docs/, uses <litro-link> for SPA nav
+    server/                     ← Nitro config, catch-all route, stubs
   .github/workflows/
     ci.yml                      ← GitHub Actions: test, build, dependency audit on PRs
     release.yml                 ← GitHub Actions: publish packages to npm via Changesets
@@ -68,6 +74,9 @@ litro/                          ← Git repo root (pnpm workspace root)
 | `playground-11ty` | (private) | 11ty-blog recipe integration test app |
 | `playground-starlight` | (private) | starlight recipe integration test app |
 | `docs` | `@beatzball/litro-docs` | Official documentation site — SSG, deploys to GitHub Pages |
+| `docs-ssr` | `@beatzball/litro-docs-ssr` | SSR replica of the docs site — fullstack, live Nitro server |
+| `packages/docs-content` | `@beatzball/litro-docs-content` | Shared Markdown content (docs + blog posts) |
+| `packages/docs-ui` | `@beatzball/litro-docs-ui` | Shared Lit UI components + utilities for docs sites |
 
 ---
 

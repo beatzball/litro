@@ -4,3 +4,4 @@ packages:
   - 'playground-11ty'
   - 'playground-starlight'
   - 'docs'
+  - 'docs-ssr'
