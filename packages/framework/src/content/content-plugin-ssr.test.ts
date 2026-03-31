@@ -62,7 +62,7 @@ describe('contentPlugin in SSR (production) mode', () => {
     roots.length = 0;
   });
 
-  it('generates a stub that uses a relative import.meta.url path (no absolute paths)', async () => {
+  it('generates a stub with import.meta.url dev path and absolute fallback', async () => {
     const rootDir = await makeFixtureProject();
     roots.push(rootDir);
 
@@ -74,10 +74,13 @@ describe('contentPlugin in SSR (production) mode', () => {
 
     const content = await readFile(stubPath, 'utf-8');
 
-    // Must use import.meta.url for portable path resolution.
+    // Dev path: must use import.meta.url for portable resolution.
     expect(content).toContain('import.meta.url');
-    // Must NOT contain machine-specific absolute paths.
-    expect(content).not.toMatch(/new URL\(['"]\/[^)]+['"]/);
+    // Production fallback: must embed the absolute content dir path.
+    const contentDir = join(rootDir, 'content');
+    expect(content).toContain(contentDir);
+    // Must use existsSync to pick the correct path at runtime.
+    expect(content).toContain('existsSync');
   });
 
   it('does not register a close hook (no watcher) in production mode', async () => {

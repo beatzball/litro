@@ -165,6 +165,7 @@ export class BlogPostPage extends LitroPage {
           siteTitle="${siteTitle}"
           .nav="${nav}"
           currentPath="/blog/${blogSlug}"
+          .spaNav="${true}"
         ></starlight-header>
         <main style="
           flex:1;
@@ -185,7 +186,7 @@ export class BlogPostPage extends LitroPage {
               ${post.tags.filter(t => t !== 'posts').length > 0 ? html`
                 <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.75rem;">
                   ${post.tags.filter(t => t !== 'posts').map(tag => html`
-                    <a href="/blog/tags/${tag}" style="
+                    <litro-link href="/blog/tags/${tag}" style="
                       display:inline-block;
                       padding:0.15em 0.55em;
                       font-size:var(--sl-text-xs);
@@ -194,7 +195,7 @@ export class BlogPostPage extends LitroPage {
                       color:var(--sl-color-accent-high,#5b21b6);
                       text-decoration:none;
                       font-weight:600;
-                    ">#${tag}</a>
+                    ">#${tag}</litro-link>
                   `)}
                 </div>
               ` : ''}
@@ -205,9 +206,9 @@ export class BlogPostPage extends LitroPage {
             ${unsafeHTML(body)}
           </article>
           <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--sl-color-border);">
-            <a href="/blog" style="font-size:var(--sl-text-sm);color:var(--sl-color-accent);text-decoration:none;">
+            <litro-link href="/blog" style="font-size:var(--sl-text-sm);color:var(--sl-color-accent);text-decoration:none;">
               &larr; Back to Blog
-            </a>
+            </litro-link>
           </footer>
         </main>
       </div>

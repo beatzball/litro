@@ -85,6 +85,67 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.13)(jsdom@25.0.1)(terser@5.46.0)
 
+  docs-ssr:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
+      '@beatzball/litro-docs-content':
+        specifier: workspace:*
+        version: link:../packages/docs-content
+      '@beatzball/litro-docs-ui':
+        specifier: workspace:*
+        version: link:../packages/docs-ui
+      '@beatzball/litro-router':
+        specifier: workspace:*
+        version: link:../packages/litro-router
+      '@lit-labs/ssr':
+        specifier: ^3.3.0
+        version: 3.3.1
+      '@lit-labs/ssr-client':
+        specifier: ^1.1.7
+        version: 1.1.8
+      '@shoelace-style/shoelace':
+        specifier: ^2.19.0
+        version: 2.20.1(@floating-ui/utils@0.2.11)(@types/react@19.2.14)
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+      highlight.js:
+        specifier: ^11.10.0
+        version: 11.11.1
+      lit:
+        specifier: ^3.2.1
+        version: 3.3.2
+      pathe:
+        specifier: ^1.1.2
+        version: 1.1.2
+      rehype-stringify:
+        specifier: ^10.0.1
+        version: 10.0.1
+      remark-gfm:
+        specifier: ^4.0.0
+        version: 4.0.1
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      remark-rehype:
+        specifier: ^11.1.1
+        version: 11.1.2
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
   packages/create-litro:
     devDependencies:
       '@types/node':

@@ -48,7 +48,7 @@
  *    accesses window, history, and document at runtime and will crash Node.js.
  */
 
-import { LitElement, html } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 // litro-router is dynamically imported inside _clickHandler() so it is never
 // evaluated in Node.js (window does not exist server-side).
@@ -68,6 +68,24 @@ export class LitroLink extends LitElement {
    * the browser — before any instances are created — so attributeChangedCallback
    * correctly fires for href/target/rel during element upgrade.
    */
+  /**
+   * Make the inner shadow <a> inherit all visual properties from the host.
+   * This allows classes and inline styles on <litro-link> to control
+   * appearance — the inner <a> is purely structural (click target + a11y).
+   */
+  static override styles = css`
+    :host {
+      display: inline;
+      cursor: pointer;
+    }
+    a {
+      color: inherit;
+      text-decoration: inherit;
+      font: inherit;
+      cursor: inherit;
+    }
+  `;
+
   static override properties = {
     href: { type: String },
     target: { type: String },

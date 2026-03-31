@@ -46,10 +46,13 @@ litro/
     framework/          ← @beatzball/litro (core)
     litro-router/       ← @beatzball/litro-router
     create-litro/       ← npm create @beatzball/litro
+    docs-content/       ← @beatzball/litro-docs-content (shared Markdown)
+    docs-ui/            ← @beatzball/litro-docs-ui (shared UI components)
   playground/           ← fullstack recipe dev environment
   playground-11ty/      ← 11ty-blog recipe dev environment
   playground-starlight/ ← starlight recipe dev environment
-  docs/                 ← this documentation site
+  docs/                 ← documentation site (SSG)
+  docs-ssr/             ← documentation site (SSR, fullstack)
   e2e/                  ← Playwright e2e tests
   research/             ← design research documents
 ```

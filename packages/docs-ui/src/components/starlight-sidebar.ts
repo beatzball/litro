@@ -22,6 +22,7 @@ export class StarlightSidebar extends LitElement {
   static override properties = {
     groups: { type: Array },
     currentSlug: { type: String },
+    spaNav: { type: Boolean },
   };
 
   static override styles = css`
@@ -95,6 +96,16 @@ export class StarlightSidebar extends LitElement {
 
   groups: SidebarGroup[] = [];
   currentSlug = '';
+  spaNav = false;
+
+  // SPA navigation: intercept clicks on sidebar <a> when spaNav=true.
+  // Dynamic import keeps litro-router out of the server bundle.
+  private _navClick(e: MouseEvent, href: string): void {
+    if (!this.spaNav) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    void import('@beatzball/litro-router').then(({ LitroRouter }) => LitroRouter.go(href));
+  }
 
   override render() {
     return html`
@@ -108,6 +119,7 @@ export class StarlightSidebar extends LitElement {
                   <a
                     href="/docs/${item.slug}"
                     aria-current="${this.currentSlug === item.slug ? 'page' : 'false'}"
+                    @click="${(e: MouseEvent) => this._navClick(e, `/docs/${item.slug}`)}"
                   >
                     <span>${item.label}</span>
                     ${item.badge ? html`<span class="badge">${item.badge.text}</span>` : ''}

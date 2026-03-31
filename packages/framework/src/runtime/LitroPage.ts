@@ -164,6 +164,19 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
      * server-injected script tag instead. It IS called on every subsequent
      * client navigation to this page.
      *
+     * ## Default behaviour
+     *
+     * The default implementation re-fetches the current page URL with
+     * `Accept: application/json`. The SSR handler detects this header and
+     * returns only the `definePageData` result as JSON, skipping the full HTML
+     * render. This means pages that use `definePageData` get SPA navigation
+     * data fetching for free — no `fetchData()` override is needed.
+     *
+     * ## Custom override
+     *
+     * Override this method to hit a different endpoint (e.g., a dedicated API
+     * route) instead of relying on content negotiation:
+     *
      * ```ts
      * override async fetchData(location: LitroLocation) {
      *   const res = await fetch(`/api/items/${location.params.id}`);
@@ -171,11 +184,23 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
      * }
      * ```
      *
-     * @param _location - The target LitroLocation with params and query.
+     * @param location - The target LitroLocation with params and query.
      * @returns A JSON-serializable value that will be stored in `this.serverData`.
      */
-    async fetchData(_location: LitroLocation): Promise<unknown> {
-      return null;
+    async fetchData(location: LitroLocation): Promise<unknown> {
+      // Default: re-fetch page data from the server using content negotiation.
+      // The SSR handler detects Accept: application/json and returns only the
+      // definePageData result as JSON, skipping the full HTML render.
+      // Subclasses can override this to hit a custom API endpoint instead.
+      try {
+        const res = await fetch(location.pathname, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) return null;
+        return res.json();
+      } catch {
+        return null;
+      }
     }
   }
 

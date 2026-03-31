@@ -24,7 +24,7 @@
 
 import { PassThrough } from 'node:stream';
 import { html, unsafeStatic } from 'lit/static-html.js';
-import { defineEventHandler, setResponseHeader, sendStream } from 'h3';
+import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader } from 'h3';
 import type { EventHandler } from 'h3';
 import { RenderResultReadable } from '@lit-labs/ssr/lib/render-result-readable.js';
 import { renderToStream } from './ssr.js';
@@ -70,9 +70,37 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
   const { route, routeMeta, pageModule } = options;
 
   return defineEventHandler(async (event) => {
+    // Content negotiation: if the client wants JSON, skip SSR and return only
+    // the definePageData result. This allows LitroPage.fetchData() to call the
+    // same page URL — no separate data API endpoint is needed.
+    const acceptHeader = getRequestHeader(event, 'accept') ?? '';
+    if (acceptHeader.includes('application/json')) {
+      setResponseHeader(event, 'content-type', 'application/json; charset=utf-8');
+      setResponseHeader(event, 'vary', 'Accept');
+
+      const pageDataExport = options.pageModule?.pageData as PageDataFetcher<unknown> | undefined;
+      if (pageDataExport?.__litroPageData === true) {
+        try {
+          const data = await pageDataExport.fetcher(event);
+          return data;
+        } catch (err) {
+          console.warn(
+            '[litro] pageData.fetcher failed (JSON request) for',
+            options.route.componentTag,
+            err,
+          );
+        }
+      }
+      // Page has no definePageData — return empty object.
+      return {};
+    }
+
     // Always set the content-type header before any writes. This must be set
     // before sendStream() is called so the header goes out in the first chunk.
     setResponseHeader(event, 'content-type', 'text/html; charset=utf-8');
+    // Inform caches that the response varies by Accept — a JSON request and an
+    // HTML request for the same URL produce different responses.
+    setResponseHeader(event, 'vary', 'Accept');
 
     try {
       // Resolve the page module. The preferred path is the pre-bundled module
@@ -218,6 +246,9 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // been the source of the error, or may not have run yet).
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const appScriptUrl = `${basePath}/_litro/app.js`;
+      // Carry vary header through the fallback path too — the URL can still
+      // be hit with Accept: application/json on retries.
+      setResponseHeader(event, 'vary', 'Accept');
       const fallbackShell = buildShell(route.componentTag, '', {
         title: routeMeta?.title,
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
