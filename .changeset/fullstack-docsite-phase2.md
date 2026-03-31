@@ -1,7 +1,6 @@
 ---
 "@beatzball/litro": minor
 "@beatzball/litro-router": patch
-"@beatzball/litro-docs-ui": patch
 ---
 
 Phase 2: docs-ssr fullstack SSR site, LitroLink styles, router scroll-to-top, content plugin production fix
