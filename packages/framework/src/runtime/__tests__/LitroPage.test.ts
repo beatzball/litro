@@ -308,6 +308,30 @@ describe('LitroPage default fetchData() — content negotiation', () => {
     expect(result).toBeNull();
   });
 
+  it('includes query string in fetch URL when location.search is set', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [] }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    class TestPage extends LitroPageMixin(LitElement) {}
+    customElements.define(uniqueTag('lp-fetch-qs'), TestPage);
+    const page = new TestPage();
+
+    const loc: LitroLocation = {
+      pathname: '/search',
+      params: {},
+      search: '?q=router&type=docs',
+      hash: '',
+    };
+    await page.fetchData(loc);
+
+    expect(mockFetch).toHaveBeenCalledWith('/search?q=router&type=docs', {
+      headers: { Accept: 'application/json' },
+    });
+  });
+
   it('returns parsed JSON body on success', async () => {
     const body = { posts: [{ id: 1, title: 'Hello' }] };
     const mockFetch = vi.fn().mockResolvedValue({

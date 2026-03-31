@@ -27,6 +27,11 @@ export default defineConfig({
       testDir: './e2e/docs',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3033' },
     },
+    {
+      name: 'docs-ssr',
+      testDir: './e2e/docs-ssr',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3034' },
+    },
   ],
   webServer: [
     {
@@ -54,6 +59,13 @@ export default defineConfig({
       name: 'docs',
       command: 'cd docs && node ../packages/framework/dist/cli/index.js dev --port 3033',
       url: 'http://localhost:3033',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+    {
+      name: 'docs-ssr',
+      command: 'cd docs-ssr && node ../packages/framework/dist/cli/index.js dev --port 3034',
+      url: 'http://localhost:3034',
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
     },

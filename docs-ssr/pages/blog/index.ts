@@ -3,7 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
-import { getPosts } from 'litro:content';
+import { previewPosts, isPreview } from '../../server/utils/preview.js';
 import { siteConfig } from '../../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
 import { buildSeoHead } from '@beatzball/litro-docs-ui/src/seo.js';
@@ -11,16 +11,18 @@ import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js'
 
 // Register components used in render()
 import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/preview-banner.js';
 
 export interface BlogIndexData {
   posts: Post[];
   siteTitle: string;
   nav: typeof siteConfig.nav;
   seoHead: string;
+  preview: boolean;
 }
 
-export const pageData = definePageData(async (_event) => {
-  const all = await getPosts();
+export const pageData = definePageData(async (event) => {
+  const all = await previewPosts(event);
   // Filter to only blog posts (URL prefix from contentDir='content')
   const posts = all.filter(p => p.url.startsWith('/content/blog/'));
   const seoHead = buildSeoHead({
@@ -34,6 +36,7 @@ export const pageData = definePageData(async (_event) => {
     siteTitle: siteConfig.title,
     nav: siteConfig.nav,
     seoHead,
+    preview: isPreview(event),
   } satisfies BlogIndexData;
 });
 
@@ -47,7 +50,7 @@ export class BlogIndexPage extends LitroPage {
 
   override render() {
     const data = this.serverData as BlogIndexData | null;
-    const { posts = [], siteTitle = 'Litro', nav = [] } = data ?? {};
+    const { posts = [], siteTitle = 'Litro', nav = [], preview = false } = data ?? {};
 
     return html`
       <div style="min-height:100vh;display:flex;flex-direction:column;">
@@ -117,6 +120,7 @@ export class BlogIndexPage extends LitroPage {
             </ul>
           `}
         </main>
+        ${preview ? html`<preview-banner></preview-banner>` : ''}
       </div>
     `;
   }
