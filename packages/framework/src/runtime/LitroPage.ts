@@ -193,7 +193,7 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
       // definePageData result as JSON, skipping the full HTML render.
       // Subclasses can override this to hit a custom API endpoint instead.
       try {
-        const res = await fetch(location.pathname, {
+        const res = await fetch(location.pathname + location.search, {
           headers: { Accept: 'application/json' },
         });
         if (!res.ok) return null;

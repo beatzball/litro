@@ -90,8 +90,8 @@ export class LitroRouter {
    * superseded this one and we bail out without touching the DOM.
    */
   private _resolveToken = 0;
-  /** Last pathname rendered by `_resolve()`. Used to skip re-renders on hash-only navigations. */
-  private _lastPathname = '';
+  /** Last pathname+search rendered by `_resolve()`. Used to skip re-renders on hash-only navigations. */
+  private _lastPathAndSearch = '';
 
   constructor(outlet: HTMLElement) {
     this.outlet = outlet;
@@ -108,8 +108,10 @@ export class LitroRouter {
 
     // Fragment navigations (clicking <a href="#section">) fire popstate per the
     // HTML spec. Guard against re-rendering the same page when only the hash changes.
+    // Compare pathname+search so query string changes (e.g. /search?q=a → /search?q=b)
+    // still trigger a re-render.
     window.addEventListener('popstate', () => {
-      if (location.pathname === this._lastPathname) return;
+      if (location.pathname + location.search === this._lastPathAndSearch) return;
       void this._resolve();
     });
     void this._resolve();
@@ -127,7 +129,7 @@ export class LitroRouter {
   private async _resolve(): Promise<void> {
     const token = ++this._resolveToken;
     const pathname = location.pathname;
-    this._lastPathname = pathname;
+    this._lastPathAndSearch = pathname + location.search;
 
     for (const route of this.routes) {
       const match = route.pattern.exec({ pathname });

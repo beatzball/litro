@@ -30,3 +30,106 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('[litro] <litro-outlet> not found — router will not start.');
   }
 });
+
+// ---------------------------------------------------------------------------
+// Search modal — client-only glue
+// ---------------------------------------------------------------------------
+void import('@beatzball/litro-docs-ui/src/components/search-modal.js').then(() => {
+  interface SearchModalElement extends HTMLElement {
+    open: boolean;
+    query: string;
+    results: unknown[];
+    loading: boolean;
+  }
+
+  const modal = document.createElement('search-modal') as SearchModalElement;
+  document.body.appendChild(modal);
+
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  // Autosuggest: debounced fetch on input
+  modal.addEventListener('search-input', ((e: CustomEvent<{ query: string }>) => {
+    const q = e.detail.query;
+    modal.query = q;
+    clearTimeout(debounceTimer);
+    if (q.length < 2) {
+      modal.results = [];
+      modal.loading = false;
+      return;
+    }
+    debounceTimer = setTimeout(async () => {
+      modal.loading = true;
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=7`);
+        const data = await res.json();
+        // Only apply if query hasn't changed while fetching (race condition guard)
+        if (modal.query === q) {
+          modal.results = data.results;
+          modal.loading = false;
+        }
+      } catch {
+        modal.loading = false;
+      }
+    }, 250);
+  }) as EventListener);
+
+  // Result selection: close modal and SPA-navigate
+  modal.addEventListener('search-select', ((e: CustomEvent<{ url: string }>) => {
+    modal.open = false;
+    void import('@beatzball/litro-router').then(({ LitroRouter }) =>
+      LitroRouter.go(e.detail.url),
+    );
+  }) as EventListener);
+
+  // Close
+  modal.addEventListener('search-close', () => {
+    modal.open = false;
+  });
+
+  // Header pill dispatches sl-search-open (composed, crosses shadow DOM)
+  document.addEventListener('sl-search-open', () => {
+    modal.query = '';
+    modal.results = [];
+    modal.open = true;
+  });
+
+  // Global keyboard shortcuts
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    // Escape — close modal (handled here because <input type="search">
+    // Escape behavior varies across browsers and can swallow the event
+    // before it crosses the shadow DOM boundary)
+    if (e.key === 'Escape' && modal.open) {
+      e.preventDefault();
+      modal.open = false;
+      return;
+    }
+
+    // Cmd+K (Mac) / Ctrl+K (Win/Linux)
+    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      if (modal.open) {
+        modal.open = false;
+      } else {
+        modal.query = '';
+        modal.results = [];
+        modal.open = true;
+      }
+      return;
+    }
+
+    // "/" shortcut — only when no input/textarea/contenteditable is focused
+    if (e.key === '/' && !modal.open) {
+      const composedTarget = e.composedPath();
+      const isInInput = composedTarget.some(
+        (el) => el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+          || (el instanceof HTMLElement && el.isContentEditable),
+      );
+      if (!isInInput) {
+        e.preventDefault();
+        modal.query = '';
+        modal.results = [];
+        modal.open = true;
+      }
+    }
+  });
+});

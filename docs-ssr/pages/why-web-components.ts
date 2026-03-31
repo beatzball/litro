@@ -6,6 +6,7 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
+import { previewPosts } from '../server/utils/preview.js';
 import { siteConfig } from '../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
 import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
@@ -25,8 +26,8 @@ export interface WhyWebComponentsData {
   seoTitle: string;
 }
 
-export const pageData = definePageData(async (_event) => {
-  const posts = await getPosts();
+export const pageData = definePageData(async (event) => {
+  const posts = await previewPosts(event);
   const post = posts.find(p => p.url === '/content/why-web-components');
 
   if (!post) {

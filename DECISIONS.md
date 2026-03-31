@@ -527,3 +527,27 @@ This rule is present in `starlight/template/public/styles/starlight.css`, `playg
 **Decision**: Shared layout components (`starlight-header`, `starlight-page`) use `?hidden=${!condition}` attribute bindings instead of structural ternaries (`${condition ? html\`<el>\` : ''}`) for conditionally visible elements.
 
 **Rationale**: Structural ternaries (`${cond ? html\`<el>\` : ''}`) create different value types (TemplateResult vs string) at the same template position. If the server renders one branch and the client evaluates the other (due to stale bundles or timing differences), `@lit-labs/ssr-client` reports a "Hydration value mismatch" and falls back to full client rendering. The `?hidden` pattern always renders the element, toggling visibility via the HTML `hidden` attribute — the template structure is identical on server and client regardless of the condition value. Corresponding CSS (`[hidden] { display: none }`) is added for each hidden-able element.
+
+---
+
+## Search modal: pure UI component + consumer glue separation
+
+**Decision**: The search modal (`search-modal.ts` in docs-ui) is a pure UI component that dispatches events (`search-input`, `search-select`, `search-close`) with zero fetch logic. The consumer (`docs-ssr/app.ts`) wires up fetch, debounce, and SPA navigation via dynamic import of `@beatzball/litro-router`.
+
+**Rationale**: Keeps the modal reusable across SSG and SSR sites. SSG could wire a client-side search index instead of fetch; SSR uses the `/api/search` endpoint. The modal doesn't need to know about either. Global keyboard shortcuts (Cmd+K, `/`, Escape) are registered at the `document` level in `app.ts`, not inside the shadow DOM component, because keyboard events from `<input type="search">` have browser-specific Escape handling that interferes with shadow DOM event propagation.
+
+---
+
+## Search autosuggest: stale results over loading flash
+
+**Decision**: When the user types a new character with results already visible, keep showing the existing (stale) results with reduced opacity (`0.6`) rather than replacing them with a "Searching..." message. The "Searching..." text only appears when there are no results yet (first search).
+
+**Rationale**: Replacing results with "Searching..." on every keystroke creates a jarring flash — the entire results list disappears and reappears 250ms later. Keeping stale results visible (dimmed) provides visual continuity and lets users continue scanning while the new results load. The loading state is set only when the debounced fetch fires (not immediately on input), further reducing unnecessary UI churn.
+
+---
+
+## Search modal Escape: double-press accepted (browser standard)
+
+**Decision**: Accept that Escape requires two presses to close the search modal when the input has content — the first press clears the `<input type="search">` value (browser default behavior), the second closes the modal.
+
+**Rationale**: Browsers implement Escape-to-clear as a native behavior for `<input type="search">` that cannot be reliably prevented across all engines. Changing to `type="text"` was tested and did not resolve the issue consistently. Many documentation sites (Algolia DocSearch, Stripe, etc.) exhibit the same double-Escape behavior. The document-level Escape handler in `app.ts` reliably closes the modal when the input is empty.

@@ -6,6 +6,7 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
+import { previewPosts } from '../../server/utils/preview.js';
 import { siteConfig } from '../../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
 import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
@@ -29,7 +30,7 @@ export interface ComparePageData {
 export const pageData = definePageData(async (event) => {
   const slug = event.context.params?.slug ?? '';
 
-  const posts = await getPosts();
+  const posts = await previewPosts(event);
   const post = posts.find(p => p.url === `/content/compare/${slug}`);
 
   if (!post) {

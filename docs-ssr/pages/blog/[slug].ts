@@ -6,6 +6,7 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
+import { previewPosts, isPreview } from '../../server/utils/preview.js';
 import { siteConfig } from '../../server/starlight.config.js';
 import { extractHeadings, addHeadingIds } from '@beatzball/litro-docs-ui/src/extract-headings.js';
 import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
@@ -15,6 +16,7 @@ import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js'
 
 // Register components used in render()
 import '@beatzball/litro-docs-ui/src/components/starlight-header.js';
+import '@beatzball/litro-docs-ui/src/components/preview-banner.js';
 
 export interface BlogPostData {
   post: Post;
@@ -24,13 +26,14 @@ export interface BlogPostData {
   nav: typeof siteConfig.nav;
   seoHead: string;
   seoTitle: string;
+  preview: boolean;
 }
 
 export const pageData = definePageData(async (event) => {
   const slug = event.context.params?.slug ?? '';
 
   // Content URLs are /content/blog/<slug> (contentDir = 'content')
-  const posts = await getPosts();
+  const posts = await previewPosts(event);
   const post = posts.find(p => p.url === `/content/blog/${slug}`);
 
   if (!post) {
@@ -68,6 +71,7 @@ export const pageData = definePageData(async (event) => {
     nav: siteConfig.nav,
     seoHead,
     seoTitle,
+    preview: isPreview(event),
   } satisfies BlogPostData;
 });
 
@@ -156,7 +160,7 @@ export class BlogPostPage extends LitroPage {
     const data = this.serverData as BlogPostData | null;
     if (!data?.post) return html`<p>Loading&hellip;</p>`;
 
-    const { post, body, siteTitle, nav } = data;
+    const { post, body, siteTitle, nav, preview } = data;
     const blogSlug = post.url.slice('/content/blog/'.length);
 
     return html`
@@ -211,6 +215,7 @@ export class BlogPostPage extends LitroPage {
             </litro-link>
           </footer>
         </main>
+        ${preview ? html`<preview-banner></preview-banner>` : ''}
       </div>
     `;
   }

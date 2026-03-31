@@ -20,6 +20,7 @@ export class StarlightHeader extends LitElement {
     hasSidebar: { type: Boolean },
     spaNav: { type: Boolean },
     _theme: { type: String, state: true },
+    _isMac: { type: Boolean, state: true },
   };
 
   static override styles = css`
@@ -130,6 +131,87 @@ export class StarlightHeader extends LitElement {
       margin-left: auto;
     }
 
+    .search-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      height: 2rem;
+      padding: 0 0.75rem;
+      border: 1px solid var(--sl-color-border, #e8e8e8);
+      border-radius: 9999px;
+      background: var(--sl-color-bg, #fff);
+      color: var(--sl-color-gray-4, #888);
+      cursor: pointer;
+      font-size: var(--sl-text-sm, 0.875rem);
+      transition: border-color 0.15s;
+      white-space: nowrap;
+      appearance: none;
+      font-family: inherit;
+    }
+
+    .search-pill:hover {
+      border-color: var(--sl-color-accent, #ea580c);
+    }
+
+    .search-pill-icon {
+      width: 0.9rem;
+      height: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .search-pill-text {
+      flex: 1;
+    }
+
+    .search-pill-kbd {
+      font-family: inherit;
+      font-size: 0.65rem;
+      background: var(--sl-color-gray-2, #e8e8e8);
+      border: 1px solid var(--sl-color-border, #e8e8e8);
+      border-radius: 3px;
+      padding: 0.1em 0.35em;
+      margin-left: auto;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 48rem) {
+      .search-pill-text,
+      .search-pill-kbd {
+        display: none;
+      }
+      .search-pill {
+        padding: 0 0.5rem;
+        gap: 0;
+      }
+    }
+
+    /* No-JS fallback: show form, hide pill */
+    .search-form {
+      display: none;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 14rem;
+      height: 2rem;
+      padding: 0 0.5rem;
+      font-size: var(--sl-text-sm, 0.875rem);
+      border: 1px solid var(--sl-color-border, #e8e8e8);
+      border-radius: var(--sl-border-radius, 0.375rem);
+      background: var(--sl-color-bg, #fff);
+      color: var(--sl-color-text, #23262f);
+      outline: none;
+    }
+
+    @media (scripting: none) {
+      .search-pill {
+        display: none;
+      }
+      .search-form {
+        display: flex;
+      }
+    }
+
     .github-link {
       display: flex;
       align-items: center;
@@ -170,6 +252,14 @@ export class StarlightHeader extends LitElement {
       display: none;
     }
 
+    .search-pill[hidden] {
+      display: none;
+    }
+
+    .search-form[hidden] {
+      display: none;
+    }
+
     .github-link[hidden] {
       display: none;
     }
@@ -197,6 +287,14 @@ export class StarlightHeader extends LitElement {
   spaNav = false;
 
   _theme = "light";
+  _isMac = true;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    if (typeof navigator !== 'undefined') {
+      this._isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform ?? '');
+    }
+  }
 
   override firstUpdated() {
     const stored =
@@ -229,6 +327,12 @@ export class StarlightHeader extends LitElement {
   private _toggleNav() {
     this.dispatchEvent(
       new CustomEvent("sl-nav-toggle", { bubbles: true, composed: true }),
+    );
+  }
+
+  private _openSearch() {
+    this.dispatchEvent(
+      new CustomEvent('sl-search-open', { bubbles: true, composed: true }),
     );
   }
 
@@ -309,6 +413,21 @@ export class StarlightHeader extends LitElement {
           )}
         </nav>
         <div class="header-actions">
+          <button
+            class="search-pill"
+            ?hidden="${!this.spaNav}"
+            @click="${this._openSearch}"
+            aria-label="Search documentation"
+          >
+            <svg class="search-pill-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+            </svg>
+            <span class="search-pill-text">Search...</span>
+            <kbd class="search-pill-kbd">${this._isMac ? '\u2318K' : 'Ctrl+K'}</kbd>
+          </button>
+          <form class="search-form" ?hidden="${!this.spaNav}" action="/search" method="get">
+            <input class="search-input" type="search" name="q" placeholder="Search..." aria-label="Search documentation" />
+          </form>
           <a
             class="github-link"
             ?hidden="${!githubItem}"

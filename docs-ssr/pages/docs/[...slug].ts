@@ -6,6 +6,7 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
+import { previewPosts, isPreview } from '../../server/utils/preview.js';
 import { siteConfig } from '../../server/starlight.config.js';
 import { extractHeadings, addHeadingIds } from '@beatzball/litro-docs-ui/src/extract-headings.js';
 import { applyHighlighting } from '@beatzball/litro-docs-ui/src/highlight.js';
@@ -14,6 +15,7 @@ import { buildSeoHead, buildJsonLd } from '@beatzball/litro-docs-ui/src/seo.js';
 
 // Register components used in render()
 import '@beatzball/litro-docs-ui/src/components/starlight-page.js';
+import '@beatzball/litro-docs-ui/src/components/preview-banner.js';
 
 export interface DocPageData {
   doc: Post;
@@ -28,6 +30,7 @@ export interface DocPageData {
   editUrl: string | null;
   seoHead: string;
   seoTitle: string;
+  preview: boolean;
 }
 
 function computePrevNext(
@@ -49,7 +52,7 @@ function computePrevNext(
 export const pageData = definePageData(async (event) => {
   const slug = event.context.params?.slug ?? '';
 
-  const posts = await getPosts();
+  const posts = await previewPosts(event);
   const doc = posts.find(p => p.url === `/content/docs/${slug}`);
 
   if (!doc) {
@@ -98,6 +101,7 @@ export const pageData = definePageData(async (event) => {
     editUrl,
     seoHead,
     seoTitle,
+    preview: isPreview(event),
   } satisfies DocPageData;
 });
 
@@ -192,6 +196,7 @@ export class DocPage extends LitroPage {
     if (!data?.doc) return html`<p>Loading&hellip;</p>`;
 
     return html`
+      ${data.preview ? html`<preview-banner></preview-banner>` : ''}
       <starlight-page
         siteTitle="${data.siteTitle}"
         pageTitle="${data.doc.title}"

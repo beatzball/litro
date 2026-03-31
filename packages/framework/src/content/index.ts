@@ -99,13 +99,9 @@ export class ContentIndex {
       }),
     );
 
-    // Filter out drafts unless includeDrafts is true
-    const filtered = this.includeDrafts
-      ? parsedPosts
-      : parsedPosts.filter((p) => !p.draft);
-
-    // Sort by date descending
-    const sorted = filtered.sort(
+    // Sort by date descending — always index ALL posts (including drafts).
+    // Draft filtering is deferred to getPosts() so callers can opt in per-query.
+    const sorted = parsedPosts.sort(
       (a, b) => b.date.getTime() - a.date.getTime(),
     );
 
