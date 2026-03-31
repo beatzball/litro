@@ -252,6 +252,14 @@ export class StarlightHeader extends LitElement {
       display: none;
     }
 
+    .search-pill[hidden] {
+      display: none;
+    }
+
+    .search-form[hidden] {
+      display: none;
+    }
+
     .github-link[hidden] {
       display: none;
     }
@@ -407,6 +415,7 @@ export class StarlightHeader extends LitElement {
         <div class="header-actions">
           <button
             class="search-pill"
+            ?hidden="${!this.spaNav}"
             @click="${this._openSearch}"
             aria-label="Search documentation"
           >
@@ -416,7 +425,7 @@ export class StarlightHeader extends LitElement {
             <span class="search-pill-text">Search...</span>
             <kbd class="search-pill-kbd">${this._isMac ? '\u2318K' : 'Ctrl+K'}</kbd>
           </button>
-          <form class="search-form" action="/search" method="get">
+          <form class="search-form" ?hidden="${!this.spaNav}" action="/search" method="get">
             <input class="search-input" type="search" name="q" placeholder="Search..." aria-label="Search documentation" />
           </form>
           <a

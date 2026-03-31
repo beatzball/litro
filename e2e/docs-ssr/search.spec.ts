@@ -53,14 +53,19 @@ test('GET /api/search respects limit parameter', async ({ request }) => {
 test('search page renders results for query', async ({ page }) => {
   await page.goto('/search?q=router');
   await page.waitForSelector('page-search');
-  const text = await page.textContent('body');
+  // Content is inside shadow DOM — evaluate to get shadow root text
+  const text = await page.locator('page-search').first().evaluate(
+    (el) => el.shadowRoot?.textContent ?? '',
+  );
   expect(text).toContain('result');
 });
 
 test('search page renders empty state', async ({ page }) => {
   await page.goto('/search?q=zzxxyy12345noresult');
   await page.waitForSelector('page-search');
-  const text = await page.textContent('body');
+  const text = await page.locator('page-search').first().evaluate(
+    (el) => el.shadowRoot?.textContent ?? '',
+  );
   expect(text).toContain('No results found');
 });
 
@@ -77,10 +82,10 @@ test('search page returns 200', async ({ request }) => {
 
 test('header contains a search pill button', async ({ page }) => {
   await page.goto('/');
-  const header = page.locator('starlight-header');
-  await expect(header).toBeVisible();
-  const pill = header.locator('.search-pill');
-  await expect(pill).toBeVisible();
+  // After hydration, spaNav property is set and the pill becomes visible.
+  // Use first() since SSR + hydration may produce two header elements briefly.
+  const pill = page.locator('starlight-header').first().locator('.search-pill');
+  await expect(pill).toBeVisible({ timeout: 5000 });
 });
 
 // ---------------------------------------------------------------------------
@@ -128,8 +133,9 @@ test('typing in modal shows autosuggest results', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
   await page.keyboard.press('Meta+k');
-  // Type a query that we know will have results
+  // Wait for the modal's shadow DOM to render and input to be available
   const input = page.locator('search-modal').locator('input[type="search"]');
+  await expect(input).toBeVisible({ timeout: 5000 });
   await input.fill('router');
   // Wait for debounced results to appear
   const results = page.locator('search-modal').locator('[role="option"]');
@@ -141,6 +147,7 @@ test('arrow keys navigate results in modal', async ({ page }) => {
   await page.waitForSelector('search-modal', { state: 'attached' });
   await page.keyboard.press('Meta+k');
   const input = page.locator('search-modal').locator('input[type="search"]');
+  await expect(input).toBeVisible({ timeout: 5000 });
   await input.fill('litro');
   // Wait for results
   const results = page.locator('search-modal').locator('[role="option"]');
@@ -155,6 +162,7 @@ test('Enter on result navigates away', async ({ page }) => {
   await page.waitForSelector('search-modal', { state: 'attached' });
   await page.keyboard.press('Meta+k');
   const input = page.locator('search-modal').locator('input[type="search"]');
+  await expect(input).toBeVisible({ timeout: 5000 });
   await input.fill('router');
   const results = page.locator('search-modal').locator('[role="option"]');
   await expect(results.first()).toBeVisible({ timeout: 5000 });
@@ -162,8 +170,8 @@ test('Enter on result navigates away', async ({ page }) => {
   await page.keyboard.press('Enter');
   // Modal should close
   await expect(page.locator('search-modal')).not.toHaveAttribute('open', '');
-  // URL should have changed from /
-  expect(page.url()).not.toBe('http://localhost:3034/');
+  // URL should have changed from / (wait for SPA navigation to complete)
+  await page.waitForURL((url) => url.pathname !== '/', { timeout: 5000 });
 });
 
 // ---------------------------------------------------------------------------

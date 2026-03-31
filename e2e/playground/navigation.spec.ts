@@ -22,7 +22,7 @@ test('client navigation between pages does not cause full reload', async ({ page
 test('blog index page renders after navigation', async ({ page }) => {
   await page.goto('/');
   await page.goto('/blog');
-  await expect(page.locator('h1')).toContainText('Blog');
+  await expect(page.locator('h1').first()).toContainText('Blog');
 });
 
 test('404 returns appropriate response for unknown routes', async ({ request }) => {
