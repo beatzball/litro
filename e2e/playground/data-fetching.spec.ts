@@ -11,9 +11,11 @@ test('server data is visible in SSR output (curl test)', async ({ request }) => 
 
 test('home page displays server data after hydration', async ({ page }) => {
   await page.goto('/');
-  // Wait for Lit hydration to complete
-  await page.waitForSelector('page-home');
-  await expect(page.locator('page-home')).toContainText('Hello');
+  // Wait for Lit hydration to complete. Use :not([hidden]) to target the
+  // visible element — the router's pre-render swap briefly creates a hidden
+  // duplicate alongside the SSR'd original before swapping.
+  await page.waitForSelector('page-home:not([hidden])');
+  await expect(page.locator('page-home:not([hidden])')).toContainText('Hello');
 });
 
 test('dynamic slug injected into __litro_data__', async ({ request }) => {
@@ -25,6 +27,6 @@ test('dynamic slug injected into __litro_data__', async ({ request }) => {
 
 test('blog post renders slug after hydration', async ({ page }) => {
   await page.goto('/blog/hello-world');
-  await page.waitForSelector('page-blog-slug');
-  await expect(page.locator('page-blog-slug')).toContainText('hello-world');
+  await page.waitForSelector('page-blog-slug:not([hidden])');
+  await expect(page.locator('page-blog-slug:not([hidden])')).toContainText('hello-world');
 });
