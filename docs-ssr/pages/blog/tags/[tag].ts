@@ -4,6 +4,7 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
+import { previewPosts } from '../../../server/utils/preview.js';
 import { siteConfig } from '../../../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
 import { formatDate, isoDate } from '@beatzball/litro-docs-ui/src/date-utils.js';
@@ -20,7 +21,7 @@ export interface TagPageData {
 
 export const pageData = definePageData(async (event) => {
   const tag = event.context.params?.tag ?? '';
-  const all = await getPosts({ tag });
+  const all = await previewPosts(event, { tag });
   // Filter to only blog posts (docs might have unexpected tags)
   const posts = all.filter(p => p.url.startsWith('/content/blog/'));
   return {

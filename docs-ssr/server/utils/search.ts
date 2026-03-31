@@ -1,5 +1,6 @@
 import type { Post } from 'litro:content';
-import { getPosts } from 'litro:content';
+import type { H3Event } from 'h3';
+import { previewPosts } from './preview.js';
 
 export interface SearchResult {
   title: string;
@@ -86,6 +87,7 @@ function scorePost(post: Post, queryLower: string): number {
  */
 export async function searchContent(
   query: string,
+  event: H3Event,
   options: SearchOptions = {},
 ): Promise<SearchResult[]> {
   if (!query.trim()) return [];
@@ -93,7 +95,7 @@ export async function searchContent(
   const { type = 'all', limit = 20 } = options;
   const queryLower = query.toLowerCase().trim();
 
-  const allPosts = await getPosts();
+  const allPosts = await previewPosts(event);
 
   // Filter by content type if requested
   let posts = allPosts;

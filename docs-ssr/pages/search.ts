@@ -26,7 +26,7 @@ export const pageData = definePageData(async (event) => {
   const q = typeof query.q === 'string' ? query.q : '';
   const type = query.type as 'blog' | 'docs' | 'all' | undefined;
 
-  const results = await searchContent(q, {
+  const results = await searchContent(q, event, {
     type: type === 'blog' || type === 'docs' ? type : 'all',
     limit: 30,
   });

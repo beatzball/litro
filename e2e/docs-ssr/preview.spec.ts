@@ -64,3 +64,82 @@ test('docs page returns 200 in preview mode', async ({ request }) => {
   const html = await res.text();
   expect(html).toContain('preview-banner');
 });
+
+// ---------------------------------------------------------------------------
+// Draft filtering — "Draft Test Post" (draft: true) must be hidden
+// without preview mode and visible with it.
+// ---------------------------------------------------------------------------
+
+const DRAFT_TITLE = 'Draft Test Post';
+
+test('blog index hides draft posts by default', async ({ request }) => {
+  const res = await request.get('/blog', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = data.posts.map((p: { title: string }) => p.title);
+  expect(titles).not.toContain(DRAFT_TITLE);
+});
+
+test('blog index shows draft posts in preview mode', async ({ request }) => {
+  const res = await request.get('/blog?preview=1', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = data.posts.map((p: { title: string }) => p.title);
+  expect(titles).toContain(DRAFT_TITLE);
+});
+
+test('search API hides draft posts by default', async ({ request }) => {
+  const res = await request.get('/api/search?q=Draft+Test+Post');
+  const data = await res.json();
+  const titles = data.results.map((r: { title: string }) => r.title);
+  expect(titles).not.toContain(DRAFT_TITLE);
+});
+
+test('search API shows draft posts in preview mode', async ({ context }) => {
+  // Activate preview via cookie (search API reads cookie, not query param)
+  await context.addCookies([
+    { name: '__litro_preview', value: '1', domain: 'localhost', path: '/' },
+  ]);
+  const res = await context.request.get('/api/search?q=Draft+Test+Post');
+  const data = await res.json();
+  const titles = data.results.map((r: { title: string }) => r.title);
+  expect(titles).toContain(DRAFT_TITLE);
+});
+
+test('tag page hides draft posts by default', async ({ request }) => {
+  const res = await request.get('/blog/tags/testing', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = (data.posts ?? []).map((p: { title: string }) => p.title);
+  expect(titles).not.toContain(DRAFT_TITLE);
+});
+
+test('tag page shows draft posts in preview mode', async ({ request }) => {
+  const res = await request.get('/blog/tags/testing?preview=1', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = (data.posts ?? []).map((p: { title: string }) => p.title);
+  expect(titles).toContain(DRAFT_TITLE);
+});
+
+test('search results page hides draft posts by default', async ({ request }) => {
+  const res = await request.get('/search?q=Draft+Test+Post', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = (data.results ?? []).map((r: { title: string }) => r.title);
+  expect(titles).not.toContain(DRAFT_TITLE);
+});
+
+test('search results page shows draft posts in preview mode', async ({ request }) => {
+  const res = await request.get('/search?q=Draft+Test+Post&preview=1', {
+    headers: { Accept: 'application/json' },
+  });
+  const data = await res.json();
+  const titles = (data.results ?? []).map((r: { title: string }) => r.title);
+  expect(titles).toContain(DRAFT_TITLE);
+});
