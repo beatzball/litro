@@ -29,6 +29,7 @@ import type { EventHandler } from 'h3';
 import { RenderResultReadable } from '@lit-labs/ssr/lib/render-result-readable.js';
 import { renderToStream } from './ssr.js';
 import { buildShell } from './shell.js';
+import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
 
@@ -45,6 +46,14 @@ export interface PageHandlerOptions {
    * when the pages plugin generates the #litro/page-manifest virtual module.
    */
   pageModule?: Record<string, unknown>;
+  /**
+   * Skip links rendered at the top of the page. Defaults to
+   * DEFAULT_SKIP_LINKS (a single "Skip to content" link).
+   *
+   * Sites with sidebars/search can extend:
+   *   skipLinks: [...DEFAULT_SKIP_LINKS, { label: 'Skip to navigation', href: '#_litro_nav' }]
+   */
+  skipLinks?: SkipLink[];
 }
 
 /**
@@ -67,7 +76,7 @@ export interface PageHandlerOptions {
  * @returns An H3 EventHandler.
  */
 export function createPageHandler(options: PageHandlerOptions): EventHandler {
-  const { route, routeMeta, pageModule } = options;
+  const { route, routeMeta, pageModule, skipLinks } = options;
 
   return defineEventHandler(async (event) => {
     // Content negotiation: if the client wants JSON, skip SSR and return only
@@ -172,6 +181,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         serverDataJson,
         appScriptUrl,
         devMode: process.env.LITRO_DEV === 'true',
+        skipLinks,
       });
 
       // Construct the Lit template for this component. Dynamic tag names in
@@ -253,6 +263,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         title: routeMeta?.title,
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         appScriptUrl,
+        skipLinks,
       });
 
       // Client-only fallback: emit the shell with a bare component tag.

@@ -47,8 +47,8 @@ export class StarlightHeader extends LitElement {
       background: none;
       border: 1px solid var(--sl-color-border, #e8e8e8);
       border-radius: var(--sl-border-radius, 0.375rem);
-      width: 2.25rem;
-      height: 2.25rem;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
       align-items: center;
       justify-content: center;
       cursor: pointer;
@@ -135,7 +135,7 @@ export class StarlightHeader extends LitElement {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      height: 2rem;
+      min-height: 2.75rem;
       padding: 0 0.75rem;
       border: 1px solid var(--sl-color-border, #e8e8e8);
       border-radius: 9999px;
@@ -203,6 +203,11 @@ export class StarlightHeader extends LitElement {
       outline: none;
     }
 
+    .search-input:focus-visible {
+      border-color: var(--sl-color-accent, #ea580c);
+      box-shadow: 0 0 0 1px var(--sl-color-accent, #ea580c);
+    }
+
     @media (scripting: none) {
       .search-pill {
         display: none;
@@ -216,8 +221,8 @@ export class StarlightHeader extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 2rem;
-      height: 2rem;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
       border-radius: var(--sl-border-radius, 0.375rem);
       color: var(--sl-color-gray-5, #4b4b4b);
       text-decoration: none;
@@ -414,6 +419,7 @@ export class StarlightHeader extends LitElement {
         </nav>
         <div class="header-actions">
           <button
+            id="_litro_search"
             class="search-pill"
             ?hidden="${!this.spaNav}"
             @click="${this._openSearch}"
@@ -434,7 +440,7 @@ export class StarlightHeader extends LitElement {
             href="${githubItem?.href ?? ''}"
             target="_blank"
             rel="noopener"
-            aria-label="GitHub"
+            aria-label="GitHub (opens in new tab)"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path

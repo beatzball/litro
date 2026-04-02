@@ -43,7 +43,7 @@ export class PreviewBanner extends LitElement {
 
   override render() {
     return html`
-      <div class="banner">
+      <div class="banner" role="status">
         <span>Preview Mode — Draft content visible</span>
         <a class="exit-link" href="?preview=0">Exit preview</a>
       </div>

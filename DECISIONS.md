@@ -551,3 +551,49 @@ This rule is present in `starlight/template/public/styles/starlight.css`, `playg
 **Decision**: Accept that Escape requires two presses to close the search modal when the input has content — the first press clears the `<input type="search">` value (browser default behavior), the second closes the modal.
 
 **Rationale**: Browsers implement Escape-to-clear as a native behavior for `<input type="search">` that cannot be reliably prevented across all engines. Changing to `type="text"` was tested and did not resolve the issue consistently. Many documentation sites (Algolia DocSearch, Stripe, etc.) exhibit the same double-Escape behavior. The document-level Escape handler in `app.ts` reliably closes the modal when the input is empty.
+
+---
+
+## Skip links: `skipLinks` array API over boolean flags
+
+**Decision**: Replace `skipNav`/`skipSearch` boolean options on `ShellOptions` and `PageHandlerOptions` with a `skipLinks?: SkipLink[]` array. Export `DEFAULT_SKIP_LINKS` (a single "Skip to content" link) and `SkipLink` type from `@beatzball/litro`.
+
+**Rationale**: Boolean flags couple the framework to specific recipe landmarks (sidebar, search). Not all Litro sites have navigation sidebars or search — the fullstack recipe has neither. The array API lets each site declare exactly which skip links it needs by extending the default:
+
+```ts
+skipLinks: [...DEFAULT_SKIP_LINKS, { label: 'Skip to navigation', href: '#_litro_nav' }]
+```
+
+The framework shell keeps the generic infrastructure (shadow DOM traversal for focus, MutationObserver for dynamic visibility during SPA navigation) but delegates recipe-specific behavior (e.g. opening a search modal on skip link click) to the site layer. `docs-ssr/app.ts` handles the `#_litro_search` skip link via a capture-phase click listener that opens the search modal.
+
+---
+
+## Skip links: shadow DOM traversal in framework, special actions in recipe
+
+**Decision**: The inline `SKIP_LINK_SCRIPT` in `shell.ts` provides generic shadow DOM traversal (find element by id across shadow roots, focus it) and MutationObserver-based visibility toggling. Recipe-specific actions (like dispatching `sl-search-open` for search) are handled in the site's `app.ts`.
+
+**Rationale**: Fragment navigation (`#id`) cannot reach elements inside shadow roots — a JS traversal is necessary. This traversal is framework-level infrastructure that all Litro sites benefit from. However, intercepting a skip link click to open a modal (rather than focusing an element) is recipe-specific behavior that belongs in the consumer code, not the framework. The docs-ssr site registers a capture-phase click handler on `a.skip-link[href="#_litro_search"]` that opens the search modal and stops propagation before the framework's generic handler runs.
+
+---
+
+## A11y: SPA focus management and screen reader announcements
+
+**Decision**: After each SPA page swap in `LitroRouter`, focus the outlet element and announce the new page title via an `aria-live="polite"` region.
+
+**Rationale**: SPA navigation replaces DOM content without a full page load, so the browser does not reset focus or announce the new page. Keyboard users lose their focus position; screen reader users hear nothing. The router creates a persistent `<div role="status" aria-live="polite">` appended to `document.body` in `setRoutes()`, sets `tabindex="-1"` on the outlet for programmatic focus, and after each page swap: (1) focuses the outlet with `preventScroll`, (2) announces the new `<h1>` text (or `document.title`) via the live region on the next microtick.
+
+---
+
+## A11y: sidebar `inert` when closed on mobile
+
+**Decision**: Add `?inert="${this._isDrawerMode && !this._navOpen}"` to the sidebar `<aside>` in `starlight-page.ts`, with drawer mode tracked via `window.matchMedia('(max-width: 72rem)')`.
+
+**Rationale**: When the sidebar is visually hidden (off-screen via `transform: translateX(-100%)`), it remains in the tab order. Keyboard users tab through invisible sidebar links. The `inert` attribute removes the sidebar from the accessibility tree and tab order when it is not visible. A `matchMedia` listener ensures `inert` is only applied in drawer mode (narrow viewports) — at desktop widths the sidebar is always visible.
+
+---
+
+## A11y: `litro-tabs` WAI-ARIA Tabs Pattern
+
+**Decision**: Implement the full WAI-ARIA Tabs Pattern in `litro-tabs.ts`: roving tabindex, `aria-controls`/`aria-labelledby` linking, arrow key navigation (Left/Right, Home/End), and `role="tabpanel"` on panels.
+
+**Rationale**: Without ARIA wiring, tab buttons have no programmatic relationship to their panels. Screen readers cannot navigate between tabs and panels. Without arrow key navigation, keyboard users must tab through every tab button to reach the content. The WAI-ARIA Tabs Pattern is the established accessible pattern for tabbed interfaces.

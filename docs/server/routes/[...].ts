@@ -1,5 +1,6 @@
 import { defineEventHandler, setResponseHeader, getRequestURL } from 'h3';
 import { createPageHandler } from '@beatzball/litro/runtime/create-page-handler.js';
+import { DEFAULT_SKIP_LINKS } from '@beatzball/litro';
 import type { LitroRoute } from '@beatzball/litro';
 import { routes, pageModules } from '#litro/page-manifest';
 
@@ -50,6 +51,10 @@ export default defineEventHandler(async (event) => {
     route: matched,
     routeMeta: (mod?.routeMeta as { title?: string; head?: string } | undefined),
     pageModule: mod,
+    skipLinks: [
+      ...DEFAULT_SKIP_LINKS,
+      { label: 'Skip to navigation', href: '#_litro_nav' },
+    ],
   });
   return handler(event);
 });

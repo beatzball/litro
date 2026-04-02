@@ -86,6 +86,20 @@ void import('@beatzball/litro-docs-ui/src/components/search-modal.js').then(() =
     modal.open = false;
   });
 
+  // "Skip to search" skip link — intercept click and open the modal instead
+  // of focusing the search pill. The skip link href is #_litro_search; the
+  // framework's generic handler would try to focus that element, but opening
+  // the modal is the better UX for keyboard/screen reader users.
+  document.addEventListener('click', (e: MouseEvent) => {
+    const link = (e.target as Element)?.closest?.('a.skip-link[href="#_litro_search"]');
+    if (!link) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    modal.query = '';
+    modal.results = [];
+    modal.open = true;
+  }, true);
+
   // Header pill dispatches sl-search-open (composed, crosses shadow DOM)
   document.addEventListener('sl-search-open', () => {
     modal.query = '';

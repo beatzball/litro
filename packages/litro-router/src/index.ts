@@ -92,6 +92,8 @@ export class LitroRouter {
   private _resolveToken = 0;
   /** Last pathname+search rendered by `_resolve()`. Used to skip re-renders on hash-only navigations. */
   private _lastPathAndSearch = '';
+  /** Screen-reader live region for announcing page changes after SPA navigation. */
+  private _announceEl: HTMLElement | null = null;
 
   constructor(outlet: HTMLElement) {
     this.outlet = outlet;
@@ -105,6 +107,25 @@ export class LitroRouter {
         component: r.component,
         action: r.action ?? (() => {}),
       }));
+
+    // Make the outlet programmatically focusable for post-navigation focus management.
+    if (!this.outlet.hasAttribute('tabindex')) {
+      this.outlet.setAttribute('tabindex', '-1');
+      this.outlet.style.outline = 'none';
+    }
+
+    // Create a persistent live region for screen reader route announcements.
+    if (!this._announceEl) {
+      this._announceEl = document.createElement('div');
+      this._announceEl.id = '_litro_announce';
+      this._announceEl.setAttribute('role', 'status');
+      this._announceEl.setAttribute('aria-live', 'polite');
+      this._announceEl.setAttribute('aria-atomic', 'true');
+      this._announceEl.className = 'sr-only';
+      this._announceEl.style.cssText =
+        'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+      document.body.appendChild(this._announceEl);
+    }
 
     // Fragment navigations (clicking <a href="#section">) fire popstate per the
     // HTML spec. Guard against re-rendering the same page when only the hash changes.
@@ -202,6 +223,23 @@ export class LitroRouter {
         child = next;
       }
       el.removeAttribute('hidden');
+
+      // Focus the outlet so keyboard users start at the top of the new page.
+      this.outlet.focus({ preventScroll: true });
+
+      // Announce the new page to screen readers via the persistent live region.
+      if (this._announceEl) {
+        this._announceEl.textContent = '';
+        // Use a microtask so the empty→filled transition triggers the live region.
+        Promise.resolve().then(() => {
+          if (this._announceEl) {
+            // Try to find an h1 inside the new page element (may be in shadow DOM).
+            const heading = el.querySelector('h1')
+              ?? el.shadowRoot?.querySelector('h1');
+            this._announceEl.textContent = heading?.textContent?.trim() || document.title;
+          }
+        });
+      }
 
       // Scroll to top of the new page, then override with hash target if present.
       // Heading elements injected via unsafeHTML live inside shadow roots, so

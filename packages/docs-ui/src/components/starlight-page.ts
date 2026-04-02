@@ -38,6 +38,7 @@ export class StarlightPage extends LitElement {
     noSidebar:   { type: Boolean },
     spaNav:      { type: Boolean },
     _navOpen:    { state: true },
+    _isDrawerMode: { state: true },
   };
 
   static override styles = css`
@@ -208,6 +209,25 @@ export class StarlightPage extends LitElement {
   noSidebar = false;
   spaNav = false;
   _navOpen = false;
+  _isDrawerMode = false;
+  private _drawerMql: MediaQueryList | null = null;
+  private _drawerMqlHandler = (e: MediaQueryListEvent) => {
+    this._isDrawerMode = e.matches;
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    if (typeof window !== 'undefined') {
+      this._drawerMql = window.matchMedia('(max-width: 72rem)');
+      this._isDrawerMode = this._drawerMql.matches;
+      this._drawerMql.addEventListener('change', this._drawerMqlHandler);
+    }
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._drawerMql?.removeEventListener('change', this._drawerMqlHandler);
+  }
 
   override updated(changed: Map<string, unknown>) {
     if (changed.has('currentPath') && this._navOpen) {
@@ -245,6 +265,7 @@ export class StarlightPage extends LitElement {
           <aside
             class="sidebar-wrap${this._navOpen ? ' nav-open' : ''}"
             ?hidden="${!hasSidebar}"
+            ?inert="${this._isDrawerMode && !this._navOpen}"
           >
             <starlight-sidebar
               .groups="${this.sidebar}"
