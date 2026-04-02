@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/create-litro",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Scaffold a new Litro app — fullstack SSR, Markdown blog, or docs site. Built on Lit web components and Nitro server.",
   "license": "Apache-2.0",
   "repository": {

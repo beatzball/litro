@@ -1,5 +1,20 @@
 # litro
 
+## 0.5.0
+
+### Minor Changes
+
+- 035912e: feat: skip links API — `skipLinks` array on ShellOptions, `DEFAULT_SKIP_LINKS` constant, `SkipLink` type export
+
+  feat: SPA focus management — focus outlet after page swap, announce new page title via `aria-live` region
+
+### Patch Changes
+
+- 035912e: fix: include query string in SPA data fetch, defer draft filtering to query time
+- Updated dependencies [035912e]
+- Updated dependencies [035912e]
+  - @beatzball/litro-router@0.1.7
+
 ## 0.4.0
 
 ### Minor Changes

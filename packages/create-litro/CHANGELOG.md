@@ -1,5 +1,11 @@
 # create-litro
 
+## 0.4.2
+
+### Patch Changes
+
+- 035912e: feat: starlight recipe uses `skipLinks` array API with `DEFAULT_SKIP_LINKS`
+
 ## 0.4.1
 
 ### Patch Changes
