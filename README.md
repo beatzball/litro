@@ -18,17 +18,25 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 ## How It Compares
 
-|                     | Litro       | Next.js     | Nuxt.js     |
+|                     | Litro       | Next.js 14  | Nuxt 3      |
 |---------------------|-------------|-------------|-------------|
 | Component model     | Lit         | React       | Vue         |
 | File-based routing  | ✓           | ✓           | ✓           |
 | SSR / SSG           | ✓           | ✓           | ✓           |
 | Server engine       | Nitro       | custom      | Nitro       |
-| Hello World JS      | ~8 kB       | ~90 kB      | ~60 kB      |
 | Virtual DOM         | —           | ✓           | ✓           |
 | W3C standard comps  | ✓           | —           | —           |
 
-> **Note on Hello World JS figures**: these are approximate figures based on widely-cited community benchmarks and published framework documentation — they were not independently measured by this project. Lit's ~5 kB runtime size is documented on [lit.dev](https://lit.dev). The Next.js and Nuxt.js figures reflect commonly reported baseline JS payloads for a minimal page and vary by framework version and configuration.
+### Benchmark results (identical 2-route apps, SSG mode)
+
+| Metric          | Litro (v0.5.0) | Next.js (v14.2) | Nuxt (v3.21) |
+|-----------------|----------------|-----------------|--------------|
+| Build time      | **1.27s**      | 6.49s           | 2.82s        |
+| Output size     | **34.8 KB**    | 702.8 KB        | 200.1 KB     |
+| Avg page weight | 1.4 KB gzip    | 1.5 KB gzip     | **0.6 KB gzip** |
+
+> Measured on Apple M4 Max, Node v24.7.0. Run `pnpm bench:cross` to reproduce.
+> See [litro.dev/benchmarks](https://litro.dev/benchmarks) for full results including TTFB, Lighthouse, and streaming metrics.
 
 ---
 
@@ -45,6 +53,7 @@ litro/
   playground-starlight/ ← starlight recipe test app
   docs/               ← official documentation site (@beatzball/litro-docs, SSG)
   docs-ssr/           ← SSR replica of docs site (@beatzball/litro-docs-ssr, fullstack)
+  benchmarks/         ← benchmark suite: SSG vs SSR + cross-framework (Litro/Nuxt/Next.js)
 ```
 
 `@beatzball/litro-router` is also independently usable without the full Litro framework — see its [package README](./packages/litro-router/README.md).

@@ -1,0 +1,459 @@
+{
+  "meta": {
+    "timestamp": "2026-04-02T09:01:28.998Z",
+    "nodeVersion": "v24.7.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpuModel": "Apple M4 Max",
+    "cpuCount": 16,
+    "memoryGB": 128,
+    "commitSha": "9b31ea1",
+    "commitMessage": "chore: version packages (#51)"
+  },
+  "buildTime": {
+    "ssg": {
+      "runs": [
+        4154,
+        4572,
+        4151
+      ],
+      "mean": 4292,
+      "median": 4154,
+      "p95": 4572,
+      "stddev": 198,
+      "min": 4151,
+      "max": 4572
+    },
+    "ssr": {
+      "runs": [
+        4404,
+        4331,
+        4294
+      ],
+      "mean": 4343,
+      "median": 4331,
+      "p95": 4404,
+      "stddev": 46,
+      "min": 4294,
+      "max": 4404
+    }
+  },
+  "bundleSize": {
+    "ssg": {
+      "clientJS": 1258277,
+      "clientCSS": 7796,
+      "serverBundle": 0,
+      "staticHTML": 3798576,
+      "totalOutput": 8562573
+    },
+    "ssr": {
+      "clientJS": 1280357,
+      "clientCSS": 0,
+      "serverBundle": 5771922,
+      "staticHTML": 0,
+      "totalOutput": 9275895
+    }
+  },
+  "httpPerf": {
+    "ssg": {
+      "/": {
+        "latency": {
+          "mean": 0.05,
+          "p50": 0,
+          "p97_5": 1,
+          "p99": 1,
+          "max": 4
+        },
+        "requests": {
+          "mean": 14604,
+          "total": 160641
+        },
+        "throughput": {
+          "mean": 674067549.1
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/docs/introduction": {
+        "latency": {
+          "mean": 0.18,
+          "p50": 0,
+          "p97_5": 1,
+          "p99": 1,
+          "max": 3
+        },
+        "requests": {
+          "mean": 13100.73,
+          "total": 144105
+        },
+        "throughput": {
+          "mean": 739984849.46
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/blog": {
+        "latency": {
+          "mean": 1.27,
+          "p50": 1,
+          "p97_5": 3,
+          "p99": 3,
+          "max": 14
+        },
+        "requests": {
+          "mean": 5094.4,
+          "total": 50937
+        },
+        "throughput": {
+          "mean": 945186406.4
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/blog/welcome": {
+        "latency": {
+          "mean": 0.05,
+          "p50": 0,
+          "p97_5": 1,
+          "p99": 1,
+          "max": 8
+        },
+        "requests": {
+          "mean": 16966.55,
+          "total": 186638
+        },
+        "throughput": {
+          "mean": 470155264
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      }
+    },
+    "ssr": {
+      "/": {
+        "latency": {
+          "mean": 7.09,
+          "p50": 6,
+          "p97_5": 12,
+          "p99": 14,
+          "max": 40
+        },
+        "requests": {
+          "mean": 1304.28,
+          "total": 14347
+        },
+        "throughput": {
+          "mean": 63282455.28
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/docs/introduction": {
+        "latency": {
+          "mean": 14.28,
+          "p50": 14,
+          "p97_5": 16,
+          "p99": 20,
+          "max": 47
+        },
+        "requests": {
+          "mean": 681.5,
+          "total": 6815
+        },
+        "throughput": {
+          "mean": 41467904
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/blog": {
+        "latency": {
+          "mean": 20.91,
+          "p50": 20,
+          "p97_5": 26,
+          "p99": 29,
+          "max": 63
+        },
+        "requests": {
+          "mean": 467,
+          "total": 4670
+        },
+        "throughput": {
+          "mean": 88834048
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      },
+      "/blog/welcome": {
+        "latency": {
+          "mean": 3.58,
+          "p50": 3,
+          "p97_5": 7,
+          "p99": 8,
+          "max": 31
+        },
+        "requests": {
+          "mean": 2444.4,
+          "total": 24440
+        },
+        "throughput": {
+          "mean": 69756518.41
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "duration": 10,
+        "connections": 10
+      }
+    }
+  },
+  "pageWeight": {
+    "ssg": {
+      "/": {
+        "rawBytes": 45977,
+        "gzipBytes": 8304,
+        "statusCode": 200
+      },
+      "/docs/introduction": {
+        "rawBytes": 56297,
+        "gzipBytes": 11322,
+        "statusCode": 200
+      },
+      "/blog": {
+        "rawBytes": 185368,
+        "gzipBytes": 33849,
+        "statusCode": 200
+      },
+      "/blog/welcome": {
+        "rawBytes": 27526,
+        "gzipBytes": 7266,
+        "statusCode": 200
+      }
+    },
+    "ssr": {
+      "/": {
+        "rawBytes": 45901,
+        "gzipBytes": 8295,
+        "statusCode": 200
+      },
+      "/docs/introduction": {
+        "rawBytes": 56183,
+        "gzipBytes": 11330,
+        "statusCode": 200
+      },
+      "/blog": {
+        "rawBytes": 185906,
+        "gzipBytes": 33843,
+        "statusCode": 200
+      },
+      "/blog/welcome": {
+        "rawBytes": 27452,
+        "gzipBytes": 7267,
+        "statusCode": 200
+      }
+    }
+  },
+  "lighthouse": {
+    "ssg": {
+      "/": {
+        "performance": 80,
+        "fcp": 2423.4320500000003,
+        "lcp": 4771.386750000001,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 2423.4320500000003
+      },
+      "/docs/introduction": {
+        "performance": 63,
+        "fcp": 4809.750849999999,
+        "lcp": 9768.6678,
+        "cls": 0,
+        "tbt": 58,
+        "speedIndex": 4809.750849999999
+      },
+      "/blog": {
+        "performance": 75,
+        "fcp": 3032.2529499999996,
+        "lcp": 5286.088250000001,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 3032.2529499999996
+      },
+      "/blog/welcome": {
+        "performance": 63,
+        "fcp": 4660.0617999999995,
+        "lcp": 9619.0824,
+        "cls": 0,
+        "tbt": 58,
+        "speedIndex": 4660.0617999999995
+      }
+    },
+    "ssr": {
+      "/": {
+        "performance": 0,
+        "fcp": 0,
+        "lcp": 0,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 0
+      },
+      "/docs/introduction": {
+        "performance": 0,
+        "fcp": 0,
+        "lcp": 0,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 0
+      },
+      "/blog": {
+        "performance": 0,
+        "fcp": 0,
+        "lcp": 0,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 0
+      },
+      "/blog/welcome": {
+        "performance": 0,
+        "fcp": 0,
+        "lcp": 0,
+        "cls": 0,
+        "tbt": 0,
+        "speedIndex": 0
+      }
+    }
+  },
+  "streaming": {
+    "ssr": {
+      "/": {
+        "ttfb": 1,
+        "ttlb": 1,
+        "delta": 0,
+        "totalBytes": 45901
+      },
+      "/docs/introduction": {
+        "ttfb": 2,
+        "ttlb": 2,
+        "delta": 0,
+        "totalBytes": 56183
+      },
+      "/blog": {
+        "ttfb": 2,
+        "ttlb": 3,
+        "delta": 1,
+        "totalBytes": 185906
+      },
+      "/blog/welcome": {
+        "ttfb": 1,
+        "ttlb": 1,
+        "delta": 0,
+        "totalBytes": 27452
+      }
+    }
+  },
+  "crossFramework": [
+    {
+      "name": "litro",
+      "version": "0.5.0",
+      "buildTime": {
+        "runs": [
+          1369,
+          1211,
+          1220
+        ],
+        "mean": 1267,
+        "median": 1220,
+        "p95": 1369,
+        "stddev": 72,
+        "min": 1211,
+        "max": 1369
+      },
+      "outputSize": 35652,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 4456,
+          "gzipBytes": 2016,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 1641,
+          "gzipBytes": 772,
+          "statusCode": 404
+        }
+      }
+    },
+    {
+      "name": "nuxt",
+      "version": "3.21.2",
+      "buildTime": {
+        "runs": [
+          3317,
+          2591,
+          2543
+        ],
+        "mean": 2817,
+        "median": 2591,
+        "p95": 3317,
+        "stddev": 354,
+        "min": 2543,
+        "max": 3317
+      },
+      "outputSize": 204880,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 1278,
+          "gzipBytes": 664,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 1284,
+          "gzipBytes": 665,
+          "statusCode": 200
+        }
+      }
+    },
+    {
+      "name": "nextjs",
+      "version": "14.2.35",
+      "buildTime": {
+        "runs": [
+          6638,
+          6405,
+          6427
+        ],
+        "mean": 6490,
+        "median": 6427,
+        "p95": 6638,
+        "stddev": 105,
+        "min": 6405,
+        "max": 6638
+      },
+      "outputSize": 719695,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 4013,
+          "gzipBytes": 1541,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 4974,
+          "gzipBytes": 1627,
+          "statusCode": 200
+        }
+      }
+    }
+  ]
+}

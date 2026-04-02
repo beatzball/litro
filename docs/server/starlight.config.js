@@ -4,6 +4,7 @@ export const siteConfig = {
   nav: [
     { label: 'Docs', href: '/docs/introduction' },
     { label: 'Blog', href: '/blog' },
+    { label: 'Compare', href: '/compare' },
     { label: 'GitHub', href: 'https://github.com/beatzball/litro' },
   ],
   sidebar: [

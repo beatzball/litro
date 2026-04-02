@@ -5,3 +5,5 @@ packages:
   - 'playground-starlight'
   - 'docs'
   - 'docs-ssr'
+  - 'benchmarks'
+  - 'benchmarks/apps/litro'
