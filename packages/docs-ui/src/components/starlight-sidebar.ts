@@ -109,10 +109,10 @@ export class StarlightSidebar extends LitElement {
 
   override render() {
     return html`
-      <nav aria-label="Site navigation">
+      <nav id="_litro_nav" aria-label="Site navigation" tabindex="-1">
         ${this.groups.map(group => html`
           <div class="group">
-            <p class="group-label">${group.label}</p>
+            <h3 class="group-label">${group.label}</h3>
             <ul>
               ${group.items.map(item => html`
                 <li>

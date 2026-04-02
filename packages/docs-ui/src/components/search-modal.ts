@@ -98,6 +98,10 @@ export class SearchModal extends LitElement {
       min-width: 0;
     }
 
+    .search-input:focus-visible {
+      box-shadow: 0 0 0 2px var(--sl-color-accent, #ea580c);
+    }
+
     .search-input::placeholder {
       color: var(--sl-color-gray-4, #888);
     }
@@ -362,7 +366,8 @@ export class SearchModal extends LitElement {
 
     return html`
       <div class="backdrop" @click="${this._onBackdropClick}">
-        <div class="modal" role="dialog" aria-modal="true" aria-label="Search documentation">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
+          <h2 class="sr-only" id="search-modal-title">Search documentation</h2>
           <div class="search-header">
             <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />

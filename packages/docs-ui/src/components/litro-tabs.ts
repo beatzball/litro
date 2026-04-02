@@ -10,6 +10,12 @@ import type { LitroTabItem } from './litro-tab-item.js';
  *
  * Reads slotted <litro-tab-item> elements via the slotchange event.
  * Renders a tab bar in Shadow DOM; clicking selects the tab.
+ *
+ * Implements the WAI-ARIA Tabs Pattern with automatic activation:
+ * - Arrow keys move focus and activate tabs
+ * - Home/End jump to first/last tab
+ * - Roving tabindex on tab buttons
+ * - aria-controls / aria-labelledby link tabs to panels
  */
 @customElement('litro-tabs')
 export class LitroTabs extends LitElement {
@@ -56,6 +62,11 @@ export class LitroTabs extends LitElement {
       border-bottom-color: var(--sl-color-accent, #7c3aed);
     }
 
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--sl-color-accent, #7c3aed);
+      outline-offset: -2px;
+    }
+
     .tab-content {
       padding-top: 1rem;
     }
@@ -63,6 +74,15 @@ export class LitroTabs extends LitElement {
 
   _labels: string[] = [];
   _selectedIndex = 0;
+  private _uid = Math.random().toString(36).slice(2, 8);
+
+  private _tabId(i: number): string {
+    return `litro-tab-${this._uid}-${i}`;
+  }
+
+  private _panelId(i: number): string {
+    return `litro-panel-${this._uid}-${i}`;
+  }
 
   private _items(): LitroTabItem[] {
     const slot = this.shadowRoot?.querySelector('slot');
@@ -83,6 +103,40 @@ export class LitroTabs extends LitElement {
     this._selectedIndex = index;
     all.forEach((item, i) => {
       item.selected = i === index;
+      item.setAttribute('role', 'tabpanel');
+      item.setAttribute('id', this._panelId(i));
+      item.setAttribute('aria-labelledby', this._tabId(i));
+      item.setAttribute('tabindex', '0');
+    });
+  }
+
+  private _onTabKeydown(e: KeyboardEvent) {
+    const count = this._labels.length;
+    if (count === 0) return;
+
+    let newIndex = this._selectedIndex;
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      newIndex = (this._selectedIndex + 1) % count;
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      newIndex = this._selectedIndex <= 0 ? count - 1 : this._selectedIndex - 1;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      newIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      newIndex = count - 1;
+    } else {
+      return;
+    }
+
+    this._selectIndex(newIndex);
+    // Focus the newly selected tab button.
+    requestAnimationFrame(() => {
+      const btn = this.shadowRoot?.querySelector(`#${this._tabId(newIndex)}`) as HTMLElement | null;
+      btn?.focus();
     });
   }
 
@@ -93,8 +147,12 @@ export class LitroTabs extends LitElement {
           <button
             class="tab-btn"
             role="tab"
+            id="${this._tabId(i)}"
             aria-selected="${this._selectedIndex === i ? 'true' : 'false'}"
+            aria-controls="${this._panelId(i)}"
+            tabindex="${this._selectedIndex === i ? '0' : '-1'}"
             @click=${() => this._selectIndex(i)}
+            @keydown=${(e: KeyboardEvent) => this._onTabKeydown(e)}
           >${label}</button>
         `)}
       </div>

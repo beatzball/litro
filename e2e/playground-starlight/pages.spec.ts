@@ -21,7 +21,7 @@ test('home page renders site title in h1', async ({ page }) => {
 test('home page renders starlight-header', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  await expect(page.locator('starlight-header')).toBeVisible();
+  await expect(page.locator('starlight-header').first()).toBeVisible();
 });
 
 test('home page renders feature cards', async ({ page }) => {

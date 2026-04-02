@@ -113,7 +113,7 @@ test('Escape closes search modal', async ({ page }) => {
 test('header pill click opens search modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
-  const pill = page.locator('starlight-header').locator('.search-pill');
+  const pill = page.locator('starlight-header').first().locator('.search-pill');
   await pill.click();
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
 });
@@ -184,7 +184,7 @@ test('search modal has correct ARIA attributes', async ({ page }) => {
   await page.keyboard.press('Meta+k');
   const dialog = page.locator('search-modal').locator('[role="dialog"]');
   await expect(dialog).toHaveAttribute('aria-modal', 'true');
-  await expect(dialog).toHaveAttribute('aria-label', 'Search documentation');
+  await expect(dialog).toHaveAttribute('aria-labelledby', 'search-modal-title');
   const listbox = page.locator('search-modal').locator('[role="listbox"]');
   await expect(listbox).toBeVisible();
 });

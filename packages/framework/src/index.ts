@@ -43,7 +43,11 @@ export const version = '0.0.1';
 export { definePageData, getServerData } from './runtime/page-data.js';
 export { LitroPage, LitroPageMixin } from './runtime/LitroPage.js';
 
+// Skip links — exported so sites can extend DEFAULT_SKIP_LINKS.
+export { DEFAULT_SKIP_LINKS } from './runtime/shell.js';
+
 // Type-only exports — erased at runtime, never cause module graph issues.
 export type { LitroRoute, LitroRouteMeta } from './types/route.js';
 export type { PageHandlerOptions } from './runtime/create-page-handler.js';
 export type { PageDataFetcher } from './runtime/page-data.js';
+export type { SkipLink } from './runtime/shell.js';
