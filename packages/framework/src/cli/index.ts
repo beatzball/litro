@@ -55,14 +55,18 @@ function run(
 
 switch (command) {
   case 'dev': {
+    // Always scan pages and write routes.generated.ts so Vite's dev middleware
+    // can resolve the import in app.ts. Without this file, page components
+    // never get defined and remain hidden behind :not(:defined) CSS.
+    console.log('[litro] Scanning pages...');
+    await scanAndWriteClientRoutes(cwd);
+
     // If dist/client/app.js doesn't exist, run vite build once so the static
     // asset handler has something to serve. Vite's dev middleware will still
     // intercept /_litro/app.js on the fly (serving app.ts) when available;
     // the pre-built file is the reliable fallback.
     const distClientApp = join(cwd, 'dist', 'client', 'app.js');
     if (!existsSync(distClientApp)) {
-      console.log('[litro] Scanning pages...');
-      await scanAndWriteClientRoutes(cwd);
       console.log('[litro] Building client bundle...');
       const binPath = join(cwd, 'node_modules', '.bin');
       const pathSep = process.platform === 'win32' ? ';' : ':';
