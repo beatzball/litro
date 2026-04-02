@@ -1,7 +1,6 @@
 ---
 "@beatzball/litro": minor
 "@beatzball/litro-router": patch
-"@beatzball/litro-docs-ui": patch
 "@beatzball/create-litro": patch
 ---
 
