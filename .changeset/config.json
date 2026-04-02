@@ -7,5 +7,10 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@beatzball/litro-docs"]
+  "ignore": [
+    "@beatzball/litro-docs",
+    "@beatzball/litro-docs-content",
+    "@beatzball/litro-docs-ui",
+    "@beatzball/litro-docs-ssr"
+  ]
 }
