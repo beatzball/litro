@@ -41,5 +41,19 @@ docs/routes.generated.ts
 docs-ssr/server/stubs/
 docs-ssr/routes.generated.ts
 
+# Benchmark apps: generated files and build outputs
+benchmarks/apps/litro/server/stubs/
+benchmarks/apps/litro/routes.generated.ts
+benchmarks/apps/nuxt/node_modules/
+benchmarks/apps/nuxt/.output/
+benchmarks/apps/nuxt/.nuxt/
+benchmarks/apps/nextjs/node_modules/
+benchmarks/apps/nextjs/out/
+benchmarks/apps/nextjs/.next/
+# benchmarks/results/latest.json is intentionally tracked — docs pages read it at build time.
+# Only ignore other result files (e.g. timestamped snapshots).
+benchmarks/results/*.json
+!benchmarks/results/latest.json
+
 # Claude Code
 .claude/

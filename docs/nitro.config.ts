@@ -25,11 +25,13 @@ export default defineNitroConfig({
     routes: [
       '/',
       '/why-web-components',
+      '/compare',
       '/compare/nextjs',
       '/compare/nuxt',
       '/compare/enhance',
       '/sitemap.xml',
       '/blog/rss.xml',
+      '/benchmarks',
     ],
   },
 

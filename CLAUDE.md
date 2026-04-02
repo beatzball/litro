@@ -180,7 +180,7 @@ Key distinction: `nitro.options.handlers` (explicit config) persists through bot
 - R-1 through R-4: Research complete (findings in `research/`)
 - I-1 through I-7: Implementation complete
 - Recipe system + content layer: complete (`fullstack`, `11ty-blog`, `starlight` recipes, `litro:content` virtual module)
-- Tests: 229/229 passing across all packages + 32/32 Playwright e2e tests
+- Tests: 360/360 passing across all packages + 92/92 Playwright e2e tests
 
 Verified working:
 - Vite client build → `dist/client/`
@@ -211,15 +211,27 @@ Verified working:
 - Shoelace `@shoelace-style/shoelace` integrated in starlight recipe + docs site; icon assets served at `/shoelace/assets/` with 1-week cache (no `immutable` — unhashed URLs)
 
 Test breakdown:
-- `packages/litro-router`: 16 tests
-- `packages/framework`: 196 tests
+- `packages/litro-router`: 18 tests
+- `packages/framework`: 228 tests
 - `packages/create-litro`: 17 tests
-- Playwright e2e: 32 tests across 3 playgrounds (dev mode)
+- `packages/docs-ui`: 54 tests
+- `docs/`: 43 tests
+- Playwright e2e: 92 tests across 5 projects (dev mode)
 
 E2E test structure:
 - `e2e/playground/` — SSR, navigation (SPA, back/forward, LitroLink), data fetching (14 tests)
 - `e2e/playground-11ty/` — content layer, API routes (9 tests)
-- `e2e/playground-starlight/` — pages, prerendered route 200-check, TOC (9 tests)
-- `pnpm test:e2e` — dev mode (all 3 servers on ports 3030/3031/3032)
+- `e2e/playground-starlight/` — pages, prerendered route 200-check, TOC (13 tests)
+- `e2e/docs/` — package pages, sidebar, badges (11 tests)
+- `e2e/docs-ssr/` — preview mode, search, streaming, ARIA (45 tests)
+- `pnpm test:e2e` — dev mode (all 5 servers on ports 3030-3034)
 - `pnpm test:e2e:preview` — production mode (builds + previews each playground)
 - Each `create-litro` recipe template ships `playwright.config.ts` + `e2e/index.spec.ts`
+
+Benchmark suite:
+- `pnpm bench:quick` — SSG/SSR benchmarks without Lighthouse
+- `pnpm bench` — SSG/SSR with Lighthouse (SSG only — Lighthouse cannot measure DSD shadow roots)
+- `pnpm bench:cross` — cross-framework (Litro/Nuxt/Next.js) + SSG/SSR without Lighthouse
+- `pnpm bench:full` — everything
+- Results: `benchmarks/results/latest.json` (committed to git, read at docs build time)
+- Minimal comparison apps: `benchmarks/apps/{litro,nuxt,nextjs}/` (identical 2-route SSG apps)
