@@ -1,5 +1,12 @@
 # litro-router
 
+## 0.1.7
+
+### Patch Changes
+
+- 035912e: feat: screen reader announcements after SPA navigation via persistent `aria-live="polite"` region
+- 035912e: fix: compare pathname + search in popstate guard to handle query-only navigations
+
 ## 0.1.6
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro-router",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "types": "./dist/index.d.ts",
   "description": "Client-side router for Lit web components. Built on the native URLPattern API. Zero dependencies. Works standalone or as part of the Litro framework.",
