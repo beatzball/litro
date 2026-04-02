@@ -113,7 +113,7 @@ test('Escape closes search modal', async ({ page }) => {
 test('header pill click opens search modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
-  const pill = page.locator('starlight-header').locator('.search-pill');
+  const pill = page.locator('starlight-header').first().locator('.search-pill');
   await pill.click();
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
 });

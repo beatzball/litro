@@ -21,7 +21,7 @@ test('TOC aside has sticky positioning', async ({ page }) => {
 test('header has sticky positioning', async ({ page }) => {
   await page.goto('/docs/getting-started');
   await page.waitForSelector('starlight-header');
-  const position = await page.locator('starlight-header').evaluate((el) => {
+  const position = await page.locator('starlight-header').first().evaluate((el) => {
     return getComputedStyle(el).position;
   });
   expect(position).toBe('sticky');
