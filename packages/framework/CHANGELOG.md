@@ -1,5 +1,11 @@
 # litro
 
+## 0.5.1
+
+### Patch Changes
+
+- f2f7142: Fix dev server skipping route scan when pre-built client bundle exists
+
 ## 0.5.0
 
 ### Minor Changes

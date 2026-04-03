@@ -1,5 +1,12 @@
 # playground
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [f2f7142]
+  - @beatzball/litro@0.5.1
+
 ## 0.0.14
 
 ### Patch Changes
