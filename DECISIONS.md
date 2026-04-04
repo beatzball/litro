@@ -597,3 +597,28 @@ The framework shell keeps the generic infrastructure (shadow DOM traversal for f
 **Decision**: Implement the full WAI-ARIA Tabs Pattern in `litro-tabs.ts`: roving tabindex, `aria-controls`/`aria-labelledby` linking, arrow key navigation (Left/Right, Home/End), and `role="tabpanel"` on panels.
 
 **Rationale**: Without ARIA wiring, tab buttons have no programmatic relationship to their panels. Screen readers cannot navigate between tabs and panels. Without arrow key navigation, keyboard users must tab through every tab button to reach the content. The WAI-ARIA Tabs Pattern is the established accessible pattern for tabbed interfaces.
+
+---
+
+## docs-ssr Docker: Node.js runtime, not nginx
+
+**Decision**: The `docs-ssr/Dockerfile` uses a two-stage build with `node:20-slim` as the runtime stage (not nginx). The runtime stage only copies `docs-ssr/dist/` — no `node_modules`, no source code.
+
+**Rationale**: Unlike `docs/` (SSG, static files served by nginx), `docs-ssr/` is a live Nitro SSR server that must run Node.js. Nitro's `node-server` preset bundles all `publicAssets` (including `docs/public/`, Shoelace assets, client bundle) into `dist/server/public/` at build time, so the runtime container is fully self-contained with just the `dist/` directory.
+
+---
+
+## docs-ssr Docker: trimmed pnpm-workspace.yaml
+
+**Decision**: The Dockerfile generates a minimal `pnpm-workspace.yaml` listing only `packages/*`, `docs`, and `docs-ssr` — excluding playgrounds, benchmarks, and other workspaces.
+
+**Rationale**: The full workspace file references directories (playground, playground-11ty, playground-starlight, benchmarks) that are not needed for the docs-ssr build. Rather than copying stub `package.json` files for each, generating a trimmed workspace file keeps the Docker context small and avoids lockfile mismatches.
+
+---
+
+## docs-ssr Docker: stub tsconfig for playground reference
+
+**Decision**: The Dockerfile creates `mkdir -p playground && echo '{}' > playground/tsconfig.json` before building.
+
+**Rationale**: The root `tsconfig.json` has `"references": [{ "path": "./playground" }]`. Vite's esbuild walks these references during the client build. Without the stub file, the build fails with `ENOENT: no such file or directory, open '/app/playground/tsconfig.json'`. An empty JSON object satisfies the parser.
+
