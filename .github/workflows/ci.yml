@@ -69,6 +69,30 @@ jobs:
       - name: Run E2E tests (dev mode)
         run: pnpm test:e2e
 
+  build-docs-ssr:
+    name: Build docs-ssr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      - name: Re-link bins
+        run: pnpm install --frozen-lockfile
+      - name: Build docs-ssr
+        run: pnpm --filter @beatzball/litro-docs-ssr build
+      - name: Verify server entry exists
+        run: test -f docs-ssr/dist/server/server/index.mjs
+
   audit:
     name: Dependency Audit
     runs-on: ubuntu-latest

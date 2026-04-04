@@ -466,11 +466,11 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 pnpm install                                    # install all workspace deps
 pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
 pnpm --filter @beatzball/litro build            # compile framework (required once)
-pnpm --filter @beatzball/litro-router test      # run router unit tests (16 tests)
-pnpm --filter @beatzball/litro test             # run framework unit tests (196 tests)
+pnpm --filter @beatzball/litro-router test      # run router unit tests (18 tests)
+pnpm --filter @beatzball/litro test             # run framework unit tests (228 tests)
 pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
 pnpm test:docs                                  # run docs unit tests (97 tests)
-pnpm test:e2e                                   # Playwright e2e tests (32 tests, 4 projects: playground/11ty/starlight/docs)
+pnpm test:e2e                                   # Playwright e2e tests (92 tests, 5 projects)
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 # Playgrounds
@@ -478,10 +478,19 @@ cd playground && litro dev      # fullstack playground on :3030
 pnpm dev:11ty                   # 11ty-blog playground
 pnpm dev:starlight              # starlight playground
 
-# Docs site
+# Docs site (SSG — litro.dev)
 pnpm dev:docs                   # docs dev server
 pnpm build:docs                 # build docs (SSG → docs/dist/static/)
 pnpm preview:docs               # preview built docs
+
+# Docs site (SSR — fullstack replica)
+pnpm dev:docs-ssr               # SSR docs dev server on :3034
+pnpm build:docs-ssr             # build docs-ssr (SSR → docs-ssr/dist/server/)
+pnpm preview:docs-ssr           # preview built docs-ssr
+
+# Docker (docs-ssr only — SSG site uses nginx, see docs/Dockerfile)
+docker build -f docs-ssr/Dockerfile -t litro-docs-ssr .
+docker run -p 3000:3000 litro-docs-ssr
 ```
 
 ---

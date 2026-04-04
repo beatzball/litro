@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.nitro
+**/.nitro
+.claude
+research
+benchmarks
+e2e
+playground
+playground-11ty
+playground-starlight
