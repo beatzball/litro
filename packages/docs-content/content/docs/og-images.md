@@ -35,10 +35,13 @@ Create `server/routes/__og/[...path].png.ts`:
 
 ```ts
 import { createOgHandler } from '@beatzball/litro/runtime/og-handler.js';
+import { routes, pageModules } from '#litro/page-manifest';
 
 export default createOgHandler({
   siteName: 'My Site',
   accentColor: '#ea580c',
+  routes,
+  pageModules,
 });
 ```
 

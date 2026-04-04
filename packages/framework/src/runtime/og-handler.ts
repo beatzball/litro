@@ -35,6 +35,17 @@ export interface OgHandlerConfig {
   template?: OgTemplate;
   /** Path to a custom .woff font file. Uses bundled Mona Sans Bold when omitted. */
   font?: string;
+  /**
+   * Page routes from the #litro/page-manifest virtual module.
+   * Passed by the site-level route file so the framework package
+   * does not need to import the virtual module directly.
+   */
+  routes?: LitroRoute[];
+  /**
+   * Page module registry from #litro/page-manifest.
+   * Maps filePath → module object containing pageData, routeMeta, etc.
+   */
+  pageModules?: Record<string, Record<string, unknown>>;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,10 +122,8 @@ function parseOgPath(pathname: string): string {
  * Usage in a site's server/routes/__og/[...path].png.ts:
  *
  *   import { createOgHandler } from '@beatzball/litro/runtime/og-handler.js';
- *   export default createOgHandler({ siteName: 'Litro' });
- *
- * The handler imports routes/pageModules from #litro/page-manifest at runtime
- * (dynamic import to avoid build-time coupling).
+ *   import { routes, pageModules } from '#litro/page-manifest';
+ *   export default createOgHandler({ siteName: 'Litro', routes, pageModules });
  */
 export function createOgHandler(config?: OgHandlerConfig): EventHandler {
   const siteName = config?.siteName ?? 'Litro';
@@ -133,42 +142,34 @@ export function createOgHandler(config?: OgHandlerConfig): EventHandler {
     let type = typeof query.type === 'string' ? query.type : undefined;
 
     // If no query overrides, look up page metadata from the manifest
-    if (!title) {
-      try {
-        const manifest = await import('#litro/page-manifest');
-        const routes: LitroRoute[] = manifest.routes;
-        const pageModules: Record<string, Record<string, unknown>> = manifest.pageModules;
+    if (!title && config?.routes && config?.pageModules) {
+      const result = matchRoute(pagePath, config.routes);
 
-        const result = matchRoute(pagePath, routes);
+      if (result) {
+        const { route, params } = result;
+        const mod = config.pageModules[route.filePath];
 
-        if (result) {
-          const { route, params } = result;
-          const mod = pageModules[route.filePath];
-
-          // Try pageData.fetcher() first for dynamic metadata
-          const pageDataExport = mod?.pageData as PageDataFetcher<unknown> | undefined;
-          if (pageDataExport?.__litroPageData === true) {
-            // Patch event params to match the target page
-            event.context.params = { ...event.context.params, ...params };
-            try {
-              const data = await pageDataExport.fetcher(event) as Record<string, unknown>;
-              title = (typeof data.seoTitle === 'string' ? data.seoTitle : '') ||
-                      (typeof data.title === 'string' ? data.title : '');
-              if (typeof data.description === 'string') description = data.description;
-              if (typeof data.type === 'string') type = data.type;
-            } catch {
-              // Data fetch failed — fall through to routeMeta
-            }
-          }
-
-          // Fall back to routeMeta
-          if (!title) {
-            const routeMeta = mod?.routeMeta as { title?: string } | undefined;
-            title = routeMeta?.title ?? '';
+        // Try pageData.fetcher() first for dynamic metadata
+        const pageDataExport = mod?.pageData as PageDataFetcher<unknown> | undefined;
+        if (pageDataExport?.__litroPageData === true) {
+          // Patch event params to match the target page
+          event.context.params = { ...event.context.params, ...params };
+          try {
+            const data = await pageDataExport.fetcher(event) as Record<string, unknown>;
+            title = (typeof data.seoTitle === 'string' ? data.seoTitle : '') ||
+                    (typeof data.title === 'string' ? data.title : '');
+            if (typeof data.description === 'string') description = data.description;
+            if (typeof data.type === 'string') type = data.type;
+          } catch {
+            // Data fetch failed — fall through to routeMeta
           }
         }
-      } catch {
-        // Manifest import failed — render generic card
+
+        // Fall back to routeMeta
+        if (!title) {
+          const routeMeta = mod?.routeMeta as { title?: string } | undefined;
+          title = routeMeta?.title ?? '';
+        }
       }
     }
 
@@ -192,7 +193,10 @@ export function createOgHandler(config?: OgHandlerConfig): EventHandler {
 
       const fontData = loadFont(config?.font);
 
-      const svg = await satori(template(input) as React.ReactNode, {
+      // Satori expects a ReactNode but our template returns a plain object tree.
+      // The cast is safe — Satori's internal renderer accepts any JSX-like object.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const svg = await satori(template(input) as any, {
         width: 1200,
         height: 630,
         fonts: [
