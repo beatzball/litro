@@ -51,6 +51,7 @@ vi.mock('h3', () => ({
   setResponseHeader: vi.fn(),
   sendStream: vi.fn().mockResolvedValue(undefined),
   getRequestHeader: vi.fn((_: unknown, name: string) => mockRequestHeaders.current[name.toLowerCase()] ?? undefined),
+  getRequestURL: vi.fn(() => new URL('http://localhost/')),
 }));
 
 vi.mock('lit/static-html.js', () => ({

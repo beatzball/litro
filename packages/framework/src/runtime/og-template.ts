@@ -43,6 +43,7 @@ export const defaultOgTemplate: OgTemplate = (input) => {
           type: 'div',
           props: {
             style: {
+              display: 'flex',
               fontSize: 24,
               color: '#94a3b8',
               fontWeight: 700,
@@ -59,6 +60,7 @@ export const defaultOgTemplate: OgTemplate = (input) => {
       type: 'div',
       props: {
         style: {
+          display: 'flex',
           fontSize: titleSize,
           color: '#e2e4e9',
           fontWeight: 700,
@@ -73,6 +75,7 @@ export const defaultOgTemplate: OgTemplate = (input) => {
       type: 'div',
       props: {
         style: {
+          display: 'flex',
           fontSize: 24,
           color: '#64748b',
         },
@@ -100,11 +103,11 @@ export const defaultOgTemplate: OgTemplate = (input) => {
       type: 'div',
       props: {
         style: {
+          display: 'flex',
           width: 200,
           height: 4,
           background: `linear-gradient(to right, ${accentColor}, #fb923c)`,
         },
-        children: [],
       },
     },
   ];
@@ -114,6 +117,7 @@ export const defaultOgTemplate: OgTemplate = (input) => {
       type: 'div',
       props: {
         style: {
+          display: 'flex',
           fontSize: 18,
           textTransform: 'uppercase',
           letterSpacing: 2,

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { ssgPreset } from '@beatzball/litro/config';
 import pagesPlugin from '@beatzball/litro/plugins';
 import ssgPlugin from '@beatzball/litro/plugins/ssg';
-import ogPlugin from '@beatzball/litro/plugins/og';
+import ogPlugin, { ogPrerenderHook } from '@beatzball/litro/plugins/og';
 import contentPlugin from '@beatzball/litro/content/plugin';
 import { CONTENT_DIR } from '@beatzball/litro-docs-content';
 
@@ -69,6 +69,7 @@ export default defineNitroConfig({
   ],
 
   hooks: {
+    'prerender:routes': ogPrerenderHook(),
     'build:before': async (nitro: Nitro) => {
       await contentPlugin(nitro);
       await pagesPlugin(nitro);
