@@ -12,13 +12,14 @@ Litro includes an opt-in plugin for generating dynamic Open Graph images. When s
 
 ### 1. Register the plugin
 
-Add `ogPlugin` to your `nitro.config.ts` after `ssgPlugin` (or `pagesPlugin` for SSR sites):
+Add `ogPlugin` and `ogPrerenderHook` to your `nitro.config.ts`:
 
 ```ts
-import ogPlugin from '@beatzball/litro/plugins/og';
+import ogPlugin, { ogPrerenderHook } from '@beatzball/litro/plugins/og';
 
 export default defineNitroConfig({
   hooks: {
+    'prerender:routes': ogPrerenderHook(),
     'build:before': async (nitro) => {
       await contentPlugin(nitro);
       await pagesPlugin(nitro);
@@ -28,6 +29,10 @@ export default defineNitroConfig({
   },
 });
 ```
+
+`ogPrerenderHook()` must be registered at the config level (not inside `build:before`) because Nitro runs prerendering before the build phase. The `ogPlugin()` call inside `build:before` stores config metadata.
+
+For SSR-only sites (no prerendering), the `ogPrerenderHook` is harmless — it's a no-op when the prerender route set is empty.
 
 ### 2. Create the route handler
 
@@ -45,6 +50,36 @@ export default createOgHandler({
 });
 ```
 
+To include a logo in the top-left corner of the card, pass a base64 data URI:
+
+```ts
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createOgHandler } from '@beatzball/litro/runtime/og-handler.js';
+import { routes, pageModules } from '#litro/page-manifest';
+
+function loadLogoDataUri(): string | undefined {
+  const candidates = [
+    resolve('public/logo.png'),        // dev: cwd is project root
+    resolve('docs/public/logo.png'),   // prerender: cwd may be repo root
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) {
+      return `data:image/png;base64,${readFileSync(p).toString('base64')}`;
+    }
+  }
+  return undefined;
+}
+
+export default createOgHandler({
+  siteName: 'My Site',
+  accentColor: '#ea580c',
+  logoDataUri: loadLogoDataUri(),
+  routes,
+  pageModules,
+});
+```
+
 ### 3. Use dynamic OG URLs in your pages
 
 If you use `buildSeoHead` from `@beatzball/litro-docs-ui`, OG image URLs are generated automatically from the page path. No changes needed to your page files.
@@ -53,7 +88,7 @@ For custom setups, point your `og:image` meta tag to `/__og/{path}.png` (use `/_
 
 ## How It Works
 
-- **SSG mode**: The plugin reads all prerender routes and registers `/__og/*.png` variants. Nitro prerenders each one as a static PNG file during build.
+- **SSG mode**: The `ogPrerenderHook` adds `/__og/*.png` routes to the prerender set. Additionally, each page response includes an `x-nitro-prerender` header hinting its OG counterpart, so pages discovered by `crawlLinks` also get their OG images prerendered.
 - **SSR mode**: The handler generates images on-demand at request time with aggressive caching (`Cache-Control: public, max-age=86400, s-maxage=604800`).
 - **Image generation**: Uses [Satori](https://github.com/vercel/satori) (HTML/CSS to SVG) and [@resvg/resvg-js](https://github.com/nicolo-ribaudo/resvg-js) (SVG to PNG). The default template renders a dark card (1200x630) with the page title, description, and a fire-palette accent gradient.
 
@@ -78,12 +113,13 @@ Passed to `createOgHandler()` in the route file:
 | `siteName` | `string` | `'Litro'` | Displayed in the top-left of the card |
 | `accentColor` | `string` | `'#ea580c'` | Gradient start color |
 | `logoSvg` | `string` | — | SVG markup for the logo |
+| `logoDataUri` | `string` | — | Base64 data URI for a logo image (PNG, SVG, etc.) |
 | `template` | `OgTemplate` | `defaultOgTemplate` | Custom Satori template function |
 | `font` | `string` | Mona Sans Bold | Path to a custom `.woff` font |
 
 ## Custom Templates
 
-The default template is a dark card with the fire palette. To customize, provide a template function:
+The default template is a dark card with the fire palette. To customize, provide a template function. Every `<div>` must have `display: 'flex'` — this is a Satori requirement.
 
 ```ts
 import type { OgTemplateInput } from '@beatzball/litro/runtime/og-template.js';
@@ -106,7 +142,7 @@ function myTemplate(input: OgTemplateInput) {
         {
           type: 'div',
           props: {
-            style: { fontSize: 48, fontWeight: 700 },
+            style: { display: 'flex', fontSize: 48, fontWeight: 700 },
             children: input.title,
           },
         },
@@ -134,11 +170,11 @@ When query params are present, the handler uses them directly instead of looking
 
 ### Large build output
 
-`@resvg/resvg-js` includes a ~2MB WASM binary. This is included in the SSG build output but only used during prerendering. For SSR deployments where bundle size matters, consider generating images via an external service.
+`@resvg/resvg-js` includes native binaries with platform-specific `.node` files. Do **not** add `@resvg/resvg-js` to `externals.inline` in your Nitro config — Rollup cannot parse native binaries. Keep it as an external dependency; it resolves from `node_modules` at runtime.
 
 ### Satori CSS limitations
 
-Satori only supports flexbox layout. Grid, `position: absolute`, and `text-overflow: ellipsis` are not supported or unreliable. Design templates using only flexbox and manual string truncation.
+Satori only supports flexbox layout. Every `<div>` with children must have `display: 'flex'` or `display: 'none'`. Grid, `position: absolute`, and `text-overflow: ellipsis` are not supported or unreliable. Design templates using only flexbox and manual string truncation.
 
 ### Font loading
 
