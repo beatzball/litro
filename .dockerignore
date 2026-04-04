@@ -7,6 +7,7 @@ node_modules
 .claude
 research
 benchmarks
+!benchmarks/results
 e2e
 playground
 playground-11ty
