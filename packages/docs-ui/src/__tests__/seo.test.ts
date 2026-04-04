@@ -67,8 +67,58 @@ describe('buildSeoHead — Open Graph tags', () => {
     );
   });
 
-  it('includes og:image', () => {
-    expect(buildSeoHead(base)).toContain('og:image');
+  it('includes og:image with path-based URL', () => {
+    expect(buildSeoHead(base)).toContain(
+      '<meta property="og:image" content="https://litro.dev/__og/page.png" />',
+    );
+  });
+
+  it('uses /__og/index.png for root path /', () => {
+    const result = buildSeoHead({ title: 'Home', description: 'Home page', path: '/' });
+    expect(result).toContain(
+      '<meta property="og:image" content="https://litro.dev/__og/index.png" />',
+    );
+  });
+
+  it('uses custom image override when provided', () => {
+    const result = buildSeoHead({ ...base, image: 'https://example.com/custom.png' });
+    expect(result).toContain(
+      '<meta property="og:image" content="https://example.com/custom.png" />',
+    );
+  });
+
+  it('includes og:image:width of 1200', () => {
+    expect(buildSeoHead(base)).toContain(
+      '<meta property="og:image:width" content="1200" />',
+    );
+  });
+
+  it('includes og:image:height of 630', () => {
+    expect(buildSeoHead(base)).toContain(
+      '<meta property="og:image:height" content="630" />',
+    );
+  });
+
+  it('includes og:site_name defaulting to Litro', () => {
+    expect(buildSeoHead(base)).toContain(
+      '<meta property="og:site_name" content="Litro" />',
+    );
+  });
+
+  it('uses custom siteName when provided', () => {
+    const result = buildSeoHead({ ...base, siteName: 'My Docs' });
+    expect(result).toContain(
+      '<meta property="og:site_name" content="My Docs" />',
+    );
+  });
+});
+
+describe('buildSeoHead — twitter:image', () => {
+  it('twitter:image matches og:image URL', () => {
+    const result = buildSeoHead({ title: 'T', description: 'D', path: '/page' });
+    expect(result).toContain(
+      '<meta name="twitter:image" content="https://litro.dev/__og/page.png" />',
+    );
   });
 });
 

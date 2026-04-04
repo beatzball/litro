@@ -31,6 +31,7 @@ export const siteConfig = {
         { label: 'API Routes', slug: 'api-routes' },
         { label: 'Content Layer', slug: 'content-layer' },
         { label: 'Static Generation', slug: 'ssg' },
+        { label: 'OG Images', slug: 'og-images' },
         { label: 'LitroRouter', slug: 'litro-router' },
       ],
     },

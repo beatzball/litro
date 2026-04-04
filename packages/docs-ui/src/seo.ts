@@ -5,11 +5,14 @@ export interface SeoOptions {
   description: string;
   path: string;
   type?: 'website' | 'article';
+  image?: string;
+  siteName?: string;
 }
 
 export function buildSeoHead(options: SeoOptions): string {
-  const { title, description, path, type = 'website' } = options;
+  const { title, description, path, type = 'website', image, siteName = 'Litro' } = options;
   const url = `${siteUrl}${path}`;
+  const ogImageUrl = image ?? `${siteUrl}/__og${path === '/' ? '/index' : path}.png`;
 
   return [
     `<meta name="description" content="${escapeAttr(description)}" />`,
@@ -18,10 +21,14 @@ export function buildSeoHead(options: SeoOptions): string {
     `<meta property="og:description" content="${escapeAttr(description)}" />`,
     `<meta property="og:type" content="${type}" />`,
     `<meta property="og:url" content="${url}" />`,
-    `<meta property="og:image" content="${siteUrl}/og-default.png" />`,
+    `<meta property="og:image" content="${ogImageUrl}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta property="og:site_name" content="${escapeAttr(siteName)}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeAttr(title)}" />`,
     `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
+    `<meta name="twitter:image" content="${ogImageUrl}" />`,
     `<link rel="sitemap" type="application/xml" href="/sitemap.xml" />`,
   ].join('\n');
 }

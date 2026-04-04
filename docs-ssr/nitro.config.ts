@@ -3,6 +3,7 @@ import type { Nitro } from 'nitropack';
 import { resolve } from 'node:path';
 import pagesPlugin from '@beatzball/litro/plugins';
 import contentPlugin from '@beatzball/litro/content/plugin';
+import ogPlugin, { ogPrerenderHook } from '@beatzball/litro/plugins/og';
 import { ssrPreset } from '@beatzball/litro/config';
 import { CONTENT_DIR } from '@beatzball/litro-docs-content';
 
@@ -20,7 +21,7 @@ export default defineNitroConfig({
     { dir: '../node_modules/@shoelace-style/shoelace/dist/themes', baseURL: '/shoelace/themes/', maxAge: 604800 },
   ],
 
-  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client', '@beatzball/litro-docs-ui'] },
+  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client', '@beatzball/litro-docs-ui', 'satori'] },
 
   esbuild: {
     options: {
@@ -43,9 +44,11 @@ export default defineNitroConfig({
   ],
 
   hooks: {
+    'prerender:routes': ogPrerenderHook(),
     'build:before': async (nitro: Nitro) => {
       await contentPlugin(nitro);
       await pagesPlugin(nitro);
+      await ogPlugin(nitro);
     },
   },
 

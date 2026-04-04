@@ -24,7 +24,7 @@
 
 import { PassThrough } from 'node:stream';
 import { html, unsafeStatic } from 'lit/static-html.js';
-import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader } from 'h3';
+import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader, getRequestURL } from 'h3';
 import type { EventHandler } from 'h3';
 import { RenderResultReadable } from '@lit-labs/ssr/lib/render-result-readable.js';
 import { renderToStream } from './ssr.js';
@@ -110,6 +110,14 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
     // Inform caches that the response varies by Accept — a JSON request and an
     // HTML request for the same URL produce different responses.
     setResponseHeader(event, 'vary', 'Accept');
+
+    // Hint the OG image route to Nitro's prerenderer so crawlLinks-discovered
+    // pages also get their OG images prerendered.
+    const pagePath = getRequestURL(event).pathname;
+    const ogRoute = pagePath === '/'
+      ? '/__og/index.png'
+      : `/__og${pagePath}.png`;
+    setResponseHeader(event, 'x-nitro-prerender', ogRoute);
 
     try {
       // Resolve the page module. The preferred path is the pre-bundled module
