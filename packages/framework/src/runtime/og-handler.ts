@@ -31,6 +31,8 @@ export interface OgHandlerConfig {
   accentColor?: string;
   /** SVG markup string for the logo in the top-left corner */
   logoSvg?: string;
+  /** Base64 data URI for a logo image (e.g. `data:image/png;base64,...`) */
+  logoDataUri?: string;
   /** Custom template function. Uses defaultOgTemplate when omitted. */
   template?: OgTemplate;
   /** Path to a custom .woff font file. Uses bundled Mona Sans Bold when omitted. */
@@ -129,6 +131,7 @@ export function createOgHandler(config?: OgHandlerConfig): EventHandler {
   const siteName = config?.siteName ?? 'Litro';
   const accentColor = config?.accentColor ?? '#ea580c';
   const logoSvg = config?.logoSvg;
+  const logoDataUri = config?.logoDataUri;
   const template = config?.template ?? defaultOgTemplate;
 
   return defineEventHandler(async (event) => {
@@ -183,6 +186,7 @@ export function createOgHandler(config?: OgHandlerConfig): EventHandler {
       type,
       siteName,
       logoSvg,
+      logoDataUri,
       accentColor,
     };
 

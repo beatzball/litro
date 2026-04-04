@@ -4,6 +4,8 @@ export interface OgTemplateInput {
   type?: string;
   siteName: string;
   logoSvg?: string;
+  /** Base64 data URI for a logo image (e.g. `data:image/png;base64,...`) */
+  logoDataUri?: string;
   accentColor?: string;
 }
 
@@ -29,6 +31,33 @@ export const defaultOgTemplate: OgTemplate = (input) => {
 
   const showBadge = type && type !== 'website';
 
+  const topRowChildren: Record<string, unknown>[] = [];
+
+  if (input.logoDataUri) {
+    topRowChildren.push({
+      type: 'img',
+      props: {
+        src: input.logoDataUri,
+        width: 36,
+        height: 36,
+        style: { display: 'flex' },
+      },
+    });
+  }
+
+  topRowChildren.push({
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        fontSize: 24,
+        color: '#94a3b8',
+        fontWeight: 700,
+      },
+      children: siteName,
+    },
+  });
+
   const topRow: Record<string, unknown> = {
     type: 'div',
     props: {
@@ -36,22 +65,9 @@ export const defaultOgTemplate: OgTemplate = (input) => {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        gap: 12,
       },
-      children: [
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              fontSize: 24,
-              color: '#94a3b8',
-              fontWeight: 700,
-            },
-            children: siteName,
-          },
-        },
-      ],
+      children: topRowChildren,
     },
   };
 
