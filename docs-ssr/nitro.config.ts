@@ -21,7 +21,7 @@ export default defineNitroConfig({
     { dir: '../node_modules/@shoelace-style/shoelace/dist/themes', baseURL: '/shoelace/themes/', maxAge: 604800 },
   ],
 
-  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client', '@beatzball/litro-docs-ui', 'satori', '@resvg/resvg-js'] },
+  externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client', '@beatzball/litro-docs-ui', 'satori'] },
 
   esbuild: {
     options: {
