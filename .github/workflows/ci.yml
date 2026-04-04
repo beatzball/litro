@@ -86,6 +86,8 @@ jobs:
         run: pnpm --filter litro-router build
       - name: Build framework
         run: pnpm --filter litro build
+      - name: Re-link bins
+        run: pnpm install --frozen-lockfile
       - name: Build docs-ssr
         run: pnpm --filter @beatzball/litro-docs-ssr build
       - name: Verify server entry exists
