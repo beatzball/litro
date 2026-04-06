@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Fullstack web framework for Lit components — file-based routing, streaming SSR, SSG, and Nitro deployment adapters. A standards-based Next.js / Nuxt.js alternative.",
   "license": "Apache-2.0",
   "repository": {

@@ -1,5 +1,11 @@
 # litro
 
+## 0.6.0
+
+### Minor Changes
+
+- 41136a3: Add dynamic OG image generation plugin and handler for rich link previews
+
 ## 0.5.1
 
 ### Patch Changes
