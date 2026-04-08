@@ -77,6 +77,16 @@
       "import": "./dist/content/plugin.js",
       "types": "./dist/content/plugin.d.ts"
     },
+    "./adapter": {
+      "source": "./src/adapter/index.ts",
+      "import": "./dist/adapter/index.js",
+      "types": "./dist/adapter/index.d.ts"
+    },
+    "./adapter/lit": {
+      "source": "./src/adapter/lit/index.ts",
+      "import": "./dist/adapter/lit/index.js",
+      "types": "./dist/adapter/lit/index.d.ts"
+    },
     "./content/env": {
       "types": "./src/content/env.d.ts"
     }

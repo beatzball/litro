@@ -1,25 +1,24 @@
 /**
  * shell.ts — HTML document shell builder
  *
- * Produces the full HTML document wrapping an SSR'd Lit component. The shell
+ * Produces the full HTML document wrapping an SSR'd page component. The shell
  * is split into two parts — `head` and `foot` — so the streamed SSR content
  * can be piped between them:
  *
  *   response.write(shell.head)       // DOCTYPE, <head>, <body>, opening wrapper
- *   // ... stream SSR DSD output ... // Lit component with shadow DOM HTML
+ *   // ... stream SSR output ...     // Component HTML (DSD or plain, per adapter)
  *   response.write(shell.foot)       // closing wrapper, </body>, </html>
  *
  * Script loading order in <head> is CRITICAL for hydration correctness:
  *
- *   1. DSD polyfill (inline, synchronous) — must run as the parser encounters
- *      <template shadowrootmode> elements. A type="module" script is deferred
- *      and arrives too late; a plain inline script runs synchronously.
+ *   1. DSD polyfill (inline, synchronous) — included only when the adapter
+ *      sets `needsDSDPolyfill: true` (Shadow DOM frameworks like Lit/FAST).
+ *      Must run as the parser encounters <template shadowrootmode> elements.
+ *      Omitted for light DOM adapters (Elena).
  *
  *   2. app.js (type="module" in the foot) — the Vite-built client bundle.
- *      `@lit-labs/ssr-client/lit-element-hydrate-support.js` is the FIRST
- *      import inside app.ts, so the hydration patch is applied before any
- *      LitElement subclass is evaluated within the same bundle. No separate
- *      hydration-support script tag is needed.
+ *      The framework adapter's client entry is the first import, setting up
+ *      any hydration patches before components are evaluated.
  *
  * The default app script path `/_litro/app.js` maps to `dist/client/app.js`
  * via the `publicAssets` entry in nitro.config.ts. In dev mode, pass
@@ -135,6 +134,15 @@ export interface ShellOptions {
    * hidden via a MutationObserver (the "#_litro_main" link is always visible).
    */
   skipLinks?: SkipLink[];
+  /**
+   * Whether to include the Declarative Shadow DOM polyfill inline script.
+   *
+   * Defaults to true for backward compatibility. Set to false for light DOM
+   * adapters (Elena) where no DSD templates are present in the SSR output.
+   *
+   * @default true
+   */
+  includeDSDPolyfill?: boolean;
 }
 
 /**
@@ -182,12 +190,9 @@ export function buildShell(
     .map((link) => `\n<a class="skip-link" href="${link.href}">${link.label}</a>`)
     .join('');
 
-  const head = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
+  const includeDSD = options?.includeDSDPolyfill !== false;
+  const dsdPolyfillBlock = includeDSD
+    ? `
   <!--
     DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
     that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
@@ -195,7 +200,15 @@ export function buildShell(
     by the browser and arrives after the parser has already processed the DSD templates,
     making it too late to upgrade them.
   -->
-  <script>${DSD_POLYFILL}</script>${extraHead}${serverDataScript}${devReloadScript}
+  <script>${DSD_POLYFILL}</script>`
+    : '';
+
+  const head = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>${dsdPolyfillBlock}${extraHead}${serverDataScript}${devReloadScript}
   <style>.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999}.skip-link:focus{position:fixed;top:0.5rem;left:50%;transform:translateX(-50%);width:auto;height:auto;padding:0.5rem 1.5rem;background:#fff;color:#23262f;border:2px solid currentColor;border-radius:0.375rem;font-size:0.875rem;font-weight:600;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15)}.skip-link[hidden]{display:none}</style>
   <script>${SKIP_LINK_SCRIPT}</script>
 </head>
@@ -206,9 +219,7 @@ export function buildShell(
   const foot = `</litro-outlet>
 
   <!--
-    App bundle — @lit-labs/ssr-client/lit-element-hydrate-support.js is the
-    first import inside app.ts, so the hydration patch runs before any
-    LitElement subclass is evaluated within this bundle.
+    App bundle — framework adapter bootstrap + page components.
     /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
   -->
   <script type="module" src="${appScriptUrl}"></script>

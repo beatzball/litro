@@ -2,7 +2,7 @@
  * Unit tests for createPageHandler() — specifically the seoHead / seoTitle
  * extraction from pageData and injection into the HTML shell.
  *
- * Heavy dependencies (@lit-labs/ssr, H3 streams, Lit) are mocked so the test
+ * Heavy dependencies (framework adapter, H3 streams) are mocked so the test
  * runs in a plain Node environment without a browser or Nitro server.
  *
  * Run with: pnpm --filter @beatzball/litro test
@@ -19,24 +19,32 @@ vi.mock('../shell.js', () => ({
   buildShell: vi.fn().mockReturnValue({ head: '', foot: '' }),
 }));
 
-vi.mock('../ssr.js', () => ({
-  renderToStream: vi.fn().mockReturnValue(
-    (async function* () {
-      // empty stream
-    })(),
-  ),
+// Mock the adapter resolver to return a minimal adapter that yields an empty stream.
+vi.mock('../../adapter/resolve.js', () => ({
+  resolveAdapter: vi.fn().mockResolvedValue({
+    name: 'lit',
+    renderPage: vi.fn().mockReturnValue(
+      (async function* () {
+        // empty stream
+      })(),
+    ),
+    getHeadScripts: vi.fn().mockReturnValue(''),
+    needsDSDPolyfill: true,
+    clientEntryModule: '../runtime/client.js',
+    vitePlugins: () => [],
+    nitroConfig: () => ({}),
+  }),
 }));
 
-vi.mock('@lit-labs/ssr/lib/render-result-readable.js', async () => {
+// Mock iterableToReadable to return a PassThrough that ends immediately.
+vi.mock('../../adapter/stream.js', async () => {
   const { PassThrough } = await import('node:stream');
   return {
-    RenderResultReadable: class MockRenderResultReadable extends PassThrough {
-      constructor(_iterable: AsyncIterable<string>) {
-        super();
-        // End the stream after the current tick so pipe() can be set up first.
-        process.nextTick(() => this.end());
-      }
-    },
+    iterableToReadable: vi.fn().mockImplementation(() => {
+      const pt = new PassThrough();
+      process.nextTick(() => pt.end());
+      return pt;
+    }),
   };
 });
 
@@ -52,11 +60,6 @@ vi.mock('h3', () => ({
   sendStream: vi.fn().mockResolvedValue(undefined),
   getRequestHeader: vi.fn((_: unknown, name: string) => mockRequestHeaders.current[name.toLowerCase()] ?? undefined),
   getRequestURL: vi.fn(() => new URL('http://localhost/')),
-}));
-
-vi.mock('lit/static-html.js', () => ({
-  html: vi.fn().mockReturnValue({}),
-  unsafeStatic: vi.fn().mockReturnValue('mock-tag'),
 }));
 
 // ---------------------------------------------------------------------------

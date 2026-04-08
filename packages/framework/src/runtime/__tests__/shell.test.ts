@@ -75,6 +75,39 @@ describe('buildShell — head: DSD polyfill', () => {
 });
 
 // ---------------------------------------------------------------------------
+// head — DSD polyfill opt-out (light DOM adapters)
+// ---------------------------------------------------------------------------
+
+describe('buildShell — head: DSD polyfill opt-out', () => {
+  it('omits the DSD polyfill when includeDSDPolyfill is false', () => {
+    const { head } = buildDefault('page-home', { includeDSDPolyfill: false });
+    // The DSD polyfill specifically checks for shadowRootMode on HTMLTemplateElement.
+    // The skip link script also uses MutationObserver, so we check for the DSD-specific string.
+    expect(head).not.toContain('HTMLTemplateElement.prototype.hasOwnProperty');
+    expect(head).not.toContain('shadowrootmode');
+  });
+
+  it('still includes title, meta, and other head content when DSD polyfill is excluded', () => {
+    const { head } = buildDefault('page-home', {
+      includeDSDPolyfill: false,
+      title: 'No Polyfill',
+    });
+    expect(head).toContain('<title>No Polyfill</title>');
+    expect(head).toContain('<meta charset="UTF-8"');
+  });
+
+  it('includes the DSD polyfill by default (includeDSDPolyfill not specified)', () => {
+    const { head } = buildDefault();
+    expect(head).toContain('HTMLTemplateElement.prototype.hasOwnProperty');
+  });
+
+  it('includes the DSD polyfill when includeDSDPolyfill is explicitly true', () => {
+    const { head } = buildDefault('page-home', { includeDSDPolyfill: true });
+    expect(head).toContain('HTMLTemplateElement.prototype.hasOwnProperty');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // head — no separate hydration support script
 // ---------------------------------------------------------------------------
 

@@ -1,37 +1,29 @@
 /**
  * create-page-handler.ts — SSR handler factory
  *
- * Returns an H3 EventHandler that server-renders a Lit page component and
- * streams the full HTML document to the client using @lit-labs/ssr.
+ * Returns an H3 EventHandler that server-renders a page component and
+ * streams the full HTML document to the client.
  *
  * Streaming architecture (in order):
- *   1. shell.head  — written synchronously: DOCTYPE, <head>, DSD polyfill,
- *                    hydration script, <body>
- *   2. SSR output  — streamed async from @lit-labs/ssr via RenderResultReadable
- *                    (Lit component HTML with Declarative Shadow DOM)
+ *   1. shell.head  — written synchronously: DOCTYPE, <head>, polyfill (if needed),
+ *                    hydration scripts, <body>
+ *   2. SSR output  — streamed async from the framework adapter's renderPage()
  *   3. shell.foot  — written synchronously after stream ends: app bundle
  *                    <script>, </body>, </html>
  *
- * Node.js / Edge note:
- *   RenderResultReadable (from @lit-labs/ssr/lib/render-result-readable.js)
- *   extends Node.js stream.Readable. It is NOT available in Cloudflare Workers
- *   or other edge runtimes that lack Node.js stream APIs. For Cloudflare Workers
- *   support, the SSR output must be converted to a Web ReadableStream manually
- *   (iterate the AsyncIterable<string> returned by renderToStream() and enqueue
- *   into a new ReadableStream controller). This is left as a TODO for the edge
- *   adapter work; the Node.js implementation is correct for all non-edge targets.
+ * The adapter is resolved at handler creation time and determines how
+ * components are rendered on the server (DSD for Lit/FAST, plain HTML for Elena).
  */
 
 import { PassThrough } from 'node:stream';
-import { html, unsafeStatic } from 'lit/static-html.js';
 import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader, getRequestURL } from 'h3';
 import type { EventHandler } from 'h3';
-import { RenderResultReadable } from '@lit-labs/ssr/lib/render-result-readable.js';
-import { renderToStream } from './ssr.js';
 import { buildShell } from './shell.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
+import type { FrameworkAdapter } from '../adapter/types.js';
+import { iterableToReadable } from '../adapter/stream.js';
 
 export interface PageHandlerOptions {
   route: LitroRoute;
@@ -54,29 +46,47 @@ export interface PageHandlerOptions {
    *   skipLinks: [...DEFAULT_SKIP_LINKS, { label: 'Skip to navigation', href: '#_litro_nav' }]
    */
   skipLinks?: SkipLink[];
+  /**
+   * Framework adapter instance. Determines how page components are
+   * rendered on the server and what hydration scripts are emitted.
+   *
+   * When omitted, falls back to resolving from the LITRO_ADAPTER env var
+   * (default: 'lit'). Prefer passing explicitly for deterministic builds.
+   */
+  adapter?: FrameworkAdapter;
 }
 
 /**
- * Creates an H3 EventHandler that SSR-renders the given Lit page component.
+ * Creates an H3 EventHandler that SSR-renders the given page component.
  *
  * The handler:
  *   1. Dynamically imports the component module (registers it with the
  *      server-side customElements registry as a side effect).
- *   2. Instantiates the component via a Lit html`` template.
- *   3. Pipes the SSR stream (head → DSD HTML → foot) to the HTTP response.
+ *   2. Delegates rendering to the framework adapter's renderPage().
+ *   3. Pipes the SSR stream (head → HTML → foot) to the HTTP response.
  *
  * Error handling:
  *   If SSR throws (e.g., the component accesses window/document at module
  *   eval time, or render() throws mid-stream), the handler logs a warning
  *   and falls back to serving the client-only HTML shell. This ensures the
- *   page is still usable — Lit will render client-side — rather than serving
- *   a 500 error in production.
+ *   page is still usable — the framework will render client-side — rather
+ *   than serving a 500 error in production.
  *
  * @param options - Route descriptor and optional route metadata.
  * @returns An H3 EventHandler.
  */
 export function createPageHandler(options: PageHandlerOptions): EventHandler {
   const { route, routeMeta, pageModule, skipLinks } = options;
+
+  // Resolve adapter lazily — allows handler creation before adapter is loaded.
+  let adapterPromise: Promise<FrameworkAdapter> | undefined;
+  function getAdapter(): Promise<FrameworkAdapter> {
+    if (options.adapter) return Promise.resolve(options.adapter);
+    if (!adapterPromise) {
+      adapterPromise = import('../adapter/resolve.js').then(m => m.resolveAdapter());
+    }
+    return adapterPromise;
+  }
 
   return defineEventHandler(async (event) => {
     // Content negotiation: if the client wants JSON, skip SSR and return only
@@ -120,6 +130,8 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
     setResponseHeader(event, 'x-nitro-prerender', ogRoute);
 
     try {
+      const adapter = await getAdapter();
+
       // Resolve the page module. The preferred path is the pre-bundled module
       // from the #litro/page-manifest registry (pageModule option), which was
       // statically imported and compiled by Rollup at build time.
@@ -177,6 +189,10 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // handler serves the pre-built dist/client/app.js as a fallback.
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const appScriptUrl = `${basePath}/_litro/app.js`;
+      const isDev = process.env.LITRO_DEV === 'true';
+
+      // Get any framework-specific head scripts from the adapter.
+      const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
 
       // Build the HTML shell for this component. The shell is split into head
       // and foot so we can stream the SSR output between the two halves.
@@ -185,41 +201,22 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const staticHead = typeof routeMeta?.head === 'string' ? routeMeta.head : '';
       const shell = buildShell(route.componentTag, '', {
         title: dynamicTitle ?? routeMeta?.title,
-        head: staticHead + dynamicHead || undefined,
+        head: staticHead + dynamicHead + adapterHeadScripts || undefined,
         serverDataJson,
         appScriptUrl,
-        devMode: process.env.LITRO_DEV === 'true',
+        devMode: isDev,
         skipLinks,
+        includeDSDPolyfill: adapter.needsDSDPolyfill,
       });
 
-      // Construct the Lit template for this component. Dynamic tag names in
-      // Lit templates must use unsafeStatic (from lit/static-html.js) — plain
-      // expression interpolation of tag names is an invalid Lit expression
-      // location and causes SSR to throw "Unexpected final partIndex".
-      //
-      // When serverDataJson is available, pass the parsed data as a .serverData
-      // property binding so this.serverData is populated *during* SSR. This means
-      // render() sees the real data and the streamed DSD HTML already shows the
-      // correct content (not "No data yet"). After JS loads, the router creates
-      // a new component instance, calls onBeforeEnter() → getServerData() (reads
-      // the JSON script tag still in the DOM) → sets serverData on the new
-      // instance, producing the same content seamlessly.
-      const tagStatic = unsafeStatic(route.componentTag);
-      const template = serverDataJson
-        ? html`<${tagStatic} .serverData=${JSON.parse(serverDataJson)}></${tagStatic}>`
-        : html`<${tagStatic}></${tagStatic}>`;
+      // Delegate rendering to the framework adapter. The adapter returns an
+      // AsyncIterable<string> of HTML chunks — DSD-wrapped for Shadow DOM
+      // frameworks (Lit, FAST) or plain HTML for light DOM (Elena).
+      const serverData = serverDataJson ? JSON.parse(serverDataJson) : undefined;
+      const ssrIterable = adapter.renderPage(route.componentTag, serverData);
 
-      // Get the AsyncIterable<string> from the SSR engine.
-      const ssrIterable = renderToStream(template);
-
-      // Wrap in RenderResultReadable to get a Node.js Readable stream.
-      // RenderResultReadable extends stream.Readable, pulling from the async
-      // generator on demand and respecting backpressure.
-      //
-      // NOTE: RenderResultReadable is Node.js-only. For Cloudflare Workers /
-      // edge runtimes, convert ssrIterable to a Web ReadableStream instead
-      // (see module-level doc comment for the conversion pattern).
-      const ssrReadable = new RenderResultReadable(ssrIterable);
+      // Convert the async iterable to a Node.js Readable stream.
+      const ssrReadable = iterableToReadable(ssrIterable);
 
       // Use a PassThrough stream to combine head + SSR output + foot into a
       // single Readable that Nitro's sendStream() can consume.
@@ -252,7 +249,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
     } catch (err) {
       // SSR setup failure (e.g., dynamic import threw, or component accesses
       // window/document at module eval time). Log a warning and fall back to
-      // the client-only shell so the page remains usable via client-side Lit.
+      // the client-only shell so the page remains usable via client-side rendering.
       console.warn(
         '[litro] SSR failed for',
         route.componentTag,
@@ -275,7 +272,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       });
 
       // Client-only fallback: emit the shell with a bare component tag.
-      // Lit will render the component entirely on the client side.
+      // The framework will render the component entirely on the client side.
       const fallbackHtml =
         fallbackShell.head +
         `<${route.componentTag}></${route.componentTag}>` +
