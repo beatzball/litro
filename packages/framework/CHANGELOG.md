@@ -1,5 +1,11 @@
 # litro
 
+## 0.7.0
+
+### Minor Changes
+
+- 2aa3dcf: Add framework adapter interface for pluggable web component framework support (Lit, FAST, Elena). Extract Lit-specific SSR and hydration code behind FrameworkAdapter contract. DSD polyfill is now conditional via shell options. Default adapter is 'lit' — zero breaking changes for existing projects.
+
 ## 0.6.0
 
 ### Minor Changes
