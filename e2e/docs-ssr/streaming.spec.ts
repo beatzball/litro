@@ -41,15 +41,19 @@ test('home page is served with chunked transfer encoding', async ({ request }) =
 // Shell ordering: hydration support script before app bundle
 // ---------------------------------------------------------------------------
 
-test('hydration support script appears before app bundle in head', async ({ request }) => {
+test('app bundle script appears in the document foot', async ({ request }) => {
   const res = await request.get('/');
   const html = await res.text();
 
-  const hydrateIdx = html.indexOf('lit-element-hydrate-support');
+  // The app bundle <script type="module"> must be present in the HTML.
+  // Hydration support (lit-element-hydrate-support.js) is the first import
+  // inside app.ts and is bundled into app.js — no separate script tag needed.
   const appIdx = html.indexOf('app.js');
-  expect(hydrateIdx).toBeGreaterThan(-1);
   expect(appIdx).toBeGreaterThan(-1);
-  expect(hydrateIdx).toBeLessThan(appIdx);
+  // The script should appear after the main content (in the foot)
+  const outletIdx = html.indexOf('</litro-outlet>');
+  expect(outletIdx).toBeGreaterThan(-1);
+  expect(appIdx).toBeGreaterThan(outletIdx);
 });
 
 // ---------------------------------------------------------------------------
