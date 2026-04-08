@@ -51,3 +51,5 @@ export type { LitroRoute, LitroRouteMeta } from './types/route.js';
 export type { PageHandlerOptions } from './runtime/create-page-handler.js';
 export type { PageDataFetcher } from './runtime/page-data.js';
 export type { SkipLink } from './runtime/shell.js';
+export type { LitroConfig } from './types/config.js';
+export type { FrameworkAdapter, AdapterName } from './adapter/types.js';
