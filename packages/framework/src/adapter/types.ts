@@ -103,4 +103,18 @@ export interface FrameworkAdapter {
    * Return an empty object if no Nitro config overrides are needed.
    */
   nitroConfig(): Partial<NitroConfig>;
+
+  /**
+   * JavaScript import statement(s) to prepend to the generated
+   * `#litro/page-manifest` virtual module.
+   *
+   * The manifest statically imports all page modules, which in turn import
+   * the framework library. Some frameworks (e.g. FAST) require initialisation
+   * code to run BEFORE the framework is first imported (DOM shims, SSR
+   * patching). This preamble is injected at the very top of the manifest so
+   * it is evaluated first in the Rollup bundle.
+   *
+   * Return an empty string if no preamble is needed (Lit, Elena).
+   */
+  manifestPreamble?(): string;
 }

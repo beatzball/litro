@@ -2,6 +2,7 @@ packages:
   - 'packages/*'
   - 'playground'
   - 'playground-11ty'
+  - 'playground-fast'
   - 'playground-starlight'
   - 'docs'
   - 'docs-ssr'

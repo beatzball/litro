@@ -329,6 +329,12 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
     devDependencies:
+      '@microsoft/fast-element':
+        specifier: ^2.10.3
+        version: 2.10.3
+      '@microsoft/fast-ssr':
+        specifier: 1.0.0-beta.39
+        version: 1.0.0-beta.39(@microsoft/fast-element@2.10.3)
       jsdom:
         specifier: ^25.0.0
         version: 25.0.1
@@ -396,6 +402,31 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.3.2
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
+  playground-fast:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
+      '@microsoft/fast-element':
+        specifier: ^2.10.3
+        version: 2.10.3
+      '@microsoft/fast-ssr':
+        specifier: 1.0.0-beta.39
+        version: 1.0.0-beta.39(@microsoft/fast-element@2.10.3)
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
     devDependencies:
       nitropack:
         specifier: ^2.13.1
@@ -950,6 +981,14 @@ packages:
     resolution: {integrity: sha512-uwPAhccfFJlsfCxMYTwOdVfOz3xqyj8xYL3zJj8f0pb30tLohnnFPhLuqp4/qoEz8sNxe4SESZedcBojRefIzg==}
     engines: {node: '>=18'}
     hasBin: true
+
+  '@microsoft/fast-element@2.10.3':
+    resolution: {integrity: sha512-IvcXLHJzujJu2Xw4v+zNvBj03GHUY997rEOSDLEym5i5B1gzxMUmMhP3Q8rPbD3YVWCxJCv8+3XPlNduX+mvgw==}
+
+  '@microsoft/fast-ssr@1.0.0-beta.39':
+    resolution: {integrity: sha512-QM49Kcpt1rD17RlO3R+z5i2pGpurpLbKnlfnVq1/U5h3InXjrZa19zZXEQzRdnm4iO0C0QFs1TzP41efKektFg==}
+    peerDependencies:
+      '@microsoft/fast-element': ^2.10.1
 
   '@minimistjs/subarg@1.0.0':
     resolution: {integrity: sha512-Q/ONBiM2zNeYUy0mVSO44mWWKYM3UHuEK43PKIOzJCbvUnPoMH1K+gk3cf1kgnCVJFlWmddahQQCmrmBGlk9jQ==}
@@ -3400,6 +3439,9 @@ packages:
   parse-css-color@0.2.1:
     resolution: {integrity: sha512-bwS/GGIFV3b6KS4uwpzCFj4w297Yl3uqnSgIPsoQkx7GMLROXfMnWvxfNkL0oh8HVhZA4hvJoEoEIqonfJ3BWg==}
 
+  parse5@6.0.1:
+    resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
+
   parse5@7.3.0:
     resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
 
@@ -4915,6 +4957,14 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@microsoft/fast-element@2.10.3': {}
+
+  '@microsoft/fast-ssr@1.0.0-beta.39(@microsoft/fast-element@2.10.3)':
+    dependencies:
+      '@microsoft/fast-element': 2.10.3
+      parse5: 6.0.1
+      tslib: 2.8.1
 
   '@minimistjs/subarg@1.0.0':
     dependencies:
@@ -7725,6 +7775,8 @@ snapshots:
     dependencies:
       color-name: 1.1.4
       hex-rgb: 4.3.0
+
+  parse5@6.0.1: {}
 
   parse5@7.3.0:
     dependencies:
