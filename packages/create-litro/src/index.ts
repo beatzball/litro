@@ -76,7 +76,7 @@ interface ParsedArgs {
   projectName: string | undefined;
   recipe: string | undefined;
   mode: 'ssg' | 'ssr' | undefined;
-  adapter: 'lit' | 'fast' | undefined;
+  adapter: 'lit' | 'fast' | 'elena' | undefined;
   listRecipes: boolean;
 }
 
@@ -85,7 +85,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   let projectName: string | undefined;
   let recipe: string | undefined;
   let mode: 'ssg' | 'ssr' | undefined;
-  let adapter: 'lit' | 'fast' | undefined;
+  let adapter: 'lit' | 'fast' | 'elena' | undefined;
   let listRecipesFlag = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -99,7 +99,7 @@ function parseArgs(argv: string[]): ParsedArgs {
       if (val === 'ssg' || val === 'ssr') mode = val;
     } else if (arg === '--adapter' || arg === '-a') {
       const val = argv[++i];
-      if (val === 'lit' || val === 'fast') adapter = val;
+      if (val === 'lit' || val === 'fast' || val === 'elena') adapter = val;
     } else if (!arg.startsWith('-') && projectName === undefined) {
       projectName = arg;
     }
@@ -177,16 +177,16 @@ async function main(): Promise<void> {
   }
 
   // 4. Adapter selection
-  let adapter: 'lit' | 'fast';
+  let adapter: 'lit' | 'fast' | 'elena';
   if (args.adapter) {
     adapter = args.adapter;
   } else {
     const selected = await promptSelect(
       'Component framework:',
-      ['lit — Lit (default)', 'fast — Microsoft FAST Element'],
+      ['lit — Lit (default)', 'fast — Microsoft FAST Element', 'elena — Elena (light DOM)'],
       'lit — Lit (default)',
     );
-    adapter = selected.startsWith('fast') ? 'fast' : 'lit';
+    adapter = selected.startsWith('elena') ? 'elena' : selected.startsWith('fast') ? 'fast' : 'lit';
   }
 
   // 5. Recipe-specific options (prompt for any that are defined on the recipe)

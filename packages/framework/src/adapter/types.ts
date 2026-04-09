@@ -117,4 +117,19 @@ export interface FrameworkAdapter {
    * Return an empty string if no preamble is needed (Lit, Elena).
    */
   manifestPreamble?(): string;
+
+  /**
+   * JavaScript code to append AFTER the page module imports and exports
+   * in the generated `#litro/page-manifest` virtual module.
+   *
+   * Unlike the preamble (which is hoisted with imports), the postamble runs
+   * as top-level inline code AFTER all imports have been evaluated. This is
+   * the right place for code that needs access to the imported page modules.
+   *
+   * The function receives the variable names of the imported page modules
+   * (e.g. ['_page0', '_page1']) so the generated code can reference them.
+   *
+   * Return undefined or an empty string if no postamble is needed.
+   */
+  manifestPostamble?(pageModuleVars: string[]): string;
 }

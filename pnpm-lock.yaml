@@ -330,6 +330,12 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
     devDependencies:
+      '@elenajs/core':
+        specifier: 1.0.0-rc.13
+        version: 1.0.0-rc.13
+      '@elenajs/ssr':
+        specifier: 1.0.0-alpha.9
+        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
       '@microsoft/fast-element':
         specifier: ^2.10.3
         version: 2.10.3
@@ -403,6 +409,31 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.3.2
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
+  playground-elena:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
+      '@elenajs/core':
+        specifier: 1.0.0-rc.13
+        version: 1.0.0-rc.13
+      '@elenajs/ssr':
+        specifier: 1.0.0-alpha.9
+        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
     devDependencies:
       nitropack:
         specifier: ^2.13.1
@@ -630,6 +661,14 @@ packages:
   '@ctrl/tinycolor@4.2.0':
     resolution: {integrity: sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==}
     engines: {node: '>=14'}
+
+  '@elenajs/core@1.0.0-rc.13':
+    resolution: {integrity: sha512-Y6jIWahk0EnDfTHaYuAGb4/S9r6jrhFt229QT+y1xcOmP5jFN0IU4xGYcdjcSQ5aSaT3QC0uZBj3AQO0UhCZEQ==}
+
+  '@elenajs/ssr@1.0.0-alpha.9':
+    resolution: {integrity: sha512-2KEdj4WAn6I1SzwmzGxD+7iBMn8tspgMzGNQYvd6012QC0QBSsIFLjdfdCFwQM7NTja7TwmETh9Qa8BTAV/zzg==}
+    peerDependencies:
+      '@elenajs/core': '>=1.0.0-rc.1'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -2356,6 +2395,22 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
+  dom-serializer@3.0.0:
+    resolution: {integrity: sha512-x+9D6nkC8tdXOQUS32egtZpZFLP90+HBZmWjuT920srbJvD/zPgFB9t4k3pEhlw5BQrXStQtRc1Y1zuriXk+Nw==}
+    engines: {node: '>=20.19.0'}
+
+  domelementtype@3.0.0:
+    resolution: {integrity: sha512-umCQid3jKbDmVjx8jGaW7uUykm4DEUeyV21hPxNMo2nV955DhUThwqyOIDtreepP31hl84X7G5U9ZfsWvIB3Pg==}
+    engines: {node: '>=20.19.0'}
+
+  domhandler@6.0.1:
+    resolution: {integrity: sha512-gYzvtM72ZtxQO0T048kd6HWSbbGCNOUwcnfQ01cqIJ4X2IYKFFHZ5mKvrQETcFXxsRObZulDaKmy//R7TPtsBg==}
+    engines: {node: '>=20.19.0'}
+
+  domutils@4.0.2:
+    resolution: {integrity: sha512-qI4JLRKnSzqFqr7hAlS5xQDusBCjKSEG4t4+7aNrIQMHBcsC2TGEhuyABJdYkgSewL57PNLYEiibY2iPKhKpaA==}
+    engines: {node: '>=20.19.0'}
+
   dot-prop@10.1.0:
     resolution: {integrity: sha512-MVUtAugQMOff5RnBy2d9N31iG0lNwg1qAoAOn7pOK5wf94WIaE3My2p3uwTQuvS2AcqchkcR3bHByjaM0mmi7Q==}
     engines: {node: '>=20'}
@@ -2408,6 +2463,10 @@ packages:
   entities@6.0.1:
     resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
+
+  entities@8.0.0:
+    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
+    engines: {node: '>=20.19.0'}
 
   error-stack-parser-es@1.0.5:
     resolution: {integrity: sha512-5qucVt2XcuGMcEGgWI7i+yZpmpByQ8J1lHhcL7PwqCwu9FPP3VUXzT4ltHe5i2z9dePwEHcDVOAfSnHsOlCXRA==}
@@ -2752,6 +2811,10 @@ packages:
 
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
+
+  htmlparser2@12.0.0:
+    resolution: {integrity: sha512-Tz7u1i95/g2x2jz81+x0FBVhBhY5aRTvD3tXXdFaljuNdzDLJ8UGNRrTcj2cgQvAg3iW/h77Fz15nLW0L0CrZw==}
+    engines: {node: '>=20.19.0'}
 
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
@@ -4704,6 +4767,13 @@ snapshots:
 
   '@ctrl/tinycolor@4.2.0': {}
 
+  '@elenajs/core@1.0.0-rc.13': {}
+
+  '@elenajs/ssr@1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)':
+    dependencies:
+      '@elenajs/core': 1.0.0-rc.13
+      htmlparser2: 12.0.0
+
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -6310,6 +6380,24 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
+  dom-serializer@3.0.0:
+    dependencies:
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
+      entities: 8.0.0
+
+  domelementtype@3.0.0: {}
+
+  domhandler@6.0.1:
+    dependencies:
+      domelementtype: 3.0.0
+
+  domutils@4.0.2:
+    dependencies:
+      dom-serializer: 3.0.0
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
+
   dot-prop@10.1.0:
     dependencies:
       type-fest: 5.4.4
@@ -6355,6 +6443,8 @@ snapshots:
       strip-ansi: 6.0.1
 
   entities@6.0.1: {}
+
+  entities@8.0.0: {}
 
   error-stack-parser-es@1.0.5: {}
 
@@ -6816,6 +6906,13 @@ snapshots:
       whatwg-encoding: 3.1.1
 
   html-void-elements@3.0.0: {}
+
+  htmlparser2@12.0.0:
+    dependencies:
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
+      domutils: 4.0.2
+      entities: 8.0.0
 
   http-errors@2.0.1:
     dependencies:

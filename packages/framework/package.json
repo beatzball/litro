@@ -107,6 +107,21 @@
       "import": "./dist/adapter/fast/runtime/LitroPage.js",
       "types": "./dist/adapter/fast/runtime/LitroPage.d.ts"
     },
+    "./adapter/elena": {
+      "source": "./src/adapter/elena/index.ts",
+      "import": "./dist/adapter/elena/index.js",
+      "types": "./dist/adapter/elena/index.d.ts"
+    },
+    "./adapter/elena/runtime": {
+      "source": "./src/adapter/elena/runtime/client.ts",
+      "import": "./dist/adapter/elena/runtime/client.js",
+      "types": "./dist/adapter/elena/runtime/client.d.ts"
+    },
+    "./adapter/elena/page": {
+      "source": "./src/adapter/elena/runtime/LitroPage.ts",
+      "import": "./dist/adapter/elena/runtime/LitroPage.js",
+      "types": "./dist/adapter/elena/runtime/LitroPage.d.ts"
+    },
     "./content/env": {
       "types": "./src/content/env.d.ts"
     }
@@ -131,7 +146,13 @@
     "./src/adapter/fast/runtime/LitroLink.ts",
     "./dist/adapter/fast/runtime/client.js",
     "./dist/adapter/fast/runtime/LitroOutlet.js",
-    "./dist/adapter/fast/runtime/LitroLink.js"
+    "./dist/adapter/fast/runtime/LitroLink.js",
+    "./src/adapter/elena/runtime/client.ts",
+    "./src/adapter/elena/runtime/LitroOutlet.ts",
+    "./src/adapter/elena/runtime/LitroLink.ts",
+    "./dist/adapter/elena/runtime/client.js",
+    "./dist/adapter/elena/runtime/LitroOutlet.js",
+    "./dist/adapter/elena/runtime/LitroLink.js"
   ],
   "dependencies": {
     "@beatzball/litro-router": "workspace:*",
@@ -156,6 +177,8 @@
     "vite": "^5.4.11"
   },
   "devDependencies": {
+    "@elenajs/core": "1.0.0-rc.13",
+    "@elenajs/ssr": "1.0.0-alpha.9",
     "@microsoft/fast-element": "^2.10.3",
     "@microsoft/fast-ssr": "1.0.0-beta.39",
     "jsdom": "^25.0.0",
@@ -182,6 +205,8 @@
   "peerDependencies": {
     "@microsoft/fast-element": "^2.0.0",
     "@microsoft/fast-ssr": "^1.0.0-beta.1",
+    "@elenajs/core": "^1.0.0-rc.1",
+    "@elenajs/ssr": "^1.0.0-alpha.1",
     "typescript": "^5.x"
   },
   "peerDependenciesMeta": {
@@ -189,6 +214,12 @@
       "optional": true
     },
     "@microsoft/fast-ssr": {
+      "optional": true
+    },
+    "@elenajs/core": {
+      "optional": true
+    },
+    "@elenajs/ssr": {
       "optional": true
     }
   }
