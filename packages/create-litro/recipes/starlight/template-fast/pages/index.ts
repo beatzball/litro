@@ -1,0 +1,105 @@
+import { html, css, repeat } from '@microsoft/fast-element';
+import { LitroPage } from '@beatzball/litro/adapter/fast/page';
+import { definePageData } from '@beatzball/litro';
+import { getGlobalData } from 'litro:content';
+import { siteConfig } from '../server/starlight.config.js';
+import { starlightHead } from '../src/route-meta.js';
+
+// Register components — namespace imports prevent Rollup tree-shaking.
+import * as _starlightHeader from '../src/components/starlight-header.js';
+import * as _litroCard from '../src/components/litro-card.js';
+import * as _litroCardGrid from '../src/components/litro-card-grid.js';
+globalThis.__litro_ce__ = { ...(globalThis as any).__litro_ce__, _starlightHeader, _litroCard, _litroCardGrid };
+
+export interface SplashData {
+  siteTitle: string;
+  description: string;
+  nav: Array<{ label: string; href: string }>;
+  features: Array<{ title: string; description: string; icon?: string }>;
+}
+
+export const pageData = definePageData(async (_event) => {
+  const metadata = await getGlobalData();
+  return {
+    siteTitle: String(metadata.title ?? siteConfig.title),
+    description: String(metadata.description ?? siteConfig.description),
+    nav: siteConfig.nav,
+    features: [
+      {
+        icon: '\u{1F4C4}',
+        title: 'Docs',
+        description: 'Structured documentation with sidebar, TOC, and prev/next navigation.',
+      },
+      {
+        icon: '\u270D\uFE0F',
+        title: 'Blog',
+        description: 'Write posts in Markdown. Tags, dates, and listing pages auto-generated.',
+      },
+      {
+        icon: '\u{1F3A8}',
+        title: 'Theming',
+        description: 'Light and dark mode via CSS custom properties. Zero JavaScript required.',
+      },
+      {
+        icon: '\u26A1',
+        title: 'Static',
+        description: 'Pre-rendered to plain HTML. Deploy to any CDN with no server required.',
+      },
+    ],
+  } satisfies SplashData;
+});
+
+export const routeMeta = {
+  head: starlightHead,
+  title: '{{projectName}}',
+};
+
+export class SplashPage extends LitroPage {}
+
+const template = html<SplashPage>`
+  ${(x) => {
+    const data = x.serverData as SplashData | null;
+    const siteTitle = data?.siteTitle ?? '{{projectName}}';
+    const description = data?.description ?? '';
+    const nav = data?.nav ?? [];
+    const features = data?.features ?? [];
+    return html<SplashPage>`
+      <div style="min-height:100vh;display:flex;flex-direction:column;">
+        <starlight-header
+          :siteTitle="${() => siteTitle}"
+          :nav="${() => nav}"
+          :currentPath="${() => '/'}"
+        ></starlight-header>
+        <main style="flex:1;max-width:56rem;margin:0 auto;padding:4rem 1.5rem 3rem;width:100%;">
+          <section style="text-align:center;margin-bottom:4rem;">
+            <h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:var(--sl-color-text);margin:0 0 1rem;line-height:1.1;">${() => siteTitle}</h1>
+            ${() => description ? html`
+              <p style="font-size:var(--sl-text-xl);color:var(--sl-color-gray-4);max-width:36rem;margin:0 auto 2.5rem;line-height:1.6;">${description}</p>
+            ` : ''}
+            <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+              <a href="/docs/getting-started" style="display:inline-block;padding:0.6rem 1.5rem;background:var(--sl-color-accent);color:var(--sl-color-text-invert,#fff);border-radius:var(--sl-border-radius);font-weight:600;text-decoration:none;font-size:var(--sl-text-base);">Get Started</a>
+              <a href="/blog" style="display:inline-block;padding:0.6rem 1.5rem;border:1px solid var(--sl-color-border);color:var(--sl-color-text);border-radius:var(--sl-border-radius);font-weight:600;text-decoration:none;font-size:var(--sl-text-base);">Blog</a>
+            </div>
+          </section>
+          <section>
+            <litro-card-grid>
+              ${repeat(() => features, html`
+                <litro-card
+                  :icon="${x => x.icon ?? ''}"
+                  :title="${x => x.title}"
+                  :description="${x => x.description}"
+                ></litro-card>
+              `)}
+            </litro-card-grid>
+          </section>
+        </main>
+      </div>
+    `;
+  }}
+`;
+
+const styles = css``;
+
+SplashPage.define({ name: 'page-home', template, styles });
+
+export default SplashPage;

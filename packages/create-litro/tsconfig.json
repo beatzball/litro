@@ -6,5 +6,5 @@
     "composite": true
   },
   "include": ["src/**/*", "recipes/**/*.ts"],
-  "exclude": ["node_modules", "dist", "recipes/**/template/**"]
+  "exclude": ["node_modules", "dist", "recipes/**/template/**", "recipes/**/template-*/**"]
 }

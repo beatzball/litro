@@ -4,6 +4,7 @@ packages:
   - 'playground-11ty'
   - 'playground-fast'
   - 'playground-starlight'
+  - 'playground-starlight-fast'
   - 'docs'
   - 'docs-ssr'
   - 'benchmarks'

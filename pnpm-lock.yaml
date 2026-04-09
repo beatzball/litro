@@ -473,6 +473,40 @@ importers:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
 
+  playground-starlight-fast:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../packages/framework
+      '@microsoft/fast-element':
+        specifier: ^2.10.3
+        version: 2.10.3
+      '@microsoft/fast-ssr':
+        specifier: 1.0.0-beta.39
+        version: 1.0.0-beta.39(@microsoft/fast-element@2.10.3)
+      '@shoelace-style/shoelace':
+        specifier: ^2.19.0
+        version: 2.20.1(@floating-ui/utils@0.2.11)(@types/react@19.2.14)
+      h3:
+        specifier: ^1.13.0
+        version: 1.15.9
+      highlight.js:
+        specifier: ^11.10.0
+        version: 11.11.1
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.48.0
+        version: 1.58.2
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
 packages:
 
   '@asamuzakjp/css-color@3.2.0':

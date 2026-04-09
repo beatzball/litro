@@ -22,6 +22,11 @@ export default defineConfig({
       testDir: './e2e/playground-starlight',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3032' },
     },
+    {
+      name: 'playground-starlight-fast',
+      testDir: './e2e/playground-starlight-fast',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3035' },
+    },
   ],
   webServer: [
     {
@@ -42,6 +47,13 @@ export default defineConfig({
       name: 'playground-starlight',
       command: 'cd playground-starlight && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3032',
       url: 'http://localhost:3032',
+      reuseExistingServer: false,
+      timeout: 180000,
+    },
+    {
+      name: 'playground-starlight-fast',
+      command: 'cd playground-starlight-fast && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3035',
+      url: 'http://localhost:3035',
       reuseExistingServer: false,
       timeout: 180000,
     },

@@ -201,4 +201,22 @@ export async function scaffold(
   // Build interpolation variables and copy all files.
   const vars = buildVars(options);
   await copyTemplate(templateDir, targetDir, vars);
+
+  // Per-adapter overlay: if a template-<adapter>/ directory exists alongside
+  // the base template/, copy its files on top — overwriting matching paths.
+  // This allows recipes to provide adapter-specific variants of files that
+  // differ structurally (page components, app.ts, config files) while sharing
+  // framework-agnostic files (content, CSS, utilities) from the base template.
+  const adapter = options.adapter ?? 'lit';
+  if (adapter !== 'lit') {
+    const overlayDir = join(recipesDir(), recipeName, `template-${adapter}`);
+    try {
+      const s = await stat(overlayDir);
+      if (s.isDirectory()) {
+        await copyTemplate(overlayDir, targetDir, vars);
+      }
+    } catch {
+      // No overlay directory for this adapter — that's fine, base template is used as-is.
+    }
+  }
 }

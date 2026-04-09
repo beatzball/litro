@@ -51,8 +51,22 @@ export function patchCustomElementsIdempotent(): void {
   const ce = (globalThis as Record<string, unknown>).customElements as CE | undefined;
   if (!ce || ce.__litroIdempotent) return;
   const orig = ce.define.bind(ce);
+
+  // FAST SSR's DOM shim allows re-registration (Map.set overwrites), but
+  // Lit's @lit-labs/ssr-dom-shim throws on duplicate define(). Detect which
+  // shim is active and only skip duplicates for Lit.
+  const isFastShim = process.env.LITRO_ADAPTER === 'fast';
+
   ce.define = function (name, ctor, options) {
-    if (ce.get(name)) return;
+    if (ce.get(name)) {
+      if (isFastShim) {
+        // FAST SSR shim: re-define to replace jiti's incorrectly-compiled
+        // class with the prerender bundle's correctly-compiled one.
+        orig(name, ctor, options);
+      }
+      // Lit SSR shim: skip to avoid "already been used" error.
+      return;
+    }
     orig(name, ctor, options);
   };
   ce.__litroIdempotent = true;

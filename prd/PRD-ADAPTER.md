@@ -1,7 +1,7 @@
 # PRD: Framework-Agnostic Adapter Architecture
 
 **Priority:** P0
-**Effort:** 5-6 weeks across 5 phases
+**Effort:** 6-7 weeks across 6 phases (Phase 0 and 1.0 complete)
 **Dependencies:** None — current test suite (360 unit + 92 e2e) is the correctness baseline
 
 ---
@@ -215,7 +215,7 @@ Alternatively (simpler): each recipe has a `template/` directory per adapter (`t
 
 ## Phasing and parallelization
 
-### Phase 0: Internal refactor — extract Lit adapter (Week 1)
+### Phase 0: Internal refactor — extract Lit adapter (Week 1) -- COMPLETE
 
 **Goal:** Current Lit-specific code extracted behind `FrameworkAdapter` interface. Zero behavioral change. All existing tests pass.
 
@@ -230,23 +230,43 @@ Alternatively (simpler): each recipe has a `template/` directory per adapter (`t
 
 **Exit criteria:** `pnpm test` (360 tests) + `pnpm test:e2e` (92 tests) pass. No diff in SSR output, shell HTML, or client behavior.
 
-### Phase 1: FAST adapter (Week 2)
+### Phase 1.0: FAST adapter — SSR (Week 2) -- COMPLETE (PR #64)
 
-**Goal:** A Litro project scaffolded with `--adapter fast` builds, serves, and passes a framework-parameterized test suite.
+**Goal:** FAST Element adapter with working SSR, hydration, client runtime, and SPA navigation. Validated by `playground-fast` workspace.
 
 | Track | Work | Parallelizable? |
 |---|---|---|
 | **1-A: FAST runtime components** | Implement `LitroOutlet`, `LitroLink`, `LitroPage` as FASTElement subclasses in `packages/framework/src/adapter/fast/runtime/`. | Independent |
 | **1-B: FAST SSR adapter** | Implement `renderPage()` using `@microsoft/fast-ssr`. Handle DSD output, streaming, server-side component registration. | Independent from 1-A |
 | **1-C: FAST client entry** | Write FAST-specific `client.ts` bootstrap (no hydrate-support patch, FAST's own initialization). | Independent |
-| **1-D: create-litro `--adapter fast`** | Add FAST template variants to recipes. Wire `--adapter` flag into scaffolder. | Independent from 1-A/B/C |
-| **1-E: Test suite** | Parameterize existing unit tests to run against both Lit and FAST adapters. Add FAST-specific e2e playwright project. | After 1-A + 1-B + 1-C |
+| **1-D: create-litro `--adapter fast`** | Wire `--adapter` flag into scaffolder CLI. | Independent from 1-A/B/C |
+| **1-E: Unit tests** | Adapter unit tests (fast-adapter, lit-adapter, resolve). | After 1-A + 1-B + 1-C |
 
-**Agents can parallelize:** 1-A, 1-B, 1-C, and 1-D are fully independent. 1-E depends on all four.
+**Exit criteria:** `playground-fast` SSR renders correctly in dev and production (build + preview). SPA navigation, hydration, @observable reactivity, LitroLink rendering, and data fetching all verified manually.
 
-**Exit criteria:** `pnpm test --adapter fast` passes parameterized unit tests. FAST e2e project passes core navigation, SSR, and data-fetching tests.
+**Lessons learned (Phase 1.0):**
+- **FAST packages must stay external** — `externals.inline` causes Rollup to bundle a second copy alongside the node_modules copy. `fastSSR()` only patches one copy, so the other uses the browser compiler and crashes on missing DOM APIs. Solution: return empty `nitroConfig()` (no `externals.inline`).
+- **ESM top-level await does NOT block sibling imports** — `ensure-dom.ts` originally used `await import(...)` for the DOM shim, but `@microsoft/fast-element` (a sibling import) would start executing while the await was pending. Solution: synchronous inline DOM stubs (no imports, no await).
+- **Rollup tree-shakes bare side-effect imports** of external packages lacking `"sideEffects"` in package.json. `import '@microsoft/fast-ssr/install-dom-shim.js'` is silently dropped. Solution: `import * as _domShim from '...'` + `globalThis.__litro_dom_shim__ = _domShim`.
+- **`manifestPreamble()`** added to `FrameworkAdapter` interface — injects code at the top of the generated page manifest virtual module, ensuring DOM shim + `fastSSR()` run before any page component imports.
+- **`process.env.LITRO_ADAPTER`** must be set in the manifest preamble (not just `nitro.config.ts`) so it's baked into the production bundle.
+- **FAST's legacy decorators** (`@attr`, `@observable`) require `experimentalDecorators: true` in both Nitro's esbuild and Vite's esbuild config.
+- **`client.ts` must be in `sideEffects`** in `packages/framework/package.json` or Vite tree-shakes the entire FAST runtime import chain.
 
-### Phase 2: Elena adapter (Week 3-4)
+### Phase 1.1: FAST adapter — SSG (Week 3)
+
+**Goal:** Validate the FAST adapter works with SSG/prerendering via a `playground-starlight-fast` workspace (Starlight recipe + FAST adapter). SSG uses the same `adapter.renderPage()` under the hood, so this should be a lighter lift than Phase 1.0.
+
+| Track | Work | Parallelizable? |
+|---|---|---|
+| **1.1-A: Scaffold playground** | Create `playground-starlight-fast` workspace using the starlight recipe with `--adapter fast`. Ensure FAST dependencies and config are wired correctly. | Start first |
+| **1.1-B: SSG build validation** | Run `litro build` (SSG mode) and verify prerendered HTML contains correct DSD output from FAST SSR. Check that all static routes produce valid HTML files. | After 1.1-A |
+| **1.1-C: Preview validation** | Run `litro preview` on the SSG output. Verify pages load, hydrate, and SPA navigation works from static files. | After 1.1-B |
+| **1.1-D: E2e tests** | Add Playwright project for `playground-starlight-fast` with route checks and navigation tests. | After 1.1-C |
+
+**Exit criteria:** `playground-starlight-fast` builds to static HTML, all prerendered routes return 200, client hydration and SPA navigation work in preview mode.
+
+### Phase 2: Elena adapter (Week 4-5)
 
 **Goal:** A Litro project scaffolded with `--adapter elena` builds, serves, and passes a framework-parameterized test suite. Light DOM output validated.
 
@@ -263,7 +283,7 @@ Alternatively (simpler): each recipe has a `template/` directory per adapter (`t
 
 **Extra time allocated** for Elena's RC status — API may require adjustments.
 
-### Phase 3: Documentation and content (Week 4-5)
+### Phase 3: Documentation and content (Week 5-6)
 
 **Goal:** Users can discover, understand, and adopt the adapter system through docs, blog content, and updated project files.
 
@@ -280,7 +300,7 @@ Alternatively (simpler): each recipe has a `template/` directory per adapter (`t
 
 **Agents can parallelize:** 3-A through 3-G are all independent. 3-H depends on 3-A and 3-B being finalized.
 
-### Phase 4: HackerNews clone showcase (Week 5-6)
+### Phase 4: HackerNews clone showcase (Week 6-7)
 
 **Goal:** Three identical HackerNews clone apps — one per adapter — demonstrating that Litro produces the same functional result regardless of framework choice. These serve as both documentation and proof of adapter equivalence.
 
