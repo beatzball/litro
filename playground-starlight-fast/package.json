@@ -1,0 +1,29 @@
+{
+  "name": "playground-starlight-fast",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#litro/page-manifest": "./server/stubs/page-manifest.ts"
+  },
+  "scripts": {
+    "dev": "litro dev",
+    "build": "litro build",
+    "preview": "litro preview",
+    "generate": "litro generate",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@beatzball/litro": "workspace:*",
+    "@microsoft/fast-element": "^2.10.3",
+    "@microsoft/fast-ssr": "1.0.0-beta.39",
+    "@shoelace-style/shoelace": "^2.19.0",
+    "highlight.js": "^11.10.0",
+    "h3": "^1.13.0"
+  },
+  "devDependencies": {
+    "nitropack": "^2.13.1",
+    "vite": "^5.4.11",
+    "typescript": "^5.7.3",
+    "@playwright/test": "^1.48.0"
+  }
+}

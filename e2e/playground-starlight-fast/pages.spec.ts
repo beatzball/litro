@@ -17,7 +17,7 @@ const PRERENDERED_ROUTES = [
 test('home page renders site title in h1', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  await expect(page.locator('page-home:not([hidden]) h1')).toContainText('playground-starlight');
+  await expect(page.locator('page-home:not([hidden]) h1')).toContainText('playground-starlight-fast');
 });
 
 test('home page renders starlight-header', async ({ page }) => {
@@ -65,7 +65,7 @@ test('blog post renders', async ({ page }) => {
 test('blog post renders Markdown body content', async ({ page }) => {
   await page.goto('/blog/welcome');
   await page.waitForSelector('page-blog-slug:not([hidden])');
-  // Markdown body is rendered via innerHTML — verify paragraphs exist
+  // Markdown body is rendered via :innerHTML — verify paragraphs exist
   const paragraphs = page.locator('page-blog-slug:not([hidden]) p');
   await expect(paragraphs.first()).toBeVisible();
   expect(await paragraphs.count()).toBeGreaterThan(0);
