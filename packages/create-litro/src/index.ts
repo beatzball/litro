@@ -5,7 +5,7 @@
  * Usage:
  *   npm create litro
  *   npx create-litro
- *   npx create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>]
+ *   npx create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast>]
  *   npx create-litro --list-recipes
  *
  * Prompts for project name, recipe, and mode, then scaffolds a complete
@@ -76,6 +76,7 @@ interface ParsedArgs {
   projectName: string | undefined;
   recipe: string | undefined;
   mode: 'ssg' | 'ssr' | undefined;
+  adapter: 'lit' | 'fast' | undefined;
   listRecipes: boolean;
 }
 
@@ -84,6 +85,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   let projectName: string | undefined;
   let recipe: string | undefined;
   let mode: 'ssg' | 'ssr' | undefined;
+  let adapter: 'lit' | 'fast' | undefined;
   let listRecipesFlag = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -95,12 +97,15 @@ function parseArgs(argv: string[]): ParsedArgs {
     } else if (arg === '--mode' || arg === '-m') {
       const val = argv[++i];
       if (val === 'ssg' || val === 'ssr') mode = val;
+    } else if (arg === '--adapter' || arg === '-a') {
+      const val = argv[++i];
+      if (val === 'lit' || val === 'fast') adapter = val;
     } else if (!arg.startsWith('-') && projectName === undefined) {
       projectName = arg;
     }
   }
 
-  return { projectName, recipe, mode, listRecipes: listRecipesFlag };
+  return { projectName, recipe, mode, adapter, listRecipes: listRecipesFlag };
 }
 
 // ---------------------------------------------------------------------------
@@ -171,7 +176,20 @@ async function main(): Promise<void> {
     mode = chosenRecipe.mode as 'ssg' | 'ssr';
   }
 
-  // 4. Recipe-specific options (prompt for any that are defined on the recipe)
+  // 4. Adapter selection
+  let adapter: 'lit' | 'fast';
+  if (args.adapter) {
+    adapter = args.adapter;
+  } else {
+    const selected = await promptSelect(
+      'Component framework:',
+      ['lit — Lit (default)', 'fast — Microsoft FAST Element'],
+      'lit — Lit (default)',
+    );
+    adapter = selected.startsWith('fast') ? 'fast' : 'lit';
+  }
+
+  // 5. Recipe-specific options (prompt for any that are defined on the recipe)
   const recipeOptions: Record<string, unknown> = {};
   if (chosenRecipe.options && chosenRecipe.options.length > 0) {
     for (const opt of chosenRecipe.options) {
@@ -189,7 +207,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // 5. Validate target directory
+  // 6. Validate target directory
   const projectDir = join(process.cwd(), projectName);
 
   if (existsSync(projectDir)) {
@@ -197,10 +215,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 6. Scaffold
+  // 7. Scaffold
   const options: ScaffoldOptions = {
     projectName,
     mode,
+    adapter,
     recipeOptions,
     recipeVersion: '0.0.1',
   };

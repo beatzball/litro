@@ -33,11 +33,11 @@ export async function resolveAdapter(
       const { litAdapter } = await import('./lit/index.js');
       return litAdapter;
     }
+    case 'fast': {
+      const { fastAdapter } = await import('./fast/index.js');
+      return fastAdapter;
+    }
     // Future adapters:
-    // case 'fast': {
-    //   const { fastAdapter } = await import('./fast/index.js');
-    //   return fastAdapter;
-    // }
     // case 'elena': {
     //   const { elenaAdapter } = await import('./elena/index.js');
     //   return elenaAdapter;

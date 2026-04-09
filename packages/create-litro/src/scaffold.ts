@@ -20,6 +20,7 @@ import type { LitroRecipe } from './types.js';
 export interface ScaffoldOptions {
   projectName: string;
   mode: 'ssg' | 'ssr';
+  adapter?: 'lit' | 'fast';
   recipeOptions?: Record<string, unknown>;
   recipeVersion?: string;
 }
@@ -72,6 +73,7 @@ function buildVars(options: ScaffoldOptions): Record<string, string> {
   const vars: Record<string, string> = {
     projectName: options.projectName,
     mode: options.mode,
+    adapter: options.adapter ?? 'lit',
     recipeVersion: options.recipeVersion ?? '0.0.0',
   };
 

@@ -87,6 +87,26 @@
       "import": "./dist/adapter/lit/index.js",
       "types": "./dist/adapter/lit/index.d.ts"
     },
+    "./adapter/fast": {
+      "source": "./src/adapter/fast/index.ts",
+      "import": "./dist/adapter/fast/index.js",
+      "types": "./dist/adapter/fast/index.d.ts"
+    },
+    "./adapter/fast/runtime": {
+      "source": "./src/adapter/fast/runtime/client.ts",
+      "import": "./dist/adapter/fast/runtime/client.js",
+      "types": "./dist/adapter/fast/runtime/client.d.ts"
+    },
+    "./adapter/fast/ssr-init": {
+      "source": "./src/adapter/fast/ssr-init.ts",
+      "import": "./dist/adapter/fast/ssr-init.js",
+      "types": "./dist/adapter/fast/ssr-init.d.ts"
+    },
+    "./adapter/fast/page": {
+      "source": "./src/adapter/fast/runtime/LitroPage.ts",
+      "import": "./dist/adapter/fast/runtime/LitroPage.js",
+      "types": "./dist/adapter/fast/runtime/LitroPage.d.ts"
+    },
     "./content/env": {
       "types": "./src/content/env.d.ts"
     }
@@ -105,12 +125,19 @@
     "./src/runtime/LitroOutlet.ts",
     "./src/runtime/LitroLink.ts",
     "./dist/runtime/LitroOutlet.js",
-    "./dist/runtime/LitroLink.js"
+    "./dist/runtime/LitroLink.js",
+    "./src/adapter/fast/runtime/client.ts",
+    "./src/adapter/fast/runtime/LitroOutlet.ts",
+    "./src/adapter/fast/runtime/LitroLink.ts",
+    "./dist/adapter/fast/runtime/client.js",
+    "./dist/adapter/fast/runtime/LitroOutlet.js",
+    "./dist/adapter/fast/runtime/LitroLink.js"
   ],
   "dependencies": {
     "@beatzball/litro-router": "workspace:*",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
+    "@resvg/resvg-js": "^2.6.0",
     "execa": "^8.0.1",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",
@@ -124,12 +151,13 @@
     "remark-gfm": "^4.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
-    "@resvg/resvg-js": "^2.6.0",
     "satori": "^0.12.0",
     "unified": "^11.0.5",
     "vite": "^5.4.11"
   },
   "devDependencies": {
+    "@microsoft/fast-element": "^2.10.3",
+    "@microsoft/fast-ssr": "1.0.0-beta.39",
     "jsdom": "^25.0.0",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
@@ -152,6 +180,16 @@
     "typescript"
   ],
   "peerDependencies": {
+    "@microsoft/fast-element": "^2.0.0",
+    "@microsoft/fast-ssr": "^1.0.0-beta.1",
     "typescript": "^5.x"
+  },
+  "peerDependenciesMeta": {
+    "@microsoft/fast-element": {
+      "optional": true
+    },
+    "@microsoft/fast-ssr": {
+      "optional": true
+    }
   }
 }
