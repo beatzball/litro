@@ -65,7 +65,7 @@ async function scanPageFiles(rootDir: string): Promise<string[]> {
  * The generated module exports a `routes` array of LitroRoute objects that
  * the catch-all Nitro handler imports at runtime to decide which component to render.
  */
-function generateManifestModule(routes: LitroRoute[], pageFiles: string[], preamble?: string): string {
+function generateManifestModule(routes: LitroRoute[], pageFiles: string[], preamble?: string, postamble?: string): string {
   const routesJson = JSON.stringify(routes, null, 2);
 
   // Static imports of every page module.
@@ -110,7 +110,7 @@ ${registryEntries}
 
 // Default export for backward compatibility with: import pages from '#litro/page-manifest'
 export default routes;
-`;
+${postamble ? `\n${postamble}` : ''}`;
 }
 
 /**
@@ -260,8 +260,10 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
       return;
     }
 
-    // Resolve the adapter to get the manifest preamble (if any).
+    // Resolve the adapter to get the manifest preamble/postamble (if any).
     // Some frameworks (e.g. FAST) need SSR init imports before component code.
+    // Elena needs a postamble to register components with @elenajs/ssr after
+    // all page modules have been imported.
     const adapter = await resolveAdapter();
     const preamble = adapter.manifestPreamble?.() ?? '';
 
@@ -289,7 +291,9 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     // pageFiles is passed alongside routes so generateManifestModule can emit
     // static imports. The order matches so pageFiles[i] → routes[i].filePath
     // (both are sorted).
-    const manifestContent = generateManifestModule(routes, pageFiles, preamble);
+    const pageModuleVars = pageFiles.map((_, i) => `_page${i}`);
+    const postamble = adapter.manifestPostamble?.(pageModuleVars) ?? '';
+    const manifestContent = generateManifestModule(routes, pageFiles, preamble, postamble);
 
     // 3a. Set the virtual module — used by Vite's dev resolver.
     nitro.options.virtual['#litro/page-manifest'] = manifestContent;

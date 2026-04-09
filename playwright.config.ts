@@ -33,6 +33,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3035' },
     },
     {
+      name: 'playground-elena',
+      testDir: './e2e/playground-elena',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3036' },
+    },
+    {
       name: 'docs-ssr',
       testDir: './e2e/docs-ssr',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3034' },
@@ -71,6 +76,13 @@ export default defineConfig({
       name: 'playground-starlight-fast',
       command: 'cd playground-starlight-fast && node ../packages/framework/dist/cli/index.js dev --port 3035',
       url: 'http://localhost:3035',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+    {
+      name: 'playground-elena',
+      command: 'cd playground-elena && node ../packages/framework/dist/cli/index.js dev --port 3036',
+      url: 'http://localhost:3036',
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
     },

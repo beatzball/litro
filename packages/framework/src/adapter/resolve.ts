@@ -37,11 +37,10 @@ export async function resolveAdapter(
       const { fastAdapter } = await import('./fast/index.js');
       return fastAdapter;
     }
-    // Future adapters:
-    // case 'elena': {
-    //   const { elenaAdapter } = await import('./elena/index.js');
-    //   return elenaAdapter;
-    // }
+    case 'elena': {
+      const { elenaAdapter } = await import('./elena/index.js');
+      return elenaAdapter;
+    }
     default:
       throw new Error(
         `[litro] Unknown adapter "${resolved}". ` +

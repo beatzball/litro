@@ -20,7 +20,7 @@ import type { LitroRecipe } from './types.js';
 export interface ScaffoldOptions {
   projectName: string;
   mode: 'ssg' | 'ssr';
-  adapter?: 'lit' | 'fast';
+  adapter?: 'lit' | 'fast' | 'elena';
   recipeOptions?: Record<string, unknown>;
   recipeVersion?: string;
 }

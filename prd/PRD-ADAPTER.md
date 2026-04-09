@@ -1,7 +1,7 @@
 # PRD: Framework-Agnostic Adapter Architecture
 
 **Priority:** P0
-**Effort:** 6-7 weeks across 6 phases (Phase 0 and 1.0 complete)
+**Effort:** 6-7 weeks across 7 phases (Phase 0, 1.0, 1.1, and 2 complete)
 **Dependencies:** None — current test suite (360 unit + 92 e2e) is the correctness baseline
 
 ---
@@ -282,6 +282,19 @@ Alternatively (simpler): each recipe has a `template/` directory per adapter (`t
 **Agents can parallelize:** 2-A, 2-B, 2-C, and 2-D are fully independent. 2-E and 2-F are sequential after those.
 
 **Extra time allocated** for Elena's RC status — API may require adjustments.
+
+### Phase 2.1: Elena adapter — Starlight SSG (Week 5)
+
+**Goal:** Validate the Elena adapter with SSG/prerendering via a `playground-starlight-elena` workspace (Starlight recipe + Elena adapter). This requires rewriting all Starlight UI components (header, sidebar, TOC, cards, badges, tabs) using Elena's mixin + `@scope` CSS patterns, making it a heavier lift than Phase 2.
+
+| Track | Work | Parallelizable? |
+|---|---|---|
+| **2.1-A: Starlight recipe overlay** | Create `packages/create-litro/recipes/starlight/template-elena/` with all page components and UI components rewritten in Elena. `@scope` CSS for light DOM encapsulation. | Start first |
+| **2.1-B: Scaffold playground** | Create `playground-starlight-elena` workspace. Wire Elena dependencies, nitro/vite config. | After 2.1-A |
+| **2.1-C: SSG build validation** | Run `litro build` (SSG mode) and verify prerendered HTML contains light DOM output (no DSD). Check that all static routes produce valid HTML files with `@scope` CSS. | After 2.1-B |
+| **2.1-D: E2e tests** | Add Playwright project for `playground-starlight-elena` with route checks, navigation tests, and light DOM assertions. | After 2.1-C |
+
+**Exit criteria:** `playground-starlight-elena` builds to static HTML, all prerendered routes return 200, `@scope` CSS encapsulation works correctly, client-side progressive enhancement and SPA navigation function in preview mode.
 
 ### Phase 3: Documentation and content (Week 5-6)
 
