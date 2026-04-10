@@ -225,3 +225,27 @@ Detects `dist/static/` and serves with a built-in Node.js HTTP server. Falls bac
 ## docs-ssr Docker: Node.js runtime with trimmed workspace
 
 Uses `node:20-slim` runtime (not nginx) since `docs-ssr/` is a live Nitro SSR server. The Dockerfile generates a minimal `pnpm-workspace.yaml` excluding playgrounds and benchmarks to keep Docker context small, and creates a stub `playground/tsconfig.json` to satisfy root `tsconfig.json` project references during Vite's esbuild pass.
+
+---
+
+## Framework adapter: per-project, not per-page
+
+The adapter is selected once per project (via `--adapter` flag or `LITRO_ADAPTER` env var), not per page. Per-page mixing was considered and deferred: it would require running multiple SSR engines in the same process, merging incompatible head scripts, and handling hydration for mixed shadow/light DOM trees. The complexity is not justified by current use cases. A single adapter per project keeps the build pipeline simple and the mental model clear.
+
+---
+
+## Framework adapter: native classes, no abstraction layer
+
+Each adapter's page components extend the framework's own base class (LitElement, FASTElement, Elena mixin) — Litro does not define a neutral component authoring API or template IR. Users write native framework code. This avoids a lowest-common-denominator API that would limit access to framework-specific features (Lit's directives, FAST's design system integration, Elena's progressive enhancement).
+
+---
+
+## Elena adapter: light DOM SSR without @elenajs/ssr
+
+The Elena adapter renders components by direct instantiation (`new ComponentClass()`, `instance.render()`, `.toString()`) rather than using `@elenajs/ssr`. This approach is simpler (no external SSR dependency), produces smaller server bundles, and handles nested component expansion via a lightweight recursive CE expander. The trade-off is that components must be SSR-safe (no `document`/`window` access at render time), which is already a requirement for Lit/FAST.
+
+---
+
+## Elena adapter: @scope CSS instead of Shadow DOM
+
+Elena uses light DOM, so component styles are not automatically scoped. The `@scope` CSS at-rule provides encapsulation without Shadow DOM: `@scope (my-component) { ... }`. This is supported in Chrome 118+, Edge 118+, Safari 17.4+. Older browsers see unscoped styles, which is acceptable graceful degradation for content-focused sites — the primary Elena use case.

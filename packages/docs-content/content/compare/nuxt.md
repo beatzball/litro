@@ -14,7 +14,7 @@ largely copies verbatim.
 </div>
 
 The difference between Litro and Nuxt is the component model.
-Nuxt uses Vue Single File Components; Litro uses Lit web components.
+Nuxt uses Vue Single File Components; Litro uses web components with your choice of framework — Lit (default), FAST Element, or Elena.
 Everything under the server layer — Nitro, H3, deployment presets — is shared.
 
 ## Feature Comparison
@@ -25,9 +25,9 @@ Everything under the server layer — Nitro, H3, deployment presets — is share
 <tr><th>Feature</th><th>Nuxt.js</th><th>Litro</th></tr>
 </thead>
 <tbody>
-<tr><td>Component model</td><td>Vue 3 (SFC)</td><td>Lit (web components)</td></tr>
+<tr><td>Component model</td><td>Vue 3 (SFC)</td><td>Lit / FAST / Elena (web components)</td></tr>
 <tr><td>File-based routing</td><td class="check">✓</td><td class="check">✓</td></tr>
-<tr><td>SSR</td><td>Vue SSR</td><td>Declarative Shadow DOM streaming</td></tr>
+<tr><td>SSR</td><td>Vue SSR</td><td>DSD streaming (Lit/FAST) or light DOM (Elena)</td></tr>
 <tr><td>SSG</td><td class="check">✓</td><td class="check">✓</td></tr>
 <tr><td>Data fetching</td><td><code>useFetch</code> / <code>useAsyncData</code></td><td><code>definePageData()</code></td></tr>
 <tr><td>API routes</td><td><code>server/api/*.ts</code> (H3)</td><td class="same">Identical ↔</td></tr>
@@ -162,7 +162,7 @@ export default defineEventHandler(async () =&gt; {
 
 ## What Changes
 
-- **Vue SFCs → Lit class components** — `<script setup>` becomes `definePageData()`; `<template>` becomes `render()`
+- **Vue SFCs → web components** — choose Lit, FAST Element, or Elena. `<script setup>` becomes `definePageData()`; `<template>` becomes `render()`
 - **No Vue runtime** — bundle drops from ~60 kB to ~8 kB
 - **vue-router → LitroRouter** — different API, built on URLPattern
 - **`<NuxtLink>` → `<litro-link>`** — SPA navigation; attribute is `href` not `to`

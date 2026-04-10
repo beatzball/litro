@@ -36,6 +36,16 @@ export const siteConfig = {
       ],
     },
     {
+      label: 'Adapters',
+      items: [
+        { label: 'Overview', slug: 'adapters/overview' },
+        { label: 'Lit', slug: 'adapters/lit' },
+        { label: 'FAST Element', slug: 'adapters/fast' },
+        { label: 'Elena', slug: 'adapters/elena' },
+        { label: 'Switching Adapters', slug: 'adapters/switching' },
+      ],
+    },
+    {
       label: 'Recipes',
       items: [
         { label: 'Fullstack App', slug: 'recipes/fullstack' },

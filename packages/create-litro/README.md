@@ -21,14 +21,17 @@ bun create @beatzball/litro my-app
 deno create npm:@beatzball/litro@latest -- my-app
 ```
 
-Follow the interactive prompts to choose a recipe and rendering mode, or pass flags directly to skip them:
+Follow the interactive prompts to choose a recipe, rendering mode, and framework adapter, or pass flags directly to skip them:
 
 ```bash
-# Fullstack SSR app (default)
+# Fullstack SSR app with Lit (default)
 npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
 
-# 11ty-compatible Markdown blog, static output
-npm create @beatzball/litro@latest my-app -- --recipe 11ty-blog --mode ssg
+# Fullstack SSR app with FAST Element
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter fast
+
+# Fullstack SSR app with Elena (light DOM)
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter elena
 
 # Starlight docs + blog, static output
 npm create @beatzball/litro@latest my-docs -- --recipe starlight
@@ -36,6 +39,18 @@ npm create @beatzball/litro@latest my-docs -- --recipe starlight
 # List all available recipes
 npm create @beatzball/litro@latest -- --list-recipes
 ```
+
+### `--adapter` flag
+
+Choose the web component framework for your project:
+
+| Value | Framework | DOM Model | SSR |
+|---|---|---|---|
+| `lit` (default) | Lit 3 | Shadow DOM | Declarative Shadow DOM |
+| `fast` | FAST Element 2 | Shadow DOM | Declarative Shadow DOM |
+| `elena` | Elena | Light DOM | Direct rendering |
+
+Omitting `--adapter` defaults to `lit`. The interactive wizard also prompts for adapter selection.
 
 ## Recipes
 

@@ -1,9 +1,10 @@
 # Litro
 
-A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nitro](https://nitro.unjs.io).
+A fullstack web framework for [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), powered by [Nitro](https://nitro.unjs.io).
 
+- **Framework adapters** — choose [Lit](https://lit.dev) (default), [FAST Element](https://www.fast.design/), or [Elena](https://elenajs.com/) via `--adapter`
 - **File-based routing** — `pages/index.ts` → `/`, `pages/blog/[slug].ts` → `/blog/:slug`
-- **Server-side rendering** — streaming Declarative Shadow DOM via `@lit-labs/ssr`
+- **Server-side rendering** — Declarative Shadow DOM (Lit/FAST) or light DOM (Elena)
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
 - **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
@@ -18,14 +19,14 @@ A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nit
 
 ## How It Compares
 
-|                     | Litro       | Next.js 14  | Nuxt 3      |
-|---------------------|-------------|-------------|-------------|
-| Component model     | Lit         | React       | Vue         |
-| File-based routing  | ✓           | ✓           | ✓           |
-| SSR / SSG           | ✓           | ✓           | ✓           |
-| Server engine       | Nitro       | custom      | Nitro       |
-| Virtual DOM         | —           | ✓           | ✓           |
-| W3C standard comps  | ✓           | —           | —           |
+|                     | Litro            | Next.js 14  | Nuxt 3      |
+|---------------------|------------------|-------------|-------------|
+| Component model     | Lit / FAST / Elena | React     | Vue         |
+| File-based routing  | ✓                | ✓           | ✓           |
+| SSR / SSG           | ✓                | ✓           | ✓           |
+| Server engine       | Nitro            | custom      | Nitro       |
+| Virtual DOM         | —                | ✓           | ✓           |
+| W3C standard comps  | ✓                | —           | —           |
 
 ### Benchmark results (identical 2-route apps, SSG mode)
 
@@ -48,9 +49,13 @@ litro/
     framework/        ← npm package: @beatzball/litro
     litro-router/     ← npm package: @beatzball/litro-router (standalone, zero-dependency)
     create-litro/     ← npm create @beatzball/litro (scaffolding)
-  playground/         ← fullstack recipe test app
+  playground/         ← fullstack recipe test app (Lit)
+  playground-fast/    ← fullstack test app (FAST Element)
+  playground-elena/   ← fullstack test app (Elena)
   playground-11ty/    ← 11ty-blog recipe test app
-  playground-starlight/ ← starlight recipe test app
+  playground-starlight/ ← starlight recipe test app (Lit)
+  playground-starlight-fast/ ← starlight test app (FAST Element)
+  playground-starlight-elena/ ← starlight test app (Elena)
   docs/               ← official documentation site (@beatzball/litro-docs, SSG)
   docs-ssr/           ← SSR replica of docs site (@beatzball/litro-docs-ssr, fullstack)
   benchmarks/         ← benchmark suite: SSG vs SSR + cross-framework (Litro/Nuxt/Next.js)
@@ -79,14 +84,17 @@ bun create @beatzball/litro my-app
 deno create npm:@beatzball/litro@latest -- my-app
 ```
 
-Follow the interactive prompts to choose a recipe and rendering mode, or pass flags to skip them:
+Follow the interactive prompts to choose a recipe, rendering mode, and framework adapter, or pass flags to skip them:
 
 ```bash
-# Non-interactive — fullstack SSR app:
+# Non-interactive — fullstack SSR app (Lit, default):
 npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
 
-# Non-interactive — 11ty-compatible Markdown blog, static output:
-npm create @beatzball/litro@latest my-app -- --recipe 11ty-blog --mode ssg
+# Non-interactive — fullstack SSR app with FAST Element:
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter fast
+
+# Non-interactive — fullstack SSR app with Elena (light DOM):
+npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter elena
 
 # Non-interactive — Starlight docs + blog, static output:
 npm create @beatzball/litro@latest my-docs -- --recipe starlight
@@ -227,7 +235,7 @@ my-app/
 
 ## Pages
 
-A page file exports a Lit component decorated with `@customElement`. The filename determines the route.
+A page file exports a web component as the default export. The filename determines the route. The example below uses Lit (default adapter) — FAST and Elena use their own component APIs with the same routing convention.
 
 ```typescript
 // pages/index.ts  →  /
@@ -499,9 +507,9 @@ docker run -p 3000:3000 litro-docs-ssr
 
 | Layer         | Library                                                                               | Role                                   |
 | ------------- | ------------------------------------------------------------------------------------- | -------------------------------------- |
-| Components    | [Lit 3](https://lit.dev)                                                              | Web component authoring                |
-| SSR           | [@lit-labs/ssr](https://github.com/lit/lit/tree/main/packages/labs/ssr)               | Streaming Declarative Shadow DOM       |
-| Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration              |
+| Components    | [Lit 3](https://lit.dev), [FAST Element 2](https://www.fast.design/), [Elena](https://elenajs.com/) | Web component authoring (via adapters) |
+| SSR           | [@lit-labs/ssr](https://github.com/lit/lit/tree/main/packages/labs/ssr), [@microsoft/fast-ssr](https://www.npmjs.com/package/@microsoft/fast-ssr) | Streaming Declarative Shadow DOM (Lit/FAST) |
+| Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration (Lit/FAST)   |
 | Client router | [`litro-router`](./packages/litro-router) (URLPattern API)                            | Web component-aware pushState router   |
 | Server        | [Nitro](https://nitro.unjs.io)                                                        | Routing, API, SSR, deployment adapters |
 | Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
