@@ -1,6 +1,6 @@
 export const siteConfig = {
   title: 'Litro',
-  description: 'The fullstack Lit framework — components, SSR, and static generation in one.',
+  description: 'The fullstack web component framework — SSR, static generation, and your choice of Lit, FAST, or Elena.',
   nav: [
     { label: 'Docs', href: '/docs/introduction' },
     { label: 'Blog', href: '/blog' },
