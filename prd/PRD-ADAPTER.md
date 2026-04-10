@@ -109,7 +109,7 @@ Each clone: top stories, story detail with comments, user profile, Ask/Show HN v
 ## Testing strategy
 
 - **Parameterized unit tests** — adapter-agnostic assertions with DSD/light-DOM conditional checks
-- **E2e projects** — `playground-fast` (3035), `playground-elena` (3036), `playground-starlight-fast` (3032), `playground-starlight-elena` (3037)
+- **E2e projects** — `playground-fast` (3038), `playground-elena` (3036), `playground-starlight-fast` (3035), `playground-starlight-elena` (3037)
 - **Behavioral equivalence** — outlet mounts router, link does SPA nav, page reads `__litro_data__`
 
 ## Migration
