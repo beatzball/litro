@@ -28,6 +28,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3033' },
     },
     {
+      name: 'playground-fast',
+      testDir: './e2e/playground-fast',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3038' },
+    },
+    {
       name: 'playground-starlight-fast',
       testDir: './e2e/playground-starlight-fast',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3035' },
@@ -74,6 +79,13 @@ export default defineConfig({
       name: 'docs',
       command: 'cd docs && node ../packages/framework/dist/cli/index.js dev --port 3033',
       url: 'http://localhost:3033',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+    {
+      name: 'playground-fast',
+      command: 'cd playground-fast && node ../packages/framework/dist/cli/index.js dev --port 3038',
+      url: 'http://localhost:3038',
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
     },
