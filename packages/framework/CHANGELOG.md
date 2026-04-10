@@ -1,5 +1,17 @@
 # litro
 
+## 0.8.0
+
+### Minor Changes
+
+- d459a96: Add FAST Element adapter with SSR, hydration, and client runtime support
+- 8c081a8: Elena framework adapter — light DOM SSR via @elenajs/ssr, progressive enhancement (no hydration), no DSD polyfill. Includes runtime components (LitroOutlet, LitroLink, LitroPage), manifestPostamble API for post-import component registration.
+
+### Patch Changes
+
+- 44196c4: Fix SSG plugin to support FAST adapter's customElements re-registration
+- b66734f: Fix Elena adapter SSR rendering for nested custom elements and light DOM content
+
 ## 0.7.0
 
 ### Minor Changes

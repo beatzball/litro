@@ -1,5 +1,14 @@
 # create-litro
 
+## 0.5.0
+
+### Minor Changes
+
+- d459a96: Add `--adapter` flag for selecting framework adapter (lit/fast)
+- 8c081a8: Add `--adapter elena` option with fullstack recipe template for Elena (light DOM web components).
+- b66734f: Add Elena framework adapter template for the starlight recipe
+- 44196c4: Add per-adapter template overlay support and FAST Element starlight recipe template
+
 ## 0.4.2
 
 ### Patch Changes
