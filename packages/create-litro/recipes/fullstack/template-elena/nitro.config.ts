@@ -36,6 +36,9 @@ export default defineNitroConfig({
 
   hooks: {
     'build:before': async (nitro: Nitro) => {
+      // HTMLElement + customElements shim must exist before page modules
+      // are imported by the page scanner (jiti evaluates them at build time).
+      await import('@beatzball/litro/adapter/elena/ssr-shim');
       await pagesPlugin(nitro);
       await ssgPlugin(nitro);
     },

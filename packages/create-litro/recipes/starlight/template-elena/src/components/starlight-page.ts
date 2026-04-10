@@ -9,61 +9,133 @@ import './starlight-sidebar.js';
 import './starlight-toc.js';
 
 /**
- * <starlight-page siteTitle="My Docs" pageTitle="Getting Started" ...>
- *   Three-column grid layout: sidebar | content | TOC.
- *   Light DOM — children render in place, no slots needed.
+ * <starlight-page sitetitle="My Docs" pagetitle="Getting Started" ...>
+ *   <div>...page content...</div>
  * </starlight-page>
+ *
+ * Central layout component — three-column grid: sidebar | content | TOC.
+ * Owns the header, sidebar drawer toggle, and backdrop.
+ * Light DOM — children render in place, no slots needed.
+ *
+ * Nav toggle is handled imperatively (class toggles + DOM insert/remove)
+ * to avoid Elena re-rendering the entire tree and destroying child
+ * component state/focus.
  */
 export class StarlightPage extends Elena(HTMLElement) {
   static tagName = 'starlight-page';
-  static props = ['siteTitle', 'pageTitle', 'nav', 'sidebar', 'toc', 'currentSlug', 'currentPath', 'noSidebar', '_navOpen'];
+  // _navopen is NOT a prop — toggling it must not trigger a re-render
+  static props = ['sitetitle', 'pagetitle', 'nav', 'sidebar', 'toc', 'currentslug', 'currentpath', 'nosidebar'];
 
-  siteTitle = '';
-  pageTitle = '';
+  sitetitle = '';
+  pagetitle = '';
   nav: NavItem[] = [];
   sidebar: SidebarGroup[] = [];
   toc: TocEntry[] = [];
-  currentSlug = '';
-  currentPath = '';
-  noSidebar = false;
-  _navOpen = false;
+  currentslug = '';
+  currentpath = '';
+  nosidebar = false;
 
-  handleNavToggle() {
-    this._navOpen = !this._navOpen;
+  private _navOpen = false;
+
+  /** Original innerHTML captured before first render — preserved across re-renders. */
+  private _contentHtml = '';
+
+  override connectedCallback(): void {
+    // Capture the original content before Elena's first render replaces innerHTML
+    if (!this._contentHtml) {
+      this._contentHtml = this.innerHTML;
+    }
+    super.connectedCallback();
+    this.addEventListener('sl-nav-toggle', this._onNavToggle);
+    this.addEventListener('click', this._onBackdropClick);
   }
 
-  closeNav() {
-    this._navOpen = false;
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeEventListener('sl-nav-toggle', this._onNavToggle);
+    this.removeEventListener('click', this._onBackdropClick);
+  }
+
+  /** Toggle nav imperatively — no re-render, just class/DOM manipulation. */
+  private _setNavOpen(open: boolean) {
+    this._navOpen = open;
+    const sidebar = this.querySelector('.sidebar-wrap') as HTMLElement | null;
+    const header = this.querySelector('starlight-header') as any;
+    if (sidebar) sidebar.classList.toggle('nav-open', open);
+    if (header) header.navopen = open;
+
+    // Manage backdrop
+    let backdrop = this.querySelector('.nav-backdrop') as HTMLElement | null;
+    if (open && !backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'nav-backdrop';
+      backdrop.setAttribute('data-action', 'close-nav');
+      // Insert after the header
+      const headerEl = this.querySelector('starlight-header');
+      headerEl?.after(backdrop);
+    } else if (!open && backdrop) {
+      backdrop.remove();
+    }
+  }
+
+  private _onNavToggle = () => {
+    this._setNavOpen(!this._navOpen);
+  };
+
+  private _onBackdropClick = (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-action="close-nav"]')) {
+      this._setNavOpen(false);
+    }
+  };
+
+  override updated(): void {
+    // Elena light DOM — pass properties to child components imperatively
+    const header = this.querySelector('starlight-header') as any;
+    if (header) {
+      header.sitetitle = this.sitetitle;
+      header.nav = this.nav;
+      header.currentpath = this.currentpath;
+      header.navopen = this._navOpen;
+      header.hassidebar = !this.nosidebar;
+    }
+    const sidebar = this.querySelector('starlight-sidebar') as any;
+    if (sidebar) {
+      sidebar.groups = this.sidebar;
+      sidebar.currentslug = this.currentslug;
+    }
+    const toc = this.querySelector('starlight-toc') as any;
+    if (toc) {
+      toc.entries = this.toc;
+    }
   }
 
   render() {
-    // Header — pass properties as attributes for Elena light DOM rendering
-    const headerEl = document.createElement('starlight-header') as any;
-    headerEl.siteTitle = this.siteTitle;
-    headerEl.nav = this.nav;
-    headerEl.currentPath = this.currentPath;
-    headerEl.navOpen = this._navOpen;
-    headerEl.hasSidebar = !this.noSidebar;
+    // During SSR, connectedCallback() never runs so _contentHtml is empty.
+    // Fall back to this.innerHTML which the SSR adapter sets from children.
+    const contentHtml = this._contentHtml || this.innerHTML || '';
 
-    const backdrop = !this.noSidebar && this._navOpen
-      ? '<div class="nav-backdrop" data-action="close-nav"></div>'
-      : '';
+    // Serialize props as JSON for child component attributes.
+    // Elena's html tag handles attribute escaping (" → &quot;).
+    const navJson = JSON.stringify(this.nav || []);
+    const sidebarJson = JSON.stringify(this.sidebar || []);
+    const tocJson = JSON.stringify(this.toc || []);
 
-    const sidebarHtml = !this.noSidebar
-      ? `<aside class="sidebar-wrap${this._navOpen ? ' nav-open' : ''}">
-          <starlight-sidebar></starlight-sidebar>
+    const sidebarHtml = !this.nosidebar
+      ? `<aside class="sidebar-wrap">
+          <starlight-sidebar groups="${sidebarJson.replace(/"/g, '&quot;')}" currentslug="${this.currentslug}"></starlight-sidebar>
         </aside>`
       : '';
 
-    const titleHtml = this.pageTitle
-      ? `<h1 class="page-title">${this.pageTitle}</h1>`
+    const titleHtml = this.pagetitle
+      ? `<h1 class="page-title">${this.pagetitle}</h1>`
       : '';
 
-    const tocHtml = !this.noSidebar
-      ? `<aside class="toc-wrap"><starlight-toc></starlight-toc></aside>`
+    const tocHtml = !this.nosidebar
+      ? `<aside class="toc-wrap"><starlight-toc entries="${tocJson.replace(/"/g, '&quot;')}"></starlight-toc></aside>`
       : '';
 
-    const bodyClass = this.noSidebar ? 'body no-sidebar' : 'body';
+    const bodyClass = this.nosidebar ? 'body no-sidebar' : 'body';
 
     return html`
       <style>
@@ -86,6 +158,14 @@ export class StarlightPage extends Elena(HTMLElement) {
           .body.no-sidebar {
             grid-template-columns: 1fr;
             grid-template-areas: 'content';
+          }
+          .body.no-sidebar .content-wrap {
+            max-width: 56rem;
+            margin: 0 auto;
+            width: 100%;
+          }
+          .body.no-sidebar .content-inner {
+            max-width: none;
           }
           .sidebar-wrap {
             grid-area: sidebar;
@@ -158,14 +238,13 @@ export class StarlightPage extends Elena(HTMLElement) {
         }
       </style>
       <div class="page-wrap">
-        <starlight-header></starlight-header>
-        ${unsafeHTML(backdrop)}
+        <starlight-header sitetitle="${this.sitetitle}" nav="${navJson}" currentpath="${this.currentpath}" hassidebar="${!this.nosidebar}"></starlight-header>
         <div class="${bodyClass}">
           ${unsafeHTML(sidebarHtml)}
           <main class="content-wrap">
             <div class="content-inner">
               ${unsafeHTML(titleHtml)}
-              <div class="content-body">${unsafeHTML(this.innerHTML)}</div>
+              <div class="content-body">${unsafeHTML(contentHtml)}</div>
             </div>
           </main>
           ${unsafeHTML(tocHtml)}

@@ -36,10 +36,8 @@ export default defineNitroConfig({
     'build:before': async (nitro: Nitro) => {
       // Elena page modules extend Elena(HTMLElement). When the SSG plugin
       // uses jiti to import page modules (to call generateRoutes()), the
-      // HTMLElement shim must already be in place. @elenajs/ssr provides it.
-      const elenaSsr = await import('@elenajs/ssr');
-      (globalThis as any).__litro_elena_ssr__ = elenaSsr.ssr;
-      (globalThis as any).__litro_elena_register__ = elenaSsr.register;
+      // HTMLElement shim must already be in place.
+      await import('@beatzball/litro/adapter/elena/ssr-shim');
 
       await contentPlugin(nitro);
       await pagesPlugin(nitro);

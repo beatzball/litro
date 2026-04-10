@@ -20,7 +20,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import process from 'node:process';
 import { scanAndWriteClientRoutes } from '../plugins/pages.js';
@@ -80,7 +80,25 @@ switch (command) {
 
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
-    run('nitro', ['dev', '--port', String(port)], { LITRO_MODE: 'server', LITRO_DEV: 'true', PORT: String(port) });
+
+    // Nitro's dev server proxies requests to a worker thread. During
+    // dev:reload the worker restarts — inflight connections emit ECONNRESET
+    // which Node v24+ treats as a fatal uncaught exception, crashing the
+    // server. Write a temporary guard script and preload it via --require.
+    const guardDir = join(cwd, 'node_modules', '.cache');
+    const guardPath = join(guardDir, 'litro-dev-guard.cjs');
+    mkdirSync(guardDir, { recursive: true });
+    writeFileSync(guardPath,
+      'process.on("uncaughtException",function(e){if(e&&e.code==="ECONNRESET")return;console.error(e);process.exit(1)});\n',
+    );
+    const nodeOpts = [process.env.NODE_OPTIONS, `--require "${guardPath}"`]
+      .filter(Boolean).join(' ');
+    run('nitro', ['dev', '--port', String(port)], {
+      LITRO_MODE: 'server',
+      LITRO_DEV: 'true',
+      PORT: String(port),
+      NODE_OPTIONS: nodeOpts,
+    });
     break;
   }
 

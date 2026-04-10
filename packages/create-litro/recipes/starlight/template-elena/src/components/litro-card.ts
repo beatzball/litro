@@ -8,17 +8,17 @@ import { Elena, html, unsafeHTML } from '@elenajs/core';
  */
 export class LitroCard extends Elena(HTMLElement) {
   static tagName = 'litro-card';
-  static props = ['title', 'description', 'icon', 'iconSrc', 'href'];
+  static props = ['title', 'description', 'icon', 'iconsrc', 'href'];
 
   title = '';
   description = '';
   icon = '';
-  iconSrc = '';
+  iconsrc = '';
   href = '';
 
   render() {
-    const iconHtml = this.iconSrc
-      ? `<img class="card-icon-img" src="${this.iconSrc}" alt="" aria-hidden="true" />`
+    const iconHtml = this.iconsrc
+      ? `<img class="card-icon-img" src="${this.iconsrc}" alt="" aria-hidden="true" />`
       : this.icon
         ? `<span class="card-icon">${this.icon}</span>`
         : '';
@@ -33,7 +33,7 @@ export class LitroCard extends Elena(HTMLElement) {
         <p class="card-title">${this.title}</p>
       </div>
       ${descHtml}
-      <div class="card-slot">${this.innerHTML}</div>
+      ${this.innerHTML ? `<div class="card-slot">${this.innerHTML}</div>` : ''}
     `;
 
     const tag = this.href ? 'a' : 'div';

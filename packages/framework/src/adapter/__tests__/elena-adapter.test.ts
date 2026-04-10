@@ -30,20 +30,19 @@ describe('elenaAdapter', () => {
     expect(config.esbuild).toBeUndefined();
   });
 
-  it('provides a manifest preamble with @elenajs/ssr import', () => {
+  it('provides a manifest preamble with ssr-shim import', () => {
     const preamble = elenaAdapter.manifestPreamble!();
-    // Direct @elenajs/ssr import ensures HTMLElement shim is installed
-    // before any page module evaluates @elenajs/core.
-    expect(preamble).toContain("import * as _elenaSsr from '@elenajs/ssr'");
-    expect(preamble).toContain('__litro_elena_ssr__');
-    expect(preamble).toContain('__litro_elena_register__');
+    // Imports the SSR shim module which provides HTMLElement and
+    // customElements globals for Node.js before page modules evaluate.
+    expect(preamble).toContain("import * as _elenaShim from '@beatzball/litro/adapter/elena/ssr-shim'");
+    expect(preamble).toContain('__litro_elena_shim__');
     expect(preamble).toContain("process.env.LITRO_ADAPTER = 'elena'");
   });
 
-  it('provides a manifest postamble that registers page components', () => {
+  it('provides an empty manifest postamble (no registration needed)', () => {
     const postamble = elenaAdapter.manifestPostamble!(['_page0', '_page1']);
-    // Postamble calls register() on each page module's default export
-    expect(postamble).toContain('_elenaSsr.register(_page0.default)');
-    expect(postamble).toContain('_elenaSsr.register(_page1.default)');
+    // No @elenajs/ssr registration needed — the adapter renders components
+    // directly using the customElements shim registry.
+    expect(postamble).toBe('');
   });
 });

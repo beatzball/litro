@@ -8,6 +8,8 @@ import { siteConfig } from '../../server/starlight.config.js';
 import { extractHeadings, addHeadingIds } from '../../src/extract-headings.js';
 import { applyHighlighting } from '../../src/highlight.js';
 import { starlightHead } from '../../src/route-meta.js';
+// Re-exporting child components prevents Rollup tree-shaking.
+export { StarlightPage } from '../../src/components/starlight-page.js';
 
 export interface DocPageData {
   doc: Post;
@@ -90,34 +92,6 @@ export class DocPage extends LitroPage {
 
     const { doc, body, sidebar, siteTitle, currentSlug, toc, nav, prevDoc, nextDoc, editUrl } = data;
 
-    // Header
-    const navLinksHtml = (nav || []).map(item => {
-      const current = ('/docs/' + currentSlug).startsWith(item.href) ? 'page' : 'false';
-      return `<a href="${item.href}" class="nav-link" aria-current="${current}">${item.label}</a>`;
-    }).join('');
-
-    // Sidebar
-    const sidebarHtml = (sidebar || []).map(group => {
-      const itemsHtml = group.items.map(item => {
-        const current = currentSlug === item.slug ? 'page' : 'false';
-        const badgeHtml = item.badge
-          ? `<span class="sb-badge">${item.badge.text}</span>`
-          : '';
-        return `<li><a href="/docs/${item.slug}" aria-current="${current}"><span>${item.label}</span>${badgeHtml}</a></li>`;
-      }).join('');
-      return `<div class="sb-group"><p class="sb-label">${group.label}</p><ul>${itemsHtml}</ul></div>`;
-    }).join('');
-
-    // TOC
-    const tocHtml = (toc || []).length > 0
-      ? `<nav aria-label="On this page">
-          <h2 class="toc-heading">On this page</h2>
-          <ul class="toc-list">${toc.map(e =>
-            `<li class="depth-${e.depth}"><a href="#${e.slug}">${e.text}</a></li>`
-          ).join('')}</ul>
-        </nav>`
-      : '';
-
     // Prev/next
     const prevHtml = prevDoc
       ? `<a href="${prevDoc.href}" class="prev-next-link">&larr; ${prevDoc.label}</a>`
@@ -137,70 +111,6 @@ export class DocPage extends LitroPage {
       <style>
         @scope (page-docs-slug) {
           :scope { display: block; }
-          .page-wrap { min-height: 100vh; display: flex; flex-direction: column; }
-
-          /* Header */
-          .header {
-            height: var(--sl-nav-height, 3.5rem);
-            background-color: var(--sl-color-bg-nav, #fff);
-            border-bottom: 1px solid var(--sl-color-border, #e8e8e8);
-            display: flex; align-items: center;
-            padding: 0 var(--sl-content-pad-x, 1.5rem); gap: 1rem;
-            position: sticky; top: 0; z-index: 100;
-          }
-          .site-title { font-size: var(--sl-text-lg, 1.125rem); font-weight: 700; color: var(--sl-color-text, #23262f); text-decoration: none; }
-          .site-title:hover { opacity: 0.85; }
-          .nav { display: flex; align-items: center; gap: 0.25rem; flex: 1; }
-          .nav-link {
-            padding: 0.35rem 0.75rem; font-size: var(--sl-text-sm, 0.875rem); font-weight: 500;
-            color: var(--sl-color-gray-5, #4b4b4b); text-decoration: none;
-            border-radius: var(--sl-border-radius, 0.375rem);
-          }
-          .nav-link:hover { color: var(--sl-color-text, #23262f); background-color: var(--sl-color-gray-2, #e8e8e8); }
-          .nav-link[aria-current='page'] { color: var(--sl-color-accent, #7c3aed); background-color: var(--sl-color-accent-low, #ede9fe); }
-
-          /* Grid layout */
-          .body {
-            display: grid;
-            grid-template-columns: var(--sl-sidebar-width, 16rem) 1fr var(--sl-toc-width, 14rem);
-            grid-template-areas: 'sidebar content toc';
-            flex: 1; max-width: 90rem; margin: 0 auto; width: 100%;
-          }
-          .sidebar-wrap {
-            grid-area: sidebar; border-right: 1px solid var(--sl-color-border, #e8e8e8);
-            background-color: var(--sl-color-bg-sidebar, #f6f6f6);
-            position: sticky; top: var(--sl-nav-height, 3.5rem);
-            height: calc(100vh - var(--sl-nav-height, 3.5rem)); overflow-y: auto;
-          }
-          .content-wrap { grid-area: content; padding: var(--sl-content-pad-y, 2rem) var(--sl-content-pad-x, 1.5rem); min-width: 0; }
-          .content-inner { max-width: var(--sl-content-width, 48rem); }
-          .toc-wrap {
-            grid-area: toc; border-left: 1px solid var(--sl-color-border, #e8e8e8);
-            position: sticky; top: var(--sl-nav-height, 3.5rem);
-            height: calc(100vh - var(--sl-nav-height, 3.5rem)); overflow-y: auto;
-            padding: var(--sl-content-pad-y, 2rem) 0 var(--sl-content-pad-y, 2rem) var(--sl-content-pad-x, 1.5rem);
-          }
-          .page-title { font-size: var(--sl-text-4xl, 2.25rem); font-weight: 700; color: var(--sl-color-text, #23262f); margin: 0 0 1.5rem; line-height: 1.15; }
-
-          /* Sidebar */
-          .sb-nav { padding: 1rem 0; }
-          .sb-group { margin-bottom: 1.5rem; }
-          .sb-label { font-size: var(--sl-text-xs, 0.75rem); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sl-color-gray-4, #757575); padding: 0 1rem; margin: 0 0 0.5rem; }
-          .sb-nav ul { list-style: none; padding: 0; margin: 0; }
-          .sb-nav li { margin: 0; }
-          .sb-nav a { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 1rem; font-size: var(--sl-text-sm, 0.875rem); color: var(--sl-color-gray-5, #4b4b4b); text-decoration: none; border-left: 2px solid transparent; }
-          .sb-nav a:hover { color: var(--sl-color-text, #23262f); background-color: var(--sl-color-gray-2, #e8e8e8); }
-          .sb-nav a[aria-current='page'] { color: var(--sl-color-accent, #7c3aed); border-left-color: var(--sl-color-accent, #7c3aed); background-color: var(--sl-color-accent-low, #ede9fe); font-weight: 600; }
-          .sb-badge { display: inline-block; padding: 0.1em 0.45em; font-size: var(--sl-text-xs, 0.75rem); font-weight: 600; border-radius: 9999px; background-color: var(--sl-color-accent-low, #ede9fe); color: var(--sl-color-accent-high, #5b21b6); margin-left: 0.5rem; }
-
-          /* TOC */
-          .toc-heading { font-size: var(--sl-text-xs, 0.75rem); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sl-color-gray-4, #757575); margin: 0 0 0.75rem; padding: 0; border: none; }
-          .toc-list { list-style: none; padding: 0; margin: 0; }
-          .toc-list li { margin: 0; }
-          .toc-list a { display: block; padding: 0.2rem 0; font-size: var(--sl-text-sm, 0.875rem); color: var(--sl-color-gray-4, #757575); text-decoration: none; border-left: 2px solid transparent; }
-          .toc-list a:hover { color: var(--sl-color-text, #23262f); }
-          .depth-2 a { padding-left: 0.75rem; }
-          .depth-3 a { padding-left: 1.5rem; }
 
           /* Prev/next */
           .prev-next { display: flex; justify-content: space-between; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--sl-color-border); font-size: var(--sl-text-sm); }
@@ -241,38 +151,21 @@ export class DocPage extends LitroPage {
           .doc-body .hljs-operator, .doc-body .hljs-punctuation { color: #94a3b8; }
           .doc-body .hljs-meta, .doc-body .hljs-meta .hljs-keyword { color: #38bdf8; }
           .doc-body .hljs-type { color: #fb923c; }
-
-          /* Responsive */
-          @media (max-width: 72rem) {
-            .body { grid-template-columns: 1fr var(--sl-toc-width, 14rem); grid-template-areas: 'content toc'; }
-            .sidebar-wrap { display: none; }
-          }
-          @media (max-width: 48rem) {
-            .body { grid-template-columns: 1fr; grid-template-areas: 'content'; }
-            .toc-wrap { display: none; }
-          }
         }
       </style>
-      <div class="page-wrap">
-        <header class="header">
-          <a class="site-title" href="/">${siteTitle}</a>
-          <nav class="nav" aria-label="Main navigation">${unsafeHTML(navLinksHtml)}</nav>
-        </header>
-        <div class="body">
-          <aside class="sidebar-wrap">
-            <nav class="sb-nav" aria-label="Site navigation">${unsafeHTML(sidebarHtml)}</nav>
-          </aside>
-          <main class="content-wrap">
-            <div class="content-inner">
-              <h1 class="page-title">${doc.title}</h1>
-              <div class="doc-body">${unsafeHTML(body)}</div>
-              ${unsafeHTML(prevNextHtml)}
-              ${unsafeHTML(editHtml)}
-            </div>
-          </main>
-          <aside class="toc-wrap">${unsafeHTML(tocHtml)}</aside>
-        </div>
-      </div>
+      <starlight-page
+        sitetitle="${siteTitle}"
+        pagetitle="${doc.title}"
+        nav="${JSON.stringify(nav)}"
+        sidebar="${JSON.stringify(sidebar)}"
+        toc="${JSON.stringify(toc)}"
+        currentslug="${currentSlug}"
+        currentpath="${'/docs/' + currentSlug}"
+      >
+        <div class="doc-body">${unsafeHTML(body)}</div>
+        ${unsafeHTML(prevNextHtml)}
+        ${unsafeHTML(editHtml)}
+      </starlight-page>
     `;
   }
 }

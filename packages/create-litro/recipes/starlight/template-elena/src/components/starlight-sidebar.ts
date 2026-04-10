@@ -12,22 +12,22 @@ export interface SidebarGroup {
 }
 
 /**
- * <starlight-sidebar .groups=${sidebar} currentSlug="getting-started">
+ * <starlight-sidebar .groups=${sidebar} currentslug="getting-started">
  *   Renders grouped navigation links for the docs sidebar.
  *   Light DOM — styles scoped via @scope.
  * </starlight-sidebar>
  */
 export class StarlightSidebar extends Elena(HTMLElement) {
   static tagName = 'starlight-sidebar';
-  static props = ['groups', 'currentSlug'];
+  static props = ['groups', 'currentslug'];
 
   groups: SidebarGroup[] = [];
-  currentSlug = '';
+  currentslug = '';
 
   render() {
     const groupsHtml = (this.groups || []).map(group => {
       const itemsHtml = group.items.map(item => {
-        const current = this.currentSlug === item.slug ? 'page' : 'false';
+        const current = this.currentslug === item.slug ? 'page' : 'false';
         const badgeHtml = item.badge
           ? `<span class="badge">${item.badge.text}</span>`
           : '';

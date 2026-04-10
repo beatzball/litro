@@ -31,8 +31,8 @@ test('home page renders header with nav links', async ({ page }) => {
 test('home page renders feature cards', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
-  // Cards are rendered inline in Elena (not as child custom elements)
-  const cards = page.locator('page-home .feature-card');
+  // Cards are rendered as <litro-card> child components
+  const cards = page.locator('page-home litro-card');
   await expect(cards.first()).toBeVisible();
   expect(await cards.count()).toBe(4);
 });
@@ -88,8 +88,8 @@ test('docs page renders prev/next navigation', async ({ page }) => {
 test('docs page renders sidebar with current page highlighted', async ({ page }) => {
   await page.goto('/docs/getting-started');
   await page.waitForSelector('page-docs-slug');
-  // Elena light DOM — sidebar links are directly in the page
-  const currentLink = page.locator('page-docs-slug .sb-nav a[aria-current="page"]');
+  // Elena light DOM — sidebar is a <starlight-sidebar> child component
+  const currentLink = page.locator('page-docs-slug starlight-sidebar a[aria-current="page"]');
   await expect(currentLink.first()).toBeVisible();
   await expect(currentLink.first()).toContainText('Getting Started');
 });
@@ -114,7 +114,8 @@ test('page components use light DOM (no shadow root)', async ({ page }) => {
 test('page HTML contains @scope CSS', async ({ page }) => {
   await page.goto('/docs/getting-started');
   await page.waitForSelector('page-docs-slug');
-  const hasScope = await page.locator('page-docs-slug style').evaluate(
+  // Multiple <style> tags (page + child components), check the first one
+  const hasScope = await page.locator('page-docs-slug style').first().evaluate(
     (el) => el.textContent?.includes('@scope') ?? false,
   );
   expect(hasScope).toBe(true);
