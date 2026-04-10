@@ -39,7 +39,7 @@ export const pageData = definePageData(async (_event) => {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Litro",
-    "description": "A fullstack web framework combining Lit web components, Nitro server, and Vite. File-based routing, streaming SSR, SSG, and Declarative Shadow DOM.",
+    "description": "A fullstack web framework combining web components, Nitro server, and Vite. File-based routing, streaming SSR, SSG, and Declarative Shadow DOM.",
     "url": "https://litro.dev",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Node.js",
@@ -56,10 +56,10 @@ export const pageData = definePageData(async (_event) => {
     nav: siteConfig.nav,
     features: [
       {
-        iconSrc: "/logos/lit-flame.svg",
-        title: "Lit Components",
+        iconSrc: "/logos/webcomponents.svg",
+        title: "Web Components",
         description:
-          "Standard web components — no VDOM, no proprietary runtime. Works anywhere.",
+          "Pick your component library — Lit, FAST, or Elena. Standard custom elements, zero lock-in.",
       },
       {
         iconSrc: "/logos/nitro.svg",
@@ -71,7 +71,7 @@ export const pageData = definePageData(async (_event) => {
         icon: "🚀",
         title: "Streaming SSR",
         description:
-          "Declarative Shadow DOM streaming via @lit-labs/ssr. Fast first paint.",
+          "Declarative Shadow DOM or light-DOM SSR — each adapter picks the fastest path to first paint.",
       },
       {
         icon: "🔀",
@@ -98,7 +98,7 @@ export const pageData = definePageData(async (_event) => {
 
 export const routeMeta = {
   head: starlightHead,
-  title: "Litro — Fullstack Lit Framework",
+  title: "Litro — Fullstack Web Component Framework",
 };
 
 @customElement("page-home")
@@ -223,12 +223,18 @@ export class SplashPage extends LitroPage {
                     style="
                 font-size:var(--sl-text-xl);
                 color:var(--sl-color-gray-5);
-                max-width:36rem;
+                max-width:40rem;
                 margin:0 auto 2.5rem;
                 line-height:1.6;
               "
                   >
-                    ${description}
+                    The fullstack web component framework — SSR, static generation, and your choice of
+                    <span style="display:inline-flex;align-items:center;gap:0.25rem;vertical-align:bottom;">
+                      <img src="/logos/lit-flame.svg" alt="" aria-hidden="true" style="width:0.95em;height:0.95em;" />Lit</span>,
+                    <span style="display:inline-flex;align-items:center;gap:0.25rem;vertical-align:bottom;">
+                      <img src="/logos/fast.svg" alt="" aria-hidden="true" style="width:0.95em;height:0.95em;" />FAST</span>, or
+                    <span style="display:inline-flex;align-items:center;gap:0.25rem;vertical-align:bottom;">
+                      <img src="/logos/elena.svg" alt="" aria-hidden="true" style="width:0.95em;height:0.95em;" />Elena</span>.
                   </p>
                 `
               : ""}
