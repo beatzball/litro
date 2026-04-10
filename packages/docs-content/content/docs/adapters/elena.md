@@ -1,10 +1,10 @@
 ---
-title: "Elena Adapter"
-description: "Build Litro pages with Elena — light DOM rendering, no Shadow DOM, no hydration, progressive enhancement with @scope CSS encapsulation."
+title: "ElenaJS Adapter"
+description: "Build Litro pages with ElenaJS — light DOM rendering, no Shadow DOM, no hydration, progressive enhancement with @scope CSS encapsulation."
 date: 2026-04-10
 ---
 
-# Elena Adapter
+# ElenaJS Adapter
 
 The Elena adapter uses [Elena](https://elenajs.com/) for **light DOM** rendering. Components render directly into the document — no Shadow DOM wrapper, no Declarative Shadow DOM, no hydration step. CSS encapsulation uses the `@scope` CSS at-rule instead.
 

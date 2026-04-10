@@ -30,6 +30,8 @@ const STATIC_ROUTES: Array<{ path: string; priority: string }> = [
   { path: '/docs/migrate/from-nextjs', priority: '0.8' },
   { path: '/docs/migrate/from-nuxt', priority: '0.8' },
   { path: '/docs/migrate/from-react', priority: '0.8' },
+  { path: '/docs/migrate/from-react-to-fast', priority: '0.8' },
+  { path: '/docs/migrate/from-react-to-elena', priority: '0.8' },
   { path: '/docs/adapters/overview', priority: '0.8' },
   { path: '/docs/adapters/lit', priority: '0.8' },
   { path: '/docs/adapters/fast', priority: '0.8' },

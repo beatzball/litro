@@ -87,3 +87,5 @@ Migration guides with step-by-step code walkthroughs:
 - [Migrating from Next.js](/docs/migrate/from-nextjs)
 - [Migrating from Nuxt.js](/docs/migrate/from-nuxt)
 - [From React to Lit](/docs/migrate/from-react)
+- [From React to FAST Element](/docs/migrate/from-react-to-fast)
+- [From React to ElenaJS](/docs/migrate/from-react-to-elena)

@@ -41,7 +41,7 @@ export const siteConfig = {
         { label: 'Overview', slug: 'adapters/overview' },
         { label: 'Lit', slug: 'adapters/lit' },
         { label: 'FAST Element', slug: 'adapters/fast' },
-        { label: 'Elena', slug: 'adapters/elena' },
+        { label: 'ElenaJS', slug: 'adapters/elena' },
         { label: 'Switching Adapters', slug: 'adapters/switching' },
       ],
     },
@@ -74,6 +74,8 @@ export const siteConfig = {
         { label: 'From Next.js', slug: 'migrate/from-nextjs' },
         { label: 'From Nuxt.js', slug: 'migrate/from-nuxt' },
         { label: 'From React (to Lit)', slug: 'migrate/from-react' },
+        { label: 'From React (to FAST)', slug: 'migrate/from-react-to-fast' },
+        { label: 'From React (to ElenaJS)', slug: 'migrate/from-react-to-elena' },
       ],
     },
     {
