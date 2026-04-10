@@ -27,6 +27,16 @@ export default defineConfig({
       testDir: './e2e/playground-starlight-fast',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3035' },
     },
+    {
+      name: 'playground-elena',
+      testDir: './e2e/playground-elena',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3036' },
+    },
+    {
+      name: 'playground-starlight-elena',
+      testDir: './e2e/playground-starlight-elena',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3037' },
+    },
   ],
   webServer: [
     {
@@ -54,6 +64,20 @@ export default defineConfig({
       name: 'playground-starlight-fast',
       command: 'cd playground-starlight-fast && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3035',
       url: 'http://localhost:3035',
+      reuseExistingServer: false,
+      timeout: 180000,
+    },
+    {
+      name: 'playground-elena',
+      command: 'cd playground-elena && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3036',
+      url: 'http://localhost:3036',
+      reuseExistingServer: false,
+      timeout: 180000,
+    },
+    {
+      name: 'playground-starlight-elena',
+      command: 'cd playground-starlight-elena && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3037',
+      url: 'http://localhost:3037',
       reuseExistingServer: false,
       timeout: 180000,
     },

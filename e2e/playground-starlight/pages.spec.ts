@@ -115,7 +115,7 @@ test('tag page renders filtered posts', async ({ page }) => {
 test('page components have DSD shadow roots', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
-  const hasShadow = await page.locator('page-home').evaluate(
+  const hasShadow = await page.locator('page-home:not([hidden])').evaluate(
     (el) => !!el.shadowRoot,
   );
   expect(hasShadow).toBe(true);

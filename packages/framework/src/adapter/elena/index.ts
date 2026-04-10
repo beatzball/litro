@@ -3,7 +3,9 @@
  *
  * Implements FrameworkAdapter for Elena (elenajs.com).
  *
- * SSR: @elenajs/ssr renders components as plain light DOM HTML (no DSD)
+ * SSR: Direct rendering — instantiate component, call render(), stringify.
+ *      No @elenajs/ssr dependency required. Elena's html tag produces a
+ *      TemplateResult with a .toString() method that handles escaping.
  * Hydration: None — Elena uses progressive enhancement (components upgrade in place)
  * Styles: Light DOM with @scope CSS encapsulation
  *
@@ -18,38 +20,205 @@
 import type { FrameworkAdapter } from '../types.js';
 
 /**
+ * Install simplified prop getters on a component prototype so that
+ * render() can read prop values from the internal _props Map.
+ * Same technique as @elenajs/ssr's installPropGetters.
+ */
+const _initialized = new WeakSet<Function>();
+
+function installPropGetters(ComponentClass: any): void {
+  if (_initialized.has(ComponentClass)) return;
+  _initialized.add(ComponentClass);
+
+  const props = ComponentClass.props;
+  if (!props) return;
+
+  for (const p of props) {
+    const name = typeof p === 'string' ? p : p.name;
+    const descriptor = Object.getOwnPropertyDescriptor(ComponentClass.prototype, name);
+    if (descriptor && typeof descriptor.get === 'function') continue;
+
+    Object.defineProperty(ComponentClass.prototype, name, {
+      configurable: true,
+      enumerable: true,
+      get() { return this._props ? this._props.get(name) : undefined; },
+      set(value: unknown) {
+        if (!this._props) this._props = new Map();
+        this._props.set(name, value);
+      },
+    });
+  }
+}
+
+/**
+ * Normalize whitespace to match Elena's client-side rendering output.
+ */
+function normalizeWhitespace(markup: string): string {
+  return markup
+    .replace(/>\n\s*/g, '>')
+    .replace(/\n\s*</g, '<')
+    .replace(/\n\s*/g, ' ')
+    .replace(/>\s+</g, '><');
+}
+
+/**
+ * Render a single Elena component class to an HTML string.
+ * Creates an instance, sets props, calls willUpdate() + render(),
+ * and stringifies the TemplateResult.
+ *
+ * @param children - Pre-rendered innerHTML from the parent's template.
+ *   Set as instance.innerHTML so components using this.innerHTML (e.g.
+ *   wrapper components like litro-card-grid) can access child content.
+ */
+function renderComponent(
+  ComponentClass: any,
+  attrs: Record<string, string>,
+  serverData?: unknown,
+  children?: string,
+): string {
+  installPropGetters(ComponentClass);
+
+  const instance = new ComponentClass();
+
+  // Capture default value types for attribute conversion.
+  const propDefaultTypes: Record<string, string> = {};
+  for (const p of ComponentClass.props || []) {
+    const name = typeof p === 'string' ? p : p.name;
+    const value = instance[name];
+    propDefaultTypes[name] = typeof value;
+
+    if (Object.prototype.hasOwnProperty.call(instance, name)) {
+      delete instance[name];
+      if (!instance._props) instance._props = new Map();
+      instance._props.set(name, value);
+    }
+  }
+
+  // Apply HTML attributes as props, converting types based on defaults.
+  if (!instance._props) instance._props = new Map();
+  for (const [key, value] of Object.entries(attrs)) {
+    const type = propDefaultTypes[key];
+    if (type === 'boolean') {
+      instance._props.set(key, value !== null && value !== 'false');
+    } else if (type === 'number') {
+      instance._props.set(key, value === null ? null : +value);
+    } else if (type === 'object') {
+      // Arrays and objects are JSON-serialized in attributes.
+      if (!value) { instance._props.set(key, null); }
+      else { try { instance._props.set(key, JSON.parse(value)); } catch { instance._props.set(key, null); } }
+    } else {
+      instance._props.set(key, value === '' ? true : value);
+    }
+    // Also set _text for Elena's built-in text property.
+    if (key === 'text') instance._text = value;
+  }
+
+  // Inject serverData directly (bypasses attribute conversion).
+  if (serverData !== undefined) {
+    instance._props.set('serverData', serverData);
+  }
+
+  // Set innerHTML for wrapper components that read this.innerHTML.
+  if (children !== undefined) {
+    instance.innerHTML = children;
+  }
+
+  try {
+    instance.willUpdate?.();
+    const result = instance.render();
+    if (!result) return '';
+    return normalizeWhitespace(result.toString());
+  } catch (error: any) {
+    const tag = ComponentClass.tagName ?? 'unknown';
+    console.warn(`[litro:elena] SSR render failed for <${tag}>: ${error.message}`);
+    return '';
+  }
+}
+
+/** Decode HTML entities that Elena's html tag escapes in attribute values. */
+const ENTITIES: Record<string, string> = {
+  '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'",
+};
+function decodeEntities(s: string): string {
+  return s.replace(/&(?:amp|lt|gt|quot|#39);/g, m => ENTITIES[m] || m);
+}
+
+/** Regex to find custom element tags (tags containing a hyphen). */
+const CE_TAG_RE = /<([a-z][a-z0-9]*-[a-z0-9-]*)([^>]*)(?:\/>|>([\s\S]*?)<\/\1>)/gi;
+
+/** Parse attributes from an HTML attribute string, decoding HTML entities. */
+function parseAttrs(attrStr: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const re = /([a-z][a-z0-9-]*)(?:\s*=\s*"([^"]*)"|\s*=\s*'([^']*)')?/gi;
+  let m;
+  while ((m = re.exec(attrStr)) !== null) {
+    attrs[m[1]] = decodeEntities(m[2] ?? m[3] ?? '');
+  }
+  return attrs;
+}
+
+/**
+ * Recursively expand custom element tags in an HTML string.
+ * Looks up each CE tag in the component registry and renders it.
+ *
+ * Expansion is bottom-up: children are expanded first, then passed
+ * to the parent as innerHTML. This allows wrapper components (like
+ * litro-card-grid) to access pre-rendered child content.
+ */
+function expandNestedCEs(html: string, ceMap: Map<string, Function>, depth = 0): string {
+  if (depth > 10) return html; // Guard against infinite recursion.
+  return html.replace(CE_TAG_RE, (match, tag, attrStr, childContent) => {
+    // Skip already-expanded CEs (have hydrated attribute from a prior pass).
+    if (attrStr && /\bhydrated\b/.test(attrStr)) return match;
+    const ComponentClass = ceMap.get(tag);
+    if (!ComponentClass) return match; // Not registered — leave as-is.
+    // First expand any nested CEs in the children (bottom-up).
+    const expandedChildren = childContent
+      ? expandNestedCEs(childContent, ceMap, depth + 1)
+      : undefined;
+    const attrs = parseAttrs(attrStr || '');
+    const innerHTML = renderComponent(ComponentClass, attrs, undefined, expandedChildren);
+    if (!innerHTML) return match;
+    // Then expand any nested CEs in this component's rendered output.
+    const expanded = expandNestedCEs(innerHTML, ceMap, depth + 1);
+    return `<${tag}${attrStr || ''} hydrated>${expanded}</${tag}>`;
+  });
+}
+
+/**
  * Render an Elena component to an AsyncIterable<string>.
  *
- * Elena's ssr() is synchronous and returns a plain string. We wrap it
- * in a single-yield async generator to match the adapter interface.
+ * Direct rendering: instantiate the component class, call render(),
+ * and stringify the TemplateResult. No @elenajs/ssr dependency needed.
  *
- * serverData is injected via globalThis.__litro_ssr_page_data__ (same
- * pattern as FAST). Elena SSR calls the constructor, which reads the
- * global. This is safe because Node.js SSR is single-threaded.
+ * serverData is injected directly into the instance's _props Map.
+ * Nested custom elements are recursively expanded using the
+ * customElements shim registry.
  */
 async function* renderElenaPage(
   tag: string,
   serverData: unknown,
 ): AsyncIterable<string> {
-  const ssrFn = (globalThis as any).__litro_elena_ssr__;
-  if (!ssrFn) {
+  const ceMap: Map<string, Function> | undefined = (globalThis as any).__litro_elena_ce_map__;
+  if (!ceMap) {
     throw new Error(
-      '[litro:elena] ssr() not found on globalThis. ' +
+      '[litro:elena] Component registry not found. ' +
         'Ensure LITRO_ADAPTER=elena is set and the manifest preamble ran.',
     );
   }
 
-  // Make serverData available to the component's constructor during SSR.
-  if (serverData != null) {
-    (globalThis as any).__litro_ssr_page_data__ = serverData;
+  const ComponentClass = ceMap.get(tag);
+  if (!ComponentClass) {
+    throw new Error(
+      `[litro:elena] Component <${tag}> not found in registry. ` +
+        `Registered: ${[...ceMap.keys()].join(', ')}`,
+    );
   }
 
-  try {
-    const result: string = ssrFn(`<${tag}></${tag}>`);
-    yield result;
-  } finally {
-    delete (globalThis as any).__litro_ssr_page_data__;
-  }
+  const innerHTML = renderComponent(ComponentClass, {}, serverData);
+  // Expand any nested custom elements in the render output.
+  const expanded = expandNestedCEs(innerHTML, ceMap);
+  yield `<${tag} hydrated>${expanded}</${tag}>`;
 }
 
 export const elenaAdapter: FrameworkAdapter = {
@@ -80,47 +249,29 @@ export const elenaAdapter: FrameworkAdapter = {
   },
 
   manifestPreamble() {
-    // Import @elenajs/ssr and store references on globalThis so
-    // renderElenaPage() can access them without re-importing.
+    // Import the SSR shim FIRST — it provides HTMLElement and customElements
+    // globals for Node.js. ESM evaluates imports in declaration order, so
+    // this runs before page module imports (which extend HTMLElement and
+    // call customElements.define()).
     //
-    // @elenajs/ssr provides an HTMLElement shim for Node.js, so it must
-    // be imported BEFORE @elenajs/core (which extends HTMLElement).
+    // The shim's customElements.define() captures every component class
+    // into __litro_elena_ce_map__. renderElenaPage() reads this map to
+    // instantiate components directly — no @elenajs/ssr needed.
     //
-    // IMPORTANT: Uses `import * as` to prevent Rollup tree-shaking.
-    // Inline code (globalThis assignments, customElements shim, env var) runs
-    // AFTER all imports due to ESM hoisting — that's fine because renderPage()
-    // only reads these at request time. The customElements shim here is a
-    // safety net for future code that may call .define() at runtime.
+    // Uses `import * as` to prevent Rollup tree-shaking of the side-effect
+    // import (Rollup drops bare `import` of external packages without
+    // "sideEffects" in package.json).
     return [
-      `import * as _elenaSsr from '@elenajs/ssr';`,
-      `globalThis.__litro_elena_ssr__ = _elenaSsr.ssr;`,
-      `globalThis.__litro_elena_register__ = _elenaSsr.register;`,
-      `if (!globalThis.customElements) {`,
-      `  var _ceMap = new Map();`,
-      `  globalThis.customElements = {`,
-      `    define: function(name, ctor) { _ceMap.set(name, ctor); },`,
-      `    get: function(name) { return _ceMap.get(name); },`,
-      `    whenDefined: function() { return Promise.resolve(); },`,
-      `  };`,
-      `}`,
+      `import * as _elenaShim from '@beatzball/litro/adapter/elena/ssr-shim';`,
+      `globalThis.__litro_elena_shim__ = _elenaShim;`,
       `process.env.LITRO_ADAPTER = 'elena';`,
     ].join('\n');
   },
 
-  manifestPostamble(pageModuleVars: string[]) {
-    // Register every page component class with @elenajs/ssr's internal
-    // registry. This runs as top-level inline code AFTER all page modules
-    // have been imported (ESM guarantees imports evaluate before inline code).
-    //
-    // Elena SSR's ssr() function looks up components from its own internal
-    // Map — NOT from customElements. Components must be explicitly registered
-    // via register(Class) before ssr() can expand their HTML tags.
-    //
-    // Each page module default-exports the Elena component class. We iterate
-    // over all of them and register any that have a static tagName property.
-    const registrations = pageModuleVars
-      .map(v => `if (${v}.default && ${v}.default.tagName) _elenaSsr.register(${v}.default);`)
-      .join('\n');
-    return `// Auto-register Elena components with @elenajs/ssr\n${registrations}`;
+  manifestPostamble(_pageModuleVars: string[]) {
+    // No registration needed — renderElenaPage() reads directly from
+    // the customElements shim map (__litro_elena_ce_map__) which is
+    // populated by .define() calls during page module imports.
+    return '';
   },
 };

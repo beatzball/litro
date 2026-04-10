@@ -112,6 +112,10 @@
       "import": "./dist/adapter/elena/index.js",
       "types": "./dist/adapter/elena/index.d.ts"
     },
+    "./adapter/elena/ssr-shim": {
+      "source": "./src/adapter/elena/ssr-shim.ts",
+      "import": "./dist/adapter/elena/ssr-shim.js"
+    },
     "./adapter/elena/runtime": {
       "source": "./src/adapter/elena/runtime/client.ts",
       "import": "./dist/adapter/elena/runtime/client.js",
@@ -152,7 +156,9 @@
     "./src/adapter/elena/runtime/LitroLink.ts",
     "./dist/adapter/elena/runtime/client.js",
     "./dist/adapter/elena/runtime/LitroOutlet.js",
-    "./dist/adapter/elena/runtime/LitroLink.js"
+    "./dist/adapter/elena/runtime/LitroLink.js",
+    "./src/adapter/elena/ssr-shim.ts",
+    "./dist/adapter/elena/ssr-shim.js"
   ],
   "dependencies": {
     "@beatzball/litro-router": "workspace:*",

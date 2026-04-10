@@ -6,6 +6,7 @@ packages:
   - 'playground-starlight'
   - 'playground-elena'
   - 'playground-starlight-fast'
+  - 'playground-starlight-elena'
   - 'docs'
   - 'docs-ssr'
   - 'benchmarks'

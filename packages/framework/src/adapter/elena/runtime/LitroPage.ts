@@ -49,22 +49,23 @@ export class LitroPage extends Elena(HTMLElement) implements LitroPageInterface 
   }
 
   override connectedCallback(): void {
-    if (typeof super.connectedCallback === 'function') {
-      super.connectedCallback();
-    }
-
-    if (this.serverData === null) {
-      // Client path: read from the server-injected script tag.
-      if (typeof document !== 'undefined') {
-        const scriptEl = document.getElementById('__litro_data__');
-        if (scriptEl) {
-          try {
-            this.serverData = JSON.parse(scriptEl.textContent || '');
-          } catch {
-            // malformed JSON — ignore
-          }
+    // Read __litro_data__ BEFORE super.connectedCallback() — Elena's
+    // connectedCallback calls render(), so serverData must be populated
+    // before the first render. Otherwise the page renders with null data,
+    // replacing SSR'd content with "Loading..." before re-rendering.
+    if (this.serverData === null && typeof document !== 'undefined') {
+      const scriptEl = document.getElementById('__litro_data__');
+      if (scriptEl) {
+        try {
+          this.serverData = JSON.parse(scriptEl.textContent || '');
+        } catch {
+          // malformed JSON — ignore
         }
       }
+    }
+
+    if (typeof super.connectedCallback === 'function') {
+      super.connectedCallback();
     }
   }
 
