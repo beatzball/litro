@@ -1,9 +1,10 @@
 # litro
 
-A fullstack web framework for [Lit](https://lit.dev) components, powered by [Nitro](https://nitro.unjs.io).
+A fullstack web framework for [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), powered by [Nitro](https://nitro.unjs.io).
 
+- **Framework adapters** — choose [Lit](https://lit.dev) (default), [FAST Element](https://www.fast.design/), or [Elena](https://elenajs.com/) via `--adapter`
 - **File-based routing** — `pages/index.ts` → `/`, `pages/blog/[slug].ts` → `/blog/:slug`
-- **Streaming SSR** — Declarative Shadow DOM via `@lit-labs/ssr`, streamed from the server
+- **Streaming SSR** — Declarative Shadow DOM (Lit/FAST) or light DOM (Elena)
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server data fetching** — `definePageData()` runs on the server, serialized to the client
 - **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
@@ -66,9 +67,9 @@ export default class IndexPage extends LitroPage {
 
 ## How It Compares
 
-|                     | Litro       | Next.js     | Nuxt.js     |
-|---------------------|-------------|-------------|-------------|
-| Component model     | Lit         | React       | Vue         |
+|                     | Litro            | Next.js     | Nuxt.js     |
+|---------------------|------------------|-------------|-------------|
+| Component model     | Lit / FAST / Elena | React     | Vue         |
 | File-based routing  | ✓           | ✓           | ✓           |
 | SSR / SSG           | ✓           | ✓           | ✓           |
 | Server engine       | Nitro       | custom      | Nitro       |
@@ -82,10 +83,7 @@ export default class IndexPage extends LitroPage {
 
 ## SEO
 
-Litro renders all pages server-side via Declarative Shadow DOM before sending HTML to the
-browser. Search engines receive fully-rendered content — the same approach used by Next.js
-and Nuxt.js. Client-side-only web components have SEO limitations; Litro's SSR eliminates
-them by default.
+Litro renders all pages server-side before sending HTML to the browser — via Declarative Shadow DOM (Lit/FAST) or light DOM (Elena). Search engines receive fully-rendered content — the same approach used by Next.js and Nuxt.js. Client-side-only web components have SEO limitations; Litro's SSR eliminates them by default.
 
 [How this works →](https://litro.dev/docs/core-concepts/ssr)
 

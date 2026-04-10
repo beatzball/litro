@@ -6,15 +6,26 @@ date: 2026-01-01
 
 # Server-Side Rendering
 
-Litro uses `@lit-labs/ssr` to render Lit components on the server using **Declarative Shadow DOM** (DSD). DSD is a browser-native way to express shadow roots in HTML — no JavaScript required to parse the initial structure.
+Litro renders all pages on the server before sending HTML to the browser. The SSR strategy depends on which [adapter](/docs/adapters/overview) your project uses:
 
-## How It Works
+- **Lit / FAST** — renders components as **Declarative Shadow DOM** (DSD) via `@lit-labs/ssr` or `@microsoft/fast-ssr`. DSD is a browser-native way to express shadow roots in HTML — no JavaScript required to parse the initial structure.
+- **Elena** — renders components as plain **light DOM** HTML. No shadow roots, no DSD wrappers. Components upgrade in place via progressive enhancement.
+
+## How It Works (Lit / FAST)
 
 1. The page handler imports the page component module (compiled into the server bundle by Rollup).
-2. `@lit-labs/ssr` renders the component to an async iterable of HTML strings.
+2. The adapter's SSR engine renders the component to an async iterable of HTML strings.
 3. The HTML is streamed in three parts: shell head → DSD output → shell foot.
 4. The browser parses the DSD HTML and constructs the shadow trees natively.
-5. `@lit-labs/ssr-client` hydrates the component, attaching event listeners and making it interactive.
+5. The hydration module patches the component to attach event listeners without re-rendering.
+
+## How It Works (Elena)
+
+1. The page handler imports the page component module.
+2. The Elena adapter instantiates the component, calls `render()`, and stringifies the result.
+3. Nested custom elements are recursively expanded.
+4. The HTML is streamed as plain markup — no shadow roots, no DSD wrappers.
+5. When JavaScript loads, components upgrade in place (progressive enhancement, no hydration step).
 
 ## Streaming
 

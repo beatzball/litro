@@ -17,11 +17,13 @@ date: 2026-01-01
 pnpm create @beatzball/litro my-app
 ```
 
-This launches the interactive scaffolding wizard. Choose a recipe:
+This launches the interactive scaffolding wizard. Choose a recipe, rendering mode, and framework adapter:
 
 - **fullstack** — SSR app with API routes
 - **11ty-blog** — Markdown blog with content layer
 - **starlight** — Documentation site with sidebar + TOC
+
+You can also pass `--adapter lit|fast|elena` to select the web component framework (default: `lit`). See [Adapters](/docs/adapters/overview) for details.
 
 ## Start the Dev Server
 

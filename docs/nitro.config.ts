@@ -33,6 +33,11 @@ export default defineNitroConfig({
       '/sitemap.xml',
       '/blog/rss.xml',
       '/benchmarks',
+      '/docs/adapters/overview',
+      '/docs/adapters/lit',
+      '/docs/adapters/fast',
+      '/docs/adapters/elena',
+      '/docs/adapters/switching',
     ],
   },
 

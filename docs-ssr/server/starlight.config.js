@@ -36,6 +36,16 @@ export const siteConfig = {
       ],
     },
     {
+      label: 'Adapters',
+      items: [
+        { label: 'Overview', slug: 'adapters/overview' },
+        { label: 'Lit', slug: 'adapters/lit' },
+        { label: 'FAST Element', slug: 'adapters/fast' },
+        { label: 'ElenaJS', slug: 'adapters/elena' },
+        { label: 'Switching Adapters', slug: 'adapters/switching' },
+      ],
+    },
+    {
       label: 'Recipes',
       items: [
         { label: 'Fullstack App', slug: 'recipes/fullstack' },
@@ -64,6 +74,8 @@ export const siteConfig = {
         { label: 'From Next.js', slug: 'migrate/from-nextjs' },
         { label: 'From Nuxt.js', slug: 'migrate/from-nuxt' },
         { label: 'From React (to Lit)', slug: 'migrate/from-react' },
+        { label: 'From React (to FAST)', slug: 'migrate/from-react-to-fast' },
+        { label: 'From React (to ElenaJS)', slug: 'migrate/from-react-to-elena' },
       ],
     },
     {

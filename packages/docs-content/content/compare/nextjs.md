@@ -18,9 +18,9 @@ React's ecosystem today, or web platform standards for the next decade.
 <tr><th>Feature</th><th>Next.js</th><th>Litro</th></tr>
 </thead>
 <tbody>
-<tr><td>Component model</td><td>React (JSX)</td><td>Lit (web components)</td></tr>
+<tr><td>Component model</td><td>React (JSX)</td><td>Lit / FAST / Elena (web components)</td></tr>
 <tr><td>File-based routing</td><td class="check">✓</td><td class="check">✓</td></tr>
-<tr><td>SSR</td><td>React Server Components</td><td>Declarative Shadow DOM streaming</td></tr>
+<tr><td>SSR</td><td>React Server Components</td><td>DSD streaming (Lit/FAST) or light DOM (Elena)</td></tr>
 <tr><td>SSG</td><td class="check">✓</td><td class="check">✓</td></tr>
 <tr><td>Data fetching</td><td><code>fetch()</code> in Server Components</td><td><code>definePageData()</code></td></tr>
 <tr><td>API routes</td><td><code>app/api/route.ts</code></td><td><code>server/api/*.ts</code> (H3)</td></tr>
@@ -126,7 +126,7 @@ export class BlogPost extends LitroPage {
 
 ## What Changes
 
-- **React → Lit** — function components become class components; JSX becomes tagged template literals
+- **React → web components** — choose Lit, FAST Element, or Elena. Function components become class components; JSX becomes tagged template literals
 - **No React runtime** — the client bundle drops from ~90 kB to ~8 kB for Hello World
 - **Shadow DOM instead of CSS Modules** — component styles are scoped at the browser level
 - **H3 API routes** — import `defineEventHandler` from `h3` rather than using Next's Web Request/Response format

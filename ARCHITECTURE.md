@@ -203,3 +203,62 @@ Each recipe has `recipe.config.ts` (exports `LitroRecipe`) and `template/` (file
 | `{{projectName}}` | `options.projectName` |
 | `{{mode}}` | `options.mode` (`'ssr'` or `'ssg'`) |
 | `{{recipeVersion}}` | `options.recipeVersion` (defaults to `'0.0.0'`) |
+
+---
+
+## 11. Framework Adapter System
+
+Litro supports three web component frameworks through a pluggable `FrameworkAdapter` interface. The adapter is selected per-project, not per-page.
+
+```
+packages/framework/src/adapter/
+  types.ts            <- FrameworkAdapter interface
+  resolve.ts          <- resolveAdapter(): lazy-loads adapter by name
+  index.ts            <- public re-exports
+  lit/index.ts        <- Lit adapter (default)
+  fast/
+    index.ts          <- FAST Element adapter
+    ensure-dom.ts     <- DOM shim for Node.js SSR
+    ssr-init.ts       <- FAST SSR template renderer setup
+    runtime/          <- LitroOutlet, LitroLink, LitroPage (FAST)
+  elena/
+    index.ts          <- Elena adapter
+    ssr-shim.ts       <- HTMLElement + customElements shim for Node.js
+    runtime/          <- LitroOutlet, LitroLink, LitroPage (Elena)
+```
+
+### Adapter resolution
+
+`resolveAdapter(name?)` lazy-loads the requested adapter via dynamic import. Resolution order: explicit argument > `LITRO_ADAPTER` env var > `'lit'` default. Unused adapters and their framework dependencies are never pulled into the module graph.
+
+### SSR pipeline
+
+Each adapter's `renderPage(tag, serverData)` returns an `AsyncIterable<string>` of HTML chunks:
+
+- **Lit**: `@lit-labs/ssr` renders Declarative Shadow DOM with `.serverData` property binding
+- **FAST**: `@microsoft/fast-ssr` renders DSD; serverData passed via `globalThis.__litro_ssr_page_data__`
+- **Elena**: Direct rendering — instantiate component, call `render()`, stringify, recursively expand nested CEs
+
+### Manifest preamble / postamble
+
+The `#litro/page-manifest` virtual module needs framework-specific setup code:
+
+- **Lit**: No preamble needed (SSR packages are inlined)
+- **FAST**: Preamble installs DOM shim and creates `templateRenderer` before any component imports
+- **Elena**: Preamble installs HTMLElement shim and `customElements` registry
+
+The preamble appears at the top of the manifest module, before page module imports. ESM evaluates imports in declaration order, so the preamble code runs first.
+
+### Runtime components (3 per adapter, 9 total)
+
+Each adapter provides native implementations of `LitroOutlet`, `LitroLink`, and `LitroPage` using its framework's component model. These are imported from adapter-specific paths:
+
+| Adapter | Import path |
+|---|---|
+| Lit | `@beatzball/litro/runtime` |
+| FAST | `@beatzball/litro/adapter/fast/runtime` |
+| Elena | `@beatzball/litro/adapter/elena/runtime` |
+
+### What is NOT adapter-specific
+
+LitroRouter, page scanner, data layer (`definePageData`), content system (`litro:content`), CLI, `#litro/page-manifest` generation, SSG prerendering, deployment — all framework-agnostic.
