@@ -9,6 +9,16 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
+// URLPattern type — mirrors the declare in index.ts so tests can use it.
+// ---------------------------------------------------------------------------
+interface URLPatternInit { pathname?: string }
+interface URLPatternResult { pathname: { groups: Record<string, string | undefined> } }
+declare class URLPattern {
+  constructor(init?: URLPatternInit);
+  exec(input?: URLPatternInit): URLPatternResult | null;
+}
+
+// ---------------------------------------------------------------------------
 // jsdom environment stubs — must run before the router module loads
 // ---------------------------------------------------------------------------
 
@@ -151,7 +161,7 @@ describe('LitroRouter.go()', () => {
 
 describe('LitroRouter — setRoutes and resolve', () => {
   let outlet: HTMLDivElement;
-  let router: LitroRouter;
+  let router: InstanceType<typeof LitroRouter>;
 
   beforeEach(() => {
     outlet = document.createElement('div');
@@ -290,9 +300,10 @@ describe('LitroRouter — setRoutes and resolve', () => {
 
 describe('URLPattern fallback (LitroURLPattern)', () => {
   it('installs on globalThis when native URLPattern is absent', () => {
-    expect(typeof globalThis.URLPattern).toBe('function');
+    const g = globalThis as Record<string, unknown>;
+    expect(typeof g.URLPattern).toBe('function');
     // The fallback class is named LitroURLPattern internally
-    expect(globalThis.URLPattern.name).toBe('LitroURLPattern');
+    expect((g.URLPattern as { name: string }).name).toBe('LitroURLPattern');
   });
 
   it('matches static paths exactly', () => {

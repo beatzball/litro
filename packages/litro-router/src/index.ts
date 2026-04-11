@@ -61,7 +61,7 @@ declare class URLPattern {
  * (Safari < 18.2, iOS < 18.2). Installed on globalThis only when the native
  * constructor is absent — zero overhead on modern browsers.
  */
-if (typeof globalThis.URLPattern === 'undefined') {
+if (typeof (globalThis as Record<string, unknown>).URLPattern === 'undefined') {
   class LitroURLPattern {
     private _re: RegExp;
     private _names: string[] = [];
