@@ -39,10 +39,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {},
   "devDependencies": {
+    "jsdom": "^25.0.0",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8",
-    "jsdom": "^25.0.0"
+    "vitest": "^2.1.8"
   }
 }

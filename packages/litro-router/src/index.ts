@@ -24,10 +24,19 @@
  */
 
 // ---------------------------------------------------------------------------
-// URLPattern ambient types
+// URLPattern types and fallback
+//
 // URLPattern (https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is
-// Baseline Newly Available (Sep 2025) but not yet in TypeScript's DOM lib.
-// Declare the minimal subset we use so tsc compiles without lib changes.
+// Baseline Newly Available (Sep 2025) but missing in Safari < 18.2 / iOS < 18.2.
+// When the native API is absent we install a minimal fallback that covers the
+// three pattern shapes Litro generates:
+//   /                  — static paths
+//   /blog/:slug        — named parameters
+//   /docs/:section?    — optional parameters
+//   /:all*             — catch-all (produced by h3ToURLPattern)
+//
+// The fallback is intentionally NOT a full spec-compliant polyfill — it only
+// handles pathname matching with the subset of syntax above.
 // ---------------------------------------------------------------------------
 
 interface URLPatternInit {
@@ -45,6 +54,44 @@ interface URLPatternResult {
 declare class URLPattern {
   constructor(init?: URLPatternInit);
   exec(input?: URLPatternInit): URLPatternResult | null;
+}
+
+/**
+ * Minimal URLPattern fallback for browsers that lack the native API
+ * (Safari < 18.2, iOS < 18.2). Installed on globalThis only when the native
+ * constructor is absent — zero overhead on modern browsers.
+ */
+if (typeof globalThis.URLPattern === 'undefined') {
+  class LitroURLPattern {
+    private _re: RegExp;
+    private _names: string[] = [];
+
+    constructor(init: URLPatternInit = {}) {
+      const pattern = init.pathname ?? '*';
+      const names: string[] = [];
+      const src = pattern
+        // catch-all :name*  →  captures the rest of the path
+        .replace(/:([^/?*]+)\*/g, (_, n: string) => { names.push(n); return '(.*)'; })
+        // optional :param?
+        .replace(/:([^/?*]+)\?/g, (_, n: string) => { names.push(n); return '([^/]*)'; })
+        // required :param
+        .replace(/:([^/?*]+)/g, (_, n: string) => { names.push(n); return '([^/]+)'; });
+      this._names = names;
+      this._re = new RegExp('^' + src + '$');
+    }
+
+    exec(input: URLPatternInit = {}): URLPatternResult | null {
+      const match = this._re.exec(input.pathname ?? '');
+      if (!match) return null;
+      const groups: Record<string, string | undefined> = {};
+      this._names.forEach((n, i) => {
+        groups[n] = match[i + 1] || undefined;
+      });
+      return { pathname: { groups } };
+    }
+  }
+
+  (globalThis as Record<string, unknown>).URLPattern = LitroURLPattern;
 }
 
 // ---------------------------------------------------------------------------
