@@ -183,8 +183,8 @@
     "vite": "^5.4.11"
   },
   "devDependencies": {
-    "@elenajs/core": "1.0.0-rc.13",
-    "@elenajs/ssr": "1.0.0-alpha.9",
+    "@elenajs/core": "1.0.0",
+    "@elenajs/ssr": "1.0.0-alpha.10",
     "@microsoft/fast-element": "^2.10.3",
     "@microsoft/fast-ssr": "1.0.0-beta.39",
     "jsdom": "^25.0.0",
@@ -211,7 +211,7 @@
   "peerDependencies": {
     "@microsoft/fast-element": "^2.0.0",
     "@microsoft/fast-ssr": "^1.0.0-beta.1",
-    "@elenajs/core": "^1.0.0-rc.1",
+    "@elenajs/core": "^1.0.0",
     "@elenajs/ssr": "^1.0.0-alpha.1",
     "typescript": "^5.x"
   },
