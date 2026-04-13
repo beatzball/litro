@@ -80,6 +80,7 @@ switch (command) {
 
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
+    const host = args.includes('--host');
 
     // Nitro's dev server proxies requests to a worker thread. During
     // dev:reload the worker restarts — inflight connections emit ECONNRESET
@@ -93,7 +94,9 @@ switch (command) {
     );
     const nodeOpts = [process.env.NODE_OPTIONS, `--require "${guardPath}"`]
       .filter(Boolean).join(' ');
-    run('nitro', ['dev', '--port', String(port)], {
+    const nitroArgs = ['dev', '--port', String(port)];
+    if (host) nitroArgs.push('--host');
+    run('nitro', nitroArgs, {
       LITRO_MODE: 'server',
       LITRO_DEV: 'true',
       PORT: String(port),
@@ -162,6 +165,7 @@ switch (command) {
   case 'preview': {
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
+    const host = args.includes('--host');
 
     // SSG build: serve dist/static/ with a built-in static file server.
     const staticDir = join(cwd, 'dist', 'static');
@@ -206,8 +210,10 @@ switch (command) {
         res.writeHead(200, { 'content-type': mime });
         createReadStream(filePath).pipe(res);
       });
-      server.listen(port, () => {
-        console.log(`[litro] Previewing static build at http://localhost:${port}`);
+      const hostname = host ? '0.0.0.0' : undefined;
+      server.listen(port, hostname, () => {
+        const addr = host ? `http://0.0.0.0:${port}` : `http://localhost:${port}`;
+        console.log(`[litro] Previewing static build at ${addr}`);
       });
       break;
     }
@@ -224,7 +230,10 @@ switch (command) {
       );
       process.exit(1);
     }
-    run('node', [entry], { PORT: String(port) });
+    run('node', [entry], {
+      PORT: String(port),
+      ...(host && { HOST: '0.0.0.0' }),
+    });
     break;
   }
 
@@ -235,9 +244,11 @@ litro — Lit-first fullstack framework
 Commands:
   litro dev              Start development server (default port: 3000)
   litro dev --port 8080  Start on a custom port
+  litro dev --host       Expose to network (listen on 0.0.0.0)
   litro build            Build for production (--mode static|server, default: server)
   litro generate         Build static site (alias for litro build --mode static)
   litro preview          Preview production build
+  litro preview --host   Expose preview server to network
     `);
     process.exit(0);
 }
