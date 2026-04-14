@@ -209,6 +209,20 @@ litro dev
 
 The dev server starts on `http://localhost:3030` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port.
 
+### Named URLs with Portless
+
+[Portless](https://portless.sh) replaces port numbers with stable, named `.localhost` URLs (e.g. `https://myapp.localhost`). Litro detects Portless automatically — no extra configuration needed:
+
+```bash
+# Install portless (one-time)
+pnpm add -D portless
+
+# Start with a named URL
+portless run litro dev   # -> https://myapp.localhost
+```
+
+The CLI honours the `PORT` env var injected by Portless and logs the named URL when `PORTLESS_URL` is detected. All playground and recipe templates include a `dev:portless` script for convenience.
+
 ---
 
 ## App structure
