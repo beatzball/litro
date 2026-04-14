@@ -1,5 +1,13 @@
 # litro
 
+## 0.8.1
+
+### Patch Changes
+
+- 97baa72: Add --host flag to dev and preview CLI commands; update @elenajs/core peer dep to stable 1.0.0
+- Updated dependencies [56d6c72]
+  - @beatzball/litro-router@0.1.8
+
 ## 0.8.0
 
 ### Minor Changes

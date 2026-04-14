@@ -207,7 +207,7 @@ cd playground
 litro dev
 ```
 
-The dev server starts on `http://localhost:3030` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port.
+The dev server starts on `http://localhost:3030` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port, and `litro dev --host` to expose the server to the network (listen on `0.0.0.0`).
 
 ### Named URLs with Portless
 

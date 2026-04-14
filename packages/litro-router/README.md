@@ -14,7 +14,7 @@ This package is also built into the [@beatzball/litro](https://github.com/beatzb
 
 ## Browser requirements
 
-`URLPattern` is [Baseline Newly Available](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern#browser_compatibility) as of September 2025 (Chrome 95+, Edge 95+, Firefox 119+, Safari 16.4+). For older browsers a polyfill is available: [`urlpattern-polyfill`](https://github.com/nicolo-ribaudo/urlpattern-polyfill).
+`URLPattern` is [Baseline Newly Available](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern#browser_compatibility) as of September 2025 (Chrome 95+, Edge 95+, Firefox 119+, Safari 18.2+). A built-in fallback activates automatically for browsers that lack the native API (e.g. Safari 16.4–18.1 / iOS < 18.2), so no external polyfill is needed.
 
 ---
 

@@ -81,6 +81,7 @@ switch (command) {
     const portlessUrl = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
+    const host = args.includes('--host');
 
     if (portlessUrl) {
       console.log(`[litro] Portless detected — ${portlessUrl}`);
@@ -98,7 +99,9 @@ switch (command) {
     );
     const nodeOpts = [process.env.NODE_OPTIONS, `--require "${guardPath}"`]
       .filter(Boolean).join(' ');
-    run('nitro', ['dev', '--port', String(port)], {
+    const nitroArgs = ['dev', '--port', String(port)];
+    if (host) nitroArgs.push('--host');
+    run('nitro', nitroArgs, {
       LITRO_MODE: 'server',
       LITRO_DEV: 'true',
       PORT: String(port),
@@ -168,6 +171,7 @@ switch (command) {
     const portlessUrlPreview = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
+    const host = args.includes('--host');
 
     if (portlessUrlPreview) {
       console.log(`[litro] Portless detected — ${portlessUrlPreview}`);
@@ -216,9 +220,10 @@ switch (command) {
         res.writeHead(200, { 'content-type': mime });
         createReadStream(filePath).pipe(res);
       });
-      server.listen(port, () => {
-        const previewUrl = portlessUrlPreview ?? `http://localhost:${port}`;
-        console.log(`[litro] Previewing static build at ${previewUrl}`);
+      const hostname = host ? '0.0.0.0' : undefined;
+      server.listen(port, hostname, () => {
+        const addr = portlessUrlPreview ?? (host ? `http://0.0.0.0:${port}` : `http://localhost:${port}`);
+        console.log(`[litro] Previewing static build at ${addr}`);
       });
       break;
     }
@@ -235,7 +240,10 @@ switch (command) {
       );
       process.exit(1);
     }
-    run('node', [entry], { PORT: String(port) });
+    run('node', [entry], {
+      PORT: String(port),
+      ...(host && { HOST: '0.0.0.0' }),
+    });
     break;
   }
 
@@ -246,9 +254,11 @@ litro — Lit-first fullstack framework
 Commands:
   litro dev              Start development server (default port: 3000)
   litro dev --port 8080  Start on a custom port
+  litro dev --host       Expose to network (listen on 0.0.0.0)
   litro build            Build for production (--mode static|server, default: server)
   litro generate         Build static site (alias for litro build --mode static)
   litro preview          Preview production build
+  litro preview --host   Expose preview server to network
     `);
     process.exit(0);
 }

@@ -1,5 +1,11 @@
 # litro-router
 
+## 0.1.8
+
+### Patch Changes
+
+- 56d6c72: Add built-in URLPattern fallback for browsers that lack the native API (Safari < 18.2 / iOS < 18.2), fixing white-screen rendering on those devices.
+
 ## 0.1.7
 
 ### Patch Changes

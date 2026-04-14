@@ -38,9 +38,9 @@ function Greeting({ name }: { name: string }) {
 **ElenaJS:**
 
 ```ts
-import { html, Component } from '@elenajs/core';
+import { html, Elena } from '@elenajs/core';
 
-class Greeting extends Component(HTMLElement) {
+class Greeting extends Elena(HTMLElement) {
   static tagName = 'my-greeting';
   static props = ['name'];
 
@@ -78,9 +78,9 @@ function Counter() {
 **ElenaJS:**
 
 ```ts
-import { html, Component } from '@elenajs/core';
+import { html, Elena } from '@elenajs/core';
 
-class Counter extends Component(HTMLElement) {
+class Counter extends Elena(HTMLElement) {
   static tagName = 'my-counter';
   static props = ['count'];
 
@@ -113,7 +113,7 @@ function Avatar({ src, alt, size = 40 }: AvatarProps) {
 **ElenaJS:**
 
 ```ts
-class Avatar extends Component(HTMLElement) {
+class Avatar extends Elena(HTMLElement) {
   static tagName = 'my-avatar';
   static props = ['src', 'alt', 'size'];
 
@@ -152,9 +152,9 @@ function Card({ children, title }) {
 **ElenaJS:**
 
 ```ts
-import { html, unsafeHTML, Component } from '@elenajs/core';
+import { html, unsafeHTML, Elena } from '@elenajs/core';
 
-class Card extends Component(HTMLElement) {
+class Card extends Elena(HTMLElement) {
   static tagName = 'my-card';
   static props = ['title'];
 
