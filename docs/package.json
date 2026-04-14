@@ -7,8 +7,10 @@
   },
   "scripts": {
     "dev": "litro dev",
+    "dev:portless": "portless run litro dev",
     "build": "litro build",
     "preview": "litro preview",
+    "preview:portless": "portless run litro preview",
     "test": "vitest run"
   },
   "dependencies": {

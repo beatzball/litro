@@ -7,8 +7,10 @@
   },
   "scripts": {
     "dev": "litro dev --port 3034",
+    "dev:portless": "portless run litro dev",
     "build": "litro build",
-    "preview": "litro preview"
+    "preview": "litro preview",
+    "preview:portless": "portless run litro preview"
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",

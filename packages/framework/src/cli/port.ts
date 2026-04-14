@@ -30,8 +30,8 @@ export function probePort(port: number): Promise<boolean> {
 }
 
 /**
- * Parse --port / -p from an argv array.
- * Returns { port, explicit: true } when the flag is present,
+ * Parse --port / -p from an argv array, falling back to the PORT env var.
+ * Returns { port, explicit: true } when the flag or env var is present,
  * { port: defaultPort, explicit: false } otherwise.
  */
 export function parsePortArg(
@@ -45,6 +45,12 @@ export function parsePortArg(
   const flagIdx = args.findIndex((a) => a === '--port' || a === '-p');
   if (flagIdx !== -1 && args[flagIdx + 1] !== undefined) {
     return { port: Number(args[flagIdx + 1]), explicit: true };
+  }
+  // Portless (and other tools) inject PORT into child processes.
+  // Honour it so the app binds to the port the proxy expects.
+  const envPort = process.env.PORT;
+  if (envPort && !Number.isNaN(Number(envPort))) {
+    return { port: Number(envPort), explicit: true };
   }
   return { port: defaultPort, explicit: false };
 }

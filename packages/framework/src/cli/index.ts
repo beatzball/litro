@@ -78,9 +78,14 @@ switch (command) {
       });
     }
 
+    const portlessUrl = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
     const host = args.includes('--host');
+
+    if (portlessUrl) {
+      console.log(`[litro] Portless detected — ${portlessUrl}`);
+    }
 
     // Nitro's dev server proxies requests to a worker thread. During
     // dev:reload the worker restarts — inflight connections emit ECONNRESET
@@ -163,9 +168,14 @@ switch (command) {
     break;
 
   case 'preview': {
+    const portlessUrlPreview = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
     const port = await resolvePort(rawPort, explicit);
     const host = args.includes('--host');
+
+    if (portlessUrlPreview) {
+      console.log(`[litro] Portless detected — ${portlessUrlPreview}`);
+    }
 
     // SSG build: serve dist/static/ with a built-in static file server.
     const staticDir = join(cwd, 'dist', 'static');
@@ -212,7 +222,7 @@ switch (command) {
       });
       const hostname = host ? '0.0.0.0' : undefined;
       server.listen(port, hostname, () => {
-        const addr = host ? `http://0.0.0.0:${port}` : `http://localhost:${port}`;
+        const addr = portlessUrlPreview ?? (host ? `http://0.0.0.0:${port}` : `http://localhost:${port}`);
         console.log(`[litro] Previewing static build at ${addr}`);
       });
       break;

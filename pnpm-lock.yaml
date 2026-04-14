@@ -23,6 +23,9 @@ importers:
       '@playwright/test':
         specifier: ^1.48.0
         version: 1.58.2
+      portless:
+        specifier: ^0.10.2
+        version: 0.10.2
 
   benchmarks:
     devDependencies:
@@ -3663,6 +3666,12 @@ packages:
   playwright@1.58.2:
     resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
     engines: {node: '>=18'}
+    hasBin: true
+
+  portless@0.10.2:
+    resolution: {integrity: sha512-g2Rpt4x/jUtGTcgYtwGElhSvIQB+p7k3dy3slHsxymDFWTImq3iwCdBYqz4EH5gJ6+Gqvjm51urlOaX9mklzmA==}
+    engines: {node: '>=20'}
+    os: [darwin, linux, win32]
     hasBin: true
 
   postcss-value-parser@4.2.0:
@@ -8018,6 +8027,8 @@ snapshots:
       playwright-core: 1.58.2
     optionalDependencies:
       fsevents: 2.3.2
+
+  portless@0.10.2: {}
 
   postcss-value-parser@4.2.0: {}
 
