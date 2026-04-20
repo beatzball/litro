@@ -76,9 +76,11 @@ Not load-bearing for current benchmarks (fixtures guarantee hits), but would bit
 
 Consistency nit. `npx nuxi generate` forces full static generation regardless of `nitro.preset`, so this does not affect output — but matching `benchmarks/apps/nuxt/nuxt.config.ts` is cleaner.
 
-### FAST hydration import verification
+### ~~FAST hydration import verification~~ (resolved)
 
-Audit flagged that `@microsoft/fast-ssr/install-element-hydration.js` appears in the Nitro hook but not verified present in client `app.ts`. Quick sanity check warranted.
+Audit item referenced `@microsoft/fast-ssr/install-element-hydration.js` — that path does not exist; the hydration install lives under `@microsoft/fast-element`. Verified:
+- Client hydration: `benchmarks/apps/hn-litro-fast/app.ts:1` imports `@microsoft/fast-element/install-element-hydration.js` (matches `playground-fast`, `playground-starlight-fast`, and the framework's own `packages/framework/src/adapter/fast/runtime/client.ts`).
+- Server DOM shim: `benchmarks/apps/hn-litro-fast/nitro.config.ts:62` imports `@microsoft/fast-ssr/install-dom-shim.js` (correct — this is the SSR-side shim, not the hydration install).
 
 ### Option 2 — Supplemental fast-ssr `unsafeHTML` package (framework-level `:innerHTML` fix)
 
