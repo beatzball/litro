@@ -1,5 +1,5 @@
 ---
-title: "Web Components vs Next.js: A Real-App Benchmark"
+title: "Web Components vs Next.js and Nuxt: A Real-App Benchmark"
 description: "We built the same Hacker News clone five times — Lit, FAST Element, Elena, Next.js 14, and Nuxt 3 — fed them through the same benchmark pipeline, and published the results. What we learned about web components, hydration-data cost, and the tradeoffs nobody advertises."
 date: 2026-04-20
 tags:
@@ -9,7 +9,7 @@ tags:
   - ssg
 ---
 
-# Web Components vs Next.js: A Real-App Benchmark
+# Web Components vs Next.js and Nuxt: A Real-App Benchmark
 
 We built the same Hacker News clone five times — once each with Litro's three framework adapters (Lit, FAST Element, Elena), once with Next.js 14, and once with Nuxt 3 — and fed all five through the same benchmark pipeline. Same routes, same fixture data, same CSS, all statically generated.
 
