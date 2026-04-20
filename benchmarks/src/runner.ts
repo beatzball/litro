@@ -177,9 +177,9 @@ async function main(): Promise<void> {
     console.log('\n[streaming] SSR');
     const ssrStreaming = await measureStreaming(SSR_BASE_URL, ROUTES);
 
-    // Lighthouse (slowest — runs last, SSG only)
-    // SSR pages use Declarative Shadow DOM — Lighthouse cannot measure paint
-    // events inside shadow roots, so SSR scores are always 0. Only SSG is measured.
+    // Lighthouse runs on SSG only — the SSR preview serves the same HTML the
+    // SSG build produces, so measuring both is redundant. HN benchmark phase
+    // captures per-adapter Lighthouse for a cross-framework comparison.
     let ssgLighthouse: Record<string, import('./types.js').LighthouseResult> = {};
 
     if (!skipLighthouse) {
@@ -220,7 +220,7 @@ async function main(): Promise<void> {
       try {
         const hnResults = [];
         for (const config of HN_FRAMEWORK_CONFIGS) {
-          const result = await measureFramework(config, APPS_DIR, buildRuns, HN_ROUTES, hnEnv);
+          const result = await measureFramework(config, APPS_DIR, buildRuns, HN_ROUTES, hnEnv, !skipLighthouse);
           hnResults.push(result);
         }
         results.hnBenchmark = hnResults;

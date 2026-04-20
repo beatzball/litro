@@ -81,6 +81,7 @@ interface FrameworkResult {
   buildTime: Stats;
   outputSize: number;
   pageWeight: Record<string, PageWeightRoute>;
+  lighthouse?: Record<string, LighthouseRoute>;
 }
 
 interface BenchmarkResults {
@@ -477,8 +478,10 @@ export class BenchmarksPage extends LitroPage {
     const sizeAnn = this._hnSizeAnnotations;
     const weightAnn = this._hnWeightAnnotations;
 
+    const hasLighthouse = frameworks.some(fw => fw.lighthouse && Object.keys(fw.lighthouse).length > 0);
+
     return html`
-      <h2>HN Clone Benchmark</h2>
+      <h2 id="hn-lighthouse">HN Clone Benchmark</h2>
       <p class="note">
         Five identical Hacker News clones (3 Litro adapters + Next.js + Nuxt),
         same fixture data, same routes (~100 pages), SSG mode. Tests realistic app
@@ -502,6 +505,7 @@ export class BenchmarksPage extends LitroPage {
         ${this._fwBuildTab(frameworks, buildWinnerIdx)}
         ${this._fwOutputSizeTab(frameworks, sizeTiedWinners, sizeAnn)}
         ${routes.length > 0 ? this._fwPageWeightTab(frameworks, routes, weightAnn) : ''}
+        ${hasLighthouse ? this._fwLighthouseTab(frameworks, routes) : ''}
       </litro-tabs>
 
       <p class="note">
@@ -669,6 +673,78 @@ export class BenchmarksPage extends LitroPage {
                   </tr>
                 `;
               })}
+            </tbody>
+          </table>
+        </div>
+      </litro-tab-item>
+    `;
+  }
+
+  private _fwLighthouseTab(frameworks: FrameworkResult[], routes: string[]) {
+    const withLh = frameworks.filter(fw => fw.lighthouse && Object.keys(fw.lighthouse).length > 0);
+    const perfScores = frameworks.map(fw => {
+      if (!fw.lighthouse) return 0;
+      const vals = routes.map(rt => fw.lighthouse?.[rt]?.performance ?? 0);
+      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    });
+    const maxPerf = Math.max(...perfScores);
+
+    return html`
+      <litro-tab-item label="Lighthouse">
+        <h3>Lighthouse Performance</h3>
+        <p class="note">
+          Headless Chrome Lighthouse audit on the statically prerendered output,
+          median of 3 runs per route. All five apps serve the same HN content,
+          so differences are architecture-driven rather than data-driven.
+        </p>
+        <p class="note">
+          <strong>Loading strategy skews the score more than runtime speed does.</strong>
+          Next.js emits every JS bundle as <code>&lt;script async&gt;</code>, so its
+          ~450&nbsp;KB of chunks loads outside Lighthouse's measurement window and
+          contributes 0&nbsp;ms to TBT. Litro emits <code>&lt;script type="module"&gt;</code>
+          — ES modules are implicitly deferred, and the browser waits for
+          module fetch-and-evaluate before firing paint events, which adds
+          roughly half a second to FCP. Lit's shadow-DOM materialization adds
+          another ~100&nbsp;ms. Nuxt hydrates a payload at parse time, producing
+          measurable TBT on list-heavy pages. Post-hydration, the in-browser
+          experience is comparable across all five — but Lighthouse weights
+          FCP/LCP/TBT inside a narrow window, and what loads in that window
+          dominates the result.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <caption>Lighthouse Performance category (median of ${withLh[0]?.lighthouse?.[routes[0]] ? '3' : '?'} runs per route).</caption>
+            <thead>
+              <tr>
+                <th scope="col">Route</th>
+                ${frameworks.map(fw => html`<th scope="col">${fw.name}</th>`)}
+              </tr>
+            </thead>
+            <tbody>
+              ${routes.map(rt => {
+                const scores = frameworks.map(fw => fw.lighthouse?.[rt]?.performance);
+                const validScores = scores.filter((s): s is number => typeof s === 'number' && s > 0);
+                const maxScore = validScores.length ? Math.max(...validScores) : 0;
+                return html`
+                  <tr>
+                    <th scope="row"><code>${rt}</code></th>
+                    ${frameworks.map((fw, i) => {
+                      const s = scores[i];
+                      if (s === undefined) return html`<td>-</td>`;
+                      const isWinner = s > 0 && s === maxScore;
+                      return html`<td class="${isWinner ? 'winner-cell' : ''}">${s.toFixed(0)}</td>`;
+                    })}
+                  </tr>
+                `;
+              })}
+              <tr>
+                <th scope="row">Average</th>
+                ${frameworks.map((_fw, i) => {
+                  const avg = perfScores[i];
+                  const isWinner = avg > 0 && avg === maxPerf;
+                  return html`<td class="${isWinner ? 'winner-cell' : ''}"><strong>${avg.toFixed(0)}</strong></td>`;
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
@@ -915,8 +991,12 @@ export class BenchmarksPage extends LitroPage {
       <litro-tab-item label="Lighthouse">
         <h3>Lighthouse Performance (SSG)</h3>
         <p class="note">
-          SSR pages use Declarative Shadow DOM — Lighthouse cannot measure paint
-          events inside shadow roots, so only SSG scores are shown.
+          Headless Chrome Lighthouse audit of the prerendered docs site,
+          median of 3 runs per route. SSR Lighthouse is not measured — the
+          preview server already renders the same HTML the SSG build produces,
+          so the score would be redundant. For a cross-framework comparison
+          on identical app code, see the
+          <a href="#hn-lighthouse">HN Clone Lighthouse table</a>.
         </p>
         <div class="table-wrap">
           <table>

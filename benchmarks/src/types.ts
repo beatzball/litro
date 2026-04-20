@@ -4,6 +4,7 @@ export interface FrameworkResult {
   buildTime: RunStats;
   outputSize: number;
   pageWeight: Record<string, PageWeightResult>;
+  lighthouse?: Record<string, LighthouseResult>;
 }
 
 export interface BenchmarkResults {
