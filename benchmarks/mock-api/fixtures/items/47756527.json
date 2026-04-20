@@ -1,0 +1,11 @@
+{
+  "by": "jruohonen",
+  "id": 47756527,
+  "kids": [
+    47757030
+  ],
+  "parent": 47756259,
+  "text": "&gt; but they don&#x27;t need FreeBSD exploit-writing capabilities for that.<p>That&#x27;s a solid point. There was a piece the other day in the Register [1] that studying supply chains for cost-benefit-risk analysis is how some of them increasingly operate. And, well, why wouldn&#x27;t they if they&#x27;re rational (an assumption that is debatable, of course)?<p>[1] <a href=\"https:&#x2F;&#x2F;www.theregister.com&#x2F;2026&#x2F;04&#x2F;11&#x2F;trivy_axios_supply_chain_attacks&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;www.theregister.com&#x2F;2026&#x2F;04&#x2F;11&#x2F;trivy_axios_supply_ch...</a>",
+  "time": 1776107174,
+  "type": "comment"
+}

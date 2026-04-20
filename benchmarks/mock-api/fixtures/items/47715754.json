@@ -1,0 +1,11 @@
+{
+  "by": "macartain",
+  "id": 47715754,
+  "kids": [
+    47716361
+  ],
+  "parent": 47711352,
+  "text": "I came here to say something like &quot;This is a joke, right?&quot; Not to be snarky, but because I just assume everyone throws the Inevitable Looming Tool at docs, especially where resource is scarce.. but this point has already come up and I suppose there is some truth in the idea that folks detect AI and are often put off by it - but while I think that&#x27;s true in creative&#x2F;blog pieces, is it really true in formal docs? For me that is in the same column as cancer cures, gene comprehension, room temperature fusion wrangling etc. - the &#x27;lets-get-AI-onto-it-pronto&#x27; column...<p>Anyway, my vapid observations aside, I have a couple of related questions:<p>- I too would be willing, even keen, to contribute to good documentation of FOSS projects that need it and that I am interested in - a huge barrier to me is that a person needs sufficient understanding to really contribute, don&#x27;t they? To the point that you pretty much need to get into the code quite deeply or else endlessly pester committers to explain how it works? OK, I am generalising, but it seems valid in the main. A while ago, I observed on a relevant list that the libvirt documentation of how to take qemu snapshots was amazingly fragmented, inconsistent and out of date and this led to comments that I should step up and produce some PRs - but my whole point was that this sh1t is hard to understand without very good docs! I would barely know where to start and I would be very hesitant about making definitive statements...<p>- As for improving doc structure - and this is a serious consideration as soon as you sit down to think about this stuff - I came across and adopted the <a href=\"https:&#x2F;&#x2F;diataxis.fr&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;diataxis.fr&#x2F;</a> framework a few years ago.. I have to say the uptake among my co-workers has been dismal. Can anyone suggest doc frameworks or approaches that are more motivating, have less friction, whatever?",
+  "time": 1775814937,
+  "type": "comment"
+}

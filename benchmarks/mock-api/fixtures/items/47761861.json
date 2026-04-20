@@ -1,0 +1,8 @@
+{
+  "by": "OuterVale",
+  "id": 47761861,
+  "parent": 47759341,
+  "text": "I built a little Jellyfin plugin for KOReader [1] so I can access my books from my Kindle. Jellyfin proved really nice to work with (though there was some poorly documented auth stuff they were in the process of deprecating).<p>If anyone has been thinking of building something in the Jellyfin ecosystem, I very much recommend it.<p>[1]: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;DeclanChidlow&#x2F;KOReader-Jellyfin-Plugin&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;DeclanChidlow&#x2F;KOReader-Jellyfin-Plugin&#x2F;</a>",
+  "time": 1776147125,
+  "type": "comment"
+}

@@ -1,0 +1,30 @@
+{
+  "by": "chromacity",
+  "id": 47756259,
+  "kids": [
+    47757463,
+    47756349,
+    47756822,
+    47761186,
+    47756527,
+    47758920,
+    47757434,
+    47759575,
+    47756446,
+    47756878,
+    47757805,
+    47758134,
+    47761853,
+    47757307,
+    47758472,
+    47757926,
+    47757168,
+    47761144,
+    47757050,
+    47758658
+  ],
+  "parent": 47755629,
+  "text": "This is a perfect illustration of what cracks me up about the hyperbolic reactions to Mythos. Yes, increased automation of cutting-edge vulnerability discovery will shake things up a bit. No, it&#x27;s nowhere near the top of what should be keeping you awake at night if you&#x27;re working in infosec.<p>We&#x27;ve built our existing tech stacks and corporate governance structures for a different era. If you want to credit one specific development for making things dramatically worse, it&#x27;s cryptocurrencies, not AI. They&#x27;ve turned the cottage industry of malicious hacking into a multi-billion-dollar enterprise that&#x27;s attractive even to rogue nations such as North Korea. And with this much at stake, they can afford to simply buy your software dependencies, or to offer one of your employees some retirement money in exchange for making a &quot;mistake&quot;.<p>We know how to write software with very few bugs (although we often choose not to). We have no good plan for keeping big enterprises secure in this reality. Autonomous LLM agents will be used by ransomware gangs and similar operations, but they don&#x27;t need FreeBSD exploit-writing capabilities for that.",
+  "time": 1776105864,
+  "type": "comment"
+}

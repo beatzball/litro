@@ -1,0 +1,12 @@
+{
+  "by": "skor",
+  "id": 47701095,
+  "kids": [
+    47756513,
+    47759727
+  ],
+  "parent": 47700460,
+  "text": "A programming language to hack music, and anything else really\n<a href=\"https:&#x2F;&#x2F;github.com&#x2F;audion-lang&#x2F;audion\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;audion-lang&#x2F;audion</a><p>The idea came after I finished a permanent piece for a museum using MaxMsp and python. I always had this thought in the back of my mind that &quot;I could express this so much easier in a few lines of code..&quot;<p>here&#x27;s the language spec: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;audion-lang&#x2F;audion&#x2F;blob&#x2F;main&#x2F;docs&#x2F;LANGUAGE.md\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;audion-lang&#x2F;audion&#x2F;blob&#x2F;main&#x2F;docs&#x2F;LANGUAG...</a><p>I really liked how objects came out, I don&#x27;t think it needs any more since I can do object composition.<p>There are some nice functions to generate rhythms and melodies with combinatorics, see src&#x2F;sequences.rs and melodies.rs<p>Its a WIP but you can use it now to create music with whatever you want: hardware&#x2F;daws&#x2F;supercollider<p>supercollider is tightly integrated but not required. \nI havent had time to develop userland libraries yet but I&#x27;m working on it",
+  "time": 1775725853,
+  "type": "comment"
+}

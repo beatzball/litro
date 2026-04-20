@@ -1,0 +1,11 @@
+{
+  "by": "apatheticonion",
+  "id": 47761942,
+  "kids": [
+    47761982
+  ],
+  "parent": 47761535,
+  "text": "There are valid use cases however the issue is rooted in lacking browser APIs.<p>For instance,<p>- if you want to do statistics tracking (how many hits your site gets and user journeys)<p>- You have a widget&#x2F;iframe system that needs to teardown when the SPA page is navigated away<p>- etc<p>The browser does not have a;<p><pre><code>   globalThis.history.addEventListener(&#x27;navigate&#x27;)\n</code></pre>\nSo you must monkey patch the history API. It&#x27;s impractical from a distribution standpoint to embed this code in the page bundle as it&#x27;s often managed externally and has its own release schedule.",
+  "time": 1776147853,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "zambelli",
+  "id": 47736969,
+  "parent": 47722081,
+  "text": "I&#x27;ve recently been tasked with hiring new college grads (less than 2 years of experience) AI Engineers. Some things that we&#x27;ve been doing:<p>1) Do they understand the ecosystem of algorithms and models? How do those coexist? Statistical models are the right choice sometimes. Sometimes it&#x27;s XGBoosted RFs, sometimes NNs, LLMs, etc. And they&#x27;re not mutually exclusive. I don&#x27;t think that has changed since AI to be honest - though I get bad candidates that say LLM-everything of course.<p>2) AI-assisted fluency. Not just in coding, but in concept build. I don&#x27;t expect them to have the velocity of an AI-fluent principal engineer, but I want to see that they&#x27;re not resistant to AI-assistance. This is obviously new.<p>3) Experience with production systems, more than before. Pre-AI, I&#x27;d accept that a recent grad might be tuned towards models and algorithms, and wouldn&#x27;t know much about frontend or backend, or anything you run into in production environments. Given the ease with which you can now setup a small DB, your modeling pipeline, and a full react dashboard or fastAPI frontend...I&#x27;d at least like to see they&#x27;ve dabbled in all of that, have a rough sense of it. I don&#x27;t need them to be full-stack, or even comfortable with it - but AI has raised the breadth bar for me.",
+  "time": 1775979029,
+  "type": "comment"
+}

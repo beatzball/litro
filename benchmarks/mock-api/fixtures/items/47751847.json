@@ -1,0 +1,8 @@
+{
+  "by": "gyorgy",
+  "id": 47751847,
+  "parent": 47736831,
+  "text": "As others already pointed out, there are alternatives of .env files. Although, I&#x27;m not very concerned about having temporary access keys to development environments stored in .env files. The agents should not be dealing with secrets directly though.",
+  "time": 1776087748,
+  "type": "comment"
+}

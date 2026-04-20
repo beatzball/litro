@@ -1,0 +1,12 @@
+{
+  "by": "organsnyder",
+  "id": 47757423,
+  "kids": [
+    47759499,
+    47757602
+  ],
+  "parent": 47757371,
+  "text": "I&#x27;ve never heard of this convention. Every getopt-style CLI tool I&#x27;ve used has identical behavior whether an option is specified in its short- or long-form.",
+  "time": 1776112181,
+  "type": "comment"
+}

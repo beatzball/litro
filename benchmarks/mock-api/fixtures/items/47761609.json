@@ -1,0 +1,20 @@
+{
+  "by": "polywock",
+  "descendants": 20,
+  "id": 47761609,
+  "kids": [
+    47761870,
+    47761935,
+    47761947,
+    47761854,
+    47762051,
+    47761760,
+    47761752,
+    47761846
+  ],
+  "score": 23,
+  "time": 1776144531,
+  "title": "TanStack Start Now Support React Server Components",
+  "type": "story",
+  "url": "https://tanstack.com/blog/react-server-components"
+}

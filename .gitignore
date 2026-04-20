@@ -50,6 +50,22 @@ benchmarks/apps/nuxt/.nuxt/
 benchmarks/apps/nextjs/node_modules/
 benchmarks/apps/nextjs/out/
 benchmarks/apps/nextjs/.next/
+# HN clone benchmark apps
+benchmarks/apps/hn-litro/dist/
+benchmarks/apps/hn-litro/server/stubs/
+benchmarks/apps/hn-litro/routes.generated.ts
+benchmarks/apps/hn-litro-fast/dist/
+benchmarks/apps/hn-litro-fast/server/stubs/
+benchmarks/apps/hn-litro-fast/routes.generated.ts
+benchmarks/apps/hn-litro-elena/dist/
+benchmarks/apps/hn-litro-elena/server/stubs/
+benchmarks/apps/hn-litro-elena/routes.generated.ts
+benchmarks/apps/hn-nextjs/node_modules/
+benchmarks/apps/hn-nextjs/out/
+benchmarks/apps/hn-nextjs/.next/
+benchmarks/apps/hn-nuxt/node_modules/
+benchmarks/apps/hn-nuxt/.output/
+benchmarks/apps/hn-nuxt/.nuxt/
 # benchmarks/results/latest.json is intentionally tracked — docs pages read it at build time.
 # Only ignore other result files (e.g. timestamped snapshots).
 benchmarks/results/*.json

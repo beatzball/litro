@@ -1,0 +1,11 @@
+{
+  "by": "440bx",
+  "id": 47756446,
+  "kids": [
+    47756934
+  ],
+  "parent": 47756259,
+  "text": "Yeah I tend to agree. For me Mythos&#x27; principal risk in my mind is saturation through being able to do bad things faster. Vulnerabilities are found and fixed - that&#x27;s life. What is a problem is identifying and prioritising vulnerabilities. A miscategorisation or misidentification may lead to an extended attack window of a vulnerability. If a cloud provider, or multiple cloud providers are open to something there then everyone is in trouble. That&#x27;s a pretty big nightmare scenario for me where I currently am.",
+  "time": 1776106818,
+  "type": "comment"
+}

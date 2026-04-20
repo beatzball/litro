@@ -1,0 +1,11 @@
+{
+  "by": "clintonc",
+  "id": 47757714,
+  "kids": [
+    47761325
+  ],
+  "parent": 47753032,
+  "text": "&lt;button type=&quot;button&quot;\n        class=&quot;download-hover&quot;\n        onclick=&quot;location.href=&#x27;<a href=\"https:&#x2F;&#x2F;github.com&#x2F;zellij-org&#x2F;zellij&#x2F;releases&#x2F;latest&#x2F;download&#x2F;zellij-x86_64-unknown-linux-musl.tar.gz\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;zellij-org&#x2F;zellij&#x2F;releases&#x2F;latest&#x2F;downloa...</a>&#x27;&quot;&gt;\n    linux download\n&lt;&#x2F;button&gt;<p>Screaming into the void, I guess, but PSA. Don&#x27;t use buttons for links. In my case, I couldn&#x27;t right-click and copy the URL, but there are a lot of other reasons not to do this.",
+  "time": 1776113818,
+  "type": "comment"
+}

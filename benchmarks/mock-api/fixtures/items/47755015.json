@@ -1,0 +1,8 @@
+{
+  "by": "nickjj",
+  "id": 47755015,
+  "parent": 47752819,
+  "text": "One nice thing about tmux is it also supports include files in its config.<p>This lets you put your theme colors in a different file, such as `source-file &quot;~&#x2F;.config&#x2F;tmux&#x2F;theme.conf&quot;` and then your theme switching external script or tool can symlink a specific theme&#x27;s tmux file to that path.<p>That&#x27;s what I do in my dotfiles:<p><pre><code>    # Main tmux config\n    https:&#x2F;&#x2F;github.com&#x2F;nickjj&#x2F;dotfiles&#x2F;blob&#x2F;master&#x2F;.config&#x2F;tmux&#x2F;tmux.conf\n\n    # One of the theme files\n    https:&#x2F;&#x2F;github.com&#x2F;nickjj&#x2F;dotfiles&#x2F;blob&#x2F;master&#x2F;themes&#x2F;tokyonight-moon&#x2F;tmux.conf\n</code></pre>\nIt allows for hot-reloading different themes as well.",
+  "time": 1776099951,
+  "type": "comment"
+}

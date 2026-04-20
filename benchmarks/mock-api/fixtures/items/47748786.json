@@ -1,0 +1,14 @@
+{
+  "by": "stanko",
+  "id": 47748786,
+  "kids": [
+    47755892,
+    47748862,
+    47751143,
+    47751439
+  ],
+  "parent": 47741527,
+  "text": "<a href=\"https:&#x2F;&#x2F;muffinman-io.itch.io&#x2F;spacedeck-x\" rel=\"nofollow\">https:&#x2F;&#x2F;muffinman-io.itch.io&#x2F;spacedeck-x</a><p>I&#x27;m still obsessed with making my game, which you can try it at the link above (it is desktop only). This is my first &quot;real&quot; game, and it has been incredibly fun and rewarding. I&#x27;ve been working on it in the evenings for about 4 or 5 months.<p>It is a very ambitious mix of genres - shoot-em-up and deck-building. A lot of people said that those are genres that shouldn&#x27;t be combined, but I think it turned out to be a fun little game. Folks who are not fans of one (or either) of the genres are actually playing it. I built a global high-score leaderboard, and there are people (including a few of my friends) competing on it. Whoever knocks my friend &quot;BER&quot; from first place will earn a beer from me.<p>This is purely a fun project, although I&#x27;m now seriously considering releasing it on steam when I finish everything I planned for it. It is made in Kaplay, a small JavaScript gamedev library, which is a big part of what makes it fun. If you try it out, please leave a comment, I would love more feedback!",
+  "time": 1776064773,
+  "type": "comment"
+}

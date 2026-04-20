@@ -1,0 +1,11 @@
+{
+  "by": "thcipriani",
+  "id": 47758698,
+  "kids": [
+    47759175
+  ],
+  "parent": 47757495,
+  "text": "Very cool that GitHub actually put stacks in the UI vs. GitLab&#x27;s `glab stack`[0] (which looks just like the `gh stack` part of GitHub&#x27;s thing).<p>One part that seems like it&#x27;s going to feel a little weird is how merging is set up[1].<p>That is, if I merge the bottom of the stack, it&#x27;ll rebase the others in the stack, which will probably trigger a CI test run. So, if I have three patches in the stack, and I want to merge the bottom two, I&#x27;d merge one, wait for tests to run on the other, merge the second vs. merge just those two in one step (though, without having used it, can&#x27;t be sure about how this&#x27;d work in practice—maybe there&#x27;s some way to work around this with restacking?)<p>[0]: &lt;<a href=\"https:&#x2F;&#x2F;docs.gitlab.com&#x2F;cli&#x2F;stack&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;docs.gitlab.com&#x2F;cli&#x2F;stack&#x2F;</a>&gt;<p>[1]: &lt;<a href=\"https:&#x2F;&#x2F;github.github.com&#x2F;gh-stack&#x2F;guides&#x2F;stacked-prs&#x2F;#merging-step-by-step\" rel=\"nofollow\">https:&#x2F;&#x2F;github.github.com&#x2F;gh-stack&#x2F;guides&#x2F;stacked-prs&#x2F;#mergi...</a>&gt;",
+  "time": 1776118888,
+  "type": "comment"
+}

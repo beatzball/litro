@@ -1,0 +1,16 @@
+{
+  "by": "gopiandcode",
+  "id": 47760076,
+  "kids": [
+    47761965,
+    47761607,
+    47760783,
+    47761019,
+    47761013,
+    47761068
+  ],
+  "parent": 47760024,
+  "text": "Repeating myself, when we speak of bugs in a verified software system, I think it&#x27;s fair to consider the entire binary a fair target.<p>If a buffer overflow causes the system to be exploited and all your bitcoins to be stolen, I don&#x27;t think the fact that the bug being in the language runtime is going to be much consolation. Especially if the software you were running was advertised as formally verified as free of bugs.<p>Second, there was a bug in the code. Maybe not a functional correctness bug, but I, along with many and most end users, would consider a crashing program buggy. Maybe we just have different tastes or different standards on what we consider an acceptable level of software quality.<p>W.r.t people running Lean in production, you&#x27;d be surprised...",
+  "time": 1776129508,
+  "type": "comment"
+}

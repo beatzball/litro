@@ -1,0 +1,11 @@
+{
+  "by": "shivang2607",
+  "id": 47752972,
+  "kids": [
+    47753938
+  ],
+  "parent": 47752844,
+  "text": "Actually I use LLM mostly for the code quality and not for the architectural&#x2F;logical or design decisions.<p>I am using claude solely because it&#x27;s best in terms of Code quality and UI.<p>According to you do you think codex has surpassed or at least came on par with the claude in terms of code quality and UI ?<p>How good is codex in terms of code context ?",
+  "time": 1776092318,
+  "type": "comment"
+}

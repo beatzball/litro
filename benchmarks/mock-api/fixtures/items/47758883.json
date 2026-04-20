@@ -1,0 +1,11 @@
+{
+  "by": "warwickmcintosh",
+  "id": 47758883,
+  "kids": [
+    47759228
+  ],
+  "parent": 47756772,
+  "text": "ROCm has improved but the reality is you&#x27;re still fighting the driver stack more than the models. If you&#x27;re actually doing local inference on AMD you&#x27;re spending your time on CUDA compatibility layers, not the AI part. Two lines of python is marketing, the gap between demo and working AMD setup is still real.",
+  "time": 1776120144,
+  "type": "comment"
+}

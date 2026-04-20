@@ -1,0 +1,8 @@
+{
+  "by": "nine_k",
+  "id": 47756112,
+  "parent": 47747939,
+  "text": "Nice! It looks essentially like userspace NAT, only active for particular ports. I&#x27;m contemplating a similar setup to handle access to my home machines: when I&#x27;m in my home network, some ports are forwarded to 127.x.y.z directly from the remote machine, and when I&#x27;m away, the same ports are forwarded via a Wireguard connection. This way, at home I can use the full speed of the LAN, and when away, the speed is limited by the Wireguard gateway, but I still connect to the same host:port, wherever I am.",
+  "time": 1776105114,
+  "type": "comment"
+}

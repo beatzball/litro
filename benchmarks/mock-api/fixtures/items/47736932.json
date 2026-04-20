@@ -1,0 +1,11 @@
+{
+  "by": "10keane",
+  "id": 47736932,
+  "kids": [
+    47737291
+  ],
+  "parent": 47736831,
+  "text": "nope. too dangerous - i&#x27;m personally working for an agent project and i know from personal experience they do collect your session log - especially in china lol. one approach i use for my own agent is that to use keyring to store all secrets. agent will call a tool to request for it, and it will be something like &lt;secret:gmail.password&gt;. the substitution happens at tool execution time so the llm never sees or logs the actual value.",
+  "time": 1775978413,
+  "type": "comment"
+}

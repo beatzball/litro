@@ -1,0 +1,8 @@
+{
+  "by": "linzhangrun",
+  "id": 47760138,
+  "parent": 47758347,
+  "text": "Definitely possible. In January, I tried using Gemini to perform black-box&#x2F;white-box testing on an existing system in my company (it&#x27;s quite old). It successfully exploited a hidden SQL injection vulnerability to penetrate the system and extract password hashes (not particularly strong passwords, successfully decrypted on a public website).\nIn terms of pure skill level, I&#x27;d say this is at least the level of a mid-level cybersecurity professional, not even considering the significant efficiency improvement.",
+  "time": 1776129979,
+  "type": "comment"
+}

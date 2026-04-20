@@ -1,0 +1,17 @@
+{
+  "by": "somat",
+  "id": 47760335,
+  "kids": [
+    47760520,
+    47760452,
+    47760524,
+    47760578,
+    47760454,
+    47760466,
+    47760797
+  ],
+  "parent": 47759898,
+  "text": "Whenever I read an article about formal verification systems there is always that nagging thought in the back of my head. Why can you trust your formal verification system to be bug free but you can&#x27;t trust the program. should not the chance of bugs be about equal in both of them?<p>You have a program that does something and you write another program to prove it. What assurance do you have that one program has fewer bugs then the other? Why can one program have bugs but the other can&#x27;t? How do you prove that you are proving the right thing? It all sort of ties into Heisenberg&#x27;s uncertainty theorem. A system cannot be fully described from within that system.<p>Don&#x27;t get me wrong, I think these are great systems doing great work. But I always feel there is something missing in the narrative.<p>I think a more practical view is that a program is already a sort of proof. there is a something to be solved and the program provides a mechanism to prove it. but this proof may be and probably is incorrect, as bugs are fixed it gets more and more correct. A powerful but time consuming tool to try and force correctness is to build the machine twice using different mechanisms. Then mismatched output indicates something is wrong with one of them. and your job as an engineer is to figure out which one. This is what formal verification brings to the table. The second mechanism.",
+  "time": 1776131742,
+  "type": "comment"
+}

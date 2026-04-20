@@ -1,0 +1,11 @@
+{
+  "by": "Whyachi",
+  "descendants": 0,
+  "id": 47756603,
+  "score": 2,
+  "text": "I built a 83,000 loc invention pipeline that starts with a problem statement and calls multiple SOTA models to generate invention ideas.  Then the ideas are run through a gauntlet to eliminate Ai slop",
+  "time": 1776107606,
+  "title": "Show HN: GDL – I built an AI-powered invention engine",
+  "type": "story",
+  "url": "https://groundeddiscoverylabs.com/"
+}

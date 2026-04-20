@@ -1,0 +1,8 @@
+{
+  "by": "contravariant",
+  "id": 47759478,
+  "parent": 47757617,
+  "text": "Huh interesting, my mental model is unable to see any difference between them.<p>I mean a branch is just jamming a flag into a commit with a polite note to move the flag along if you&#x27;re working on it. You make a long trail, leave several flags and merge the whole thing back.<p>Of course leaving multiple waypoints only makes sense if merging the earlier parts makes any sense, and if the way you continue actually depends on the previous work.<p>If you can split it into several small changes made to a central branch it&#x27;s a lot easier to merge things. Otherwise you risk making a new feature codependent on another <i>even if there was no need to</i>.",
+  "time": 1776124277,
+  "type": "comment"
+}

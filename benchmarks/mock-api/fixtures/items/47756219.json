@@ -1,0 +1,15 @@
+{
+  "by": "spankalee",
+  "id": 47756219,
+  "kids": [
+    47757058,
+    47761412,
+    47756746,
+    47757009,
+    47757122
+  ],
+  "parent": 47755629,
+  "text": "I really wish that the FAIR package manager project had been successful, but they recently gave up after the WordPress drama died down.<p><a href=\"https:&#x2F;&#x2F;fair.pm&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;fair.pm&#x2F;</a><p>FAIR has a very interesting architecture, inspired by atproto, that I think has the potential to mitigate some of the supply-chain attacks we&#x27;ve seen recently.<p>In FAIR, there&#x27;s no central package repository. Anyone can run one, like an atproto PDS. Packages have DIDs, routable across all repositories. There are aggregators that provide search, front-ends, etc. And like Bluesky, there are &quot;labelers&quot;, separate from repositories and front-ends. So organizations like Socket, etc can label packages with their analysis in a first class way, visible to the whole ecosystem.<p>So you could set up your installer to ban packages flagged by Socket, or ones that recently published by a new DID, etc. You could run your own labeler with AI security analysis on the packages you care about. A specific community could build their own lint rules and label based on that (like e18e in the npm ecosystem.<p>Not perfect, but far better than centralized package managers that only get the features their owner decides to pay for.",
+  "time": 1776105660,
+  "type": "comment"
+}

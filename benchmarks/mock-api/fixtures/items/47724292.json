@@ -1,0 +1,8 @@
+{
+  "by": "kabir_daki",
+  "id": 47724292,
+  "parent": 47721997,
+  "text": "Impressive to see parametric CAD running in the browser. \nCurious how you handle precision with floating point — \nthat&#x27;s usually the first wall you hit with geometry in JS. \nDoes it support STEP or DXF export?",
+  "time": 1775859120,
+  "type": "comment"
+}

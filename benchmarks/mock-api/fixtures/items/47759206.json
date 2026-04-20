@@ -1,0 +1,8 @@
+{
+  "by": "peyton",
+  "id": 47759206,
+  "parent": 47759166,
+  "text": "&gt; Did you use an LLM to generate this HN submission?<p>Must have.<p>&gt; The Finder will never see the patch.<p>I wasn’t worried that this eval would show the answer to the model before evaluating it. Seems requirements leaked into this post.",
+  "time": 1776122150,
+  "type": "comment"
+}

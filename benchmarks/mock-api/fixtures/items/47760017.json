@@ -1,0 +1,11 @@
+{
+  "by": "jmalicki",
+  "id": 47760017,
+  "kids": [
+    47760768
+  ],
+  "parent": 47759898,
+  "text": "I have experience with similar things!<p>But that&#x27;s not saying the proofs are an issue - usually the spec you can reasonably prove in lean or another prover, say TLA+ or Z3 depending on your kind of program - has to be overly simplified and have a lot of assumptions.<p>However, that is powerful.<p>It doesn&#x27;t mean your program doesn&#x27;t have bugs.<p>It means this big scary complicated algorithm you think works but are skeptical doesn&#x27;t have bugs - so when you encounter one, you know the bug is elsewhere, and you start really looking at the boundaries of what could be misspecified, if the assumptions given to the prover are actually true, etc.<p>It eliminates the big scary thing everyone will think is the cause of the bug as the actual cause.<p>This has been insanely valuable to me lately.  It is also something I never really was able to do before the help of AI - vibe coding proofs about my programs is IMO one of the killer apps of AI, since there aren&#x27;t a ton of great resources yet about how to do it well since it is rarely done.",
+  "time": 1776129059,
+  "type": "comment"
+}

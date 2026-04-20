@@ -1,0 +1,8 @@
+{
+  "by": "rhdunn",
+  "id": 47761889,
+  "parent": 47759709,
+  "text": "Tools like this (formal verification, sparse, etc.) and built-in mechanism (types, generics, RAII, rust&#x27;s borrow checker) can only verify issues within the scope of that framework. There are also trade-offs and limitations with each type and each implementation.<p>Type checking allows you to (outside of type casting such as in languages like C&#x2F;C++ and casting to object for generic containers in Java) verify that an object is of a given type. That allows you to be sure that a well-formed program isn&#x27;t doing things like putting a random object in a list.<p>Languages like C#, Scala, and Kotlin improve Java generics by making the generic type of a container or other interface&#x2F;type part of the type system. This allows generic types of a generic type to preserve the inner type. This makes it possible to implement things like monads and mapping functions to preserve the generic type.<p>A similar thing is possible with union types, sealed interfaces&#x2F;traits, etc. that allow you to check and verify the return type instead of defaulting it to a generic object&#x2F;any type.<p>Likewise with other features like nullable&#x2F;non-null annotations (or corresponding nullable type annotations like in Kotlin and recent C# versions).<p>All of these can be abused&#x2F;circumvented, but if you keep your code within that framework the compiler will stop that code compiling. Likewise, these solve a limited set of bugs. For example, nullable types can&#x27;t verify memory management and related bugs.",
+  "time": 1776147393,
+  "type": "comment"
+}

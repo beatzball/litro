@@ -1,0 +1,11 @@
+{
+  "by": "Rochus",
+  "id": 47740820,
+  "kids": [
+    47748288
+  ],
+  "parent": 47739764,
+  "text": "Thanks. There is actually also an i386 version of the system in the repository, where I modified the kernel so it runs with Multiboot, making installations much easier. An essential achievement for both platforms were the stand-alone tools, i.e. I can compile and link the whole Oberon system on Linux or any other platform (see <a href=\"https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;op2&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;op2&#x2F;</a>). I even implemented an IDE which I used for the development (see <a href=\"https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;activeoberon&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;activeoberon&#x2F;</a>).",
+  "time": 1776007492,
+  "type": "comment"
+}

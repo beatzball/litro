@@ -1,0 +1,8 @@
+{
+  "by": "com2kid",
+  "id": 47761879,
+  "parent": 47761846,
+  "text": "There are benefits to having the same type system throughout a code base. Also Typescript is a <i>really</i> nice language.<p>The other issue is, many websites are basically apps. The HTML is a byproduct, it isn&#x27;t the main event. The template based systems are fine if you have mostly plain HTML with some interactivity sprinkled in, but for people who are building complex web apps, there is typically a tiny bit of HTML and a lot of logic.<p>The old template based systems fall to pieces for really complicated sites.<p>In regards to language, if you are going to pick a JITed or interpreted  language, may as well pick one that has had a <i>lot</i> of effort put into making it fast, and the JS runtimes are <i>really</i> optimized by now. Java is faster, but Typescript is a much better language (and more type safe!) than Java.",
+  "time": 1776147287,
+  "type": "comment"
+}

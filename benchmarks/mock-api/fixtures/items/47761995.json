@@ -1,0 +1,11 @@
+{
+  "by": "gherkinnn",
+  "id": 47761995,
+  "kids": [
+    47762037
+  ],
+  "parent": 47761870,
+  "text": "The article lists the significant performance gains. Why render on wimpy phones over bad network when a cheap aws box can do it for you?<p>That aside, Next.js and the recent related vulnerabilities made me weary of RSC and I struggle to see the benefit of RSCs over the previous server side rendered and hydrated model. Chances are TanStack will do a better job than Vercel and yet the bumpy ride of the last few years tarnished the whole idea.",
+  "time": 1776148297,
+  "type": "comment"
+}

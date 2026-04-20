@@ -1,0 +1,18 @@
+{
+  "by": "jeeybee",
+  "descendants": 9,
+  "id": 47744683,
+  "kids": [
+    47757982,
+    47756377,
+    47756660,
+    47745626,
+    47744756
+  ],
+  "score": 7,
+  "text": "I got tired of repeating myself to my LLM every session. rekal is an MCP server that stores memories in SQLite and retrieves them with hybrid search (BM25 + vectors + recency decay). One file, local embeddings, no API keys.",
+  "time": 1776029153,
+  "title": "Show HN: Rekal – Long-term memory for LLMs in a single SQLite file",
+  "type": "story",
+  "url": "https://github.com/janbjorge/rekal"
+}

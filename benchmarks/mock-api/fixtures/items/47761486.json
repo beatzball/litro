@@ -1,0 +1,8 @@
+{
+  "by": "boulos",
+  "id": 47761486,
+  "parent": 47758959,
+  "text": "Yeah, but that missing context is super important.<p>If they want it for local dev work, that&#x27;s pretty different from wanting a high-performance air gapped object store without rewriting clients.<p>They seem to know what they&#x27;re doing (having complained about a methodology problem in MinIO), and yet don&#x27;t personally want to throw their hat in the ring not maybe pay anyone...<p>Context matters!",
+  "time": 1776143527,
+  "type": "comment"
+}

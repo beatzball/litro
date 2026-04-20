@@ -6,7 +6,8 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { computeStats } from '../utils/stats.js';
 import { gzipSize } from '../utils/gzip.js';
-import type { FrameworkResult, PageWeightResult } from '../types.js';
+import { measureLighthouse } from './lighthouse.js';
+import type { FrameworkResult, LighthouseResult, PageWeightResult } from '../types.js';
 import { SERVER_READY_TIMEOUT, CROSS_FRAMEWORK_ROUTES } from '../config.js';
 
 export interface FrameworkConfig {
@@ -87,14 +88,18 @@ export async function measureFramework(
   config: FrameworkConfig,
   appsDir: string,
   runs: number,
+  routes?: string[],
+  env?: Record<string, string>,
+  measureLighthouseFlag = false,
 ): Promise<FrameworkResult> {
   const appDir = join(appsDir, config.dir);
   console.log(`\n[cross-framework] ${config.name}`);
+  const execEnv = env ? { ...process.env, ...env } : undefined;
 
   // Install deps if needed
   if (!existsSync(join(appDir, 'node_modules'))) {
     console.log(`  Installing dependencies...`);
-    execSync(config.installCmd, { cwd: appDir, stdio: 'pipe' });
+    execSync(config.installCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
   }
 
   // Build N times
@@ -104,7 +109,7 @@ export async function measureFramework(
     rmSync(outputDir, { recursive: true, force: true });
 
     const start = performance.now();
-    execSync(config.buildCmd, { cwd: appDir, stdio: 'pipe' });
+    execSync(config.buildCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
     const elapsed = Math.round(performance.now() - start);
 
     times.push(elapsed);
@@ -120,10 +125,12 @@ export async function measureFramework(
   const proc = startPreview(config.previewCmd, appDir, config.previewPort);
 
   const pageWeight: Record<string, PageWeightResult> = {};
+  let lighthouse: Record<string, LighthouseResult> | undefined;
   try {
     await waitForReady(baseUrl, SERVER_READY_TIMEOUT);
 
-    for (const route of CROSS_FRAMEWORK_ROUTES) {
+    const effectiveRoutes = routes ?? CROSS_FRAMEWORK_ROUTES;
+    for (const route of effectiveRoutes) {
       const res = await fetch(baseUrl + route);
       const buf = Buffer.from(await res.arrayBuffer());
       pageWeight[route] = {
@@ -132,6 +139,11 @@ export async function measureFramework(
         statusCode: res.status,
       };
       console.log(`  ${route}: ${buf.byteLength} bytes (gzip: ${gzipSize(buf)})`);
+    }
+
+    if (measureLighthouseFlag) {
+      console.log(`  lighthouse audit...`);
+      lighthouse = await measureLighthouse(baseUrl, effectiveRoutes);
     }
   } finally {
     await stopProc(proc);
@@ -146,5 +158,6 @@ export async function measureFramework(
     buildTime: computeStats(times),
     outputSize,
     pageWeight,
+    ...(lighthouse ? { lighthouse } : {}),
   };
 }

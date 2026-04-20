@@ -1,0 +1,8 @@
+{
+  "by": "maouida",
+  "id": 47727925,
+  "parent": 47726762,
+  "text": "The constraints solving took a good amount of thinking while designing FluidCAD. At first I tried to make it all declarative where user just create unconstrained geometries then define constraints, something like:\nconst l1 = line();\nconst c1 = circle();\n&#x2F;&#x2F; define constraint\nl1.length(100).position(x, y).tangentTo(c1)\n...<p>Then I decided against this idea because it results in too much typing + the constraint solver implementation is not trivial and there is not much web based open source solvers. I went with a mixed approach instead between declarative and imperative. <a href=\"https:&#x2F;&#x2F;fluidcad.io&#x2F;docs&#x2F;guides&#x2F;sketching&#x2F;constrained-geometry\" rel=\"nofollow\">https:&#x2F;&#x2F;fluidcad.io&#x2F;docs&#x2F;guides&#x2F;sketching&#x2F;constrained-geomet...</a>",
+  "time": 1775887921,
+  "type": "comment"
+}

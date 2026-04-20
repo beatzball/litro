@@ -1,0 +1,8 @@
+{
+  "by": "Aamir21",
+  "id": 47758793,
+  "parent": 47758560,
+  "text": "A few questions..<p>1. Does the &#x2F;verification&#x2F;assess-risk endpoint capture what you&#x27;d actually need in a CI&#x2F;CD gate? What&#x27;s missing from the request&#x2F;response schema?\n2. The Knowledge Graph as the source of business rules, does this model make sense for your stack, or is there a simpler primitive we should define first?\n3. MCP compatibility, are there gaps in how OQP maps to MCP&#x27;s tool&#x2F;resource model?",
+  "time": 1776119508,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "Aurornis",
+  "id": 47724105,
+  "kids": [
+    47726416
+  ],
+  "parent": 47722081,
+  "text": "How to interview in the age of AI is one of the top questions in a manager peer group that I&#x27;m in.<p>Several hiring managers in the group went all in on AI-assisted interviews because they wanted the interviews to match the tools that engineers can use on their work. Most of them have gone full circle and returned back to no-AI interviews.<p>The main problem with AI-assisted interviews is that they become a test of how familiar the candidate is with the specific AI tool you&#x27;re letting them use. They started getting inverted signals because the hardcore vibecoders knew all the tricks to brute force the problem with high token spend. They&#x27;d do things like spend the interview trying to spin up parallel subagents to brute force a solution.<p>Then the careful coders who tried to understand the problem and do it right were penalized because every minute they spent trying to do the problem (instead of offloading all cognitive load to AI) was time lost to letting AI do the work.<p>There were also simpler problems like when someone was familiar with some visual LLM interface tool but didn&#x27;t have a familiar workflow for the CLI tool used in the interview.<p>Most people went back to coding interviews that forbid AI and test coding skills, combined with a discussion about their AI experience.<p>My takeaway was that it&#x27;s easy to teach new hires how to use AI tools on the job, but it&#x27;s much harder to bring someone with weak coding skills up to the level of someone with strong coding skills. It&#x27;s even harder when that person is leaning on AI so much that they&#x27;re not learning how to code anything.",
+  "time": 1775858088,
+  "type": "comment"
+}

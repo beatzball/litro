@@ -1,0 +1,8 @@
+{
+  "by": "dragonfax",
+  "id": 47745166,
+  "parent": 47741889,
+  "text": "Using Claude Channels can make it easy to inject prompts and get just the response back without having to identify it in the terminal output or fight with the TUI.<p>But they&#x27;re not well designed, and some things just have to go in through the terminal interface like slash commands (i.e. `&#x2F;clear`)",
+  "time": 1776032492,
+  "type": "comment"
+}

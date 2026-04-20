@@ -1,0 +1,8 @@
+{
+  "by": "halfwhey",
+  "id": 47753179,
+  "parent": 47752819,
+  "text": "My two favorite tmux QoL improvements are enabling seamless navigation between neovim and tmux (there are many plugins but i use this one <a href=\"https:&#x2F;&#x2F;github.com&#x2F;aserowy&#x2F;tmux.nvim\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;aserowy&#x2F;tmux.nvim</a>) and extrakto which lets you fuzzy select anything in the tmux buffer and insert into the cursor or copy it to the clipboard. (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;laktak&#x2F;extrakto\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;laktak&#x2F;extrakto</a>)",
+  "time": 1776093117,
+  "type": "comment"
+}

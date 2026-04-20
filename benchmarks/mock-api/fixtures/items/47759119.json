@@ -1,0 +1,11 @@
+{
+  "by": "jeroenhd",
+  "id": 47759119,
+  "kids": [
+    47760933
+  ],
+  "parent": 47758261,
+  "text": "I&#x27;m pretty sure I set up most of what &quot;Simple S3&quot; using with Apache2 and WebDAV at least fifteen years ago.<p>Every month there&#x27;s a post of &quot;I just want a simple S3 server&quot; and every single one of them has a different definition of &quot;simple&quot;. The moment any project overlaps between the use cases of two &quot;simple S3&quot; projects, they&#x27;re no longer &quot;simple&quot; enough.<p>That&#x27;s probably why hosted S3-like services will exist even if writing &quot;simple&quot; S3 servers is so easy. Everyone has a different opinion of what basic S3 usage is like and only the large providers&#x2F;startups with business licensing can afford to set up a system that supports all of them.",
+  "time": 1776121509,
+  "type": "comment"
+}

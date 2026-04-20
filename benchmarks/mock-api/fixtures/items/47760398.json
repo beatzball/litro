@@ -1,0 +1,8 @@
+{
+  "by": "lmm",
+  "id": 47760398,
+  "parent": 47760305,
+  "text": "&gt; That means proving the absence of bugs, and you cannot prove a negative.<p>You can prove that the program implements a specification correctly. That doesn&#x27;t require proving a negative, but it does prove the absence of bugs. (I think you know this argument is weak, since your next paragraph is a complete non-sequitur)<p>&gt; Or if you try to formally verify your formal verification then you&#x27;re just translating the problem to a new layer. It&#x27;s just a chain of proofs that is always ultimately based on an unproven one, which invalidates the whole chain.<p>All proofs ultimately rest on axioms. That&#x27;s normal and not really an argument unless you want to doubt everything, in which case what&#x27;s the point in ever saying anything?",
+  "time": 1776132254,
+  "type": "comment"
+}

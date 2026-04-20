@@ -1,0 +1,11 @@
+{
+  "by": "vatsachak",
+  "id": 47760485,
+  "kids": [
+    47761975
+  ],
+  "parent": 47759709,
+  "text": "You guys are missing the forest for the trees.<p>They used an AI agent sending ideas to a fuzzer and discovered a heap buffer overflow in Lean. This is big.",
+  "time": 1776133009,
+  "type": "comment"
+}

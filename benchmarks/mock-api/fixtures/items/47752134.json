@@ -1,0 +1,11 @@
+{
+  "by": "lxgr",
+  "id": 47752134,
+  "kids": [
+    47752503
+  ],
+  "parent": 47751105,
+  "text": "100% agreed; people generally don&#x27;t realize how deanonymizing EXIF data can be.<p>I remember one of my cameras or phones including a &quot;seconds since device startup&quot; counter; together with the exact time the photo was taken, this yields a precise timestamp of when a phone was last restarted. This by itself can be highly deanonymizing out of a small to medium sized set of candidate phones&#x2F;photographers.",
+  "time": 1776088955,
+  "type": "comment"
+}

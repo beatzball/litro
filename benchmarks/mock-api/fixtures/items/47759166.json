@@ -1,0 +1,13 @@
+{
+  "by": "Cynddl",
+  "id": 47759166,
+  "kids": [
+    47759668,
+    47760060,
+    47759206
+  ],
+  "parent": 47758347,
+  "text": "&gt; Each case runs three agents: a Curator reads the advisory and builds an answer key, a Finder (the model under test) gets 24 shell steps to explore the code and write a structured report, and a Judge scores the blinded submission. The Finder never sees the patch. It starts from sink hints and must trace the bug through actual code.<p>Curator, answer key, Finder, shell steps, structured report, sink hints… I understand nothing. Did you use an LLM to generate this HN submission?<p>It looks like a standard LLM-as-a-judge approach. Do you manually validate or verify some of the results? Done poorly, the results can be very noisy and meaningless.",
+  "time": 1776121848,
+  "type": "comment"
+}

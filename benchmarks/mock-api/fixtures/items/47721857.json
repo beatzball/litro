@@ -1,0 +1,8 @@
+{
+  "by": "austin-cheney",
+  "id": 47721857,
+  "parent": 47718113,
+  "text": "The tabular SQL database generally regarded as the fastest, SQLite, is measured as only averaging about 3x faster than the file system assuming you are using well optimized approaches in each system.  That said the file system could be faster depending upon the operation.<p>The advantages of a database:<p>* Locking - Tables applying locking conventions to prevent race conditions from multiple operations writing competing changes to the same data repository.  If its only a single application that has access to the data this can be solved with queues, but locking is necessary when multiple applications write to the same data at the same time.<p>* API - SQL provides a grammar that many people are familiar with.  In practice this all goes to shit when you have to write a bunch of stored procedures, SQL functions, or table triggers.  I really don&#x27;t like SQL.<p>* References - In RDBMSs records of tables can reference records of other tables using secondary keys that point to unique identifiers of the given other table.  This is typically employed as secondary keys.  This is also solved auto-magically in languages where objects are passed by reference, but that isn&#x27;t the file system.<p>---<p>If your database, data system, whatever is in memory only there are very few real advantages to using something like SQL.  If the data is on disk the file system is the lower level and is designed in such a way as to optimize access to the file system by something like SQL, such as with Logical Volume Manager that can create data volumes that span different hardware.",
+  "time": 1775845558,
+  "type": "comment"
+}

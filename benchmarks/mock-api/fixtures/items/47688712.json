@@ -1,0 +1,33 @@
+{
+  "by": "ed_elliott_asc",
+  "descendants": 21,
+  "id": 47688712,
+  "kids": [
+    47688737,
+    47728428,
+    47750319,
+    47734034,
+    47691492,
+    47689730,
+    47689501,
+    47701121,
+    47693813,
+    47731719,
+    47688897,
+    47704945,
+    47693681,
+    47708859,
+    47741328,
+    47694910,
+    47710867,
+    47692822,
+    47691179,
+    47695024,
+    47702802
+  ],
+  "score": 20,
+  "text": "Something I’ve noticed (I’m using Claude subscription so no refunds but it applies to usage windows) is that sometimes AI makes mistakes so if something is important I tell Claude code to spin up a couple of sub agents and verify the information, often there will be a mistake and it gets rectified.<p>It feels unfair I have to pay (or lose some usage) for this.<p>Interested in other people’s thoughts.",
+  "time": 1775647506,
+  "title": "Ask HN: Should AI credits be refunded on mistakes?",
+  "type": "story"
+}

@@ -1,0 +1,13 @@
+{
+  "by": "tech234a",
+  "id": 47760577,
+  "kids": [
+    47761728,
+    47760863,
+    47761690
+  ],
+  "parent": 47760125,
+  "text": "Can anyone comment on the security of Jellyfin? When I had last looked into it, it seemed like Jellyfin had a somewhat weak security model that made me question switching family members to it from Plex.",
+  "time": 1776133989,
+  "type": "comment"
+}

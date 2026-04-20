@@ -1,0 +1,15 @@
+{
+  "by": "marcusdev",
+  "id": 47744257,
+  "kids": [
+    47748647,
+    47744578,
+    47750469,
+    47744452,
+    47744714
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;m working on a fully offline, client-side train journey planner for UK rail - <a href=\"https:&#x2F;&#x2F;railraptor.com\" rel=\"nofollow\">https:&#x2F;&#x2F;railraptor.com</a><p>When booking flights, I use sites like Kiwi and Skyscanner that let you do flexible searches - multiple destinations, custom connections, creative routes, etc. But rail search feels oddly constrained. All the UK train operators offer basically the same experience, and surface the exact same routes. I always suspected there were better or just different options that weren’t being shown. Where is the &quot;Skyscanner for trains&quot;?<p>After digging through the national rail data feeds, I decided to have a go at building my own route planner that runs completely offline in the browser. This gave me the freedom to implement more complex filters, search to&#x2F;from multiple stations, and do it without a persistent network connection.<p>Now I&#x27;m finding routes that aren&#x27;t offered by the standard train operators, connecting at different stations, and finding it&#x27;s often easier to travel to different stations (some I&#x27;d never heard of) that get me closer and faster to where I actually want to go!<p>It&#x27;s still a little rough and I&#x27;d like to add more features such as fares, VSTP data, and direct-links to book tickets, but wanted to share early and get some initial feedback before investing more time into it. So, thanks in advance - let me know what you think.",
+  "time": 1776026599,
+  "type": "comment"
+}

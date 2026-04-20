@@ -1,0 +1,11 @@
+{
+  "by": "suvamsh",
+  "descendants": 0,
+  "id": 47754924,
+  "score": 3,
+  "text": "Hey HN,\nI built Asthi to give me a straight forward way to track all of my assets. It&#x27;s completely free.<p>I&#x27;ve tried a few different products like Mint (before it was killed), empower, google finance, etc. but each had something missing that left me wanting more. After years of being frustrated with each solution I spent a few weeks to build my own.<p>Some design choices\n- Intentionally requires manual entry, I don&#x27;t trust tracker apps to have read (definitely not write) access to my financial accounts. Certain assets like precious metals can&#x27;t even use this anyway and need to be manual.\n- For tax advantaged accounts I try to find proxy tickers since it&#x27;s custom based on the company or brokerage\n- Real estate requires manually entry as well but I&#x27;d love to auto pull estimated prices<p>I haven&#x27;t spent much time on user experience since I built it for myself so would love feedback! Please send all thoughts and comments, I can iterate quickly and address any issues.",
+  "time": 1776099616,
+  "title": "Show HN: Asthi – Damn good asset tracker",
+  "type": "story",
+  "url": "https://www.asthi.app/"
+}

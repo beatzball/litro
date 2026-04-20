@@ -1,0 +1,12 @@
+{
+  "by": "spijdar",
+  "id": 47741564,
+  "kids": [
+    47741722,
+    47741819
+  ],
+  "parent": 47739174,
+  "text": "Oh, this is something I&#x27;m going to have to try. Excellent work!<p>I have to ask, since people who&#x27;d know will probably be here, what&#x27;s the &quot;ten thousand foot view&quot; of Oberon <i>today</i>? I&#x27;m aware of the lineage from Pascal&#x2F;Modula, and that it was a full OS written entirely in Oberon, sort of akin to a Smalltalk or Lisp machine image. What confuses me is the later work on Oberon seems to be something of a cross between a managed runtime like Java or dot net, and the Inferno OS, where it can both run hosted or &quot;natively&quot;. Whenever I&#x27;ve skimmed the wikipedia or web pages I&#x27;ve been a bit confused.",
+  "time": 1776011268,
+  "type": "comment"
+}

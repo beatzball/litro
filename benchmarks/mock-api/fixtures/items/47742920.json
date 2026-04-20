@@ -1,0 +1,11 @@
+{
+  "by": "jorl17",
+  "id": 47742920,
+  "kids": [
+    47743114
+  ],
+  "parent": 47742200,
+  "text": "Hi!<p>Over the years, I&#x27;ve tried several of these dock replacement apps. The one that stuck the longest was uBar (which I used with a setup similar to what you have here, emulating a &quot;windows taskbar&quot;.<p>I&#x27;ve hit issues with most of them that forced me to move back to the normal Dock, but the number one issue has always been around notification badges: they always seemed to break in strange ways.<p>For example, can your dock show badges for iMessage if the app isn&#x27;t open? Does it get the updated badge count without me opening it? Say I receive a SMS&#x2F;iMessage, does it instantly show a counter next to the unopened pinned messages app? None of the other apps successfully did this when I tried them...<p>I don&#x27;t know if there are other apps like this, but iMessage was by far the biggest offender. Perhaps system settings too?<p>P.S.: Congrats on the launch :)<p>P.P.S.: As others have said, I think a subscription for this will rub many people the wrong way (I am one of them). If I&#x27;m paying for a subscription, I expect this to be pretty bug-free and have at least monthly updates. I wouldn&#x27;t ask this of other subscription-based apps, but for one that replaces a system-level component and wants me to keep paying, you bet I am holding it to a high standard! I&#x27;ve wasted too much money on other replacements and gotten very little value out of that.",
+  "time": 1776019236,
+  "type": "comment"
+}

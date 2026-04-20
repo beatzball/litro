@@ -1,0 +1,8 @@
+{
+  "by": "_alternator_",
+  "id": 47760385,
+  "parent": 47760305,
+  "text": "This comment conflates a number of ideas that obscures its own epistemological point. For example, yes, you can prove a negative (for instance, you can prove there is no largest integer).<p>The question of who validates the validator is real, but the abstraction of &quot;formal verification&quot; does serve a purpose, like any good mathematical or programming abstraction. Whole classes of bugs are removed; what&#x27;s left to verify is usually much shorter.",
+  "time": 1776132151,
+  "type": "comment"
+}

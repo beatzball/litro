@@ -1,0 +1,8 @@
+{
+  "by": "renewiltord",
+  "id": 47761793,
+  "parent": 47753689,
+  "text": "Build using ecosystem  with a  better standard library. Too little in node so you have to install lots of deps. I have to encapsulate your tool in docker to prevent node supply chain attack. If you use a better ecosystem with larger standard library you will be installing fewer rando deps. You can do it. You are very AI forward organization. Fewer dependencies and write all code yourself. You have LLM.<p>Node, Python etc. allow arbitrary footgun tech to lose all local data. You have to use better tech.",
+  "time": 1776146451,
+  "type": "comment"
+}

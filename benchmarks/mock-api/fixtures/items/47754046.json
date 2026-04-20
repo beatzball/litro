@@ -1,0 +1,8 @@
+{
+  "by": "verall",
+  "id": 47754046,
+  "parent": 47753726,
+  "text": "&gt; In case anyone is looking for it, the fix is &quot;bind-key -T root S-Enter send-keys C-j&quot;<p>I was looking, thank you!",
+  "time": 1776096145,
+  "type": "comment"
+}

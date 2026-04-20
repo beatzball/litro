@@ -1,0 +1,11 @@
+{
+  "by": "zerkten",
+  "id": 47751703,
+  "kids": [
+    47755579
+  ],
+  "parent": 47742621,
+  "text": "They have a perpetual pricing option available alongside the subscription one. It&#x27;s still worth thinking about the economics of this.<p>How are they supposed to fund development? It&#x27;s important to differentiate independent devs and the goliaths. When you release an app like this, it is &quot;good enough&quot; for more people. Your incentive to build the thing is that you can make a living off of it and continue crafting it with the intent of building other great things. The biggest software companies have many revenue streams and ways to cover costs that are very different from independent devs.<p>When you sell perpetual use software, you have the incentive to release yearly versions (or whatever cadence is best.) You are incentivized to only put bugfixes into next year&#x27;s version to force upgrades. Users lose out because they don&#x27;t get bug fixes and the developer is put in a spot where they have to look for more devious ways of making a profit.<p>To make money the cost of perpetual software is also very high. Devs make terrible compromises here to seem reasonable, but you need to move a lot of units to reduce the price to the level possible with subscription software.<p>Subscriptions are far from perfect, but they bring some balance. Next time you complain, it would be an interesting exercise to state what you would be prepared to pay and how often.",
+  "time": 1776087037,
+  "type": "comment"
+}

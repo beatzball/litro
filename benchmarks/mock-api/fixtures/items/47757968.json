@@ -1,0 +1,8 @@
+{
+  "by": "klaxce",
+  "id": 47757968,
+  "parent": 47743992,
+  "text": "I’m trying the demo now, since I’ve been looking for something like this and haven’t been happy with any of the options. This is really close, so I want it to be right so I can be done looking.<p>I have “Displays have separate Spaces” enabled for a few reasons, and I’d like to keep it that way.<p>I have “Show on all displays” in BoringBar turned off, because if I turn it on, then I lose the per-monitor window on the bar, which I want.<p>My MBP and First External Display have the opposite windows on their bars. Spotify is open on MBP, but showing on the monitor, and vice versa. The Main display is fine. External Display 2 is my “Main display” and External Display 1 and the MBP display are “Extend display”.<p>On the extended monitors, BoringBar doesn’t stop windows from going behind it (it auto resizes on the main display) when I maximize them.<p>I would really like if it had an option like Windows to group windows by application, but not to put them all in one “chip” as you call it. I just want all of my VSCode windows to be next to each other, without another app’s window in between. If I use your “Group windows by app” then I don’t like how hiding and showing from the bar works. In Windows 11, I always show window title and group windows by app.<p>Lastly, I’d like if all “chips” were the same size, even if some title text is shorter than others.<p>Great work so far. It feels far less janky than uBar or others I’ve tried. I’m hopeful and will keep an eye on it! Is there any way to reset my trial if you come out with these changes at a later date? For now I’ll be uninstalling it, as the windows on the wrong display is unusable.",
+  "time": 1776115239,
+  "type": "comment"
+}

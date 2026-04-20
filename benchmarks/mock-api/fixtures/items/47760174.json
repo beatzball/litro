@@ -1,0 +1,8 @@
+{
+  "by": "linzhangrun",
+  "id": 47760174,
+  "parent": 47752819,
+  "text": "The scrolling behavior in tmux has always annoyed me. Every time I have to press a shortcut to enter copy&#x2F;scroll mode, and then exit it again. At the same time, using Ctrl+A to select all is always cumbersome.<p>In modern TUI editors, scrolling and select-all don’t seem to be issues at all. I can use them almost unconsciously in a way similar to GUI applications—for example, Micro or TUIs from OpenCode. Does anyone know how to solve these problems?",
+  "time": 1776130295,
+  "type": "comment"
+}

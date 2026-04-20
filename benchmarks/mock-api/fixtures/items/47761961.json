@@ -1,0 +1,11 @@
+{
+  "by": "danielhep",
+  "id": 47761961,
+  "kids": [
+    47762013
+  ],
+  "parent": 47761870,
+  "text": "Without RSC you have to wait for the user to download the application bundle before the request for content can even be sent to the server. So that means that the db queries and stuff are not even initiated until the client has the bundle and runs it, vs with RSC that stuff is all launched the moment the first request comes in from the user.",
+  "time": 1776147957,
+  "type": "comment"
+}

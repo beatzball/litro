@@ -1,0 +1,8 @@
+{
+  "by": "rs545837",
+  "id": 47761501,
+  "parent": 47757495,
+  "text": "This is awesome honestly, Stacked PRs are one of those features that feels obvious in hindsight. Breaking a n-line PR into 3 focused layers where each one is independently reviewable is a huge win for both the author and reviewer. The native GitHub UI with the stack navigator is the right call too, and there&#x27;s no reason this should require a third-party tool.<p>One thing I keep thinking about in this same direction: even within a single layer of a stack, line-level diffs are still noisy. You rename a function and update x call sites, the diff shows y changed lines. A reviewer has to mentally reconstruct &quot;oh this is just a rename&quot; from raw red&#x2F;green text.<p>Semantic diffing (showing which functions, classes, methods were added&#x2F;modified&#x2F;deleted&#x2F;moved) would pair really well with stacks. Each layer of the stack becomes even easier to review when the diff tells you &quot;modified function X, added function Y&quot; instead of just showing changed lines.<p>I&#x27;ve been researching something in this direction, <a href=\"https:&#x2F;&#x2F;ataraxy-labs.github.io&#x2F;sem&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;ataraxy-labs.github.io&#x2F;sem&#x2F;</a>. It does entity-level diffs, blame, and impact analysis. Would love to see forges like GitHub move in this direction natively. Stacked PRs solve the too much at once problem. Semantic diffs solve the &quot;what actually changed&quot; problem. Together they&#x27;d make code review dramatically better.",
+  "time": 1776143621,
+  "type": "comment"
+}

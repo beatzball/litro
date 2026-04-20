@@ -1,0 +1,11 @@
+{
+  "by": "sgm_ro",
+  "id": 47735957,
+  "kids": [
+    47736085
+  ],
+  "parent": 47735693,
+  "text": "Those groks are quite old by now, and not impressive.\nMinimax M2.7 is a big upgrade vs 2.5, at a similar price, should easily beat the grok.\nGLM 5.1 is also a great value (with coding plans), around claude sonnet capability.<p>But if you are doing a lot of coding your best value will be a coding plan, not pay per token. Gpt plus is a really good value and its 5.4-high model is super capable, some even consider it better than opus.<p>I don&#x27;t think it&#x27;s worth getting less than state of the art models to do actual coding, if the code will actually be used. Costs a bit more but will save you a lot of time in the end, and will produce a better quality product.",
+  "time": 1775965221,
+  "type": "comment"
+}

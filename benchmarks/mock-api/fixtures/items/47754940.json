@@ -1,0 +1,8 @@
+{
+  "by": "angarrido",
+  "id": 47754940,
+  "parent": 47753684,
+  "text": "must people think it’s just GPU cost. In practice it’s coordination: model latency variance + queueing + retries under load. You don’t scale linearly, you get cascading slowdowns.",
+  "time": 1776099673,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "rowyourboat",
+  "id": 47761790,
+  "parent": 47715389,
+  "text": "This shows, once more, that humans are bad with modes. You have two copies of the repo, one in a transaction and one not in a transaction.<p>The problem is that the thing you use to build the transaction can also be used to directly manipulate the DB. A better API design would be to separate those two things.",
+  "time": 1776146409,
+  "type": "comment"
+}

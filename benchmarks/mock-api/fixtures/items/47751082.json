@@ -1,0 +1,17 @@
+{
+  "by": "ieie3366",
+  "id": 47751082,
+  "kids": [
+    47751860,
+    47751111,
+    47752594,
+    47752600,
+    47754254,
+    47752722,
+    47752952
+  ],
+  "parent": 47750669,
+  "text": "Most likely: actually using the geolocation is an extremely niche usecase for images uploaded from mobile browsers.<p>I’d wager 99.9% of the users didn’t realize that they are effectively sending their live GPS coords to a random website when taking a photo.<p>But yes, a prop to the input tag ’includeLocation’ which would then give the user some popup confirmation prompt would have been nice",
+  "time": 1776083706,
+  "type": "comment"
+}

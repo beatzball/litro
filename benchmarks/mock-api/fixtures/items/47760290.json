@@ -1,0 +1,8 @@
+{
+  "by": "heavyset_go",
+  "id": 47760290,
+  "parent": 47753032,
+  "text": "Just use byobu, zellij does weird things, byobu just uses tmux (or screen) and has a sane mouse TUI",
+  "time": 1776131238,
+  "type": "comment"
+}

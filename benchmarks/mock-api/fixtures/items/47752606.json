@@ -1,0 +1,8 @@
+{
+  "by": "halfwhey",
+  "id": 47752606,
+  "parent": 47747424,
+  "text": "The extra stuff is that you can automate interactions with Claude Code sessions using a CLI (which just tmux send-keys under the hood), an HTTP server, and ACP server (so you can embed claude code in other IDEs), and typescript library. So it&#x27;s meant to make CC more embeddable in your workflows.",
+  "time": 1776090896,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "gregoryl",
+  "id": 47758167,
+  "kids": [
+    47758325,
+    47758274
+  ],
+  "parent": 47758067,
+  "text": "If I&#x27;m following correctly, the conflicts arise from other commits made to main already - you&#x27;ve implicitly caught branch A up to main, and now you need catch branch B up to main, for a clean merge.<p>I don&#x27;t see how there is any other way to achieve this cleanly, it&#x27;s not a git thing, it&#x27;s a logic thing right?",
+  "time": 1776116398,
+  "type": "comment"
+}

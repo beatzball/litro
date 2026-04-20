@@ -1,0 +1,15 @@
+{
+  "by": "cleverdash",
+  "id": 47757721,
+  "kids": [
+    47761122,
+    47757836,
+    47757963,
+    47757868,
+    47757806
+  ],
+  "parent": 47757495,
+  "text": "As a solo dev I rarely need stacked PRs, but the underlying problem, keeping PRs small and reviewable, is real even when you&#x27;re your own reviewer. I&#x27;ve found that forcing myself to break work into small branches before I start (rather than retroactively splitting a giant branch) is the actual discipline. The tooling just makes it less painful when you don&#x27;t.<p>Curious whether this changes anything for the AI-assisted workflow. Right now I let Claude Code work on a feature branch and it naturally produces one big diff. Stacked PRs could be interesting if agents learned to split their own work into logical chunks.",
+  "time": 1776113846,
+  "type": "comment"
+}

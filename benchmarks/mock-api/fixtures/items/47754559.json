@@ -1,0 +1,11 @@
+{
+  "by": "0xchamin",
+  "descendants": 0,
+  "id": 47754559,
+  "score": 7,
+  "text": "I watch a lot of Stanford&#x2F;Berkeley lectures and YouTube content on AI agents, MCP, and security. Got tired of scrubbing through hour-long videos to find one explanation. Built v1 of mcptube a few months ago. It performs transcript search and implements Q&amp;A as an MCP server. It got traction (34 stars, my first open-source PR, some notable stargazers like CEO of Trail of Bits).<p>But v1 re-searched raw chunks from scratch every query. So I rebuilt it.<p>v2 (mcptube-vision) follows Karpathy&#x27;s LLM Wiki pattern. At ingest time, it extracts transcripts, detects scene changes with ffmpeg, describes key frames via a vision model, and writes structured wiki pages. Knowledge compounds across videos rather than being re-discovered. FTS5 + a two-stage agent (narrow then reason) for retrieval.<p>MCPTube works both as CLI (BYOK) and MCP server. I tested MCPTube with Claude Code, Claude Desktop, VS Code Copilot, Cursor, and others. Zero API key needed server-side.<p>Coming soon: I am also building SaaS platform. This platform supports playlist ingestion, team wikis, etc. I like to share early access signup: <a href=\"https:&#x2F;&#x2F;0xchamin.github.io&#x2F;mcptube&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;0xchamin.github.io&#x2F;mcptube&#x2F;</a><p>Happy to discuss architecture tradeoffs — FTS5 vs vectors, file-based wiki vs DB, scene-change vs fixed-interval sampling. Give it a try via `pip install mcptube`. Also, please do star the repo if you enjoy my contribution (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;0xchamin&#x2F;mcptube\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;0xchamin&#x2F;mcptube</a>)",
+  "time": 1776098049,
+  "title": "Show HN: Mcptube – Karpathy's LLM Wiki idea applied to YouTube videos",
+  "type": "story",
+  "url": "https://github.com/0xchamin/mcptube"
+}

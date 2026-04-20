@@ -1,0 +1,11 @@
+{
+  "by": "arc_light",
+  "id": 47753999,
+  "kids": [
+    47755948
+  ],
+  "parent": 47753684,
+  "text": "A piece that often gets overlooked: unlike a web app where you can cache aggressively and serve millions of users from relatively few servers, LLM inference is stateless in a weird way — each request is expensive and can&#x27;t really be batched the way traditional workloads can. A spike in traffic doesn&#x27;t just slow you down linearly, it creates queuing effects that cascade fast.<p>There&#x27;s also the memory side. A large model has to live entirely in GPU VRAM to run efficiently. You can&#x27;t just &quot;add more RAM&quot; on the fly the way you can with CPU workloads. Scaling means acquiring, provisioning, and loading entirely new physical machines — which takes minutes to hours, not seconds.<p>So you end up with a system that&#x27;s simultaneously very expensive per-request, very hard to scale horizontally in real time, and very sensitive to traffic spikes. That&#x27;s a reliability engineer&#x27;s nightmare even before you factor in the supply constraints the sibling comment mentioned.",
+  "time": 1776095983,
+  "type": "comment"
+}

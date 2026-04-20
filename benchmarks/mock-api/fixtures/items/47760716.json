@@ -1,0 +1,8 @@
+{
+  "by": "throwaway894345",
+  "id": 47760716,
+  "parent": 47760192,
+  "text": "Heh, I just spent 15 minutes debugging a Jellyfin bug where my WebOS client thought that the startup wizard had not been completed yet (I tried restarting it several times, but the thing that did the trick was enabling debug logging and _then_ it started working properly--probably a coincidence). Jellyfin is the best in class, but the bar is in hell. It can&#x27;t be run in any kind of a high availability configuration, so if your only instance goes down or has any kind of issue, you have to jump on and fix it immediately or you can&#x27;t use it. When something goes wrong, some of the logs show up in stderr, but most are just written as plain files to a directory. It&#x27;s free software, so you get what you pay for, but it&#x27;s pretty buggy.",
+  "time": 1776135440,
+  "type": "comment"
+}

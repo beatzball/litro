@@ -1,0 +1,13 @@
+{
+  "by": "pxc",
+  "id": 47740949,
+  "kids": [
+    47750689,
+    47742443,
+    47742039
+  ],
+  "parent": 47740148,
+  "text": "&gt; Heh, lucky you, at least you get a message. My ISP just drops traffic to the affected IPs. No ping, no traceroute, just a spinner in the browser until it says &quot;page not found&quot;.<p>This is generally how the GFW works in China. Instead of an overbearing nanny like a school or corporation&#x27;s DNS blocker, you&#x27;re left with a sense that you&#x27;re on a version of the Internet that is just intermittently and somewhat mysteriously broken.<p>And indeed, in China, a lot of things that probably aren&#x27;t fully intended to be blocked are not reliably accessible. Implementation varies, so you get strange routing and peering issues. It feels like an Internet that isn&#x27;t fully formed, that hasn&#x27;t finished coming together yet.<p>Nation states and corporations obviously gain some things sometimes by having Internet censorship&#x2F;blocking frameworks in place. Maybe, sometimes, ordinary people even benefit, too, if it helps shut down illegal and genuinely harmful businesses.<p>But it feels like the whole world is gradually trending towards more and more Internet censorship without realizing that we are <i>un-building</i> a miraculous thing that took enormous effort and cleverness and expense to build. I wish we could think about this not only in terms of freedom (and we absolutely should think about it in terms of freedom), but how we are <i>disintegrating the infrastructure</i> of communication and computing.",
+  "time": 1776008081,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "kayson",
+  "id": 47711507,
+  "parent": 47711352,
+  "text": "Yes! I recently started maintaining <a href=\"https:&#x2F;&#x2F;github.com&#x2F;AnalogJ&#x2F;scrutiny\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;AnalogJ&#x2F;scrutiny</a> a self-hosted service for collecting and monitoring hard drive SMART data. Right now the docs are just a somewhat organized collection of markdown files in the repo. It would be great to have something more polished, rendered by GitHub pages, etc, but I have been prioritizing bug fixes and don&#x27;t have the bandwidth (or expertise really) to improve the docs.<p>The latest release has ~500k downloads so it&#x27;s a popular project and your contribution would be a pretty significant impact.",
+  "time": 1775776320,
+  "type": "comment"
+}

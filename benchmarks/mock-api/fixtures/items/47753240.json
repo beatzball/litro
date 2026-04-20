@@ -1,0 +1,12 @@
+{
+  "by": "tosti",
+  "id": 47753240,
+  "kids": [
+    47758068,
+    47753510
+  ],
+  "parent": 47752819,
+  "text": "I like having a red bar for tmux running as root and a blue one for running it as a normal user, e.g. for root:<p><pre><code>    set -g status-style &quot;bg=red&quot;\n</code></pre>\nI also like to have the bar on top and the status centered:<p><pre><code>    set -g status-justify absolute-centre\n    set -g status-position top</code></pre>",
+  "time": 1776093387,
+  "type": "comment"
+}

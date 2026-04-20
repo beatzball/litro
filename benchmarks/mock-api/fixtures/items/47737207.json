@@ -1,0 +1,11 @@
+{
+  "by": "jvqv",
+  "id": 47737207,
+  "kids": [
+    47737298
+  ],
+  "parent": 47736831,
+  "text": "As a precaution I would probably never pass secrets directly to the agent at all. Something like a placeholder format where the actual substitution happens at execution time so the LLM never sees the real value. Keeps things cleaner if something ever goes wrong.",
+  "time": 1775981458,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "noodletheworld",
+  "id": 47762051,
+  "parent": 47761609,
+  "text": "&gt; We intentionally do not support &#x27;use server&#x27; actions, both because of existing attack vectors and because they can create highly implicit network boundaries<p>Mmm. Very nice.<p>Explicitly avoiding turning react into “webforms” and focusing on the <i>actual point</i> of RSC seems like the path RSC should have had from the beginning.<p>Magical RPC so you could “use server” and not bother to write an API properly was never the point of RSC, and the CVEs showed why it was a bad idea.",
+  "time": 1776148775,
+  "type": "comment"
+}

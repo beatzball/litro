@@ -1,0 +1,21 @@
+{
+  "by": "JanSchu",
+  "id": 47749688,
+  "kids": [
+    47750614,
+    47750359,
+    47752217,
+    47754250,
+    47750515,
+    47750465,
+    47750348,
+    47750345,
+    47751045,
+    47750336,
+    47750366
+  ],
+  "parent": 47749674,
+  "text": "I wanted to test how far AI coding tools could take a production project. Not a prototype. A social media management platform with 12 first-party API integrations, multi-tenant auth, encrypted credential storage, background job processing, approval workflows, and a unified inbox. The scope would normally keep a solo developer busy for the better part of a year. I shipped it in 3 weeks.<p>Before writing any code, I spent time on detailed specs, an architecture doc, and a style guide. All public: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;tree&#x2F;main&#x2F;development_specs\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;tree&#x2F;main...</a><p>I broke the specs into tasks that could run in parallel across multiple agents versus tasks with dependencies that had to merge first. This planning step was the whole game. Without it, the agents produce a mess.<p>I used Opus 4.6 (Claude Code) for planning and building the first pass of backend and UI. Opus holds large context better and makes architectural decisions across files more reliably. Then I used Codex 5.3 to challenge every implementation, surface security issues, and catch bugs. Token spend was roughly even between the two.<p>Where AI coding worked well: Django models, views, serializers, standard CRUD. Provider modules for well-documented APIs like Facebook and LinkedIn. Tailwind layouts and HTMX interactions. Test generation. Cross-file refactoring, where Opus was particularly good at cascading changes across models, views, and templates when I restructured the permission system.<p>Where it fell apart: TikTok&#x27;s Content Posting API has poor docs and an unusual two-step upload flow. Both tools generated wrong code confidently, over and over. Multi-tenant permission logic produced code that worked for a single workspace but leaked data across tenants in multi-workspace setups. These bugs passed tests, which is what made them dangerous. OAuth edge cases like token refresh, revoked permissions, and platform-specific error codes all needed manual work. Happy path was fine, defensive code was not. Background task orchestration (retry logic, rate-limit backoff, error handling) also required writing by hand.<p>One thing I underestimated: Without dedicated UI designs, getting a consistent UX was brutal. All the functionality was there, but screens were unintuitive and some flows weren&#x27;t reachable through the UI at all. 80% of features worked in 20% of the time. The remaining 80% went to polish and making the experience actually usable.<p>The project is open source under AGPL-3.0. 12 platform integrations, all first-party APIs. Django 5.x + HTMX + Alpine.js + Tailwind CSS 4 + PostgreSQL. No Redis. Docker Compose deploy, 4 containers.<p>Ask me anything about the spec-driven approach, platform API quirks, or how I split work between the two models.",
+  "time": 1776072494,
+  "type": "comment"
+}

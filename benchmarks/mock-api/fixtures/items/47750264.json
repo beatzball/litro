@@ -1,0 +1,13 @@
+{
+  "by": "isodev",
+  "id": 47750264,
+  "kids": [
+    47750932,
+    47750406,
+    47751083
+  ],
+  "parent": 47738883,
+  "text": "Very good example as to why using a single, centralised proxy globally by all services is a bad idea. Docker would never have a reason to block anything if they were simply running their own.<p>For everyone else, small and big, this is the weekly reminder to not use Cloudflare for user-facing access to anything.",
+  "time": 1776077743,
+  "type": "comment"
+}

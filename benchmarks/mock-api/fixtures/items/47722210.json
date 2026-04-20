@@ -1,0 +1,11 @@
+{
+  "by": "PaulHoule",
+  "id": 47722210,
+  "kids": [
+    47724821
+  ],
+  "parent": 47722081,
+  "text": "Even if you said AI programming is based on &quot;knowing what to prompt&quot; this still comes down to:<p>(1) understanding software engineering (for one thing knowing if answers make sense)<p>(2) subject matter expertise and the ability to communicate with SMEs, fake being an SME by reading books,  see the old &quot;knowledge engineer&quot; construct from the 1980s.<p>(3) knowing specifics about AI coding.<p>I think (1) and (2) are 80-90% of what leads to success in the long term.  My guess is the models are going to get better so (3) skills have a short half life and will matter less,  but (1) and (2) will stay the same.<p>Maybe I&#x27;m cynical but if I was designing screeners for this thing I would ask people things like<p>&quot;How many accounts do you follow on X about AI?&quot; where the right answer is &quot;I don&#x27;t have an X account&quot; and the higher the count the worse it is.<p>&quot;What percent of your programming time do you spend thinking about AI programming tools?&quot; and anything over 20% is suspect (but maybe it is a tooling job or something in which case I&#x27;d drop it)<p>That is,  I want to see that somebody used AI tools to deliver something 100% done end-to-end that worked and I&#x27;d like to see them spending 80% of their time doing.<p>I&#x27;d also be thinking about screeners designed to detect FOMO attitudes and reject people for it.",
+  "time": 1775847584,
+  "type": "comment"
+}

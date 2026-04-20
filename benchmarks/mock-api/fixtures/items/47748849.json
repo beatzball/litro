@@ -1,0 +1,11 @@
+{
+  "by": "pjmlp",
+  "id": 47748849,
+  "kids": [
+    47750051
+  ],
+  "parent": 47739174,
+  "text": "This is great, especially being System 3, given the nice user experience Oberon eventually morphed into.<p>In System 3 with the Gadgets system it was already starting to feel like a proper mainstream OS, instead of the plain black and white, without framework like experience from the initial Project Oberon, even thought it was a technological achivement already, with a memory safe systems language.<p>I prefer the path taken down by Active Oberon, however that doesn&#x27;t seem to also get that much love nowadays, and is much more complex to explore than System 3.<p>For those that not know it, it already had something like OLE (inspired by how Xerox PARC did it with Cedar), an AOT&#x2F;JIT compilation system (with slim binaries for portability), and everything on a memory safe systems language.",
+  "time": 1776065185,
+  "type": "comment"
+}

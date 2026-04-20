@@ -1,0 +1,8 @@
+{
+  "by": "canarias_mate",
+  "id": 47760380,
+  "parent": 47749674,
+  "text": "Multi-tenant bugs slipping through tests is the scariest part of shipping fast with AI codegen. We&#x27;ve been working on Autonoma (<a href=\"https:&#x2F;&#x2F;www.getautonoma.com&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;www.getautonoma.com&#x2F;</a>) for exactly this, AI agents that do E2E testing by navigating your app like a real user and catching the stuff unit tests miss.",
+  "time": 1776132115,
+  "type": "comment"
+}

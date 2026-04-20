@@ -1,0 +1,13 @@
+{
+  "by": "joshka",
+  "id": 47757371,
+  "kids": [
+    47757661,
+    47757423,
+    47757811
+  ],
+  "parent": 47753689,
+  "text": "&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>Initial impression:<p>-h and --help should follow the short &#x2F; long standard of providing more &#x2F; less info. The approach currently used is -h and --help show command lists and point at a --help-full flag. The --help-full output seems to give what I&#x27;d expect on -h. This needs to be much better - it should give enough information that a user &#x2F; coding agen doesn&#x27;t have to read websites &#x2F; docs to understand how the feature works.<p>Completions are broken by default compared to the actual list of commands - i.e. dns didn&#x27;t show up in the list.<p>When I ran cf start -h it prompted to install completions (this was odd because completions were already installed &#x2F; detected). But either way, -h should never do anything interactive<p>Some parts of the cli seem very different to the others (e.g. cf domains -h is very different to cf dns -h). Color &#x2F; lack of color, options, etc.",
+  "time": 1776111912,
+  "type": "comment"
+}

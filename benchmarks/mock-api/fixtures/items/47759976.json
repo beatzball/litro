@@ -1,0 +1,12 @@
+{
+  "by": "natpalmer1776",
+  "id": 47759976,
+  "kids": [
+    47761578,
+    47760052
+  ],
+  "parent": 47758386,
+  "text": "The armchair ML engineer in me says our current context management approach is the issue. With a proper memory management system wired up to it’s own LLM-driven orchestrator, memories should be pulled in and pushed out between prompts, and ideally, in the middle of a “thinking” cycle. You can enhance this to be performant using vector databases and such but the core principle remains the same and is oft repeated by parents across the world: “Clean up your toys before you pull a new one out!”<p>Also since I thought for another 30 seconds, the “too many memories!” Problem imo is the same problem as context management and compaction and requires the same approach: more AI telling AI what AI should be thinking about. De-rank “memories” in the context manager as irrelevant and don’t pass them to the outer context. If a memory is de-ranked often and not used enough it gets purged.",
+  "time": 1776128633,
+  "type": "comment"
+}

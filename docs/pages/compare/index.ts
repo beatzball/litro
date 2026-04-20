@@ -41,6 +41,7 @@ interface FrameworkResult {
 
 interface CompareIndexData {
   frameworks: FrameworkResult[];
+  hnFrameworks: FrameworkResult[];
   siteTitle: string;
   nav: typeof siteConfig.nav;
   seoHead: string;
@@ -55,10 +56,12 @@ export const pageData = definePageData(async (_event) => {
   const jsonPath = resolve(process.cwd(), '..', 'benchmarks', 'results', 'latest.json');
 
   let frameworks: FrameworkResult[] = [];
+  let hnFrameworks: FrameworkResult[] = [];
   try {
     const raw = await readFile(jsonPath, 'utf-8');
     const results = JSON.parse(raw);
     frameworks = results.crossFramework ?? [];
+    hnFrameworks = results.hnBenchmark ?? [];
   } catch {
     // No benchmark data yet — page renders without it
   }
@@ -79,6 +82,7 @@ export const pageData = definePageData(async (_event) => {
 
   return {
     frameworks,
+    hnFrameworks,
     siteTitle: siteConfig.title,
     nav: siteConfig.nav,
     seoHead,
@@ -203,6 +207,22 @@ export class CompareIndexPage extends LitroPage {
         margin-left: 0.5rem;
         vertical-align: middle;
       }
+
+      /* ── Annotation markers + legend ─────────────────────────────── */
+      .annotation-marker {
+        color: var(--sl-color-accent, #ea580c);
+        font-weight: 600;
+        margin-left: 1px;
+      }
+      .annotation-legend {
+        margin: 0.75rem 0 1.5rem;
+        font-size: var(--sl-text-sm, 0.875rem);
+        color: var(--sl-color-gray-4, #9ca3af);
+        line-height: 1.6;
+      }
+      .annotation-legend p {
+        margin: 0.2rem 0;
+      }
     `,
   ];
 
@@ -224,6 +244,31 @@ export class CompareIndexPage extends LitroPage {
     return values.indexOf(target);
   }
 
+  private _fwTiedWinnerIndices(values: number[], lowerIsBetter: boolean, formatFn: (v: number) => string): Set<number> {
+    const winnerIdx = this._fwWinnerIdx(values, lowerIsBetter);
+    if (winnerIdx === -1) return new Set();
+    const winnerDisplay = formatFn(values[winnerIdx]);
+    const tied = new Set<number>();
+    for (let i = 0; i < values.length; i++) {
+      if (formatFn(values[i]) === winnerDisplay) tied.add(i);
+    }
+    return tied;
+  }
+
+  private _hnSizeAnnotations: Record<string, string> = {
+    'litro-fast': '*',
+    'nextjs': '\u2020',
+  };
+
+  private _hnWeightAnnotations: Record<string, string> = {
+    'nuxt': '\u2021',
+  };
+
+  private _fwNameWithAnnotation(name: string, annotations?: Record<string, string>) {
+    const sym = annotations?.[name];
+    return sym ? html`${name}<sup class="annotation-marker">${sym}</sup>` : html`${name}`;
+  }
+
   /* ── Render ──────────────────────────────────────────────────────── */
 
   override render() {
@@ -232,6 +277,8 @@ export class CompareIndexPage extends LitroPage {
 
     const fw = data.frameworks;
     const hasBench = fw.length > 0;
+    const hnFw = data.hnFrameworks;
+    const hasHnBench = hnFw.length > 0;
 
     return html`
       <div class="page">
@@ -266,6 +313,8 @@ export class CompareIndexPage extends LitroPage {
           </div>
 
           ${hasBench ? this._benchmarkTable(fw) : ''}
+
+          ${hasHnBench ? this._hnBenchmarkSummary(hnFw) : ''}
 
           <p class="bench-link">
             <a href="/benchmarks">Full benchmark methodology, SSG vs SSR internals, and raw data -></a>
@@ -308,20 +357,28 @@ export class CompareIndexPage extends LitroPage {
     title: string,
     frameworks: FrameworkResult[],
     valueFn: (fw: FrameworkResult, i: number) => string,
-    winnerIdx: number,
+    winnerIdx: number | Set<number>,
+    annotations?: Record<string, string>,
   ) {
+    const winners = typeof winnerIdx === 'number' ? new Set([winnerIdx]) : winnerIdx;
+    const firstWinnerIdx = typeof winnerIdx === 'number' ? winnerIdx : [...winnerIdx][0];
+    const isTie = winners.size > 1;
+    const winnerName = frameworks[firstWinnerIdx]?.name ?? '';
+    const winnerSym = annotations?.[winnerName];
+    const tieNames = isTie ? [...winners].map(i => frameworks[i]?.name).join(' & ') : winnerName;
+
     return html`
       <litro-card title="${title}">
         <div class="fw-card-values">
           ${frameworks.map((fw, i) => html`
             <div class="fw-card-row">
-              <span class="fw-name">${fw.name}</span>
-              <span class="fw-value ${i === winnerIdx ? 'winner-value' : ''}">${valueFn(fw, i)}</span>
+              <span class="fw-name">${this._fwNameWithAnnotation(fw.name, annotations)}</span>
+              <span class="fw-value ${winners.has(i) ? 'winner-value' : ''}">${valueFn(fw, i)}</span>
             </div>
           `)}
         </div>
         <div class="card-badge">
-          <litro-badge variant="tip" text="${frameworks[winnerIdx]?.name ?? ''} wins"></litro-badge>
+          <litro-badge variant="${winnerSym ? 'caution' : 'tip'}" text="${isTie ? `${tieNames} tied` : `${winnerName} wins`}${winnerSym ? ` ${winnerSym}` : ''}"></litro-badge>
         </div>
       </litro-card>
     `;
@@ -365,6 +422,50 @@ export class CompareIndexPage extends LitroPage {
           </tbody>
         </table>
       </div>
+    `;
+  }
+
+  private _hnBenchmarkSummary(frameworks: FrameworkResult[]) {
+    const buildWinnerIdx = this._fwWinnerIdx(frameworks.map(f => f.buildTime.mean), true);
+    const sizeTiedWinners = this._fwTiedWinnerIndices(
+      frameworks.map(f => f.outputSize), true, v => this._formatBytes(v),
+    );
+
+    const routes = Object.keys(frameworks[0]?.pageWeight ?? {});
+    const avgGzips = frameworks.map(fw => {
+      if (routes.length === 0) return 0;
+      return routes.reduce((s, rt) => s + (fw.pageWeight[rt]?.gzipBytes ?? 0), 0) / routes.length;
+    });
+    const weightWinnerIdx = this._fwWinnerIdx(avgGzips, true);
+
+    const sizeAnn = this._hnSizeAnnotations;
+    const weightAnn = this._hnWeightAnnotations;
+
+    return html`
+      <h2>Realistic App Benchmark</h2>
+      <p class="note">
+        Five identical Hacker News clones (~100 pages, SSG). Three Litro adapters
+        (Lit, FAST, Elena) vs Next.js and Nuxt.
+      </p>
+
+      <section class="summary-section" aria-label="HN benchmark summary">
+        <litro-card-grid>
+          ${this._fwCard('Build Time', frameworks, fw => this._formatMs(fw.buildTime.mean), buildWinnerIdx)}
+          ${this._fwCard('Output Size', frameworks, fw => this._formatBytes(fw.outputSize), sizeTiedWinners, sizeAnn)}
+          ${routes.length > 0 ? this._fwCard('Avg Page Weight', frameworks, (_, i) => this._formatBytes(avgGzips[i]), weightWinnerIdx, weightAnn) : ''}
+        </litro-card-grid>
+      </section>
+
+      <div class="annotation-legend">
+        <p><span class="annotation-marker">*</span> FAST's prerender engine does not evaluate <code>:innerHTML</code> bindings — output size excludes comment tree HTML. See <a href="/docs/adapters/overview#ssr-output-fidelity">SSR output fidelity</a>.</p>
+        <p><span class="annotation-marker">\u2020</span> Next.js output includes RSC payload files (<code>.txt</code>) alongside HTML, inflating total on-disk size.</p>
+        <p><span class="annotation-marker">\u2021</span> Nuxt produces the smallest page weight because it does not duplicate data for hydration. Litro and Next.js inline serialized data alongside rendered HTML for client hydration; Nuxt prerenders the HTML and ships only a minimal metadata stub, relying on the server-rendered markup without client re-rendering.</p>
+      </div>
+
+      <p class="note">
+        These benchmarks measure static prerendering (SSG) only. Per-request SSR
+        benchmarks are planned for a future update.
+      </p>
     `;
   }
 }

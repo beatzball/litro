@@ -1,0 +1,11 @@
+{
+  "by": "kunley",
+  "id": 47700973,
+  "kids": [
+    47702824
+  ],
+  "parent": 47700460,
+  "text": "Working on an audio streaming platform powering an indy internet radio. Looks like Icecast &amp; friends show its age and a similar product can be easily built with the functionality cast down to simply robust streaming &amp; handling &quot;timed playlists&quot;. I enjoy every bit of knowing exactly what happens in the code. It&#x27;s not open source atm, but will be. It&#x27;s in Go, is a pleasure to write and the deployment takes minimal amount of resources.<p>Other project is to continue a bit stalled progress of a configuration language BCL - add functions, more structures and fix some hidden scoping issues. Making languages is an endless fun.\n<a href=\"https:&#x2F;&#x2F;github.com&#x2F;wkhere&#x2F;bcl\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;wkhere&#x2F;bcl</a>",
+  "time": 1775724920,
+  "type": "comment"
+}

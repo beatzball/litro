@@ -1,0 +1,11 @@
+{
+  "by": "eitanlebras",
+  "id": 47756377,
+  "kids": [
+    47757862
+  ],
+  "parent": 47744683,
+  "text": "The hybrid search scoring is really well thought out. One question: are the 0.4&#x2F;0.4&#x2F;0.2 weights fixed or configurable? To me it feels like different use cases would want different balances (e.g. a coding assistant would want higher recency weights than a research tool would).",
+  "time": 1776106480,
+  "type": "comment"
+}

@@ -1,0 +1,15 @@
+{
+  "by": "8cvor6j844qw_d6",
+  "id": 47754283,
+  "kids": [
+    47758330,
+    47756263,
+    47757234,
+    47761288,
+    47759549
+  ],
+  "parent": 47753689,
+  "text": "&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>It&#x27;d be great if the Wrangler CLI could display the required API token permissions upfront during local dev, so you know exactly what to provision before deploying. Even better if there were something like a `cf permissions check` command that tells you what&#x27;s missing or unneeded perms with an API key.",
+  "time": 1776097008,
+  "type": "comment"
+}

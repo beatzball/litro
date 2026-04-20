@@ -1,0 +1,11 @@
+{
+  "by": "kvdveer",
+  "id": 47761689,
+  "kids": [
+    47761738
+  ],
+  "parent": 47761535,
+  "text": "While i agree, the current JS security model rally doesn&#x27;t allow for distinguishing origin for JS code. Should that ever change, advertisers will just require that you compile their library into the first party js code, negating any benefit from such a security model.",
+  "time": 1776145370,
+  "type": "comment"
+}

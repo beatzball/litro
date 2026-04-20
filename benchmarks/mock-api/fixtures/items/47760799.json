@@ -1,0 +1,11 @@
+{
+  "by": "ajaystream",
+  "id": 47760799,
+  "kids": [
+    47761268
+  ],
+  "parent": 47759709,
+  "text": "The spec-completeness problem here is the same one that bites distributed systems verification: the proof holds inside an operating envelope (no adversarial inputs, trusted runtime, bounded sizes), and the interesting failures live at the boundary. TLA+ has the same property - you can prove liveness under a fairness assumption the deployment silently violates, and nothing in the proof tells you when reality drifted outside.<p>What I&#x27;d actually want from the tooling is a machine-checkable statement of the envelope itself, propagated as a runtime guard rather than a compile-time comment. Then &quot;proof holds&quot; and &quot;we are still inside the proof&#x27;s domain&quot; are two separate, observable properties, and the unverified-parser &#x2F; unverified-runtime cases stop being invisible.",
+  "time": 1776136356,
+  "type": "comment"
+}

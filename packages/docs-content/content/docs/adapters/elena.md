@@ -125,12 +125,36 @@ The Elena adapter has minimal configuration:
 - No decorator settings needed (Elena uses static props, not decorators)
 - The manifest preamble installs an `HTMLElement` shim and `customElements` registry for Node.js SSR
 
+## SSR Details
+
+### Internal Registry
+
+Elena's `@elenajs/ssr` uses its own internal component registry, separate from the browser's `customElements` registry. Components must be explicitly registered by calling `.define()` — the Litro page scanner handles this automatically for page components, but if you create non-page custom elements used inside page templates, they must also call `.define()` or they will render as empty tags during SSR.
+
+### Wrapper Components and Attributes
+
+If you build a wrapper component that renders a child custom element in its `render()` method, you must pass relevant attributes through to the child element in the template. During SSR, Elena expands child custom elements by instantiating them with the attributes present in the parent's render output. Attributes not passed in the template will be missing during SSR, even if they're set programmatically in `connectedCallback`.
+
+```ts
+// Correct — attributes passed in render()
+render() {
+  return html`<child-element title="${this.title}" count="${this.count}"></child-element>`;
+}
+
+// Incorrect — child renders without title/count during SSR
+connectedCallback() {
+  super.connectedCallback();
+  this.querySelector('child-element')?.setAttribute('title', this.title);
+}
+```
+
 ## Limitations
 
 - **No Shadow DOM** — global CSS affects component internals. This is a feature for content sites but may be unwanted for complex widget libraries.
 - **Props must be lowercase** — `myProp` in HTML becomes `myprop` after parsing. Use `myprop` in the `props` declaration.
 - **`html` tag escapes interpolations** — use `unsafeHTML()` from `@elenajs/core` when you need to render raw HTML (e.g. Markdown content).
 - **Wrapper components and `innerHTML`** — components that capture `innerHTML` in `connectedCallback` must fall back to `this.innerHTML` in `render()` for SSR compatibility.
+- **SSR registry is separate** — see [SSR Details](#ssr-details) above. Non-page components need `.define()` to render during SSR.
 - **`@scope` browser support** — older browsers see unscoped styles (functional but not encapsulated).
 
 ## Further Reading

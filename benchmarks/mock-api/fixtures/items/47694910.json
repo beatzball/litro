@@ -1,0 +1,8 @@
+{
+  "by": "AStrangeMorrow",
+  "id": 47694910,
+  "parent": 47688712,
+  "text": "I mean “mistakes” can be hard to define. IMHO there is an area of responsibility between the LLM, the LLM user, and the code itself.<p>Did it make a mistake because I didn’t follow instructions properly or hallucinated some content?<p>Did it make a mistake because the prompt was unclear&#x2F;open to interpretation or plain wrong?<p>Did it make a mistake because it lacked some context? Or too much context and it starts getting confused?<p>Is not handling edge cases automatically when that was not requested a mistake?<p>I am not just trying to defend LLMs, in many cases they make obvious mistakes and just don’t follow my arguably clear instructions properly. But sometimes it is not so clear cut. Maybe I didn’t link a relevant file (you can argue it could have looked to it), maybe my prompt just wasn’t that clear etc",
+  "time": 1775675779,
+  "type": "comment"
+}

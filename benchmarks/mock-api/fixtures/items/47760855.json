@@ -1,0 +1,8 @@
+{
+  "by": "Animats",
+  "id": 47760855,
+  "parent": 47759709,
+  "text": "Compression&#x2F;decompression is a good problem for proof of correctness. The specification is very simple (you must get back what you put in), while the implementation is complex.<p>What seems to have happened here is that the storage allocator underneath is unverified. That, too, has a relatively simple spec - all buffers disjoint, no lost buffers, no crashes.",
+  "time": 1776136864,
+  "type": "comment"
+}

@@ -1,0 +1,14 @@
+{
+  "by": "kokkis",
+  "id": 47750341,
+  "kids": [
+    47753721,
+    47753654,
+    47751635,
+    47756331
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;m building a financial censorship monitor at <a href=\"https:&#x2F;&#x2F;nofunds.org&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;nofunds.org&#x2F;</a>, that tells a story of how money has been turned into a political weapon to silence journalists, activists, and civil society by freezing assets, blocking accounts, sanctioning, and banning payments. It&#x27;s part of my master&#x27;s thesis <a href=\"https:&#x2F;&#x2F;www.doria.fi&#x2F;handle&#x2F;10024&#x2F;187407\" rel=\"nofollow\">https:&#x2F;&#x2F;www.doria.fi&#x2F;handle&#x2F;10024&#x2F;187407</a> and also <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=36430596\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=36430596</a>, but now I wanted to make a more comprehensive list, using Claude API and manual work. I&#x27;m designing a website right now, and the site is live within 2 months (given the API rate limitations currently to process articles). I know Hacker News is quite critical of Bitcoin, but it&#x27;s also worthy to warn that, indeed, Bitcoin is at least a marginal tool to those whose bank accounts may be endangered. I&#x27;m basically arguing that Bitcoin can be used to resist such financial censorship, deplatforming and so on.",
+  "time": 1776078426,
+  "type": "comment"
+}

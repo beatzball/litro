@@ -1,0 +1,8 @@
+{
+  "by": "maouida",
+  "id": 47729086,
+  "parent": 47729006,
+  "text": "I have added a caching mechanism; objects are computed only when their parameters change. When an object change, all objects after it will recompute. This will probably need to be revised in future with more efficient algorithm to find what objects are affected by the change and recompute only those.",
+  "time": 1775900521,
+  "type": "comment"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@beatzball/hn-mock-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "start": "tsx server.ts",
+    "capture": "tsx capture-fixtures.ts"
+  },
+  "dependencies": {
+    "h3": "^1.15.6"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}

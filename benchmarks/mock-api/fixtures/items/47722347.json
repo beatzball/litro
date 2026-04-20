@@ -1,0 +1,12 @@
+{
+  "by": "maouida",
+  "id": 47722347,
+  "kids": [
+    47723525,
+    47723199
+  ],
+  "parent": 47722275,
+  "text": "Based on opencascade wasm. \nFeatures in the docs. \nApi coming soon. \nNo it was not, I started this before I even started using coding agents. It took many iterations and rewrites before settling on the current shape. After building the core features I started using claude to add more features, improve test coverage and generte docs.",
+  "time": 1775848296,
+  "type": "comment"
+}

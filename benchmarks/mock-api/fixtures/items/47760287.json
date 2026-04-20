@@ -1,0 +1,8 @@
+{
+  "by": "chatmasta",
+  "id": 47760287,
+  "parent": 47757544,
+  "text": "I like how GitLab does this, with an SSH server that implements only a few commands for creating PATs, so you can authenticate with your SSH keys and create a short-lived PAT in one command.",
+  "time": 1776131233,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "stevekemp",
+  "id": 47730897,
+  "parent": 47729765,
+  "text": "Crafting Interpreters is a good recommendation, and in the same spirit &quot;Writing an Interpreter in Go&quot; (and it&#x27;s followup about writing a virtual machine) is a good addition.<p>A lot of the complexity and front-work of these kinda things is the parsing step though, so you can follow MAL (or any other make a lisp tutorial) though that won&#x27;t necessarily help with other languages it frees you to jump to the interesting parts.<p>FORTH, mentioned in another comment, has that same appeal.  I wrote a quick tutorial here, back in the day:<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;skx&#x2F;foth\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;skx&#x2F;foth</a>",
+  "time": 1775917451,
+  "type": "comment"
+}

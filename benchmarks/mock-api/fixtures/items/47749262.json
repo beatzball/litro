@@ -1,0 +1,11 @@
+{
+  "by": "mentalgear",
+  "id": 47749262,
+  "kids": [
+    47749894
+  ],
+  "parent": 47747939,
+  "text": "Very interesting - but I also find it important for solutions to state the trade-offs if they provide a novel approach that doesn&#x27;t have the same requirements as the main contenders. In your case, what are the trade offs for running in user space ?",
+  "time": 1776068490,
+  "type": "comment"
+}

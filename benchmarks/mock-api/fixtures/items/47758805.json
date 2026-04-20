@@ -1,0 +1,12 @@
+{
+  "by": "jauntywundrkind",
+  "id": 47758805,
+  "kids": [
+    47759208,
+    47759162
+  ],
+  "parent": 47728823,
+  "text": "Very side note, but really liking seeing Elysia so close to the top on the benchmark list.<p>I&#x27;ve been using it, and pointing my LLM&#x27;s to it as example code, because it&#x27;s type system is so so much better than Hono&#x27;s. <a href=\"https:&#x2F;&#x2F;elysiajs.com&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;elysiajs.com&#x2F;</a><p>I didn&#x27;t know that it was also flipping fast as frell. (Encore&#x27;s benchmark is showing them as faster still, of course!)",
+  "time": 1776119586,
+  "type": "comment"
+}

@@ -1,0 +1,27 @@
+{
+  "by": "nitramm",
+  "descendants": 18,
+  "id": 47722081,
+  "kids": [
+    47724105,
+    47722210,
+    47723526,
+    47736969,
+    47722889,
+    47726557,
+    47745194,
+    47733969,
+    47733722,
+    47723160,
+    47727822,
+    47735381,
+    47726239,
+    47726555,
+    47727218
+  ],
+  "score": 28,
+  "text": "I saw the HackerRank (YC S11) hiring post (https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=47667011) and it made me realize I no longer understand how to evaluate candidates effectively.<p>Specifically, we are changing hiring across 3 dimensions:\n&gt; Tasks: Real-world tasks on code repositories vs standard algorithmic-style puzzles\n&gt; Evaluation: AI fluency, orchestration skills vs functional correctness\n&gt; Candidate experience: Agentic IDE vs a simple code editor<p>In the “old world,” you could ask multiple questions and triangulate skill from answers. Now it seems like evaluation depends heavily on tools and models that keep changing month to month.<p>So I’m curious:\n&gt; What signals actually correlate with strong engineers today?\n&gt; How do you design interviews that don’t become obsolete with the next model release?\n&gt; Are algorithmic interviews still useful at all?<p>Would love to hear from people who have recently changed their hiring process or have been interviewed using this new approach.",
+  "time": 1775846869,
+  "title": "Ask HN: Hiring in the age of AI-assisted coding: what works?",
+  "type": "story"
+}

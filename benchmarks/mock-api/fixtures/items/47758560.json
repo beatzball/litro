@@ -1,0 +1,14 @@
+{
+  "by": "Aamir21",
+  "descendants": 1,
+  "id": 47758560,
+  "kids": [
+    47758793
+  ],
+  "score": 5,
+  "text": "As AI agents autonomously write and deploy code, there&#x27;s no standard for verifying that what they shipped actually satisfies business requirements. OQP is an attempt to define that standard.<p>It&#x27;s MCP-compatible and defines four core endpoints:\n- GET &#x2F;capabilities — what can this agent verify?\n- GET &#x2F;context&#x2F;workflows — what are the business rules for this workflow?\n- POST &#x2F;verification&#x2F;execute — run a verification workflow\n- POST &#x2F;verification&#x2F;assess-risk — what is the risk of this change?<p>The analogy we keep coming back to: what OpenAPI did for REST APIs, OQP does for agentic software verification.<p>Early contributors include Philip Lew (XBOSoft) and Benjamin Young (W3C JSON-LD Working Group). Looking for feedback from engineers building on top of MCP, agent orchestration frameworks, or anyone who has felt the pain of &quot;the agent shipped something wrong and we had no way to catch it.&quot;<p>Repo: github.com&#x2F;OranproAi&#x2F;open-qa-protocol",
+  "time": 1776118239,
+  "title": "Show HN: OQP – A verification protocol for AI agents",
+  "type": "story",
+  "url": "https://github.com/OranproAi/open-qa-protocol"
+}

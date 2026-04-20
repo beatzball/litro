@@ -1,0 +1,11 @@
+{
+  "by": "joenot443",
+  "id": 47705344,
+  "kids": [
+    47710612
+  ],
+  "parent": 47700460,
+  "text": "I&#x27;m still working on Nottawa (<a href=\"https:&#x2F;&#x2F;nottawa.app\" rel=\"nofollow\">https:&#x2F;&#x2F;nottawa.app</a>) - free live audioreactive visuals for everyone.<p>It&#x27;s a node based workstation for generating live visuals using shaders, webcams, local files, and more. 100+ effects and source types.<p>Nottawa&#x27;s aimed somewhere between the Resolume and TouchDesigner market. VJs and musicians who are interested in live visuals but don&#x27;t have the time or funds to dive into a pro setup.<p>It&#x27;s built in C++ with OpenFrameworks, ImGui, BTrack, and more. Right now I&#x27;m doing a front-end rewrite in SwiftUI which bridges back to C++ while keeping all the rendering in OpenGL.",
+  "time": 1775750225,
+  "type": "comment"
+}

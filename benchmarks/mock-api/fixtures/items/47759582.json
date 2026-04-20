@@ -1,0 +1,8 @@
+{
+  "by": "amirhirsch",
+  "id": 47759582,
+  "parent": 47753689,
+  "text": "Please have an endpoint for up-to-minute billing with hooks for notifications and setting limits, importantly have it correlate-with&#x2F;be the endpoint that shows usage analytics.<p>Previous-co could never get argo billing to match argo analytics, and with no support from CF over months we backed away from CF completely in fear that scale-up would present new surprise unknown&#x2F;untraceable costs<p>Previous-previous-co is probably the largest user of web worker",
+  "time": 1776125216,
+  "type": "comment"
+}

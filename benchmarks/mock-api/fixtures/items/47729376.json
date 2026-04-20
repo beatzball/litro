@@ -1,0 +1,8 @@
+{
+  "by": "muzani",
+  "id": 47729376,
+  "parent": 47718113,
+  "text": "A lot of early games were more like file systems and they worked. I&#x27;m surprised nobody had mentioned ACID yet.<p>The API revolution might be another thing - you were able to swap out a database with any other. Risky decisions are fine when they&#x27;re reversible. Databases were a more reversible way to deal with scaling and architecture.",
+  "time": 1775904110,
+  "type": "comment"
+}

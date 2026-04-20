@@ -1,0 +1,13 @@
+{
+  "by": "davidajackson",
+  "descendants": 0,
+  "id": 47733790,
+  "kids": [
+    47733845
+  ],
+  "score": 4,
+  "text": "Given a system with N components and M pairwise connections between said N components, there exists infinite sequences of [component, command, ...] for a series of operations. A component displays data and a command obviously executes a command.<p>Has anyone here done research on using an agant to select happy paths to test based on user intent? Is there literature on this? Seems like a cost, compute, intent optimization problem.<p>Assume latency is a restriction.<p>Seems like something some AI research folks here can chime in on. I have my own opinions but want to hear what the community thinks.",
+  "time": 1775939678,
+  "title": "Ask HN: Agentic Permutation of Testing Paths In A System",
+  "type": "story"
+}

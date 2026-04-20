@@ -1,0 +1,8 @@
+{
+  "by": "karimf",
+  "id": 47761935,
+  "parent": 47761609,
+  "text": "This is an interesting approach.<p>&gt; How does this compare to Next.js App Router?<p>&gt; Next.js App Router is server-first: your component tree lives on the server by default, and you opt into client interactivity with &#x27;use client&#x27;.<p>&gt; TanStack Start is isomorphic-first: your tree lives wherever makes sense. At the base level, RSC output can be fetched, cached, and rendered where it makes sense instead of owning the whole tree. When you want to go further, Composite Components let the client assemble the final tree instead of just accepting a server-owned one.<p>The sudden server-first change on Next.js App Router definitely trips some people, especially since React started as client-only library.",
+  "time": 1776147833,
+  "type": "comment"
+}

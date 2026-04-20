@@ -1,0 +1,11 @@
+{
+  "by": "devendra116",
+  "id": 47740486,
+  "kids": [
+    47740712
+  ],
+  "parent": 47739946,
+  "text": "something that you dont like about using AWS secrets Manager or think it should be handle differently?<p>im researching around building a execution environment that handle the secret + actual execution, any input is appreciated",
+  "time": 1776005880,
+  "type": "comment"
+}

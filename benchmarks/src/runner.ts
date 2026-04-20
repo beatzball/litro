@@ -14,6 +14,9 @@ import {
   RESULTS_DIR,
   APPS_DIR,
   FRAMEWORK_CONFIGS,
+  HN_FRAMEWORK_CONFIGS,
+  HN_ROUTES,
+  MOCK_API_PORT,
 } from './config.js';
 import { startServer, waitForReady, stopServer } from './utils/server-lifecycle.js';
 import { measureBuildTime } from './measures/build-time.js';
@@ -23,11 +26,13 @@ import { measureHttpPerf } from './measures/http-perf.js';
 import { measureLighthouse } from './measures/lighthouse.js';
 import { measureStreaming } from './measures/streaming.js';
 import { measureFramework } from './measures/cross-framework.js';
+import { startMockApi, stopMockApi } from './utils/mock-api.js';
 
 // --- CLI flags ---
 const args = process.argv.slice(2);
 const skipLighthouse = args.includes('--skip-lighthouse');
 const crossFramework = args.includes('--cross-framework');
+const hnBenchmark = args.includes('--hn');
 const runsFlag = args.find((_, i) => args[i - 1] === '--runs');
 const buildRuns = runsFlag ? parseInt(runsFlag, 10) : BUILD_RUNS;
 
@@ -98,8 +103,16 @@ function printSummary(results: BenchmarkResults): void {
   }
 
   if (results.crossFramework?.length) {
-    console.log('--- Cross-Framework ---');
+    console.log('--- Cross-Framework (minimal) ---');
     for (const fw of results.crossFramework) {
+      console.log(`  ${fw.name} (v${fw.version}): build=${fw.buildTime.mean}ms, output=${formatBytes(fw.outputSize)}`);
+    }
+    console.log('');
+  }
+
+  if (results.hnBenchmark?.length) {
+    console.log('--- HN Benchmark (realistic) ---');
+    for (const fw of results.hnBenchmark) {
       console.log(`  ${fw.name} (v${fw.version}): build=${fw.buildTime.mean}ms, output=${formatBytes(fw.outputSize)}`);
     }
     console.log('');
@@ -110,7 +123,7 @@ function printSummary(results: BenchmarkResults): void {
 
 async function main(): Promise<void> {
   console.log('Litro Benchmark Suite');
-  console.log(`Build runs: ${buildRuns}, Lighthouse: ${skipLighthouse ? 'skipped' : 'enabled'}, Cross-framework: ${crossFramework ? 'enabled' : 'skipped'}\n`);
+  console.log(`Build runs: ${buildRuns}, Lighthouse: ${skipLighthouse ? 'skipped' : 'enabled'}, Cross-framework: ${crossFramework ? 'enabled' : 'skipped'}, HN: ${hnBenchmark ? 'enabled' : 'skipped'}\n`);
 
   // 1. Collect metadata
   const meta = await collectMeta();
@@ -164,9 +177,9 @@ async function main(): Promise<void> {
     console.log('\n[streaming] SSR');
     const ssrStreaming = await measureStreaming(SSR_BASE_URL, ROUTES);
 
-    // Lighthouse (slowest — runs last, SSG only)
-    // SSR pages use Declarative Shadow DOM — Lighthouse cannot measure paint
-    // events inside shadow roots, so SSR scores are always 0. Only SSG is measured.
+    // Lighthouse runs on SSG only — the SSR preview serves the same HTML the
+    // SSG build produces, so measuring both is redundant. HN benchmark phase
+    // captures per-adapter Lighthouse for a cross-framework comparison.
     let ssgLighthouse: Record<string, import('./types.js').LighthouseResult> = {};
 
     if (!skipLighthouse) {
@@ -194,6 +207,27 @@ async function main(): Promise<void> {
         frameworkResults.push(result);
       }
       results.crossFramework = frameworkResults;
+    }
+
+    // 5c. HN benchmark (optional — realistic app comparison, SSG only)
+    // TODO: Add --hn-ssr flag for per-request SSR benchmarks using measureHttpPerf().
+    // Each app needs SSR build/serve configs, and the mock API must stay running
+    // during autocannon tests. Store results in hnSsrBenchmark in latest.json.
+    if (hnBenchmark) {
+      console.log('\n=== HN BENCHMARK PHASE ===\n');
+      const mockApiProc = await startMockApi();
+      const hnEnv = { HN_API_BASE: `http://localhost:${MOCK_API_PORT}/v0` };
+      try {
+        const hnResults = [];
+        for (const config of HN_FRAMEWORK_CONFIGS) {
+          const result = await measureFramework(config, APPS_DIR, buildRuns, HN_ROUTES, hnEnv, !skipLighthouse);
+          hnResults.push(result);
+        }
+        results.hnBenchmark = hnResults;
+      } finally {
+        await stopMockApi(mockApiProc);
+        console.log('Mock API stopped.');
+      }
     }
 
     // 6. Write results

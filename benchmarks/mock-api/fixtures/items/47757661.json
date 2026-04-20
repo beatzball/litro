@@ -1,0 +1,12 @@
+{
+  "by": "dec0dedab0de",
+  "id": 47757661,
+  "kids": [
+    47759449,
+    47758775
+  ],
+  "parent": 47757371,
+  "text": "Please don&#x27;t ever make the short version of a cli flag be different than the long version.<p>The short version is for typing on the fly, and the long version is for scripts, they should have identical output.<p>The full thorough documentation should be in man, and&#x2F;or info.",
+  "time": 1776113501,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "convolvatron",
+  "id": 47759240,
+  "kids": [
+    47761121
+  ],
+  "parent": 47759169,
+  "text": "I just spent some time with the s3 protocol and I agree completely. What should have been able to leverage the simplifying assumptions turned into another hodgepodge. It’s not like nfs is a real shining example of simplicity either. I’ve never worked with p9, but potentially that aside I think we really failed to come up with a decent distributed file model,",
+  "time": 1776122371,
+  "type": "comment"
+}

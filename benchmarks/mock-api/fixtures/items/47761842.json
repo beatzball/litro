@@ -1,0 +1,8 @@
+{
+  "by": "boomlinde",
+  "id": 47761842,
+  "parent": 47757495,
+  "text": "IME the github workflow promotes bad commit hygiene by making squashing or rebasing as-is an either-or choice in the web GUI.<p>This will help some since you can more easily split PRs into units that make sense to squash at the end, but it still seems like not doing this on a per-commit basis is a disadvantage compared to Gerrit. With Gerrit I can use all the built-in Git rebase&#x2F;squash&#x2F;fixup tools to manage the commit stack and push everything in one go. I don&#x27;t think there&#x27;s a nearly as convenient a way to work with stacked branches in Git.",
+  "time": 1776146871,
+  "type": "comment"
+}

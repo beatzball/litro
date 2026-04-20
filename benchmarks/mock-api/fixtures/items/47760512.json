@@ -1,0 +1,8 @@
+{
+  "by": "stratts",
+  "id": 47760512,
+  "parent": 47728970,
+  "text": "It was always possible to write large amounts of crappy code if you were motivated or clueless enough (see <a href=\"https:&#x2F;&#x2F;github.com&#x2F;radian-software&#x2F;TerrariaClone\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;radian-software&#x2F;TerrariaClone</a>). It&#x27;s now just easier, and the consequences less severe, as the agent has code comprehension superpowers and will happily extend your mud ball of a codebase.<p>There are still consequences, however. Even with an agent, development slows, cost increases, bugs emerge at a higher rate, etc. It&#x27;s still beneficial to focus on code quality instead of raw output. I don&#x27;t think this is limited writing it yourself, mind - but you need to actually have an understanding of what&#x27;s being generated so you can critique and improve it.<p>Personally, I&#x27;ve found the accessibility aspect to be the most beneficial. I&#x27;m not always writing more code, but I can do much more of it on my phone, just prompting the agent, which has been so freeing. I don&#x27;t feel this is talked about enough!",
+  "time": 1776133375,
+  "type": "comment"
+}

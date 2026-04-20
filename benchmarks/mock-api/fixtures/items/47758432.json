@@ -1,0 +1,8 @@
+{
+  "by": "jimrandomh",
+  "id": 47758432,
+  "parent": 47755629,
+  "text": "I think the main problem here is the ideology of software updating. Updates represent a tradeoff: On one hand there might be security vulnerabilities that need an update to fix, and developers don&#x27;t want to receive bug reports or maintain server infrastructure for obsolete versions. On the other hand, the developer might make decisions users don&#x27;t want, or turn evil temporarily (as in a supply chain attack) or permanently (as in selling off control of a Wordpress extension).<p>In the case of small Wordpress extensions from individual developers, I think the tradeoff is such that you should basically never allow auto-updating. Unfortunately wordpress.org runs a Wordpress extension marketplace that doesn&#x27;t work that way, and worse. I think that other than a small number of high-visibility long-established extensions, you should basically never install anything from there, and if you want a Wordpress extension you should download its source code and install it manually as an unpacked extension.<p>(This is a comment that I wrote about Chrome extensions, where I replaced Chrome with Wordpress, deleted one sentence about Google, and it was all still true. <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=47721946#47724474\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=47721946#47724474</a> )",
+  "time": 1776117640,
+  "type": "comment"
+}

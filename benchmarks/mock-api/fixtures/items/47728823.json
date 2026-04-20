@@ -1,0 +1,18 @@
+{
+  "by": "vinhnx",
+  "descendants": 12,
+  "id": 47728823,
+  "kids": [
+    47759821,
+    47759767,
+    47759883,
+    47758805,
+    47760307,
+    47761180
+  ],
+  "score": 60,
+  "time": 1775897596,
+  "title": "What we learned building a Rust runtime for TypeScript",
+  "type": "story",
+  "url": "https://encore.dev/blog/rust-runtime"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "cleverdash",
+  "id": 47757697,
+  "parent": 47753689,
+  "text": "The trend of CLI-first design because AI agents need it is interesting. We ended up in the same place building developer tools, the CLI and API came first because that&#x27;s what agents actually consume. The dashboard came after.<p>The cf permissions check idea from the top comment is great. One thing I&#x27;ve found is that agents are surprisingly good at using CLIs but terrible at diagnosing why a command failed. Clear error messages with the exact fix (&quot;missing scope X, run cf token add --scope X&quot;) matter way more for agent usability than the happy path.",
+  "time": 1776113731,
+  "type": "comment"
+}

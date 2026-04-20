@@ -1,0 +1,8 @@
+{
+  "by": "didgetmaster",
+  "id": 47725839,
+  "parent": 47718113,
+  "text": "There is no reason why a single data management system cannot be built that can do everything that either a file system or a database can do (I have been building one).<p>It is an object store called Didgets (i.e. Data Widgets). Each Didget has a specific type. One type is used to hold unstructured data like a file does. These Didgets are unsurprisingly called File Didgets. Other types of Didgets can hold lists (used to create hierarchical folders, music play lists, photo albums, etc.).<p>Others hold sets of Key&#x2F;Value pairs which are used to create a tagging system for other Didgets or columns in a relational table.<p>Using a variety of Didgets, I have been able to create hierarchical file systems where a simple query can find one or thousands of files instantly out of 200 million+ based on the values of any tags attached.<p>In the same container (called a pod), it can store tens of thousands of relational tables; each one capable of having 100,000+ columns and billions of rows.<p>The system is &#x27;multi-model&#x27; so it could manage hierarchical data, relational data, graph data, or anything managed by a NoSQL system.<p>It is not only versatile, but is incredibly fast.",
+  "time": 1775867998,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "embedding-shape",
+  "id": 47741452,
+  "parent": 47740390,
+  "text": "&gt; This is a great example of why blanket IP blocking is such a terrible enforcement mechanism<p>AFAIK, they&#x27;re not doing &quot;blanket IP blocking&quot;, they&#x27;re intercepting requests based on DNS and IP, and try to serve their own certificates and their own content. Obviously, in most cases it fails, as the certificate doesn&#x27;t match the site, so the browser rejects it, but as far as I can see and tell, there is no &quot;blanket IP blocks&quot;, more like &quot;DNS and IP interception&quot;.<p>The difference doesn&#x27;t really matter in practice, sucks regardless, but I thought I&#x27;d clarify for the ones who are not experiencing these blocks themselves at least.",
+  "time": 1776010635,
+  "type": "comment"
+}

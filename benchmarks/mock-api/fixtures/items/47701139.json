@@ -1,0 +1,11 @@
+{
+  "by": "boricj",
+  "id": 47701139,
+  "kids": [
+    47714262
+  ],
+  "parent": 47700460,
+  "text": "I&#x27;m working on ghidra-delinker-extension [1], which is a relocatable object file exporter for Ghidra.<p>The algorithms needed to slice up a Ghidra database into relocatable sections, and especially to recover relocations through analysis are really tricky to get right. My MIPS analyzer in particular is an eldritch horror due to several factors combining into a huge mess (branch delay slots, split HI16&#x2F;LO16 relocations, code flow analysis, register graph dependency...).<p>The entire endeavor requires an unusual level of exacting precision to work and will produce some really exotic undefined behavior when it fails, but when it works you feel like a mechanic in a Mad Max universe, stripping programs for parts and building unholy chimeras from them, some examples I&#x27;ve linked in the readme. It has also led to a poster presentation to the SURE workshop at ACM CCS 2025 in Taiwan as a hobbyist, an absolutely insane story.<p>[1] <a href=\"https:&#x2F;&#x2F;github.com&#x2F;boricj&#x2F;ghidra-delinker-extension\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;boricj&#x2F;ghidra-delinker-extension</a>",
+  "time": 1775726172,
+  "type": "comment"
+}

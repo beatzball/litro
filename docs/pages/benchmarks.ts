@@ -81,6 +81,7 @@ interface FrameworkResult {
   buildTime: Stats;
   outputSize: number;
   pageWeight: Record<string, PageWeightRoute>;
+  lighthouse?: Record<string, LighthouseRoute>;
 }
 
 interface BenchmarkResults {
@@ -102,6 +103,7 @@ interface BenchmarkResults {
   lighthouse: { ssg: Record<string, LighthouseRoute> };
   streaming: { ssr: Record<string, StreamingRoute> };
   crossFramework?: FrameworkResult[];
+  hnBenchmark?: FrameworkResult[];
 }
 
 export interface BenchmarksData {
@@ -114,12 +116,30 @@ export interface BenchmarksData {
 
 /* ── Server data ──────────────────────────────────────────────────────── */
 
+const EMPTY_STATS: Stats = { runs: [], mean: 0, median: 0, p95: 0, stddev: 0, min: 0, max: 0 };
+const EMPTY_BUNDLE: BundleSize = { clientJS: 0, clientCSS: 0, serverBundle: 0, staticHTML: 0, totalOutput: 0 };
+const EMPTY_RESULTS: BenchmarkResults = {
+  meta: { timestamp: '', nodeVersion: '', platform: '', arch: '', cpuModel: '', cpuCount: 0, memoryGB: 0, commitSha: '', commitMessage: '' },
+  buildTime: { ssg: EMPTY_STATS, ssr: EMPTY_STATS },
+  bundleSize: { ssg: EMPTY_BUNDLE, ssr: EMPTY_BUNDLE },
+  httpPerf: { ssg: {}, ssr: {} },
+  pageWeight: { ssg: {}, ssr: {} },
+  lighthouse: { ssg: {} },
+  streaming: { ssr: {} },
+};
+
 export const pageData = definePageData(async (_event) => {
   const { readFile } = await import('node:fs/promises');
   const { resolve } = await import('node:path');
   const jsonPath = resolve(process.cwd(), '..', 'benchmarks', 'results', 'latest.json');
-  const raw = await readFile(jsonPath, 'utf-8');
-  const results = JSON.parse(raw) as BenchmarkResults;
+
+  let results: BenchmarkResults = EMPTY_RESULTS;
+  try {
+    const raw = await readFile(jsonPath, 'utf-8');
+    results = JSON.parse(raw) as BenchmarkResults;
+  } catch {
+    // No benchmark data yet — page renders "run bench" placeholders
+  }
 
   const seoTitle = 'Benchmarks — Litro';
   const seoHead = buildSeoHead({
@@ -259,6 +279,22 @@ export class BenchmarksPage extends LitroPage {
         margin-left: 0.5rem;
         vertical-align: middle;
       }
+
+      /* ── Annotation footnotes ─────────────────────────────────────── */
+      .annotation-marker {
+        color: var(--sl-color-accent, #ea580c);
+        font-weight: 600;
+        margin-left: 1px;
+      }
+      .annotation-legend {
+        margin: 0.75rem 0 1.5rem;
+        font-size: var(--sl-text-sm, 0.875rem);
+        color: var(--sl-color-gray-4, #9ca3af);
+        line-height: 1.6;
+      }
+      .annotation-legend p {
+        margin: 0.2rem 0;
+      }
     `,
   ];
 
@@ -291,6 +327,18 @@ export class BenchmarksPage extends LitroPage {
     return values.indexOf(target);
   }
 
+  /** Returns a Set of all indices whose formatted display value matches the winner's. */
+  private _fwTiedWinnerIndices(values: number[], lowerIsBetter: boolean, formatFn: (v: number) => string): Set<number> {
+    const winnerIdx = this._fwWinnerIdx(values, lowerIsBetter);
+    if (winnerIdx === -1) return new Set();
+    const winnerDisplay = formatFn(values[winnerIdx]);
+    const tied = new Set<number>();
+    for (let i = 0; i < values.length; i++) {
+      if (formatFn(values[i]) === winnerDisplay) tied.add(i);
+    }
+    return tied;
+  }
+
   /* ── Render ──────────────────────────────────────────────────────── */
 
   override render() {
@@ -300,6 +348,9 @@ export class BenchmarksPage extends LitroPage {
     const r = data.results;
     const fw = r.crossFramework ?? [];
     const hasCross = fw.length > 0;
+    const hn = (r as BenchmarkResults & { hnBenchmark?: FrameworkResult[] }).hnBenchmark ?? [];
+    const hasHn = hn.length > 0;
+    const hasInternals = r.buildTime.ssg.runs.length > 0;
 
     return html`
       <div class="page">
@@ -314,20 +365,27 @@ export class BenchmarksPage extends LitroPage {
             Real-world performance numbers for Litro and competing frameworks,
             measured on the same hardware with identical page content.
           </p>
-          <p class="meta">
-            <code>${new Date(r.meta.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</code>
-            &middot; commit <code>${r.meta.commitSha}</code>
-            &middot; ${r.meta.nodeVersion}
-            &middot; ${r.meta.cpuModel} (${r.meta.cpuCount} cores, ${r.meta.memoryGB} GB)
-          </p>
+          ${r.meta.timestamp ? html`
+            <p class="meta">
+              <code>${new Date(r.meta.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</code>
+              &middot; commit <code>${r.meta.commitSha}</code>
+              &middot; ${r.meta.nodeVersion}
+              &middot; ${r.meta.cpuModel} (${r.meta.cpuCount} cores, ${r.meta.memoryGB} GB)
+            </p>
+          ` : ''}
 
-          <!-- ═══════ Section 1: Cross-Framework ═══════ -->
+          <!-- ═══════ Section 1: Cross-Framework (minimal) ═══════ -->
           ${hasCross ? this._crossFrameworkSection(fw) : this._crossFrameworkPlaceholder()}
 
           <hr class="section-divider" />
 
-          <!-- ═══════ Section 2: Litro SSG vs SSR ═══════ -->
-          ${this._litroInternalsSection(r)}
+          <!-- ═══════ Section 2: HN Benchmark (realistic) ═══════ -->
+          ${hasHn ? this._hnBenchmarkSection(hn) : this._hnBenchmarkPlaceholder()}
+
+          <hr class="section-divider" />
+
+          <!-- ═══════ Section 3: Litro SSG vs SSR ═══════ -->
+          ${hasInternals ? this._litroInternalsSection(r) : this._litroInternalsPlaceholder()}
         </main>
       </div>
     `;
@@ -384,24 +442,127 @@ export class BenchmarksPage extends LitroPage {
     `;
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * SECTION 2: HN Benchmark (realistic app, SSG only)
+   * TODO: Add SSR benchmark section once --hn-ssr is implemented in the
+   * runner. Would show per-request TTFB, throughput, and latency p99
+   * across all 5 frameworks using measureHttpPerf().
+   * ════════════════════════════════════════════════════════════════════ */
+
+  private _hnSizeAnnotations: Record<string, string> = {
+    'nextjs': '\u2020',
+  };
+
+  private _hnWeightAnnotations: Record<string, string> = {
+    'nuxt': '\u2021',
+  };
+
+  private _fwNameWithAnnotation(name: string, annotations?: Record<string, string>) {
+    const sym = annotations?.[name];
+    return sym ? html`${name}<sup class="annotation-marker">${sym}</sup>` : html`${name}`;
+  }
+
+  private _hnBenchmarkSection(frameworks: FrameworkResult[]) {
+    const buildWinnerIdx = this._fwWinnerIdx(frameworks.map(f => f.buildTime.mean), true);
+    const sizeTiedWinners = this._fwTiedWinnerIndices(
+      frameworks.map(f => f.outputSize), true, v => this._formatBytes(v),
+    );
+
+    const routes = Object.keys(frameworks[0]?.pageWeight ?? {});
+    const avgGzips = frameworks.map(fw => {
+      if (routes.length === 0) return 0;
+      return routes.reduce((s, rt) => s + (fw.pageWeight[rt]?.gzipBytes ?? 0), 0) / routes.length;
+    });
+    const weightWinnerIdx = this._fwWinnerIdx(avgGzips, true);
+
+    const sizeAnn = this._hnSizeAnnotations;
+    const weightAnn = this._hnWeightAnnotations;
+
+    const hasLighthouse = frameworks.some(fw => fw.lighthouse && Object.keys(fw.lighthouse).length > 0);
+
+    return html`
+      <h2 id="hn-lighthouse">HN Clone Benchmark</h2>
+      <p class="note">
+        Five identical Hacker News clones (3 Litro adapters + Next.js + Nuxt),
+        same fixture data, same routes (~100 pages), SSG mode. Tests realistic app
+        complexity with data fetching, dynamic routes, and nested comment trees.
+      </p>
+
+      <section class="summary-section" aria-label="HN benchmark summary">
+        <litro-card-grid>
+          ${this._fwSummaryCard('Build Time', frameworks, fw => this._formatMs(fw.buildTime.mean), buildWinnerIdx)}
+          ${this._fwSummaryCard('Output Size', frameworks, fw => this._formatBytes(fw.outputSize), sizeTiedWinners, sizeAnn)}
+          ${routes.length > 0 ? this._fwSummaryCard('Avg Page Weight', frameworks, (_, i) => this._formatBytes(avgGzips[i]), weightWinnerIdx, weightAnn) : ''}
+        </litro-card-grid>
+      </section>
+
+      <div class="annotation-legend">
+        <p><span class="annotation-marker">\u2020</span> Next.js output includes RSC payload files (<code>.txt</code>) alongside HTML, inflating total on-disk size.</p>
+        <p><span class="annotation-marker">\u2021</span> Nuxt produces the smallest page weight because it does not duplicate data for hydration. Litro inlines a <code>__litro_data__</code> JSON blob (~14 KB on the index page) and Next.js inlines RSC scripts (~25 KB) — both ship serialized data alongside rendered HTML so the client can hydrate. Nuxt prerenders the HTML and ships only a minimal metadata stub (~160 bytes), relying on the server-rendered markup without client re-rendering.</p>
+      </div>
+
+      <litro-tabs>
+        ${this._fwBuildTab(frameworks, buildWinnerIdx)}
+        ${this._fwOutputSizeTab(frameworks, sizeTiedWinners, sizeAnn)}
+        ${routes.length > 0 ? this._fwPageWeightTab(frameworks, routes, weightAnn) : ''}
+        ${hasLighthouse ? this._fwLighthouseTab(frameworks, routes) : ''}
+      </litro-tabs>
+
+      <p class="note">
+        These benchmarks measure static prerendering (SSG) only. Per-request SSR
+        benchmarks — measuring TTFB, throughput, and latency under load — are
+        planned for a future update.
+      </p>
+    `;
+  }
+
+  private _hnBenchmarkPlaceholder() {
+    return html`
+      <h2>HN Clone Benchmark</h2>
+      <p class="note">
+        HN clone benchmarks have not been run yet. Run
+        <code>pnpm bench:hn</code> to compare all 5 HN clones.
+      </p>
+    `;
+  }
+
+  private _litroInternalsPlaceholder() {
+    return html`
+      <h2>Litro SSG vs SSR</h2>
+      <p class="note">
+        Internal Litro benchmarks have not been run yet. Run
+        <code>pnpm bench</code> to compare SSG vs SSR across build time,
+        output size, HTTP latency, and Lighthouse scores.
+      </p>
+    `;
+  }
+
   private _fwSummaryCard(
     title: string,
     frameworks: FrameworkResult[],
     valueFn: (fw: FrameworkResult, i: number) => string,
-    winnerIdx: number,
+    winnerIdx: number | Set<number>,
+    annotations?: Record<string, string>,
   ) {
+    const winners = typeof winnerIdx === 'number' ? new Set([winnerIdx]) : winnerIdx;
+    const firstWinnerIdx = typeof winnerIdx === 'number' ? winnerIdx : [...winnerIdx][0];
+    const isTie = winners.size > 1;
+    const winnerName = frameworks[firstWinnerIdx]?.name ?? '';
+    const winnerSym = annotations?.[winnerName];
+    const tieNames = isTie ? [...winners].map(i => frameworks[i]?.name).join(' & ') : winnerName;
+
     return html`
       <litro-card title="${title}">
         <div class="fw-card-values">
           ${frameworks.map((fw, i) => html`
             <div class="fw-card-row">
-              <span class="fw-name">${fw.name}</span>
-              <span class="fw-value ${i === winnerIdx ? 'winner-value' : ''}">${valueFn(fw, i)}</span>
+              <span class="fw-name">${this._fwNameWithAnnotation(fw.name, annotations)}</span>
+              <span class="fw-value ${winners.has(i) ? 'winner-value' : ''}">${valueFn(fw, i)}</span>
             </div>
           `)}
         </div>
         <div class="card-badge">
-          <litro-badge variant="tip" text="${frameworks[winnerIdx]?.name ?? ''} wins"></litro-badge>
+          <litro-badge variant="${winnerSym ? 'caution' : 'tip'}" text="${isTie ? `${tieNames} tied` : `${winnerName} wins`}${winnerSym ? ` ${winnerSym}` : ''}"></litro-badge>
         </div>
       </litro-card>
     `;
@@ -442,7 +603,8 @@ export class BenchmarksPage extends LitroPage {
     `;
   }
 
-  private _fwOutputSizeTab(frameworks: FrameworkResult[], sizeWinnerIdx: number) {
+  private _fwOutputSizeTab(frameworks: FrameworkResult[], sizeWinnerIdx: number | Set<number>, annotations?: Record<string, string>) {
+    const winners = typeof sizeWinnerIdx === 'number' ? new Set([sizeWinnerIdx]) : sizeWinnerIdx;
     const maxOutput = Math.max(...frameworks.map(f => f.outputSize));
 
     return html`
@@ -463,8 +625,8 @@ export class BenchmarksPage extends LitroPage {
                 const pct = maxOutput > 0 ? (fw.outputSize / maxOutput) * 100 : 0;
                 return html`
                   <tr>
-                    <th scope="row">${fw.name}</th>
-                    <td class="${i === sizeWinnerIdx ? 'winner-cell' : ''}">${this._formatBytes(fw.outputSize)}</td>
+                    <th scope="row">${this._fwNameWithAnnotation(fw.name, annotations)}</th>
+                    <td class="${winners.has(i) ? 'winner-cell' : ''}">${this._formatBytes(fw.outputSize)}</td>
                     <td>
                       <span class="bar" style="width: ${pct.toFixed(1)}%"></span>
                       <span class="bar-label">${pct.toFixed(0)}%</span>
@@ -479,7 +641,7 @@ export class BenchmarksPage extends LitroPage {
     `;
   }
 
-  private _fwPageWeightTab(frameworks: FrameworkResult[], routes: string[]) {
+  private _fwPageWeightTab(frameworks: FrameworkResult[], routes: string[], annotations?: Record<string, string>) {
     return html`
       <litro-tab-item label="Page Weight">
         <h3>HTML Response Size</h3>
@@ -489,15 +651,13 @@ export class BenchmarksPage extends LitroPage {
             <thead>
               <tr>
                 <th scope="col">Route</th>
-                ${frameworks.map(fw => html`<th scope="col">${fw.name} raw</th><th scope="col">${fw.name} gzip</th>`)}
-                <th scope="col">Smallest</th>
+                ${frameworks.map(fw => html`<th scope="col">${this._fwNameWithAnnotation(fw.name, annotations)} raw</th><th scope="col">${this._fwNameWithAnnotation(fw.name, annotations)} gzip</th>`)}
               </tr>
             </thead>
             <tbody>
               ${routes.map(rt => {
                 const gzips = frameworks.map(fw => fw.pageWeight[rt]?.gzipBytes ?? Infinity);
                 const minGzip = Math.min(...gzips);
-                const winnerName = frameworks[gzips.indexOf(minGzip)]?.name ?? '';
                 return html`
                   <tr>
                     <th scope="row"><code>${rt}</code></th>
@@ -510,10 +670,81 @@ export class BenchmarksPage extends LitroPage {
                         <td class="${isWinner ? 'winner-cell' : ''}">${this._formatBytes(pw.gzipBytes)}</td>
                       `;
                     })}
-                    <td>${winnerName}</td>
                   </tr>
                 `;
               })}
+            </tbody>
+          </table>
+        </div>
+      </litro-tab-item>
+    `;
+  }
+
+  private _fwLighthouseTab(frameworks: FrameworkResult[], routes: string[]) {
+    const withLh = frameworks.filter(fw => fw.lighthouse && Object.keys(fw.lighthouse).length > 0);
+    const perfScores = frameworks.map(fw => {
+      if (!fw.lighthouse) return 0;
+      const vals = routes.map(rt => fw.lighthouse?.[rt]?.performance ?? 0);
+      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    });
+    const maxPerf = Math.max(...perfScores);
+
+    return html`
+      <litro-tab-item label="Lighthouse">
+        <h3>Lighthouse Performance</h3>
+        <p class="note">
+          Headless Chrome Lighthouse audit on the statically prerendered output,
+          median of 3 runs per route. All five apps serve the same HN content,
+          so differences are architecture-driven rather than data-driven.
+        </p>
+        <p class="note">
+          <strong>Loading strategy skews the score more than runtime speed does.</strong>
+          Next.js emits every JS bundle as <code>&lt;script async&gt;</code>, so its
+          ~450&nbsp;KB of chunks loads outside Lighthouse's measurement window and
+          contributes 0&nbsp;ms to TBT. Litro emits <code>&lt;script type="module"&gt;</code>
+          — ES modules are implicitly deferred, and the browser waits for
+          module fetch-and-evaluate before firing paint events, which adds
+          roughly half a second to FCP. Lit's shadow-DOM materialization adds
+          another ~100&nbsp;ms. Nuxt hydrates a payload at parse time, producing
+          measurable TBT on list-heavy pages. Post-hydration, the in-browser
+          experience is comparable across all five — but Lighthouse weights
+          FCP/LCP/TBT inside a narrow window, and what loads in that window
+          dominates the result.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <caption>Lighthouse Performance category (median of ${withLh[0]?.lighthouse?.[routes[0]] ? '3' : '?'} runs per route).</caption>
+            <thead>
+              <tr>
+                <th scope="col">Route</th>
+                ${frameworks.map(fw => html`<th scope="col">${fw.name}</th>`)}
+              </tr>
+            </thead>
+            <tbody>
+              ${routes.map(rt => {
+                const scores = frameworks.map(fw => fw.lighthouse?.[rt]?.performance);
+                const validScores = scores.filter((s): s is number => typeof s === 'number' && s > 0);
+                const maxScore = validScores.length ? Math.max(...validScores) : 0;
+                return html`
+                  <tr>
+                    <th scope="row"><code>${rt}</code></th>
+                    ${frameworks.map((fw, i) => {
+                      const s = scores[i];
+                      if (s === undefined) return html`<td>-</td>`;
+                      const isWinner = s > 0 && s === maxScore;
+                      return html`<td class="${isWinner ? 'winner-cell' : ''}">${s.toFixed(0)}</td>`;
+                    })}
+                  </tr>
+                `;
+              })}
+              <tr>
+                <th scope="row">Average</th>
+                ${frameworks.map((_fw, i) => {
+                  const avg = perfScores[i];
+                  const isWinner = avg > 0 && avg === maxPerf;
+                  return html`<td class="${isWinner ? 'winner-cell' : ''}"><strong>${avg.toFixed(0)}</strong></td>`;
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
@@ -760,8 +991,12 @@ export class BenchmarksPage extends LitroPage {
       <litro-tab-item label="Lighthouse">
         <h3>Lighthouse Performance (SSG)</h3>
         <p class="note">
-          SSR pages use Declarative Shadow DOM — Lighthouse cannot measure paint
-          events inside shadow roots, so only SSG scores are shown.
+          Headless Chrome Lighthouse audit of the prerendered docs site,
+          median of 3 runs per route. SSR Lighthouse is not measured — the
+          preview server already renders the same HTML the SSG build produces,
+          so the score would be redundant. For a cross-framework comparison
+          on identical app code, see the
+          <a href="#hn-lighthouse">HN Clone Lighthouse table</a>.
         </p>
         <div class="table-wrap">
           <table>

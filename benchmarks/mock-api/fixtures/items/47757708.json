@@ -1,0 +1,8 @@
+{
+  "by": "christianh",
+  "id": 47757708,
+  "parent": 47741527,
+  "text": "I’m working on <a href=\"https:&#x2F;&#x2F;poser.pro\" rel=\"nofollow\">https:&#x2F;&#x2F;poser.pro</a>, a ski technique feedback tool for skiers that want to improve their skills.<p>How? The user (skier!) uploads a short ski clip to Poser, lets Poser analyze, and then gets their results.<p>For now, you get video outputs: head-tracking and skeleton overlay. I’ve built a a lot of extra stuff (animated 3D body, turn-detection, balance-, steering-, pressure-, and edging-metrics, etc.), I’m just not sure how to package it all to be useful. So as of this post, videos are what’s available.<p>I’m using Meta AI’s SAM3 Tracking and SAM3D Body for skier tracking and pose estimation. The heavy lifting happens in Runpod.<p>I’m a software developer, Bachelor and Masters in Applied Phyiscs, and a ski instructor in the Austrian and Danish ski schools. So I thought to combine all three passions in Poser!",
+  "time": 1776113795,
+  "type": "comment"
+}

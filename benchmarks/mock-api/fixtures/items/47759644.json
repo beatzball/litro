@@ -1,0 +1,8 @@
+{
+  "by": "mettamage",
+  "id": 47759644,
+  "parent": 47723526,
+  "text": "I only do takehome assignments if they can be useful boilerplate&#x2F;starter projects for me and then spend all my hours on them. Recently I had 5 working days to create a backend for a chatbot. I spent about 80 to 100 (including the weekend).<p>It&#x27;s good starter code for AI-enabled projects that are cloud agnostic and have good security practices :)<p>It also, probably, got me the job. At this point, that&#x27;s honestly secondary. I can create new tools way faster!<p>One failed takehome assignment, years ago, became an amazing portfolio piece for 2 jobs down the line. The reason the original company failed me: not a standard full-stack web app. I broke the client-server model and made a P2P web app (drawing together etc.).",
+  "time": 1776125713,
+  "type": "comment"
+}

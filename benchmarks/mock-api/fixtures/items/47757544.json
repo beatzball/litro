@@ -1,0 +1,11 @@
+{
+  "by": "amluto",
+  "id": 47757544,
+  "kids": [
+    47760287
+  ],
+  "parent": 47753689,
+  "text": "&gt; Tell us your hopes and dreams for a Cloudflare-wide CLI<p>No long lived tokens, or at least a very straightforward configuration to avoid them.<p>One option: an easy tool to make narrowly scoped, very short lived tokens, in a file, and maybe even a way to live-update the file (so you can bind mount it).<p>Another option: a proxy mode that can narrow the scope. So I set it up on a host, then if I want to give a container access to one domain or one bucket or whatever, I ask the host CLI to become a proxy that gives the relevant subset of its permissions to the proxied client, and I connect the container to it.",
+  "time": 1776112900,
+  "type": "comment"
+}

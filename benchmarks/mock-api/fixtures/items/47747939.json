@@ -1,0 +1,25 @@
+{
+  "by": "paulmooreparks",
+  "id": 47747939,
+  "kids": [
+    47751487,
+    47756112,
+    47750380,
+    47749262,
+    47749692,
+    47748262,
+    47749343,
+    47749777,
+    47748195,
+    47749039,
+    47750569,
+    47748061,
+    47749081,
+    47748027,
+    47747962
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;m building Tela (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;paulmooreparks&#x2F;tela\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;paulmooreparks&#x2F;tela</a>), a self-hosted relay that tunnels TCP services through encrypted WireGuard connections. The key difference from Tailscale and similar tools is that it requires no TUN adapter, no root access, and no admin privileges on either end. It runs entirely in userspace.<p>My initial motivation was wanting to RDP and SSH into my home workstation from a locked-down corporate laptop when I travel. I couldn&#x27;t install Tailscale on the laptop, and I didn&#x27;t want to pay for a cloud VM just to do SSH port forwarding. Now I use it to tie together half a dozen machines, both locally and on Hetzner &amp; Linode. I can SSH and RDP into remote machines, host a git repo on one machine and access it from the others, and (optionally) share files across all of them on a local mount.<p>You run a hub (telahubd), register machines with a lightweight agent (telad), and connect from anywhere with the client (tela). All three are single Go binaries with no external dependencies. The hub never sees your traffic. It just relays opaque WireGuard ciphertext.<p>All binaries run on Windows, Linux, and macOS. There is also a desktop GUI app, TelaVisor, that wraps the client and enables remote management of hubs and agents.<p>It&#x27;s Apache 2.0-license and pre-1.0 release, but I&#x27;m polishing it for a stable 1.0 release in the next month or so.<p>I&#x27;m also working on an enterprise-grade management portal that works with Tela, <a href=\"https:&#x2F;&#x2F;awansaya.net&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;awansaya.net&#x2F;</a>",
+  "time": 1776057958,
+  "type": "comment"
+}

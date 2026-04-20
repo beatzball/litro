@@ -1,0 +1,8 @@
+{
+  "by": "waterTanuki",
+  "id": 47761180,
+  "parent": 47728823,
+  "text": "&gt; First, we knew we wanted to extend Encore to more languages over time, and we&#x27;d seen projects like Prisma and Pydantic successfully use a Rust core with bindings into Node.js and Python respectively.<p>On an unrelated note Prisma decided to rewrite their Rust core in Typescript.\n<a href=\"https:&#x2F;&#x2F;www.prisma.io&#x2F;blog&#x2F;from-rust-to-typescript-a-new-chapter-for-prisma-orm\" rel=\"nofollow\">https:&#x2F;&#x2F;www.prisma.io&#x2F;blog&#x2F;from-rust-to-typescript-a-new-cha...</a>",
+  "time": 1776140290,
+  "type": "comment"
+}

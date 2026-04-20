@@ -1,0 +1,8 @@
+{
+  "by": "patates",
+  "id": 47761964,
+  "parent": 47759169,
+  "text": "S3 needs a split:<p>QS3 (Quite Simple Storage Service) for the barebones. Bucket&#x2F;Object CRUD. Maybe: Multipart Uploads. Presigned URLs.<p>S3 for Object Tagging, Access Control Lists, etc.<p>S3E (enterprise? extended? elaborate?) for Object Lock &amp; Retention (WORM compliance, Legal Holds), Event Notifications and so on.",
+  "time": 1776147990,
+  "type": "comment"
+}

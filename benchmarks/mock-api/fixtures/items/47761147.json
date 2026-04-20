@@ -1,0 +1,8 @@
+{
+  "by": "kuruczgy",
+  "id": 47761147,
+  "parent": 47760024,
+  "text": "&gt; It’s important to note that this is the Lean runtime that has a bug, not the Lean kernel, which is the part that actually does the verification (aka proving). [1] So it’s not even immediately clear what this bug would really apply to<p>Well, Lean is written in Lean, so I am pretty sure a runtime bug like this could be exploited to prove `False`. Yes, since the kernel is written in C++, technically it&#x27;s not the part affected by this bug, but since you cannot use the Lean kernel without the Lean compiler, this difference does not matter.",
+  "time": 1776139932,
+  "type": "comment"
+}

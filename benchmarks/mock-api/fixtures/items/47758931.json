@@ -1,0 +1,11 @@
+{
+  "by": "tptacek",
+  "id": 47758931,
+  "kids": [
+    47758981
+  ],
+  "parent": 47758444,
+  "text": "It&#x27;s probably the most important storage API in the industry. Implementing it gives you on-prem storage, AWS S3 (the Hoover Dam of Internet storage megaprojects, arguably the most reliable store of any kind available to any normal programmer), and a whole ecosystem of S3-compatible options with different features and price points.<p>It&#x27;s a little like asking why you&#x27;d use SQL.",
+  "time": 1776120467,
+  "type": "comment"
+}

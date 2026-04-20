@@ -1,0 +1,15 @@
+{
+  "by": "hliyan",
+  "id": 47761846,
+  "kids": [
+    47761879,
+    47761990,
+    47761933,
+    47761859,
+    47761956
+  ],
+  "parent": 47761609,
+  "text": "Can we please go back to template-based server rendering (e.g. JSP, PHP, ASP, Handlebars&#x2F;Mustache) and use JS for user interactivity only? Tired of seeing this cycle play out with a new framework every 5-6 years.",
+  "time": 1776146945,
+  "type": "comment"
+}

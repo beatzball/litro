@@ -1,0 +1,11 @@
+{
+  "by": "speak_on",
+  "id": 47759208,
+  "kids": [
+    47760054
+  ],
+  "parent": 47758805,
+  "text": "Type system via a single schema looks similar to Hono+OpenApi+RPC, or is there a different advantage?",
+  "time": 1776122159,
+  "type": "comment"
+}

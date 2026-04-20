@@ -1,0 +1,11 @@
+{
+  "by": "vidluther",
+  "id": 47735718,
+  "kids": [
+    47738919
+  ],
+  "parent": 47733714,
+  "text": "I&#x27;m thinking of exposing the sqlite db, and now possibly this JSON file as well.. I can take both during the build process and throw them up on CF. Great idea, thank you.",
+  "time": 1775961645,
+  "type": "comment"
+}

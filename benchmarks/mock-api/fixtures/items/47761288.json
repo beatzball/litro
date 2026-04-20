@@ -1,0 +1,8 @@
+{
+  "by": "tstrimple",
+  "id": 47761288,
+  "parent": 47754283,
+  "text": "I think this boils down to more discoverability of the entire API. While I&#x27;m not a fan of GraphQL necessarily, it does provide the tools for very robust LLM usage typically because of the discoverability and HATEOAS aspects they actually follow compared to most &quot;REST&quot; APIs. I would love if LLMs could learn everything they need to about an API just by following links from its root entry point. That drastically cuts down on the &quot;ingested knowledge&quot; and documentation reads (of the wrong version) it needs to perform. Outdated documentation can often be worse than no documentation if the tool has the capability of helping you &quot;discover&quot; its features and capabilities.",
+  "time": 1776141326,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "cortesoft",
+  "id": 47743570,
+  "kids": [
+    47743721,
+    47743750
+  ],
+  "parent": 47743491,
+  "text": "It looks like it shouldn’t be an issue… it is just a wrapper around CLI calls to the official Claude code. It would be indistinguishable from the Anthropic side, and it isn’t even doing anything hacky or impersonating the official client.",
+  "time": 1776022740,
+  "type": "comment"
+}

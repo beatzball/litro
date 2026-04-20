@@ -1,0 +1,11 @@
+{
+  "by": "pxc",
+  "id": 47746085,
+  "kids": [
+    47746202
+  ],
+  "parent": 47741889,
+  "text": "If xterm.js is slower than tmux, why don&#x27;t you just use tmux for the headless sessions as well? How is tmux not headless enough?",
+  "time": 1776040157,
+  "type": "comment"
+}

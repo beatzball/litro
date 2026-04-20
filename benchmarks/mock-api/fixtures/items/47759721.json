@@ -1,0 +1,16 @@
+{
+  "by": "agentultra",
+  "id": 47759721,
+  "kids": [
+    47760193,
+    47760061,
+    47761329,
+    47761173,
+    47761113,
+    47759755
+  ],
+  "parent": 47728970,
+  "text": "I’m working as a single solo developer of a tiny video game. I’m writing it in C with raylib. No coding assistants, no agents, not even a language server.<p>I only work on it for a few hours during the week. And it’s progressing at a reasonable pace that I’m happy with. I got cross-compilation from Linux to Windows going early on in a couple of hours.  Wasn’t that hard.<p>I’ve had to rework parts of the code as I’ve progressed. I’ve had to live with decisions I made early on. It’s code. It’s fine.<p>I don’t really understand the, “more, better, faster,” cachet to be honest. Writing the code hasn’t been the bottle neck to developing software for a long time. It’s usually the thinking that takes most of the time and if that goes away well… I dunno, that’s weird. I will understand it even less.<p>Agree with writing less code though. The economics of throwing out 37k lines of code a week is… stupid in the extreme. If we get paid by the line we could’ve optimized for this long before LLM’s were invented. It’s not like more lines of code means more inventory to sell. It’s usually the opposite: the more bugs to fix, the more frustrated customers, the higher churn of exhausted developers.",
+  "time": 1776126399,
+  "type": "comment"
+}

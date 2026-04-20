@@ -1,0 +1,8 @@
+{
+  "by": "tusharkhatri369",
+  "id": 47753871,
+  "parent": 47749295,
+  "text": "&quot;To give an example, at one point was trying to get Claude to fix a UI issue. Claude came up with a solution and then applied it at 7 different places in the code. It didn&#x27;t make sense to fix it in 7 places. It should have been fixed in 1 place and have all 7 of those existing places use the one fix. There were several issues like that, where Claude was doing something a reviewer wouldn&#x27;t let through.&quot;<p>yes right it also sometimes changes the whole architechture without even asking me  lol",
+  "time": 1776095571,
+  "type": "comment"
+}

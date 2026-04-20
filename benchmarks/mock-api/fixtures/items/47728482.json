@@ -1,0 +1,8 @@
+{
+  "by": "tnelsond4",
+  "id": 47728482,
+  "parent": 47728352,
+  "text": "I tried reading the dragon book in my teens, never really understood it, it was too much theory for me.<p>I&#x27;d recommend starting with implementing a forth since it&#x27;s the easiest language to write an interpreter&#x2F;compiler for. From there you&#x27;ll have enough experience to go for something bigger.<p>Making your own bytecode is really fun.<p>Ultimately you&#x27;ll probably want your compiler to target llvm bytecode so that it works on every target automatically.",
+  "time": 1775894250,
+  "type": "comment"
+}

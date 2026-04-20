@@ -5,13 +5,14 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  serialize-javascript: '>=7.0.3'
+  serialize-javascript: '>=7.0.5'
   tar: '>=7.5.11'
   node-forge: '>=1.4.0'
   picomatch: '>=4.0.4'
   lodash: '>=4.18.0'
   defu: '>=6.1.5'
-  basic-ftp: '>=5.2.2'
+  basic-ftp: '>=5.3.0'
+  brace-expansion: '>=2.0.3'
 
 importers:
 
@@ -48,6 +49,93 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  benchmarks/apps/hn-litro:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../../../packages/framework
+      '@beatzball/litro-router':
+        specifier: workspace:*
+        version: link:../../../packages/litro-router
+      '@lit-labs/ssr':
+        specifier: ^3.3.0
+        version: 3.3.1
+      '@lit-labs/ssr-client':
+        specifier: ^1.1.7
+        version: 1.1.8
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+      lit:
+        specifier: ^3.2.1
+        version: 3.3.2
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
+  benchmarks/apps/hn-litro-elena:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../../../packages/framework
+      '@beatzball/litro-router':
+        specifier: workspace:*
+        version: link:../../../packages/litro-router
+      '@elenajs/core':
+        specifier: 1.0.0
+        version: 1.0.0
+      '@elenajs/ssr':
+        specifier: 1.0.0-alpha.10
+        version: 1.0.0-alpha.10(@elenajs/core@1.0.0)
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
+  benchmarks/apps/hn-litro-fast:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../../../packages/framework
+      '@beatzball/litro-router':
+        specifier: workspace:*
+        version: link:../../../packages/litro-router
+      '@microsoft/fast-element':
+        specifier: ^2.10.3
+        version: 2.10.3
+      '@microsoft/fast-ssr':
+        specifier: 1.0.0-beta.39
+        version: 1.0.0-beta.39(@microsoft/fast-element@2.10.3)
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+    devDependencies:
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
   benchmarks/apps/litro:
     dependencies:
       '@beatzball/litro':
@@ -78,6 +166,16 @@ importers:
       vite:
         specifier: ^5.4.11
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
+
+  benchmarks/mock-api:
+    dependencies:
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+    devDependencies:
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
 
   docs:
     dependencies:
@@ -1967,9 +2065,6 @@ packages:
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
 
-  balanced-match@1.0.2:
-    resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
-
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
@@ -2019,8 +2114,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  basic-ftp@5.2.2:
-    resolution: {integrity: sha512-1tDrzKsdCg70WGvbFss/ulVAxupNauGnOlgpyjKzeQxzyllBLS0CGLV7tjIXTK3ZQA9/FBEm9qyFFN1bciA6pw==}
+  basic-ftp@5.3.0:
+    resolution: {integrity: sha512-5K9eNNn7ywHPsYnFwjKgYH8Hf8B5emh7JKcPaVjjrMJFQQwGpwowEnZNEtHs7DfR7hCZsmaK3VA4HUK0YarT+w==}
     engines: {node: '>=10.0.0'}
 
   better-path-resolve@1.0.0:
@@ -2033,12 +2128,6 @@ packages:
   boxen@7.0.0:
     resolution: {integrity: sha512-j//dBVuyacJbvW+tvZ9HuH03fZ46QcaKvvhZickZqtB271DxJ7SNRSNxrV/dZX0085m7hISRZWbzWlJvx/rHSg==}
     engines: {node: '>=14.16'}
-
-  brace-expansion@1.1.13:
-    resolution: {integrity: sha512-9ZLprWS6EENmhEOpjCYW2c8VkmOvckIJZfkr7rBW6dObmfgJ/L1GpSYW5Hpo9lDz4D1+n0Ckz8rU7FwHDQiG/w==}
-
-  brace-expansion@2.0.2:
-    resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
   brace-expansion@5.0.4:
     resolution: {integrity: sha512-h+DEnpVvxmfVefa4jFbCf5HdH5YMDXRsmKflpf1pILZWRFlTbJpxeU55nJl4Smt5HQaGzg1o6RHFPJaOqnmBDg==}
@@ -2227,9 +2316,6 @@ packages:
   compression@1.8.1:
     resolution: {integrity: sha512-9mAqGPHLakhCLeNyxPkK4xVo746zQ/czLH1Ky+vkitMnWfWZps8r0qXuwhwizagCRttsL4lfG4pIOvaWLpAP0w==}
     engines: {node: '>= 0.8.0'}
-
-  concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   confbox@0.1.8:
     resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
@@ -3918,8 +4004,8 @@ packages:
     resolution: {integrity: sha512-1gnZf7DFcoIcajTjTwjwuDjzuz4PPcY2StKPlsGAQ1+YH20IRVrBaXSWmdjowTJ6u8Rc01PoYOGHXfP1mYcZNQ==}
     engines: {node: '>= 18'}
 
-  serialize-javascript@7.0.4:
-    resolution: {integrity: sha512-DuGdB+Po43Q5Jxwpzt1lhyFSYKryqoNjQSA9M92tyw0lyHIOur+XCalOUe0KTJpyqzT8+fQ5A0Jf7vCx/NKmIg==}
+  serialize-javascript@7.0.5:
+    resolution: {integrity: sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==}
     engines: {node: '>=20.0.0'}
 
   serve-handler@6.1.7:
@@ -5584,7 +5670,7 @@ snapshots:
 
   '@rollup/plugin-terser@0.4.4(rollup@4.59.0)':
     dependencies:
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       smob: 1.6.1
       terser: 5.46.0
     optionalDependencies:
@@ -6021,8 +6107,6 @@ snapshots:
 
   bail@2.0.2: {}
 
-  balanced-match@1.0.2: {}
-
   balanced-match@4.0.4: {}
 
   bare-events@2.8.2: {}
@@ -6062,7 +6146,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  basic-ftp@5.2.2: {}
+  basic-ftp@5.3.0: {}
 
   better-path-resolve@1.0.0:
     dependencies:
@@ -6082,15 +6166,6 @@ snapshots:
       type-fest: 2.19.0
       widest-line: 4.0.1
       wrap-ansi: 8.1.0
-
-  brace-expansion@1.1.13:
-    dependencies:
-      balanced-match: 1.0.2
-      concat-map: 0.0.1
-
-  brace-expansion@2.0.2:
-    dependencies:
-      balanced-match: 1.0.2
 
   brace-expansion@5.0.4:
     dependencies:
@@ -6285,8 +6360,6 @@ snapshots:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
-
-  concat-map@0.0.1: {}
 
   confbox@0.1.8: {}
 
@@ -6767,7 +6840,7 @@ snapshots:
 
   get-uri@6.0.5:
     dependencies:
-      basic-ftp: 5.2.2
+      basic-ftp: 5.3.0
       data-uri-to-buffer: 6.0.2
       debug: 4.4.3
     transitivePeerDependencies:
@@ -7673,15 +7746,15 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.13
+      brace-expansion: 5.0.4
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.0.2
+      brace-expansion: 5.0.4
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.0.2
+      brace-expansion: 5.0.4
 
   minimist@1.2.8: {}
 
@@ -8344,7 +8417,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  serialize-javascript@7.0.4: {}
+  serialize-javascript@7.0.5: {}
 
   serve-handler@6.1.7:
     dependencies:

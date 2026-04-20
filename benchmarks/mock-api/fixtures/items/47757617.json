@@ -1,0 +1,12 @@
+{
+  "by": "bsimpson",
+  "id": 47757617,
+  "kids": [
+    47757649,
+    47759478
+  ],
+  "parent": 47757495,
+  "text": "Finally!<p>I never understood the PR=branch model GitHub defaulted to.  Stacked commits (ala Phabricator&#x2F;Gerrit) always jived more with how my brain reasons about changes.<p>Glad to see this option.  I guess I&#x27;ll have to install their CLI thing now.",
+  "time": 1776113280,
+  "type": "comment"
+}

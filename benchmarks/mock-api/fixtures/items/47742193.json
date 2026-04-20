@@ -1,0 +1,11 @@
+{
+  "by": "tobz1000",
+  "id": 47742193,
+  "kids": [
+    47747395
+  ],
+  "parent": 47740148,
+  "text": "&gt; there are testimonies of smart home devices like anti-theft alarms or automatic doors, that stop working whenever [...] because their backends rely on Cloudflare.<p>The fault here lies 100% with horribly designed IoT devices that turn into bricks when they lose internet connection.",
+  "time": 1776014669,
+  "type": "comment"
+}

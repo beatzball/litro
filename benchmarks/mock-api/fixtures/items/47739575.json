@@ -1,0 +1,14 @@
+{
+  "by": "utrack",
+  "id": 47739575,
+  "kids": [
+    47747732,
+    47739994,
+    47744152,
+    47748994
+  ],
+  "parent": 47738883,
+  "text": "They block the whole of Cloudflare R2, I believe the Docker hub is just (heh) a collateral.<p>When the La Liga match starts, everything that&#x27;s proxied via CF (including zero access reverse tunnels) stops working.<p>There&#x27;s even a website made for checking if the match is on: <a href=\"https:&#x2F;&#x2F;hayahora.futbol&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;hayahora.futbol&#x2F;</a><p>You can check if your host is affected: <a href=\"https:&#x2F;&#x2F;hayahora.futbol&#x2F;#comprobador&amp;domain=docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com\" rel=\"nofollow\">https:&#x2F;&#x2F;hayahora.futbol&#x2F;#comprobador&amp;domain=docker-images-pr...</a>",
+  "time": 1776001463,
+  "type": "comment"
+}

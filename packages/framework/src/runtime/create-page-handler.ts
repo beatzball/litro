@@ -204,7 +204,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         head: staticHead + dynamicHead + adapterHeadScripts || undefined,
         serverDataJson,
         appScriptUrl,
-        devMode: isDev,
+        contentDevPolling: isDev && process.env.LITRO_HAS_CONTENT === 'true',
         skipLinks,
         includeDSDPolyfill: adapter.needsDSDPolyfill,
       });

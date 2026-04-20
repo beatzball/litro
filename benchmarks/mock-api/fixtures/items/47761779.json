@@ -1,0 +1,8 @@
+{
+  "by": "klinquist",
+  "id": 47761779,
+  "parent": 47750669,
+  "text": "Yeah, I also find this annoying.  I created a site that lets Ham Radio Parks on the Air operators share photos of their setups in parks (<a href=\"https:&#x2F;&#x2F;www.potaparkpics.com\" rel=\"nofollow\">https:&#x2F;&#x2F;www.potaparkpics.com</a>).    I do it with  no login - you simply specify what park you are in, then upload photos.  I use the geolocation (comparing the photo exif against the park you said you were in) as authentication.   Works great - but only for iPhone users.",
+  "time": 1776146263,
+  "type": "comment"
+}

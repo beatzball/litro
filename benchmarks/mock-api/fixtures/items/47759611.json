@@ -1,0 +1,8 @@
+{
+  "by": "patrickthebold",
+  "id": 47759611,
+  "parent": 47758067,
+  "text": "I&#x27;m not sure I follow your workflow exactly. If PR B is merged, then I&#x27;d expect PR A to already be merged (I&#x27;d normally branch off of A to make B.)<p>That said, after the squash merge of A and git fetch origin, you want something like git rebase --update-refs --onto origin&#x2F;main A C (or whatever the tip of the chain of branches is)<p>The --update-refs will make sure pr B is in the right spot. Of course, you need to (force) push the updated branches. AFAICT the gh command line tool makes this a bit smoother.",
+  "time": 1776125448,
+  "type": "comment"
+}

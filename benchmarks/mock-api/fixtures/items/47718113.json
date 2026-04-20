@@ -1,0 +1,32 @@
+{
+  "by": "uticus",
+  "descendants": 20,
+  "id": 47718113,
+  "kids": [
+    47720804,
+    47721483,
+    47718243,
+    47738797,
+    47723848,
+    47725839,
+    47718176,
+    47721374,
+    47718491,
+    47725553,
+    47729376,
+    47720945,
+    47721857,
+    47721397,
+    47747249,
+    47738782,
+    47727918,
+    47719786,
+    47718168,
+    47720271
+  ],
+  "score": 14,
+  "text": "A database could be described crudely as a program for interfacing with data on disk. Most software is built to interface with databases although the software also has (often very capable) ways of interfacing with data on disk via filesystem interaction.<p>My question is, what historically has driven the industry to focus on database-specific solutions, rather than on filesystem-specific solutions?<p>This is not a rant against databases, but I do wonder why many major programming languages and frameworks (RoR Active Directory,  C# EF, etc) have put much effort into making database interaction smooth from the perspective of the programming language, instead of putting effort into interacting with data on disk. Kind of an alternate reality sort of musing.",
+  "time": 1775828836,
+  "title": "Ask HN: Why Databases Instead of Filesystem?",
+  "type": "story"
+}

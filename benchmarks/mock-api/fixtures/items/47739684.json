@@ -1,0 +1,15 @@
+{
+  "by": "pentacent_hq",
+  "descendants": 9,
+  "id": 47739684,
+  "kids": [
+    47744521,
+    47740041,
+    47741579
+  ],
+  "score": 5,
+  "text": "Hey folks,<p>I&#x27;m building an Open Source email newsletter tool and one of the challenges we have is form spam: As soon as a signup form goes live somewhere, bots will try to sign up. This is possibly an attempt to overwhelm the inbox of people whose accounts have been compromised. But it&#x27;s also bad for the people who run the newsletter as these ultimately unwanted emails reduce their sender reputation.<p>There was recently a discussion here on HN about this topic [1]. The post author ended up using Cloudflare Turnstile to mitigate the issue. We currently already have support for external captcha solutions like hCaptcha. However, many of our users are quite privacy-conscious and don&#x27;t like having user data sent to third parties (especially non-EU third parties for our European users).<p>So now I&#x27;ve been thinking of adding an invisible proof-of-work (PoW) captcha to all signup forms. Possible implementations I&#x27;ve been considering are Altcha [2] and mCaptcha [3].<p>Now to my question: Have any of you tried using PoW captchas to protect against form spam? What have your experiences been with it so far?<p>[1] https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=47609882<p>[2] https:&#x2F;&#x2F;altcha.org&#x2F;<p>[3] https:&#x2F;&#x2F;mcaptcha.org&#x2F;",
+  "time": 1776002066,
+  "title": "Ask HN: What's your experience with PoW captchas against form spam?",
+  "type": "story"
+}

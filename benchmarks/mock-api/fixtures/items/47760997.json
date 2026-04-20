@@ -1,0 +1,12 @@
+{
+  "by": "LegNeato",
+  "id": 47760997,
+  "kids": [
+    47761331,
+    47761212
+  ],
+  "parent": 47760827,
+  "text": "Founder here.<p>1. Programming GPUs is a problem. The ratio of CPUs to CPU programmers and GPUs to GPU programmers is massively out of whack. Not because GPU programming is less valuable or lucrative, because GPUs are weird and the tools are weird.<p>2. We are more interested in leveraging existing libraries than running existing binaries wholesale (mostly within a warp). But, running GPU-unaware code leaves a lot of space for the compiler to move stuff around and optimize things.<p>3. The compiler changes are not our product, the GPU apps we are building with them are. So it is in our interest to make the apps very fast.<p>Anyway, skepticism is understandable and we are well aware code wins arguments.",
+  "time": 1776138289,
+  "type": "comment"
+}

@@ -4,6 +4,7 @@ export interface FrameworkResult {
   buildTime: RunStats;
   outputSize: number;
   pageWeight: Record<string, PageWeightResult>;
+  lighthouse?: Record<string, LighthouseResult>;
 }
 
 export interface BenchmarkResults {
@@ -41,6 +42,7 @@ export interface BenchmarkResults {
     ssr: Record<string, StreamingResult>;
   };
   crossFramework?: FrameworkResult[];
+  hnBenchmark?: FrameworkResult[];
 }
 
 export interface RunStats {

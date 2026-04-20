@@ -1,0 +1,11 @@
+{
+  "by": "geekysquirrel",
+  "id": 47701602,
+  "kids": [
+    47716034
+  ],
+  "parent": 47700460,
+  "text": "So great to see how much stuff there is going on outside of AI!<p>I&#x27;ve been working (on and off for over a decade) on a way to manage my unwieldy photo and video collection. I experimented with so many tools before but ultimately nothing ticked all my boxes so I wrote my own. Admittedly lots of niche stuff like proper support for UTC time, stereo photos and partial dates and things like 100% offline face detection and custom tag hierarchies and querying without a database. Each time I add a new feature I&#x27;m having a blast :)<p><a href=\"https:&#x2F;&#x2F;gitlab.com&#x2F;geekysquirrel&#x2F;memo2\" rel=\"nofollow\">https:&#x2F;&#x2F;gitlab.com&#x2F;geekysquirrel&#x2F;memo2</a>",
+  "time": 1775729583,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "ctbellmar",
+  "id": 47751614,
+  "kids": [
+    47755413,
+    47756161
+  ],
+  "parent": 47741527,
+  "text": "PlantLab (<a href=\"https:&#x2F;&#x2F;plantlab.ai\" rel=\"nofollow\">https:&#x2F;&#x2F;plantlab.ai</a>) - AI plant health diagnosis for cannabis. It&#x27;s an API, not an app [1]. Photo in, structured JSON out - condition, confidence, growth stage, nutrient lockout analysis. The response is for machines. Light burn at 0.92 confidence? Your controller dims the light. Calcium deficiency with excess potassium flagged as the lockout cause? Dosing pump adjusts.<p>I&#x27;m a software dev&#x2F;data nerd, not a grower. I got interested because cannabis grow rooms are already full of automation - VPD controllers, pH&#x2F;EC monitoring, dosing pumps, dimmable lights. But nothing was looking at the plant. Every sensor in the room measures the environment, not whether the plant is actually doing well. I wanted to add the eyes. And this seems to be a bound domain issue (i.e. limited number of issues&#x2F;conditions&#x2F;pests vs. all plants everywhere).<p>ViT-based multi-stage pipeline that verifies it&#x27;s cannabis, classifies condition or pest, then runs nutrient subclassification if needed. 30 classes, 18ms inference, Go API, ONNX Runtime. Trained on a little over a million images from grower friends. Classification was 80% of the lift. I also shipped a Home Assistant integration - camera takes a scheduled snapshot, PlantLab diagnoses, HA acts on the result. No human involved.<p>Recently the part that&#x27;s been the most fun is the autoresearch loop. Between training runs the system looks at its own confusion matrix, finds which classes it&#x27;s mixing up, audits those training images for bad labels, and tells me what to fix. It&#x27;s not fully autonomous yet but it&#x27;s getting there - the model is increasingly debugging its own training data.<p>Solo project, &lt;100 users, free tier is 3&#x2F;day.<p>[1] I built a simple Android app for those who want to just try it out, it&#x27;s on Google Store. Probably will make one for iOS too as time allows. <a href=\"https:&#x2F;&#x2F;play.google.com&#x2F;store&#x2F;apps&#x2F;details?id=com.plantlab.plantlab_mobile\">https:&#x2F;&#x2F;play.google.com&#x2F;store&#x2F;apps&#x2F;details?id=com.plantlab.p...</a>",
+  "time": 1776086593,
+  "type": "comment"
+}

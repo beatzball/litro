@@ -1,0 +1,18 @@
+{
+  "by": "ezzato",
+  "descendants": 9,
+  "id": 47728352,
+  "kids": [
+    47732979,
+    47729765,
+    47731941,
+    47728482,
+    47733302,
+    47732471
+  ],
+  "score": 17,
+  "text": "I have this long thought about building a language for the age of ai.<p>Here is a non-exhaustive list of features i would love to have it included:\n- separate effect full code from pure logic\n- separate state and code\n- ai native debugger\n- native deterministic simulation testing\n- coding proofs\n- explicit type system\n- repl\n- wasm target<p>I have no background in compiler building or similar. I would just like to spend some weeks reading the best resource about this topic.<p>Please share any resource you recommend reading.",
+  "time": 1775892476,
+  "title": "Ask HN: Best books on building a programming language",
+  "type": "story"
+}

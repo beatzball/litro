@@ -1,0 +1,15 @@
+{
+  "by": "codethief",
+  "id": 47753018,
+  "kids": [
+    47757348,
+    47753523,
+    47753896,
+    47755210,
+    47753153
+  ],
+  "parent": 47750669,
+  "text": "In a similar move (silently changing a feature crucial to some users), in Android 11 Google suddenly removed the possibility to use &quot;special&quot; characters<p><pre><code>  &quot;:&lt;&gt;?|\\*\n</code></pre>\nin filenames[0], presumably because they&#x27;re not allowed on Windows&#x2F;NTFS and Windows users might end up struggling to transfer them to their Windows computer. I don&#x27;t care about NTFS at all, though. I just want to be able to sync all my files with my Linux machines and now I&#x27;m no longer able to. Makes me want to scream.<p>[0]: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;GrapheneOS&#x2F;os-issue-tracker&#x2F;issues&#x2F;952\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;GrapheneOS&#x2F;os-issue-tracker&#x2F;issues&#x2F;952</a>",
+  "time": 1776092481,
+  "type": "comment"
+}

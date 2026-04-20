@@ -1,0 +1,8 @@
+{
+  "by": "Rochus",
+  "id": 47745193,
+  "parent": 47745018,
+  "text": "Thanks. The A2 Fox compiler actually has an ARM backend, so I would be surprised if nobody has migrated it to the Raspi yet. The 2003 version of AOS&#x2F;Bluebottle (not A2) is on my list of interesting sytems, particularly because it supports multicore hardware.",
+  "time": 1776032725,
+  "type": "comment"
+}

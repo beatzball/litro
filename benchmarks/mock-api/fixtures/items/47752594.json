@@ -1,0 +1,12 @@
+{
+  "by": "freehorse",
+  "id": 47752594,
+  "kids": [
+    47753177,
+    47753445
+  ],
+  "parent": 47751082,
+  "text": "&gt; actually using the geolocation is an extremely niche usecase for images uploaded from mobile browsers<p>Is it only for mobile browsers? The article makes it sound [0] as if it is a general thing, even when sharing through bluetooth, and that only copying the image via usb connection allows you to keep geolocation in exif. Not sure what happens when you upload to native apps, eg to some cloud storage app (photo specific or not). I definitely want my location to stay when I make a cloud backup of my photos with an app intended for that.<p>[0] Quote:<p>&gt;&gt; Using a &quot;Progressive Web App&quot; doesn&#x27;t work either. So, can users transfer their photos via Bluetooth or QuickShare? No. That&#x27;s now broken as well. You can&#x27;t even directly share via email without the location being stripped away. Literally the only way to get a photo with geolocation intact is to plug in a USB cable, copy the photo to your computer, and then upload it via a desktop web browser?",
+  "time": 1776090840,
+  "type": "comment"
+}

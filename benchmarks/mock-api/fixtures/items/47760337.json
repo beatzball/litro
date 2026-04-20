@@ -1,0 +1,8 @@
+{
+  "by": "arjie",
+  "id": 47760337,
+  "parent": 47755629,
+  "text": "Personally, I&#x27;ve found that nowadays the README.md file of most projects is more useful than the code. With the code I inherit their dependency chain and all of that. But with an LLM I can rewrite most of these things myself. This is not yet to the degree of universality. For instance I still use ratatui, but I also don&#x27;t use a worktree manager or a Claude coordinator from other people - I just have my own. I also don&#x27;t use OpenClaw - I have my own.<p>Looking at the list of plugins, I&#x27;d probably write accordion-and-accordion-slider and so on myself (meaning Claude Code and Codex would do most of the work). I think the future of software is like that: there is no reason to use most dependencies and so we&#x27;ll likely tend towards our own library of software, with the web of trust unnecessary because all we need are other people&#x27;s ideas, not their software.",
+  "time": 1776131768,
+  "type": "comment"
+}

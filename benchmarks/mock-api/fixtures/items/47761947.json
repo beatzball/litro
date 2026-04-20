@@ -1,0 +1,8 @@
+{
+  "by": "chrysoprace",
+  "id": 47761947,
+  "parent": 47761609,
+  "text": "Excited to try it out. I&#x27;m perhaps less excited about having to wrap RSC&#x27;s in special functions, but given the Query example I suppose it makes sense. I&#x27;ll reserve judgement until I&#x27;ve properly tried it out.<p>How does this work with Suspense (without Query) and the &#x27;use&#x27; hook from React?",
+  "time": 1776147877,
+  "type": "comment"
+}

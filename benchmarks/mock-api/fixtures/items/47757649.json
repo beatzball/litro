@@ -1,0 +1,15 @@
+{
+  "by": "ezekg",
+  "id": 47757649,
+  "kids": [
+    47757687,
+    47759426,
+    47757669,
+    47759340,
+    47759345
+  ],
+  "parent": 47757617,
+  "text": "My only complaint off the bat is the reliance on the GH CLI, which I don&#x27;t use either. But maybe by the time it&#x27;s GA they&#x27;ll have added UI support.",
+  "time": 1776113426,
+  "type": "comment"
+}

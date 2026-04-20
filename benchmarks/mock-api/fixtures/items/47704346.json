@@ -1,0 +1,11 @@
+{
+  "by": "DamnInteresting",
+  "id": 47704346,
+  "kids": [
+    47732516
+  ],
+  "parent": 47700460,
+  "text": "I&#x27;m working on the next update of Omiword[1], an ongoing daily word game previously discussed on HN[2]. I&#x27;m building an alternate stand-alone app version with access to all of the archived puzzles. It&#x27;s slow going since it&#x27;s just one of many side-projects I like to work on, but that&#x27;s the tinkerer&#x27;s dilemma.<p>Yes, I know that [insert LLM here] could do a lot of that conversion for me in mere minutes. No thank you. I&#x27;m doing it, in part, for the doing.<p>[1] <a href=\"https:&#x2F;&#x2F;omiword.com\" rel=\"nofollow\">https:&#x2F;&#x2F;omiword.com</a><p>[2] <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=43654350\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=43654350</a>",
+  "time": 1775745404,
+  "type": "comment"
+}

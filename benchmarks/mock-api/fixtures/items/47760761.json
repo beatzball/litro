@@ -1,0 +1,8 @@
+{
+  "by": "mystraline",
+  "id": 47760761,
+  "parent": 47760181,
+  "text": "Intel ARC 380&#x27;s are ideal at 4k realtime transcoded streams. And theyre cheap as well.<p>You could probably do a sticky round robin reverse proxy with a few backends doing transcode.<p>The biggest issue is bandwidth, but you probably knew that.",
+  "time": 1776135972,
+  "type": "comment"
+}

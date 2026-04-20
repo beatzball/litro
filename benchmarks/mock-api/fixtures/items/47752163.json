@@ -1,0 +1,13 @@
+{
+  "by": "MisterTea",
+  "id": 47752163,
+  "kids": [
+    47753260,
+    47752322,
+    47756501
+  ],
+  "parent": 47749384,
+  "text": "I am surprised the top comment on an HN post is someone asking what Oberon is (especially someone who have programmer in their name.) Oberon is not only a programming language, but an entire software and hardware computing system built from the ground up to be as minimal as possible by famed computer scientist Niklaus Wirth. Simple RISC CPU, Oberon compiler, OS And Windowing system. The windowing system was famously copied by Rob Pike&#x27;s Acme text editor on Plan 9.<p><a href=\"https:&#x2F;&#x2F;projectoberon.net&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;projectoberon.net&#x2F;</a>",
+  "time": 1776089081,
+  "type": "comment"
+}

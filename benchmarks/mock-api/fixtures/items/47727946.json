@@ -1,0 +1,8 @@
+{
+  "by": "maouida",
+  "id": 47727946,
+  "parent": 47723403,
+  "text": "The interactive region extrude feature is designed specifically for fast modeling at the expense of making the model &quot;not so parametric&quot;. When user pick a region, the raycasted point is inserted&#x2F;hardcoded in the code. e.g extrude(100).pick([100, 100])\nSo if the sketch dimensions change, there is a chance the point will fall outside the region boundaries which will break it.\nIt is preferred to use proper boolean operations in sketch mode to define regions while keeping it parametric.<p>The interactive region extrude is there for when you want fast modeling&#x2F;prototyping.",
+  "time": 1775888180,
+  "type": "comment"
+}

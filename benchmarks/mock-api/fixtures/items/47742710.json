@@ -1,0 +1,13 @@
+{
+  "by": "cyberax",
+  "id": 47742710,
+  "kids": [
+    47743920,
+    47743423,
+    47748904
+  ],
+  "parent": 47742280,
+  "text": "&gt; I still hope to see the world where Oberon is the future (and present) of OS and programming language design<p>I see you&#x27;re into horror stories.<p>Oberon is absolutely a horrible language. It&#x27;s an example of how you can screw up a good language by insisting on things that were important in 1960-s.<p>Like not allowing multiple returns (not multiple return _values_ but multiple returns).",
+  "time": 1776018162,
+  "type": "comment"
+}

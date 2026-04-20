@@ -1,0 +1,11 @@
+{
+  "by": "devendra116",
+  "id": 47740555,
+  "kids": [
+    47741170
+  ],
+  "parent": 47738873,
+  "text": "if you usecase is just about dealing with private key and txn signing why not use any KMS service?",
+  "time": 1776006198,
+  "type": "comment"
+}

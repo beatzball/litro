@@ -104,5 +104,10 @@ export default async function contentPlugin(nitro: Nitro): Promise<void> {
   opts['__litroContentDir'] = contentDir;
   opts['__litroContentStub'] = stubPath;
 
+  // Signal to the page handler that content polling should be enabled in dev.
+  // The shell injects a polling script for /_litro/_litro-version.json only
+  // when this is set — apps without a content layer skip it entirely.
+  process.env.LITRO_HAS_CONTENT = 'true';
+
   nitro.logger.info(`[litro:content] Content directory: ${contentDir}`);
 }

@@ -1,0 +1,11 @@
+{
+  "by": "omgJustTest",
+  "id": 47741105,
+  "kids": [
+    47742146
+  ],
+  "parent": 47740884,
+  "text": "people have been talking about &quot;models of models&quot; for arbitration opportunity in inference for about 1.5 yrs.<p>Arbitration idea: if a user doesn&#x27;t need high QOS of newest LLM, slip them a cheaper LLM, run their query at reduced quality. measure if they cost you fewer $s in the lower QOS. =&gt; profit.<p>For chatgpt the arbitration opportunity looks more like &quot;we could allocate this amount of gpu to training or inference, we are losing money if we offer the highest quality infra&quot;<p>In addition there&#x27;s other interesting economics scaling that can be done outside of &quot;models of models&quot; that are far more profitable. I won&#x27;t go over all of them (and some of them I feel are quite powerful) but the laziest one is that subscription models count on some zombie users as a counterweight to highly expensive single users, and as a source of stable cashflow.<p>Zombie users are ones that are paying for sub but not actively  or barely using the service",
+  "time": 1776008894,
+  "type": "comment"
+}

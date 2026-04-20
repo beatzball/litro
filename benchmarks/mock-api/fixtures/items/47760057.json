@@ -1,0 +1,13 @@
+{
+  "by": "gopiandcode",
+  "id": 47760057,
+  "kids": [
+    47760458,
+    47761696,
+    47760096
+  ],
+  "parent": 47759964,
+  "text": "Hi! Author here. When we speak of bugs in a verified software system, I think it&#x27;s fair to consider the entire binary a fair target.<p>If a buffer overflow causes the system to be exploited and all your bitcoins to be stolen, I don&#x27;t think the fact that the bug being in the language runtime is going to be much consolation. Especially if the software you were running was advertised as formally verified as free of bugs.<p>Secondly, I did find a bug in the algorithm. in Archive.lean, in the parsing of the compressed archive headers. That was the crashing input.",
+  "time": 1776129360,
+  "type": "comment"
+}

@@ -1,0 +1,27 @@
+{
+  "by": "bradley13",
+  "id": 47755991,
+  "kids": [
+    47757103,
+    47756125,
+    47756500,
+    47758965,
+    47756832,
+    47760047,
+    47756027,
+    47756895,
+    47756472,
+    47757707,
+    47756989,
+    47756840,
+    47756849,
+    47756778,
+    47760755,
+    47757560,
+    47756059
+  ],
+  "parent": 47755629,
+  "text": "Whenever I look at a web project, it starts with &quot;npm install&quot; and literally dozens of libraries get downloaded.<p>The project authors probably don&#x27;t even know what libraries their project requires, because many of them are transitive dependencies. There is zero chance that they have checked those libraries for supply chain attacks.",
+  "time": 1776104627,
+  "type": "comment"
+}

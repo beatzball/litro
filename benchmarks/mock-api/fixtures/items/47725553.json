@@ -1,0 +1,8 @@
+{
+  "by": "nivertech",
+  "id": 47725553,
+  "parent": 47718113,
+  "text": "BTW: some early filesystems were more database-like:<p><a href=\"https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;ISAM\" rel=\"nofollow\">https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;ISAM</a><p><a href=\"https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Record_Management_Services\" rel=\"nofollow\">https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Record_Management_Services</a><p>They were more like BerkeleyDB and lacked Query Planner.<p>I think Oracle internally using something similar, i.e. a native filesystem optimized for an RDBMS.",
+  "time": 1775865924,
+  "type": "comment"
+}

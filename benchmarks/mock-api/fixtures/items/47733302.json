@@ -1,0 +1,11 @@
+{
+  "by": "zerr",
+  "id": 47733302,
+  "kids": [
+    47755997
+  ],
+  "parent": 47728352,
+  "text": "When it comes to PL implementations, there are lesser materials about creating relevant tools besides compilers: linkers and especially debuggers. Are there any coursers&#x2F;books that go into implementing these tools?",
+  "time": 1775935758,
+  "type": "comment"
+}

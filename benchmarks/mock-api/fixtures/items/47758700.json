@@ -1,0 +1,11 @@
+{
+  "by": "pastel8739",
+  "id": 47758700,
+  "kids": [
+    47760011
+  ],
+  "parent": 47758067,
+  "text": "I agree that this is annoying and unintuitive. But I don’t see the simplest solution here, so:<p>All you need to do is pull main, then do an interactive rebase with the next branch in your stack with ‘git rebase -i main’, then drop all the commits that are from the branch you just merged.",
+  "time": 1776118896,
+  "type": "comment"
+}

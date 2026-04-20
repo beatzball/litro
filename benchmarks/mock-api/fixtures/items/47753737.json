@@ -1,0 +1,8 @@
+{
+  "by": "hamasho",
+  "id": 47753737,
+  "parent": 47752819,
+  "text": "I use c-q for prefix key because it doesn’t conflict with common zsh and vim bindings.<p>Because the author suggested swapping caps lock and control key, I also recommend mapping escape key at the control key and change the behavior based on whether another key is pressed. For example, if you press control + a, it sends c-a, but if you only press control key and then release, it sends escape. It makes your vim life (and in general) a lot easier. You don’t have to compete the most variable real estate on the keyboard, right next to the A key.<p>For most bindings like moving, resizing, and splitting,I emulate vim bindings.<p>Also, -r flag for bind-key command is impotent, because it enables to repeat commands like changing the pane size or move focus. You don’t have to press prefix key each time.<p>If you want to get fancy look with minimal setting, use plugins like nord tmux theme.",
+  "time": 1776095206,
+  "type": "comment"
+}

@@ -1,0 +1,13 @@
+{
+  "by": "tcoff91",
+  "id": 47758050,
+  "kids": [
+    47758104,
+    47758327,
+    47758179
+  ],
+  "parent": 47757981,
+  "text": "It&#x27;s basically trying to bring the stacked diff workflow pioneered by Phabricator to GitHub.<p>The idea is that it allows you to better handle working on top of stuff that&#x27;s not merged yet, and makes it easier for reviewers to review pieces of a larger stack of work independently.<p>It&#x27;s really useful in larger corporate environments.<p>I&#x27;ve used stacked PRs when doing things like upgrading react-native in a monorepo. It required a massive amount of changes, and would be really hard to review as a single pull request. It has to be landed all at once, it&#x27;s all or nothing. But being able to review it as smaller independent PRs is helpful.<p>Stacking PRs is also useful even when you don&#x27;t need to merge the entire stack at once.",
+  "time": 1776115728,
+  "type": "comment"
+}

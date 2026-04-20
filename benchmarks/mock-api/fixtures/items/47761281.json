@@ -1,0 +1,11 @@
+{
+  "by": "kevmo314",
+  "id": 47761281,
+  "kids": [
+    47761641
+  ],
+  "parent": 47708457,
+  "text": "Isn&#x27;t this turning a GPU into a slower CPU? It&#x27;s not like CPUs are slow, in fact they&#x27;re quite a bit faster than any single GPU thread. If code is written in a GPU unaware way it&#x27;s not going to take advantage of the reasons for being on the GPU in the first place.",
+  "time": 1776141258,
+  "type": "comment"
+}

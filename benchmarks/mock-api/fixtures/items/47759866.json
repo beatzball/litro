@@ -1,0 +1,11 @@
+{
+  "by": "androiddrew",
+  "id": 47759866,
+  "kids": [
+    47761707
+  ],
+  "parent": 47759616,
+  "text": "You got it right I think. I’m sitting with two “AI Ready Radeon AI Pro 9700 workstation cards, which are RDNA4 not CDNA. My experience is that my cards are not a priority. Individual engineers at AMD may care, the company  doesn’t. I have been trying since February to get ahold of anyone responsible for shipping tuned Tensile gfx1201 kernels in rocm-libs, which is used by Ollama.its been three weeks since I raised enough hell on the discord to get a response, but they still can’t find “who” is responsible for Tensile tuning, and “if” they are even going to do it for the gfx12* cards.<p>Don’t get me started with vLLM and AITER.",
+  "time": 1776127745,
+  "type": "comment"
+}

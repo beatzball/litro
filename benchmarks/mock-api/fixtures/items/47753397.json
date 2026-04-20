@@ -1,0 +1,11 @@
+{
+  "by": "jcims",
+  "id": 47753397,
+  "kids": [
+    47758026
+  ],
+  "parent": 47751781,
+  "text": "Bought and rigged up a &#x27;hand sanitizer plant&#x27; about five months into COVID.  Populated the thing with thermocouples, load cells and automation with nodered on raspberry pi and a bunch of esp32s flashed with tasmota doing sensing and control.  Everything talked over mqtt.  Great little architecture and having it highly automated allowed me to focus on the parts that were less easily controlled for.<p>Dashboard: <a href=\"https:&#x2F;&#x2F;imgur.com&#x2F;a&#x2F;so7iZJX\" rel=\"nofollow\">https:&#x2F;&#x2F;imgur.com&#x2F;a&#x2F;so7iZJX</a><p>Sanitizer run: <a href=\"https:&#x2F;&#x2F;imgur.com&#x2F;a&#x2F;iWDlNfb\" rel=\"nofollow\">https:&#x2F;&#x2F;imgur.com&#x2F;a&#x2F;iWDlNfb</a><p>Quite a lot of fun actually.",
+  "time": 1776093995,
+  "type": "comment"
+}

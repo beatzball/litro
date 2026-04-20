@@ -1,0 +1,12 @@
+{
+  "by": "spudlyo",
+  "id": 47743578,
+  "kids": [
+    47744399,
+    47746940
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;m writing an essay about how I use an ancient text editor, GNU Emacs, along with gptel, Gemini, some local models, yt-dlp, and patreon-dl to help me me study an ancient language, Latin.<p>I want to show how I liberate poorly aligned, pixelated PDF image scans of century-old Latin textbooks from the Internet Archive and transform them into glorious Org mode documents while preserving important typographic details, nicely formatted tables, and some semantic document metadata. I also want to demonstrate how I use a high-performance XML database engine to quickly perform Latin-to-English lookups against an XML-TEI formatted edition of the 19th century Lewis &amp; Short dictionary, and using a RESTXQ endpoint and some XQuery code to dynamically reformat the entries into Org-mode for display in a pop-up buffer.<p>I intend demonstrate how I built a transcription pipeline in Emacs Lisp using tools such as yt-dlp and patreon-dl to grab Latin-language audio content from the Internet, transcode the audio with ffmpeg, do Voice Activity Detection and chunking in Python with Silero, load the chunks into Gemini&#x27;s context window, and send it off for transcription and macronization, gather forced-alignment data using local a local wav2vec2-latin model, and finally add word-level linguistic analysis (POS, morphology, lemmas) using a local Stanza model trained on the Classical corpus.<p>This all gets saved to an an XML file which is loaded into BaseX along with some metadata. I&#x27;ll then demonstrate some Emacs Lisp code which pulls it into an Org-mode based transcription buffer and minor-mode for reading and study, where I can play audio of any given Latin word, sentence, or paragraph, thanks to the forced-alignment and linguistic analysis data being stored in hidden text properties when the data was fetched from the database.<p>Lastly, I&#x27;d like to explore how to leverage these tools to automatically create flash cards with audio cues in Org mode using the anki-editor Emacs minor mode for sentence mining.",
+  "time": 1776022770,
+  "type": "comment"
+}

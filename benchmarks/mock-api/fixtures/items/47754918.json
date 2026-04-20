@@ -1,0 +1,14 @@
+{
+  "by": "traderj0e",
+  "id": 47754918,
+  "kids": [
+    47754951,
+    47758892,
+    47756604,
+    47757255
+  ],
+  "parent": 47754894,
+  "text": "I&#x27;ve backtested this kind of strategy, and it had a good return (like 100% APR), but then I realized it was cheating by knowing when things are going to resolve. Often times it&#x27;s not clear. Your return depends a lot on how quickly you can get your money out. I never got around to trying a strat that doesn&#x27;t know the resolution time, which actually has to be manual cause it takes some judgement to pick things that you expect to resolve soon.<p>Also requires a lot of volume to be &quot;predictable&quot; obviously, since 1 loss sets you back 10-20 wins. It&#x27;s surprisingly hard to find reasonable-liquidity markets after all your filtering. Many have huge spreads or thin books. Scare quotes around &quot;predictable&quot; because you never know if others will use this strat or a lot of unlikely events will happen due to insiders.<p>Another thing, just like the author, I was excluding sports in all the above. Yes Polymarket is famous for letting people bet on world events etc, but turns out it&#x27;s still more about sports. Betting on the overdog in sports markets seems more appealing because there are plenty of those events with large volume, they&#x27;re kinda homogenous, you know exactly when they resolve, and they&#x27;re harder to rig. I simply never got around to putting real time or money into the overdog strat.",
+  "time": 1776099579,
+  "type": "comment"
+}

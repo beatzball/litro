@@ -1,0 +1,8 @@
+{
+  "by": "myniqx",
+  "id": 47738797,
+  "parent": 47718113,
+  "text": "databases solves coordination problems that filesystems couldnt. concurrent writes, atomic transactions<i>, and structured querying across millions of records.<p>But, filesystem-databases idea is still exists. SQLite is essentially this. and I wrote an adapter for this. from experience, It look like capable of doing everything that other adapters do. but really slowly :D<p>For example;\ndatrix.update(&#x27;comment&#x27;,&#x2F;</i>where<i>&#x2F;{ author(another file): { group(another file): { tag: &#x27;abc&#x27;} } },&#x2F;</i>data*&#x2F; { name: &#x27;new name&#x27;, anotherRelation(another file): { connect:[123] } })<p>to find correct entry, this query has to check 3 file. that It replace all the results name with &#x27;new name&#x27; and also connects another file&#x27;s entry for them. what happens if another user wants to write authors same time. or names updated but while connecting another relation exception happened. I have to get back all updates. how I solved this. I lock filesystem while this query (all other requests blocked) I updated all data in memory and if anything happens on the way I revert. this is how slow this solution. what should I do to fix this. I must create another application. It has to manage all request. without blocking. and this is also we called database engine.",
+  "time": 1775996243,
+  "type": "comment"
+}

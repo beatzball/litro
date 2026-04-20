@@ -1,0 +1,13 @@
+{
+  "by": "mikeocool",
+  "id": 47758451,
+  "kids": [
+    47758897,
+    47758608,
+    47758613
+  ],
+  "parent": 47757981,
+  "text": "Constantly rewriting git history with squashes, rebases, manual changes, and force pushes has always seemed like leaving a loaded gun pointed at your foot to me.<p>Especially since you get all of the same advantages with plain old stream on consciousness commits and merges using:<p>git merge --no-ff<p>git log --first-parent<p>git bisect --first-parent",
+  "time": 1776117719,
+  "type": "comment"
+}

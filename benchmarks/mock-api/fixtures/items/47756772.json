@@ -1,0 +1,23 @@
+{
+  "by": "galaxyLogic",
+  "descendants": 30,
+  "id": 47756772,
+  "kids": [
+    47762038,
+    47759616,
+    47758589,
+    47759483,
+    47756841,
+    47760132,
+    47758883,
+    47758292,
+    47760950,
+    47759593,
+    47760991
+  ],
+  "score": 122,
+  "time": 1776108521,
+  "title": "GAIA – Open-source framework for building AI agents that run on local hardware",
+  "type": "story",
+  "url": "https://amd-gaia.ai/docs"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "davesque",
+  "id": 47759964,
+  "kids": [
+    47760057
+  ],
+  "parent": 47759709,
+  "text": "Am I reading the article wrong?  It appears that the author did not test the claims of the proof.  Wouldn&#x27;t a &quot;bug&quot; in this case mean she found an input that did not survive a round trip through the compression algorithm?<p><i>Update:</i> Actually, I guess this may have been her point: &quot;The two bugs that were found both sat outside the boundary of what the proofs cover.&quot;  So then I guess the title might be a bit click baity.",
+  "time": 1776128514,
+  "type": "comment"
+}

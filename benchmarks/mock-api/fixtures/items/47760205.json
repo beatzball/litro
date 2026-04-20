@@ -1,0 +1,15 @@
+{
+  "by": "AtmosXR",
+  "descendants": 4,
+  "id": 47760205,
+  "kids": [
+    47760407,
+    47761307,
+    47760352
+  ],
+  "score": 2,
+  "text": "I run a YC company called Drafted.ai that allows people to design a house with the help of our AI. We&#x27;ve had 120k+ people come to the site and 20k+ signups since launching 3 months ago. We’ve raised $17M since starting the company 8 months ago, from Buckley Ventures (Josh Buckley), YC, Convective (Bill Clerico), Patrick Collison, Ben Silbermann, Jack Altman, Starship Ventures, Moses Moody, Ryan Tedder, Kevin Mahaffey, Charlie Songhurst.<p>We are looking for a killer infrastructure&#x2F;backend engineer who can help with the core product infra and model training infra.<p>We have a major gap to fill with someone who is fast-paced, detail-oriented, and hungry to grow.<p>The experience we are looking for:\n1. Experience building and scaling GPU-based inference services, optimizing for both low latency and high resource utilization.<p>2. Experience with job orchestration and load balancing with parallel generations, heterogeneous resource constraints (GPU, CPU, I&#x2F;O), and multi-tiered queues.<p>3. Experience implementing observability for latency attribution and failure diagnosis for multi-stage, asynchronous, and cross-platform pipelines.<p>4. Experience designing fan-out architectures where upstream job completion triggers multiple independent downstream consumers that have mixed criticality.<p>5. Familiarity with modern cloud infrastructure: managed databases, job queues, edge compute&#x2F;CDN, and PaaS deployment platforms.<p>6. Experience coding with a variety of backends (servers in Python, Typescript, Rust).<p>7. Experience deploying to different infrastructures (AWS, Cloudflare, Railway, etc).<p>If this fits you, email me at nick@drafted.ai to schedule an intro call.",
+  "time": 1776130511,
+  "title": "AI Home Architecture Startup Looking for Back End/ML Infra Engineer",
+  "type": "story"
+}

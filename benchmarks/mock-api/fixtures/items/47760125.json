@@ -1,0 +1,14 @@
+{
+  "by": "shrinks99",
+  "id": 47760125,
+  "kids": [
+    47760642,
+    47760577,
+    47760331,
+    47760541
+  ],
+  "parent": 47759341,
+  "text": "Noticed that Jellyfin had inched out Plex when sorting by popularity on the TrueNAS app catalogue the other day (45,178 installs vs Plex&#x27;s 42,225).  The existance of this project seems to confirm that the dev ecosystem around it is getting stronger!",
+  "time": 1776129894,
+  "type": "comment"
+}

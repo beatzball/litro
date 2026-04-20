@@ -11,3 +11,7 @@ packages:
   - 'docs-ssr'
   - 'benchmarks'
   - 'benchmarks/apps/litro'
+  - 'benchmarks/apps/hn-litro'
+  - 'benchmarks/apps/hn-litro-fast'
+  - 'benchmarks/apps/hn-litro-elena'
+  - 'benchmarks/mock-api'

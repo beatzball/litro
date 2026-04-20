@@ -1,0 +1,11 @@
+{
+  "by": "ghshephard",
+  "id": 47756315,
+  "kids": [
+    47757584
+  ],
+  "parent": 47753032,
+  "text": "The only (deal breaker for me ) weakness of zellij - doesn&#x27;t support copy&#x2F;paste from the keyboard (from the screen&#x2F;scrollback) and doesn&#x27;t support multiple copy&#x2F;paste buffers.<p>I do that roughly every 60-90 seconds with tmux - so, until the zellij developers relent (they suggest the &quot;proper way&quot; of copy paste is to pipe the data into a text editor and use that - but has the downside of not supporting <i>system</i> copy-paste buffers.) - no options other than to stick with tmux (or fork zellij - but that seems a bit much....)",
+  "time": 1776106167,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "InfraScaler",
+  "id": 47720818,
+  "kids": [
+    47726838
+  ],
+  "parent": 47701105,
+  "text": "You are rebuilding tailscale but requiring a centralised hub. I did the same in 2016 (pre-tailscale?) <a href=\"https:&#x2F;&#x2F;web.archive.org&#x2F;web&#x2F;20160304013451&#x2F;https:&#x2F;&#x2F;wormhole.network&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;web.archive.org&#x2F;web&#x2F;20160304013451&#x2F;https:&#x2F;&#x2F;wormhole....</a><p>I am not sure WireGuard existed at the time, and I used SoftEther and based it all on doing outbound tunnels to TCP&#x2F;443* to avoid firewall blocks in corporate networks.<p>You could explore full P2P by leveraging UDP hole punching:\n<a href=\"https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;firewall-bypass-series-1-2&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;firewall-bypass-series-1-2&#x2F;</a>\n<a href=\"https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;firewall-bypass-encapsulating-traffic-inside-udp&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;firewall-bypass-encapsulating-tr...</a><p>(WireGuard may already do it, dunno)<p>Also, fun fact, tela is also Spanish for fabric. Given the Filipino history, I guess it comes from there.<p>* I know I know, TCP in TCP is a bad idea <a href=\"https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;tcp-over-tcp-is-a-bad-idea&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;cloudnetworking.pro&#x2F;tcp-over-tcp-is-a-bad-idea&#x2F;</a>",
+  "time": 1775839967,
+  "type": "comment"
+}

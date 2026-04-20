@@ -1,0 +1,8 @@
+{
+  "by": "Someone1234",
+  "id": 47720804,
+  "parent": 47718113,
+  "text": "Because you&#x27;ll slowly start building the individual pieces of the database over the file system, until you&#x27;ve just recreated a database. Database didn&#x27;t spawn out of nothing, people were writing to raw files on disk, and kept on solving the same issues over and over (data definitions, indexes, relations, cache&#x2F;memory management, locks, et al).<p>So your question is: Why does the industry focus on reusable solutions to hard problems, over piece-meal recreating it every project? And when phased in that way, the answer is self-evident. Productivity&#x2F;cost&#x2F;ease.",
+  "time": 1775839898,
+  "type": "comment"
+}

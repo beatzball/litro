@@ -1,0 +1,11 @@
+{
+  "by": "Animats",
+  "id": 47756822,
+  "kids": [
+    47759338
+  ],
+  "parent": 47756259,
+  "text": "<i>&quot;It resolved its C2 domain through an Ethereum smart contract, querying public blockchain RPC endpoints. Traditional domain takedowns would not work because the attacker could update the smart contract to point to a new domain at any time.&quot;</i><p>Does this mean firewalls now have to block all Ethereum endpoints?",
+  "time": 1776108799,
+  "type": "comment"
+}

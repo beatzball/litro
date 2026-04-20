@@ -1,0 +1,12 @@
+{
+  "by": "cvrajeesh",
+  "id": 47756696,
+  "kids": [
+    47758007,
+    47757662
+  ],
+  "parent": 47756664,
+  "text": "That’s a fair point, and you’re right.<p>Right now the data isn’t directly modeled from primary sources like the Valmiki Ramayana or the Mahabharata. It’s an MVP built quickly using curated summaries, so the graph is definitely incomplete.<p>Planning to expand coverage and move towards a more accurate, source-grounded knowledge graph over time.",
+  "time": 1776108021,
+  "type": "comment"
+}

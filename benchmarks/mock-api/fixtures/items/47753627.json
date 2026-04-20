@@ -1,0 +1,14 @@
+{
+  "by": "ericol",
+  "descendants": 1,
+  "id": 47753627,
+  "kids": [
+    47753699,
+    47758178
+  ],
+  "score": 6,
+  "text": "Still not showing in status:<p>https:&#x2F;&#x2F;status.claude.com&#x2F;<p>But: I was logged off, can&#x27;t login, and code returns 500<p><pre><code>    API Error: 500 {&quot;type&quot;:&quot;error&quot;,&quot;error&quot;:{&quot;type&quot;:&quot;api_error&quot;,&quot;message&quot;:&quot;Internal server\n     error&quot;},&quot;request_id&quot;:&quot;req_STRING&quot;}</code></pre>",
+  "time": 1776094814,
+  "title": "Tell HN: Another Monday, Another Claude Outage",
+  "type": "story"
+}

@@ -1,0 +1,24 @@
+{
+  "by": "paulhebert",
+  "id": 47744920,
+  "kids": [
+    47747680,
+    47749762,
+    47748956,
+    47746168,
+    47749911,
+    47746198,
+    47746106,
+    47749964,
+    47746176,
+    47745397,
+    47748561,
+    47745287,
+    47746103,
+    47745647
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;m continuing to hack on Tiled Words, my daily word puzzle!<p><a href=\"https:&#x2F;&#x2F;tiledwords.com\" rel=\"nofollow\">https:&#x2F;&#x2F;tiledwords.com</a><p>After winning the Playlin Player&#x27;s Choice award I&#x27;ve noticed an uptick in players as well as some people sharing videos on YouTube which has been fun. I&#x27;ve got a few thousand people playing every day.<p>I just launched user accounts today so user&#x27;s can now track their progress across devices and share their stats with each other. This ended up being a bigger chunk of work than I expected but I&#x27;m really pleased with how it turned out. (Though I launched it 15 minutes ago so I&#x27;m holding my breath for bug reports)<p>I&#x27;m fine-tuning my internal puzzle-building now with the goal of letting people use them to make and share their own puzzles soon!",
+  "time": 1776030552,
+  "type": "comment"
+}

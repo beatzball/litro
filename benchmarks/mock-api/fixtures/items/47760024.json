@@ -1,0 +1,16 @@
+{
+  "by": "ctmnt",
+  "id": 47760024,
+  "kids": [
+    47760076,
+    47761267,
+    47761147,
+    47761326,
+    47761125,
+    47760115
+  ],
+  "parent": 47759709,
+  "text": "This article’s framing and title are odd. The author, in fact, found no bugs or errors in the proven code. She says so at the end of the article:<p>&gt; The two bugs that were found both sat outside the boundary of what the proofs cover. The denial-of-service was a missing specification. The heap overflow was a deeper issue in the trusted computing base, the C++ runtime that the entire proof edifice assumes is correct.<p>Still an interesting and useful result to find a bug in the Lean runtime, but I’d argue that doesn’t justify the title. Or the claim that “the entire proof edifice” is somehow shaky.<p>It’s important to note that this is the Lean <i>runtime</i> that has a bug, not the Lean kernel, which is the part that actually does the verification (aka proving). [1] So it’s not even immediately clear what this bug would really apply to, since obviously no one’s running any compiled Lean code in any kind of production hot path.<p>[1] <a href=\"https:&#x2F;&#x2F;lean-lang.org&#x2F;doc&#x2F;reference&#x2F;latest&#x2F;Elaboration-and-Compilation&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;lean-lang.org&#x2F;doc&#x2F;reference&#x2F;latest&#x2F;Elaboration-and-C...</a>",
+  "time": 1776129120,
+  "type": "comment"
+}

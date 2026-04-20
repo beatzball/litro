@@ -1,0 +1,8 @@
+{
+  "by": "jorl17",
+  "id": 47761600,
+  "parent": 47753689,
+  "text": "Fantastic. I recently automated a bunch of operations across ~50 domains with an agent, an API key, and a bunch of HTTP requests. I kept thinking that surely cloudflare had to be working on better ergonomics for this -- glad to see they were :D",
+  "time": 1776144471,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "interstice",
+  "id": 47727855,
+  "kids": [
+    47727893
+  ],
+  "parent": 47723467,
+  "text": "Looking at this now, I like the approach! It&#x27;s also fundamentally different from mine (maybe phew). The mouse driven approach makes it far more approachable, while mine is deliberately code driven and perhaps more quirky (step export is a code function for example).<p>Also looking at your API, I used a vector type a lot for defining things like planes, so where you have sketch(&quot;xz&quot;,func) mines a little more like plane(vec).sketch(). How are you handling sketching directly on arbitrary planes or faces etc?",
+  "time": 1775887065,
+  "type": "comment"
+}

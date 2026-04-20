@@ -1,0 +1,8 @@
+{
+  "by": "zitterbewegung",
+  "id": 47760339,
+  "parent": 47760305,
+  "text": "The better look at this is not to prove that you have no bugs is that to prove that a program conforms to a specification that Lean can verify.<p>Even with the addition of two numbers the execution of a program can be wrong if the CPU has a fault or if the runtime of the program has a bug.<p>I think you just need to look at why formal verification exists.",
+  "time": 1776131796,
+  "type": "comment"
+}

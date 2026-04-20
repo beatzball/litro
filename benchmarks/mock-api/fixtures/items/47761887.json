@@ -1,0 +1,8 @@
+{
+  "by": "mbitsnbites",
+  "id": 47761887,
+  "parent": 47759960,
+  "text": "Though I&#x27;m not actively working with Firefox so can&#x27;t speak for their use cases, one important use case for clobber builds is CI.<p>I&#x27;m the author of BuildCache, and where I work we make thousands of clobber builds every day in our CI. Caching helps tremendously for keeping build times short.<p>There are a few use cases for local development too. For instance if you switch between git branches you may have to make near full rebuilds (e.g. in C++ if some header file is touched that gets included by many files).<p>Another advantage as a local dev is that you can tap into the central CI cache and when you pull the latest trunk and build it, chances are that the CI system has already built that version (e.g. as part of a merge gate) so you will get cache hits.",
+  "time": 1776147370,
+  "type": "comment"
+}

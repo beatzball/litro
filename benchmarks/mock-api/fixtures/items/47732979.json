@@ -1,0 +1,8 @@
+{
+  "by": "vladimir-vg",
+  "id": 47732979,
+  "parent": 47728352,
+  "text": "What I can assure you about, is that you DO NOT NEED to learn how to create runtimes, compilers or translators.<p>The challenge isn&#x27;t really in building a decent implementation or adopting useful features. There are plenty of languages with decent implementations and features that are on display in Github graveyard.<p>The challenge is to deeply understand what THE PROBLEM is. Books won&#x27;t help you with that at all. Long walks, drinking fresh water, meditation, prayer. It may take years.<p>And once you understood the problem, the path is clear: research and studying prototypes of other people helps greatly.<p>What is the problem that you&#x27;re trying to solve? You listed the features, not the issue you&#x27;re aiming at.",
+  "time": 1775933036,
+  "type": "comment"
+}

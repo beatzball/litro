@@ -1,0 +1,11 @@
+{
+  "by": "coppsilgold",
+  "id": 47759616,
+  "kids": [
+    47759866
+  ],
+  "parent": 47756772,
+  "text": "Nvidia went through a lot of effort to make CUDA operational on their entire lineup, and they did it before deep learning even took off.<p>You do this thing not because you expect consumers with 5 year old hardware to provide meaningful utilization but as a demo (&quot;let me grab my old gaming machine and do some supercomputing real quick&quot;) and a signal that you intend to stay the course. AMD management hasn&#x27;t realized this even after various Nvidia people said that this was exactly why they did it, at some point the absence of that signal is a signal that the AMD compute ecosystem is an unreliable investment, no?",
+  "time": 1776125496,
+  "type": "comment"
+}

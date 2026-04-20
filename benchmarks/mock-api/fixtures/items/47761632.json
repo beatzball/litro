@@ -1,0 +1,8 @@
+{
+  "by": "osm3000",
+  "id": 47761632,
+  "parent": 47728970,
+  "text": "I am a machine learning engineer. I&#x27;ve been in the domain almost 12 years now (different titles and roles).<p>In my current role (and by no means that is unique), I don&#x27;t know how to write less code.<p>Here are problems I am facing:\n- DS generating a lot of code\n- Managers who have therapy sessions with Gemini, and in which their ideas have been validated\n- No governance on DS (you want this package? import it)\n- No governance on Infrastructure (I spent a couple of months upskilling in a pipeline technology that were using: reading documentation and creating examples, until I became very good it...just for the whole tech to be ditched)\n- Libraries and tools that have been documentation, or too complex (GCP for example)<p>The cognitive overload is immense.<p>Back few years ago, when I was doing my PhD, immersing in PyTorch and Scipy stack had a huge return on investment. Now, I don&#x27;t feel it.<p>So, how do I even write less code? Slowly, I am succumbing to the fact that my tools and methods are inappropriate. I am steadily shifting towards offloading this to Claude and its likings.<p>Is it introducing risks? For sure. It&#x27;s going to be a disaster at one point. But I don&#x27;t know what to do. Do I need a better abstraction? Different way to think about it? No clue",
+  "time": 1776144812,
+  "type": "comment"
+}

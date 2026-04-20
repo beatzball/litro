@@ -1,0 +1,12 @@
+{
+  "by": "egeres",
+  "id": 47749708,
+  "kids": [
+    47750552,
+    47750927
+  ],
+  "parent": 47738883,
+  "text": "I wasn&#x27;t able to pull some images and I lost 1h trying to diagnose network problems in my setup, but it didn&#x27;t occur to me that &quot;la liga&quot; was the root cause . My workaround was to add &quot;registry-mirrors&quot;: [&quot;<a href=\"https:&#x2F;&#x2F;mirror.gcr.io\" rel=\"nofollow\">https:&#x2F;&#x2F;mirror.gcr.io</a>&quot;] in my &#x2F;etc&#x2F;docker&#x2F;daemon.json",
+  "time": 1776072680,
+  "type": "comment"
+}

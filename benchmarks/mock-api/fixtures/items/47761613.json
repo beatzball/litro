@@ -1,0 +1,10 @@
+{
+  "by": "matt_d",
+  "descendants": 0,
+  "id": 47761613,
+  "score": 4,
+  "time": 1776144570,
+  "title": "UpDown: Efficient Manycore based on Many Threading & Scalable Memory Parallelism",
+  "type": "story",
+  "url": "https://people.cs.uchicago.edu/~aachien/lssg/research/10x10/ics26-single-chip-updown.pdf"
+}

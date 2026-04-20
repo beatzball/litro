@@ -1,0 +1,11 @@
+{
+  "by": "itake",
+  "id": 47749343,
+  "kids": [
+    47750003
+  ],
+  "parent": 47747939,
+  "text": "I think this is the same as using a cloudflared tunnel?<p>to access my home desktop machine, I run:<p>```\n$ ssh itake@ssh.domain.me -o ProxyCommand=&quot;cloudflared access ssh --hostname %h&quot;\n```<p>and I setup all the cloudflare access tunnels to connect to the service.",
+  "time": 1776069210,
+  "type": "comment"
+}

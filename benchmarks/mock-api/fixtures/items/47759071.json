@@ -1,0 +1,14 @@
+{
+  "by": "alexbike",
+  "id": 47759071,
+  "kids": [
+    47761473,
+    47759142,
+    47759451,
+    47760792
+  ],
+  "parent": 47757552,
+  "text": "The markdown approach has a real advantage people underestimate: you can read and edit the memory yourself. With vector DBs and embeddings the memory becomes opaque — you can&#x27;t inspect or correct what the model &quot;knows&quot;. Plain files keep the human in the loop.<p>The hard part is usually knowing what +not+ to write down. Every system I&#x27;ve seen eventually drowns in low-signal entries.",
+  "time": 1776121245,
+  "type": "comment"
+}

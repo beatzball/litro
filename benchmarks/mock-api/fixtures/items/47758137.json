@@ -1,0 +1,11 @@
+{
+  "by": "xixixao",
+  "id": 47758137,
+  "kids": [
+    47758370
+  ],
+  "parent": 47758067,
+  "text": "Conflicts spawn most likely because PR A was squashed, and once you squash Git doesn&#x27;t know that PR B&#x27;s ancestors commits are the same thing as the squashed commit on main.<p>No idea if this feature fixes this.<p>Edit: Hopefully `gh stack sync` does the rebasing correctly (rebase --onto with the PR A&#x27;s last commit as base)",
+  "time": 1776116249,
+  "type": "comment"
+}

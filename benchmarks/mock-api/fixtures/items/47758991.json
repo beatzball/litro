@@ -1,0 +1,8 @@
+{
+  "by": "mickael-kerjean",
+  "id": 47758991,
+  "parent": 47758261,
+  "text": "Or maybe the underlying philosophy is different enough to warrant its own implementation. For example, the Filestash implementation (which I made) listed in the article is stateless and acts as a gateway that proxies everything to an underlying storage. We don&#x27;t own the storage, you do, via any of the available connectors (SFTP, FTP, WebDAV, Azure, SMB, IPFS, Sharepoint, Dropbox, ...). You generate S3 keys bound to a specific backend and path, and everything gets proxied through. That&#x27;s fundamentally different to not fit in the mold of other alternatives that mostly assume they own your storage and as a result can not be made stateless by design. That approach has pro and cons on each side",
+  "time": 1776120796,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "fweimer",
+  "id": 47757789,
+  "kids": [
+    47757969,
+    47757889
+  ],
+  "parent": 47757495,
+  "text": "I find this puzzling. It does not seem to allow to stack PRs on top of other people&#x27;s PRs?<p>There is already an option to enable review comments on individual commits (see the API endpoint here: <a href=\"https:&#x2F;&#x2F;docs.github.com&#x2F;en&#x2F;rest&#x2F;guides&#x2F;working-with-comments?apiVersion=2026-03-10#commit-comments\" rel=\"nofollow\">https:&#x2F;&#x2F;docs.github.com&#x2F;en&#x2F;rest&#x2F;guides&#x2F;working-with-comments...</a>). Self-stacking PRs seem redundant.",
+  "time": 1776114220,
+  "type": "comment"
+}

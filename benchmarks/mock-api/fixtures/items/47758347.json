@@ -1,0 +1,25 @@
+{
+  "by": "mufeedvh",
+  "descendants": 15,
+  "id": 47758347,
+  "kids": [
+    47760698,
+    47759166,
+    47761459,
+    47760138,
+    47758784,
+    47760107,
+    47758417,
+    47760806,
+    47758348,
+    47759257,
+    47759641,
+    47758819
+  ],
+  "score": 57,
+  "text": "N-Day-Bench tests whether frontier LLMs can find known security vulnerabilities in real repository code. Each month it pulls fresh cases from GitHub security advisories, checks out the repo at the last commit before the patch, and gives models a sandboxed bash shell to explore the codebase.<p>Static vulnerability discovery benchmarks become outdated quickly. Cases leak into training data, and scores start measuring memorization. The monthly refresh keeps the test set ahead of contamination — or at least makes the contamination window honest.<p>Each case runs three agents: a Curator reads the advisory and builds an answer key, a Finder (the model under test) gets 24 shell steps to explore the code and write a structured report, and a Judge scores the blinded submission. The Finder never sees the patch. It starts from sink hints and must trace the bug through actual code.<p>Only repos with 10k+ stars qualify. A diversity pass prevents any single repo from dominating the set. Ambiguous advisories (merge commits, multi-repo references, unresolvable refs) are dropped.<p>Currently evaluating GPT-5.4, Claude Opus 4.6, Gemini 3.1 Pro, GLM-5.1, and Kimi K2.5. All traces are public.<p>Methodology: <a href=\"https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;methodology\">https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;methodology</a><p>Live Leaderboard: <a href=\"https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;leaderboard\">https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;leaderboard</a><p>Live Traces: <a href=\"https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;traces\">https:&#x2F;&#x2F;ndaybench.winfunc.com&#x2F;traces</a>",
+  "time": 1776117243,
+  "title": "N-Day-Bench – Can LLMs find real vulnerabilities in real codebases?",
+  "type": "story",
+  "url": "https://ndaybench.winfunc.com"
+}

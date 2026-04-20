@@ -1,0 +1,8 @@
+{
+  "by": "antiloper",
+  "id": 47751347,
+  "parent": 47750669,
+  "text": "I don&#x27;t know a good solution for this. 99% of websites asking for this hypothetical permission would not deserve it. Users (rightfully) don&#x27;t expect that uploading a photo leaks their location.<p>Element (the matrix client) used to not strip geolocation metadata for the longest time. I don&#x27;t know if they fixed that yet.",
+  "time": 1776085194,
+  "type": "comment"
+}

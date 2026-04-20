@@ -1,0 +1,17 @@
+{
+  "by": "wenhan_zhou",
+  "descendants": 17,
+  "id": 47757552,
+  "kids": [
+    47759071,
+    47758386,
+    47760255,
+    47758335
+  ],
+  "score": 23,
+  "text": "I have a proposal that addresses long-term memory problems for LLMs when new data arrives continuously (cheaply!). The program involves no code, but two Markdown files.<p>For retrieval, there is a semantic filesystem that makes it easy for LLMs to search using shell commands.<p>It is currently a scrappy v1, but it works better than anything I have tried.<p>Curious for any feedback!",
+  "time": 1776112939,
+  "title": "Show HN: Continual Learning with .md",
+  "type": "story",
+  "url": "https://github.com/SunAndClouds/ReadMe"
+}

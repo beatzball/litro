@@ -1,0 +1,8 @@
+{
+  "by": "raw_anon_1111",
+  "id": 47760069,
+  "parent": 47753223,
+  "text": "None.  I work in consulting specializing in AWS Architecture + app dev.  All of my projects over the last 6 years have been green field - empty AWS account + empty git repo.<p>I’ve been using Codex and Claude code over the past 6 months. They both do pretty well creating well structured normalized database schemas for both RDMS databases and single table design + appropriate GSIs with enough (business context).  But they both have are  suboptimal architecture and ETL designs.<p>I know AWS very well (trust me).  But I would never go in blind for instance doing a green field implementation on Azure trusting AI.",
+  "time": 1776129434,
+  "type": "comment"
+}

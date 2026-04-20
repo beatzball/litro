@@ -1,0 +1,8 @@
+{
+  "by": "cmrdporcupine",
+  "id": 47744929,
+  "parent": 47742394,
+  "text": "I often think this style of UI -- tiled text windows but with mouse and graphics interaction (similar to emacs actually) -- is what we should be using for the coding agents we&#x27;re all using now.<p>I&#x27;d like to be able to dock panels of information, live-edit pieces of code instead of just &quot;accept? Y&#x2F;N&quot;, have side interactions, have real scroll bars and proper clipboards, even a live REPL alongside.<p>Instead we get Claude Code&#x27;s janky &quot;60fps TUI&quot; full of bugs and barely interactive.",
+  "time": 1776030644,
+  "type": "comment"
+}

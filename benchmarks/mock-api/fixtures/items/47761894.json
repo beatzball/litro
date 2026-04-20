@@ -1,0 +1,8 @@
+{
+  "by": "gbro3n",
+  "id": 47761894,
+  "parent": 47728970,
+  "text": "My current take is that AI is helping me experiment much faster. I can get less involved with the parts of an application that matter less and focus more (manually) on the parts that do. I agree with a lot of the sentiment here - even with the best intentions of reviewing every line of AI code, when it works well and I&#x27;m working fast on low stakes functionality, that sometimes doesn&#x27;t happen. This can be offset however by using AI efficiencies to maintain better test coverage than I would by hand (unit and e2e), having documentation updated with assistance and having diagrams maintained to help me review. There are still some annoyances, when the AI struggles with seemingly simple issues, but I think that we all have to admit that programming was difficult, and quality issues existed before AI.",
+  "time": 1776147439,
+  "type": "comment"
+}

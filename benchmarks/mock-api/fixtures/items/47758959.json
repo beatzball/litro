@@ -1,0 +1,12 @@
+{
+  "by": "tptacek",
+  "id": 47758959,
+  "kids": [
+    47761486,
+    47760462
+  ],
+  "parent": 47729350,
+  "text": "Since this has come up 4-5 times on the thread already, the clear subtext of this post is that this developer wants to build to the S3 API, but run their storage locally --- maybe for testing reasons, maybe for data hygiene reasons, maybe for performance reasons. So things like &quot;what about Hugging Face&#x27;s object storage product&quot; don&#x27;t really answer their question.",
+  "time": 1776120604,
+  "type": "comment"
+}

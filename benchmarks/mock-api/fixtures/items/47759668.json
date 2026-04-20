@@ -1,0 +1,11 @@
+{
+  "by": "rohansood15",
+  "id": 47759668,
+  "kids": [
+    47761646
+  ],
+  "parent": 47759166,
+  "text": "I worked in AppSec in the past, made sense to me. Maybe you aren&#x27;t the target audience?<p>You don&#x27;t really need manual verification for these, the CVEs (vulnerabilities) are public and can be programmatically validated.",
+  "time": 1776126000,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "wenhan_zhou",
+  "id": 47761473,
+  "parent": 47759071,
+  "text": "The editability is surely an underrated advantage, both for the program itself and the memories it generated.<p>I think in terms of noise, it is less problematic here because <i>not everything</i> is being retrieved. The agent can selectively explore subsets of the tree (plus you can edit the exploration policy by yourself).<p>Since there is no context bloat, it is quite forgivable to just write things down.",
+  "time": 1776143411,
+  "type": "comment"
+}

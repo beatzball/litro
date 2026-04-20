@@ -1,0 +1,8 @@
+{
+  "by": "Ingon",
+  "id": 47750380,
+  "parent": 47747939,
+  "text": "I&#x27;ve been working on a similar tool for a while - connet (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;connet-dev&#x2F;connet\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;connet-dev&#x2F;connet</a>). It builds upon QUIC (instead of wireguard), but I think from an enduser perspective the results ends up looking pretty similar.",
+  "time": 1776078642,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "poglet",
+  "id": 47760907,
+  "parent": 47759341,
+  "text": "If you&#x27;re using Dolphin, it may be worth testing Better-Wii-Menu-DE (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;Gavin-S-Dev&#x2F;Better-Wii-Menu-DE\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;Gavin-S-Dev&#x2F;Better-Wii-Menu-DE</a>).<p>You could probably have your Wii computer boot directly into Jellyfin using a startup shortcut with &#x27;dolphin-emu -e WiiFin.dol&#x27;, then switch out of the app to play Wii games using the better menu app.<p>Then you can your Wiimote for both media + gaming with out needing a keyboard &#x2F; mouse.",
+  "time": 1776137310,
+  "type": "comment"
+}

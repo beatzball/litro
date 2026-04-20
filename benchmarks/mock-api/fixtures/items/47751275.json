@@ -1,0 +1,12 @@
+{
+  "by": "adzm",
+  "id": 47751275,
+  "kids": [
+    47751804,
+    47751755
+  ],
+  "parent": 47750669,
+  "text": "This is the right move. <a href=\"https:&#x2F;&#x2F;github.com&#x2F;whatwg&#x2F;html&#x2F;issues&#x2F;11724#issuecomment-4192228562\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;whatwg&#x2F;html&#x2F;issues&#x2F;11724#issuecomment-419...</a> and adding a feature to browsers to explicitly use the info is the best solution really. The problem is that there was a change without a backup solution without making a native app, but preventing people from accidentally uploading their location in an image is the right move. It really needs to be more well known and handled automatically.",
+  "time": 1776084834,
+  "type": "comment"
+}

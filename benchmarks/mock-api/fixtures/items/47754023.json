@@ -1,0 +1,11 @@
+{
+  "by": "brandon272",
+  "id": 47754023,
+  "kids": [
+    47754495
+  ],
+  "parent": 47742200,
+  "text": "Feedback:<p>- Would like the ability to customize colours or themes (i.e. taskbar background, application menu button colour, chip background colour, chip active state colour, etc.)<p>- In another comment you mention that you haven&#x27;t figured out how to display badge counts without having the app open, but I am not seeing badge counts even with the app open. For example, when someone sends me a message in Messages, the badge count that shows up in the dock never shows up in boringBar. Strangely, other apps that do not show a badge count in my dock show a badge count in boringBar! (This one is a deal breaker for me given the amount of messaging I do through that app. The badge count is something I rely on a lot.)<p>- My preference is to have &quot;Show Windows Names&quot; enabled. But in certain apps it does not behave as I would expect. For example, when the Mac Messages app is open, it always has a conversation selected, which means the name of the Messages app in boringBar is always the name of the person whose last conversation you had selected. Messages may be a unique case, but for me I would like for it to just be called &quot;Messages&quot; no matter who I am talking to.<p>- On the subscription debate: I am not anti-subscription, but the value proposition has to be there. $10&#x2F;month for a dock substitute is too much for me. That&#x27;s $120&#x2F;year. $1200&#x2F;decade per user, for what amounts to a marginal quality of life improvement to the operating system. I think a proper price for something like this that is fair to the developer and to the end user is a $40 - $80 perpetual license with one year of updates included.",
+  "time": 1776096076,
+  "type": "comment"
+}

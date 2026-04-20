@@ -1,0 +1,11 @@
+{
+  "by": "mmastrac",
+  "id": 47759018,
+  "kids": [
+    47759101
+  ],
+  "parent": 47756321,
+  "text": "Can you (err... buildcache) cache Rust proc-macros? I&#x27;ve been battling this with sccache and I&#x27;m now maintaining a 10-patch deep stack for the next.js build CI.<p>Windows builds were ridiculously poor on cache hits rates too because of non-determinism that was not able to figure out.<p>I&#x27;d be happy to test it out.",
+  "time": 1776120958,
+  "type": "comment"
+}

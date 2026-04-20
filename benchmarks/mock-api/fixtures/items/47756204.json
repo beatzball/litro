@@ -1,0 +1,8 @@
+{
+  "by": "ButlerianJihad",
+  "id": 47756204,
+  "parent": 47750669,
+  "text": "I noticed that this headline is in lowercase, and I can tell you why Google&#x2F;Android is doing this: because of the uppercase app &quot;Photos&quot; by Google.<p>Recently, I&#x27;ve been struggling with adding locations to some photos after-the-fact, such as edited photos as well as screenshots (because these screenshots are from location-based apps).<p>The Photos app always tells me that &quot;location will only be visible inside Photos&quot; -- that is, only to users of the app, and those who I share with inside the app. If the image is downloaded or extracted from the Photos app, apparently it will lose that location info and it won&#x27;t be stored in the EXIF as normal.<p>This is because Android, like iOS, seeks to assert control over the JPEG&#x2F;PNG image file types, and claim them as a special object type which can only be handled by Photos and other image-handling apps.<p>These image-format objects will no longer be treated as normal files that you can just throw anywhere, but as something that only Photos can handle on your phone, and tied inextricably to the Photos app. Therefore, any metadata that you add shall be stored and managed by Photos, and not in the file itself, because that would be interoperable, and that would be absolutely nuts!",
+  "time": 1776105599,
+  "type": "comment"
+}
