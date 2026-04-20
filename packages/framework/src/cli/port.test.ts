@@ -32,6 +32,16 @@ describe('probePort', () => {
 });
 
 describe('parsePortArg', () => {
+  const originalPort = process.env.PORT;
+
+  afterEach(() => {
+    if (originalPort === undefined) {
+      delete process.env.PORT;
+    } else {
+      process.env.PORT = originalPort;
+    }
+  });
+
   it('parses --port <n>', () => {
     expect(parsePortArg(['--port', '8080'])).toEqual({ port: 8080, explicit: true });
   });
@@ -49,11 +59,28 @@ describe('parsePortArg', () => {
   });
 
   it('returns default when no flag present', () => {
+    delete process.env.PORT;
     expect(parsePortArg([])).toEqual({ port: 3000, explicit: false });
   });
 
   it('respects a custom defaultPort', () => {
+    delete process.env.PORT;
     expect(parsePortArg([], 4321)).toEqual({ port: 4321, explicit: false });
+  });
+
+  it('honours PORT env var when no CLI flag is given', () => {
+    process.env.PORT = '4567';
+    expect(parsePortArg([])).toEqual({ port: 4567, explicit: true });
+  });
+
+  it('CLI --port flag takes precedence over PORT env var', () => {
+    process.env.PORT = '4567';
+    expect(parsePortArg(['--port', '8080'])).toEqual({ port: 8080, explicit: true });
+  });
+
+  it('ignores non-numeric PORT env var', () => {
+    process.env.PORT = 'abc';
+    expect(parsePortArg([])).toEqual({ port: 3000, explicit: false });
   });
 });
 

@@ -7,15 +7,17 @@
   },
   "scripts": {
     "dev": "litro dev",
+    "dev:portless": "portless run litro dev",
     "build": "litro build",
     "preview": "litro preview",
+    "preview:portless": "portless run litro preview",
     "generate": "litro generate",
     "test:e2e": "playwright test"
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",
-    "@elenajs/core": "1.0.0-rc.13",
-    "@elenajs/ssr": "1.0.0-alpha.9",
+    "@elenajs/core": "1.0.0",
+    "@elenajs/ssr": "1.0.0-alpha.10",
     "highlight.js": "^11.10.0",
     "h3": "^1.13.0"
   },

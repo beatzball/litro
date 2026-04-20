@@ -7,62 +7,37 @@
  */
 
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
-import { LitroRouter, h3ToURLPattern } from '../index.js';
 
 // ---------------------------------------------------------------------------
-// URLPattern polyfill
-//
-// URLPattern is browser-native (Baseline Sep 2025); jsdom does not include it
-// and Node.js does not expose it as a global. We provide a minimal but correct
-// implementation that covers the three pattern shapes Litro uses:
-//   /                       — exact root
-//   /blog/:slug             — named parameter
-//   /:all*                  — catch-all (produced by h3ToURLPattern)
+// URLPattern type — mirrors the declare in index.ts so tests can use it.
 // ---------------------------------------------------------------------------
-beforeAll(() => {
-  // jsdom doesn't implement scrollTo or CSS.escape — provide no-op stubs.
-  if (typeof window.scrollTo !== 'function' || (window.scrollTo as unknown) === undefined) {
-    window.scrollTo = (() => {}) as typeof window.scrollTo;
-  }
-  if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
-    (globalThis as Record<string, unknown>).CSS = {
-      escape: (s: string) => s.replace(/([^\w-])/g, '\\$1'),
-    };
-  }
+interface URLPatternInit { pathname?: string }
+interface URLPatternResult { pathname: { groups: Record<string, string | undefined> } }
+declare class URLPattern {
+  constructor(init?: URLPatternInit);
+  exec(input?: URLPatternInit): URLPatternResult | null;
+}
 
-  if (typeof (globalThis as Record<string, unknown>).URLPattern !== 'undefined') return;
+// ---------------------------------------------------------------------------
+// jsdom environment stubs — must run before the router module loads
+// ---------------------------------------------------------------------------
 
-  (globalThis as Record<string, unknown>).URLPattern = class MinimalURLPattern {
-    private regex: RegExp;
-    private paramNames: string[] = [];
-
-    constructor(init: { pathname?: string } = {}) {
-      const pattern = init.pathname ?? '*';
-      const names: string[] = [];
-      const src = pattern
-        // catch-all :name*  →  captures the rest of the path
-        .replace(/:([^/?*]+)\*/g, (_, n) => { names.push(n); return '(.*)'; })
-        // optional :param?
-        .replace(/:([^/?*]+)\?/g, (_, n) => { names.push(n); return '([^/]*)'; })
-        // required :param
-        .replace(/:([^/?*]+)/g, (_, n) => { names.push(n); return '([^/]+)'; });
-      this.paramNames = names;
-      this.regex = new RegExp('^' + src + '$');
-    }
-
-    exec(input: { pathname?: string } = {}): {
-      pathname: { groups: Record<string, string | undefined> };
-    } | null {
-      const match = this.regex.exec(input.pathname ?? '');
-      if (!match) return null;
-      const groups: Record<string, string | undefined> = {};
-      this.paramNames.forEach((n, i) => {
-        groups[n] = match[i + 1] || undefined;
-      });
-      return { pathname: { groups } };
-    }
+// jsdom doesn't implement scrollTo or CSS.escape — provide no-op stubs.
+if (typeof window.scrollTo !== 'function' || (window.scrollTo as unknown) === undefined) {
+  window.scrollTo = (() => {}) as typeof window.scrollTo;
+}
+if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
+  (globalThis as Record<string, unknown>).CSS = {
+    escape: (s: string) => s.replace(/([^\w-])/g, '\\$1'),
   };
-});
+}
+
+// Ensure the native URLPattern is NOT available so the router's built-in
+// fallback activates. This simulates Safari < 18.2 / iOS < 18.2.
+delete (globalThis as Record<string, unknown>).URLPattern;
+
+// Import AFTER deleting globalThis.URLPattern so the fallback installs.
+const { LitroRouter, h3ToURLPattern } = await import('../index.js');
 
 // ---------------------------------------------------------------------------
 // h3ToURLPattern — catch-all syntax conversion
@@ -186,7 +161,7 @@ describe('LitroRouter.go()', () => {
 
 describe('LitroRouter — setRoutes and resolve', () => {
   let outlet: HTMLDivElement;
-  let router: LitroRouter;
+  let router: InstanceType<typeof LitroRouter>;
 
   beforeEach(() => {
     outlet = document.createElement('div');
@@ -312,6 +287,81 @@ describe('LitroRouter — setRoutes and resolve', () => {
     LitroRouter.go('/nav-target');
     await new Promise(r => setTimeout(r, 50));
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-nav');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// URLPattern fallback (LitroURLPattern)
+//
+// The router installs a minimal URLPattern fallback on globalThis when the
+// native API is missing (Safari < 18.2 / iOS < 18.2). These tests verify
+// the fallback is active and handles all Litro route patterns correctly.
+// ---------------------------------------------------------------------------
+
+describe('URLPattern fallback (LitroURLPattern)', () => {
+  it('installs on globalThis when native URLPattern is absent', () => {
+    const g = globalThis as Record<string, unknown>;
+    expect(typeof g.URLPattern).toBe('function');
+    // The fallback class is named LitroURLPattern internally
+    expect((g.URLPattern as { name: string }).name).toBe('LitroURLPattern');
+  });
+
+  it('matches static paths exactly', () => {
+    const p = new URLPattern({ pathname: '/' });
+    expect(p.exec({ pathname: '/' })).not.toBeNull();
+    expect(p.exec({ pathname: '/other' })).toBeNull();
+  });
+
+  it('matches multi-segment static paths', () => {
+    const p = new URLPattern({ pathname: '/blog/post' });
+    expect(p.exec({ pathname: '/blog/post' })).not.toBeNull();
+    expect(p.exec({ pathname: '/blog' })).toBeNull();
+  });
+
+  it('extracts named parameters', () => {
+    const p = new URLPattern({ pathname: '/blog/:slug' });
+    const result = p.exec({ pathname: '/blog/hello-world' });
+    expect(result).not.toBeNull();
+    expect(result!.pathname.groups.slug).toBe('hello-world');
+  });
+
+  it('named params do not match across slashes', () => {
+    const p = new URLPattern({ pathname: '/blog/:slug' });
+    expect(p.exec({ pathname: '/blog/a/b' })).toBeNull();
+  });
+
+  it('extracts multiple named parameters', () => {
+    const p = new URLPattern({ pathname: '/docs/:section/:page' });
+    const result = p.exec({ pathname: '/docs/guide/intro' });
+    expect(result).not.toBeNull();
+    expect(result!.pathname.groups.section).toBe('guide');
+    expect(result!.pathname.groups.page).toBe('intro');
+  });
+
+  it('handles optional parameters', () => {
+    const p = new URLPattern({ pathname: '/docs/:section?' });
+    expect(p.exec({ pathname: '/docs/' })).not.toBeNull();
+    expect(p.exec({ pathname: '/docs/guide' })).not.toBeNull();
+  });
+
+  it('handles catch-all patterns', () => {
+    const p = new URLPattern({ pathname: '/:all*' });
+    const result = p.exec({ pathname: '/some/deep/path' });
+    expect(result).not.toBeNull();
+    expect(result!.pathname.groups.all).toBe('some/deep/path');
+  });
+
+  it('handles prefixed catch-all patterns', () => {
+    const p = new URLPattern({ pathname: '/files/:rest*' });
+    const result = p.exec({ pathname: '/files/docs/readme.md' });
+    expect(result).not.toBeNull();
+    expect(result!.pathname.groups.rest).toBe('docs/readme.md');
+  });
+
+  it('catch-all matches root path', () => {
+    const p = new URLPattern({ pathname: '/:all*' });
+    const result = p.exec({ pathname: '/' });
+    expect(result).not.toBeNull();
   });
 });
 

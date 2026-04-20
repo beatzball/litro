@@ -26,8 +26,6 @@
  *   PageDataFetcher   — shape of the definePageData return value
  */
 
-export const version = '0.0.1';
-
 // Client-safe exports — these are the only exports that should appear in the
 // browser bundle. Server-only modules (createPageHandler, renderToStream,
 // ssgPlugin, presets) must NOT be re-exported here: they pull in Node.js-only

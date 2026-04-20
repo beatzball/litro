@@ -23,6 +23,9 @@ importers:
       '@playwright/test':
         specifier: ^1.48.0
         version: 1.58.2
+      portless:
+        specifier: ^0.10.2
+        version: 0.10.2
 
   benchmarks:
     devDependencies:
@@ -428,11 +431,11 @@ importers:
         version: 5.4.21(@types/node@22.19.13)(terser@5.46.0)
     devDependencies:
       '@elenajs/core':
-        specifier: 1.0.0-rc.13
-        version: 1.0.0-rc.13
+        specifier: 1.0.0
+        version: 1.0.0
       '@elenajs/ssr':
-        specifier: 1.0.0-alpha.9
-        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
+        specifier: 1.0.0-alpha.10
+        version: 1.0.0-alpha.10(@elenajs/core@1.0.0)
       '@microsoft/fast-element':
         specifier: ^2.10.3
         version: 2.10.3
@@ -523,11 +526,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/framework
       '@elenajs/core':
-        specifier: 1.0.0-rc.13
-        version: 1.0.0-rc.13
+        specifier: 1.0.0
+        version: 1.0.0
       '@elenajs/ssr':
-        specifier: 1.0.0-alpha.9
-        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
+        specifier: 1.0.0-alpha.10
+        version: 1.0.0-alpha.10(@elenajs/core@1.0.0)
       h3:
         specifier: ^1.15.6
         version: 1.15.9
@@ -607,11 +610,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/framework
       '@elenajs/core':
-        specifier: 1.0.0-rc.13
-        version: 1.0.0-rc.13
+        specifier: 1.0.0
+        version: 1.0.0
       '@elenajs/ssr':
-        specifier: 1.0.0-alpha.9
-        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
+        specifier: 1.0.0-alpha.10
+        version: 1.0.0-alpha.10(@elenajs/core@1.0.0)
       h3:
         specifier: ^1.13.0
         version: 1.15.9
@@ -790,11 +793,11 @@ packages:
     resolution: {integrity: sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==}
     engines: {node: '>=14'}
 
-  '@elenajs/core@1.0.0-rc.13':
-    resolution: {integrity: sha512-Y6jIWahk0EnDfTHaYuAGb4/S9r6jrhFt229QT+y1xcOmP5jFN0IU4xGYcdjcSQ5aSaT3QC0uZBj3AQO0UhCZEQ==}
+  '@elenajs/core@1.0.0':
+    resolution: {integrity: sha512-YOlSv7qpvVVrzlVYoyx7s1c8cBML0b5Q8WhxXaNeO3Awd2iNcf9HcJKDWuOi9KT53F7L8K9uQNLCzyb7EVxlpw==}
 
-  '@elenajs/ssr@1.0.0-alpha.9':
-    resolution: {integrity: sha512-2KEdj4WAn6I1SzwmzGxD+7iBMn8tspgMzGNQYvd6012QC0QBSsIFLjdfdCFwQM7NTja7TwmETh9Qa8BTAV/zzg==}
+  '@elenajs/ssr@1.0.0-alpha.10':
+    resolution: {integrity: sha512-6gz0tnjE+yn5r9QeFjx7ujZPSQYbZb2q7a7J32Af3P7fbXkth9tS6BvlKRmthHz6XL2+GpNGLurhHDdMjEJ+iQ==}
     peerDependencies:
       '@elenajs/core': '>=1.0.0-rc.1'
 
@@ -3762,6 +3765,12 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  portless@0.10.2:
+    resolution: {integrity: sha512-g2Rpt4x/jUtGTcgYtwGElhSvIQB+p7k3dy3slHsxymDFWTImq3iwCdBYqz4EH5gJ6+Gqvjm51urlOaX9mklzmA==}
+    engines: {node: '>=20'}
+    os: [darwin, linux, win32]
+    hasBin: true
+
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
@@ -4895,11 +4904,11 @@ snapshots:
 
   '@ctrl/tinycolor@4.2.0': {}
 
-  '@elenajs/core@1.0.0-rc.13': {}
+  '@elenajs/core@1.0.0': {}
 
-  '@elenajs/ssr@1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)':
+  '@elenajs/ssr@1.0.0-alpha.10(@elenajs/core@1.0.0)':
     dependencies:
-      '@elenajs/core': 1.0.0-rc.13
+      '@elenajs/core': 1.0.0
       htmlparser2: 12.0.0
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -8115,6 +8124,8 @@ snapshots:
       playwright-core: 1.58.2
     optionalDependencies:
       fsevents: 2.3.2
+
+  portless@0.10.2: {}
 
   postcss-value-parser@4.2.0: {}
 
