@@ -1,5 +1,11 @@
 # create-litro
 
+## 0.5.2
+
+### Patch Changes
+
+- 08cf41c: Add dev:portless and preview:portless scripts to recipe templates
+
 ## 0.5.1
 
 ### Patch Changes
