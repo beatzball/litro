@@ -13,7 +13,7 @@ tags:
 
 We built the same Hacker News clone five times — once each with Litro's three framework adapters (Lit, FAST Element, Elena), once with Next.js 14, and once with Nuxt 3 — and fed all five through the same benchmark pipeline. Same routes, same fixture data, same CSS, all statically generated.
 
-The short version: **web components are competitive.** Litro builds the app in ~1.8 seconds across all three adapters; Next.js takes ~7 seconds for the same output. On `/story/[id]` — a realistic content page with a comment tree — gzipped page weight lands at 11 KB for Elena, 11.5 KB for FAST, 15 KB for Lit, and 16 KB for Next.js. Nuxt comes in lightest on the homepage (4.8 KB vs Litro's ~8–9 KB), but that's because Nuxt ships ~160 bytes of hydration metadata while Litro and Next.js inline the full server data (~14 KB and ~25 KB respectively). Different tradeoff, not a different tier.
+The short version: **web components are competitive.** Litro builds the app in ~1.3 seconds across all three adapters; Next.js takes ~5 seconds for the same output. On `/story/[id]` — a realistic content page with a comment tree — gzipped page weight lands at 11 KB for Elena, 11.5 KB for FAST, 15 KB for Lit, and 16 KB for Next.js. Nuxt comes in lightest on the homepage (4.8 KB vs Litro's ~8–9 KB), but that's because Nuxt ships ~160 bytes of hydration metadata while Litro and Next.js inline the full server data (~14 KB and ~25 KB respectively). Different tradeoff, not a different tier.
 
 What the numbers don't show, and what this post is really about: the three Litro columns are the same app, swapped at one config line. That's the adapter system working — and it's the part of the story we think is worth more than any single benchmark row.
 
@@ -49,21 +49,21 @@ All runs on the same machine, same Node.js version, median of three runs. Full J
 
 | Framework     | Time   |
 |---------------|--------|
-| litro-elena   | 1561   |
-| litro-lit     | 1819   |
-| litro-fast    | 1863   |
-| nuxt          | 3176   |
-| nextjs        | 6970   |
+| litro-elena   | 1129   |
+| litro-lit     | 1327   |
+| litro-fast    | 1350   |
+| nuxt          | 2396   |
+| nextjs        | 5152   |
 
-Litro's three adapters build the same 79 story pages + 10 user pages + 3 list pages (92 total routes) in under two seconds. Next.js takes nearly four times longer for the same output. Most of the gap is Next.js's RSC compilation step and the extra toolchain layers (SWC, `generateStaticParams` evaluation, static export pipeline). Nuxt sits in the middle — faster than Next.js, slower than Litro, because Nitro's prerender runs per-route but Nuxt compiles Vue SFCs and resolves auto-imports on top of it.
+Litro's three adapters build the same 79 story pages + 10 user pages + 3 list pages (92 total routes) in just over a second. Next.js takes nearly four times longer for the same output. Most of the gap is Next.js's RSC compilation step and the extra toolchain layers (SWC, `generateStaticParams` evaluation, static export pipeline). Nuxt sits in the middle — faster than Next.js, slower than Litro, because Nitro's prerender runs per-route but Nuxt compiles Vue SFCs and resolves auto-imports on top of it.
 
 ### Output size (total bytes in the static directory)
 
 | Framework     | Size     |
 |---------------|----------|
-| nuxt          | 1.40 MB  |
+| nuxt          | 1.41 MB  |
 | litro-elena   | 1.84 MB  |
-| litro-fast    | 2.09 MB  |
+| litro-fast    | 2.10 MB  |
 | litro-lit     | 2.39 MB  |
 | nextjs        | 4.27 MB  |
 
@@ -151,7 +151,7 @@ A few findings that weren't on our bingo card going in:
 
 **FAST Element `:innerHTML` doesn't evaluate during SSR.** FAST's SSR library doesn't run property bindings that write to DOM properties, so `:innerHTML` in templates produces empty `<div>` tags in prerendered output. We hit this on the comment tree (rendered from HTML strings returned by the HN API) and the story body. The workaround was an app-level post-build step that reads the `__litro_data__` payload from each static HTML file and fills the empty divs. It's documented in the [adapter docs](/docs/adapters/overview#where-workarounds-live), and we flagged it as an asterisk on the FAST numbers for one benchmark run before backporting the fix. A proper framework-level solution — a supplemental `unsafeHTML` directive for fast-ssr — is on our post-merge roadmap.
 
-**Next.js build times stay long regardless of cache state.** We re-ran the benchmarks after a warm cache and Next.js still took ~7 seconds vs Litro's ~1.8. The gap isn't a cold-start artifact.
+**Next.js build times stay long regardless of cache state.** We re-ran the benchmarks after a warm cache and Next.js still took ~5 seconds vs Litro's ~1.3. The gap isn't a cold-start artifact.
 
 **Nuxt's payload extraction is invisible in naive benchmarks.** We initially reported Nuxt's page weight as the outright winner. It took a closer look at what was actually in the HTML to notice the 160-byte payload stub. Any "which framework is lightest" benchmark that doesn't account for deferred hydration data is probably measuring something other than what the user actually pays for.
 

@@ -62,6 +62,8 @@
     "bench:full": "pnpm --filter @beatzball/litro-benchmarks bench:full",
     "bench:hn": "pnpm --filter @beatzball/litro-benchmarks bench:hn",
     "bench:hn:full": "pnpm --filter @beatzball/litro-benchmarks bench:hn:full",
+    "bench:all": "pnpm --filter @beatzball/litro-benchmarks bench:all",
+    "bench:all:full": "pnpm --filter @beatzball/litro-benchmarks bench:all:full",
     "dev:hn-mock-api": "pnpm --filter @beatzball/hn-mock-api dev",
     "dev:hn-litro": "pnpm --filter bench-hn-litro dev",
     "dev:hn-litro-fast": "pnpm --filter bench-hn-litro-fast dev",
