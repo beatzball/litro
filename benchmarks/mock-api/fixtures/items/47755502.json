@@ -1,0 +1,8 @@
+{
+  "by": "nzoschke",
+  "id": 47755502,
+  "parent": 47753689,
+  "text": "I have been experimenting with Open API spect -&gt; CLI too. I have Go and specs auto-generated either with Huma or Fuego<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;danielgtaylor&#x2F;huma\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;danielgtaylor&#x2F;huma</a>\n<a href=\"https:&#x2F;&#x2F;github.com&#x2F;go-fuego&#x2F;fuego\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;go-fuego&#x2F;fuego</a><p>The restish tool by the author of Huma is functionally correct, but I&#x27;m finding the models are not doing a great job at inferring the syntax. Admittedly I am having a hard time following the syntax too.<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;rest-sh&#x2F;restish\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;rest-sh&#x2F;restish</a><p>I need to do proper evals, but it makes me wonder if `curl` or a CLI with more standard args &#x2F; opts parsing will work better.<p>Thanks to Cloudflare for sharing their notes, anyone else figure this out?",
+  "time": 1776102332,
+  "type": "comment"
+}

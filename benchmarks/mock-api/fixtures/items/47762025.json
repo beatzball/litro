@@ -1,0 +1,11 @@
+{
+  "by": "darshanmakwana",
+  "descendants": 0,
+  "id": 47762025,
+  "score": 2,
+  "text": "Last week I wanted to quickly view some Gaussian splats which I had trained on a remote server that didn’t have any open ports or a display device. So I ended up downloading everything locally just to inspect the results\nThis weekend I put together a terminal-based Gaussian splats viewer that renders directly in the terminal. It works over SSH and currently runs on CPU only and written in rust with claude code. I’ve found it to be pretty useful for quickly checking which .ply files correspond to which scenes and getting a rough sense of their quality.<p>Along the way, I also wrote a small tutorial on the forward rasterization process for Gaussian splatting on CPUs",
+  "time": 1776148547,
+  "title": "Show HN: Tsplat – Render Gaussian Splats directly in your terminal",
+  "type": "story",
+  "url": "https://github.com/darshanmakwana412/tsplat"
+}

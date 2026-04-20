@@ -1,0 +1,8 @@
+{
+  "by": "lmm",
+  "id": 47759991,
+  "parent": 47759709,
+  "text": "Not verifying the parser seems like a pretty big oversight. Parsing binary formats is notoriously dangerous!",
+  "time": 1776128786,
+  "type": "comment"
+}

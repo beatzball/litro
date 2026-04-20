@@ -1,0 +1,8 @@
+{
+  "by": "saranshrana",
+  "id": 47749936,
+  "parent": 47736831,
+  "text": "Honestly, best solution is to use native CSP solutions like AWS Secrets Manager, AWS SSM Parameter Store, GCP Secret Manager, Terraform Vault.<p>All these have native audit logs and access logs, which can help you pin point exactly when did your AI Agent requested and accessed your secrets at Runtime.",
+  "time": 1776074655,
+  "type": "comment"
+}

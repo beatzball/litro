@@ -1,0 +1,17 @@
+{
+  "by": "jenadine",
+  "id": 47757981,
+  "kids": [
+    47758050,
+    47758451,
+    47761924,
+    47758624,
+    47759784,
+    47758107,
+    47761382
+  ],
+  "parent": 47757495,
+  "text": "I might be missing something, but what I need is not &quot;stacked PR&quot; but a proper UI and interface to manage single commit:<p>- merge some commits independently when partial work is ready.<p>- mark some commit as reviewed.<p>- UI to do interactive rebase and and squash and edit individual commits. (I can do that well from the command line, but not when using the GitHub interface, and somehow not everyone from my team is familiar with that)<p>- ability to attach a comment to a specific commit, or to the commit message.<p>- better way to visualize what change over time in each forced push&#x2F;revision (diff of diff)<p>Git itself already has the concept of commit. Why put this &quot;stacked PR&quot; abstraction on top of it?<p>Or is there a difference I don&#x27;t see?",
+  "time": 1776115313,
+  "type": "comment"
+}

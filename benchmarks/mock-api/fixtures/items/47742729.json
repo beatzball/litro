@@ -1,0 +1,14 @@
+{
+  "by": "a-ve",
+  "id": 47742729,
+  "kids": [
+    47742763,
+    47743949,
+    47743803,
+    47743697
+  ],
+  "parent": 47742559,
+  "text": "I think that’s a fair question.<p>My thinking is pretty simple: most people will probably choose the basic 2-device plan, which works out to about $0.85 per month. For an app like this, I think that is a reasonable price.<p>Another reason is that a lot of Mac apps charge a one-time fee upfront, but then require paid upgrades later. In practice, that often ends up being similar to paying for a few years of ongoing support anyway.<p>I also think a low-cost subscription sets a clearer expectation that the app will continue to be maintained and kept working as macOS changes. For software like this, where OS updates can easily break things, that felt like the more honest model.",
+  "time": 1776018277,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "rmonvfer",
+  "id": 47744675,
+  "parent": 47738883,
+  "text": "As a Spaniard, this also happens to me. You can either use a VPN or just switch DNS servers to one that doesn’t have anycast nodes in Spain.<p>Cloudflare’s authoritative DNS uses EDNS Client Subnet (ECS) to return different IP pools based on where the query originates. Spanish resolvers get IPs from a range that La Liga blocks. If your recursive resolver is physically outside Spain (or you use DoH&#x2F;DoT to tunnel to one), Cloudflare returns a different, unblocked pool.<p>AdGuard DNS works well for this.",
+  "time": 1776029108,
+  "type": "comment"
+}

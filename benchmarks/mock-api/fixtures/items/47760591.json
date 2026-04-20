@@ -1,0 +1,8 @@
+{
+  "by": "jauntywundrkind",
+  "id": 47760591,
+  "parent": 47760192,
+  "text": "I gave Jellyfin up and went back to upnp&#x2F;dlna after the Android and iOS clients would keep losing sync, or wouldn&#x27;t show me some season of a show, or would pick a white background on white text for a show.<p>The pain just kept adding up. It was quite nice most of the time. But every single time I reached for my phone, I was wondering how badly it was going to go. Quitting Jellyfin seemed like an excellent choice.<p>Upnp&#x2F;dlna is much cruder; very direct raw BubbleUPnP client. But it works so well for me. Their transcoding server also is quite good and I can run it on any machine I want, isn&#x27;t coupled to anything, can switch between them easily.<p>Bubbleupnp is also great because it lets me turn tablets into cast screens. I love that so much. Good general protocols rock; having media server, media renderer, then separate control points was a great model, good job UPnP.",
+  "time": 1776134109,
+  "type": "comment"
+}

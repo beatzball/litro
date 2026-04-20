@@ -1,0 +1,12 @@
+{
+  "by": "fphilipe",
+  "id": 47761360,
+  "kids": [
+    47761421,
+    47761383
+  ],
+  "parent": 47757495,
+  "text": "I&#x27;ve been doing stacked PRs for ~2 years now. Thus, I don&#x27;t quite see the need for this CLI. Git has had some additions in the last few years that make this work natively – specifically the --update-refs flag[1] or the rebase.updateRefs config. Combined with `git commit --fixup`, rebase.autoStash, and rebase.autoSquash rebasing stacks becomes a breeze (as long as you work off from the tip of your stack). Add in git-absorb[2] and the heavy-lifting is taken care of.<p>My biggest gripe with GitHub when working with stacks – and something that&#x27;s not clarified in these docs – is whether fast-forward merges are possible. Its &quot;Merge with rebase&quot; button <i>always</i> rewrites the commit. They do mention that the stack needs to be rebased in order to merge it. My workaround has been `git merge --ff-only top-branch-of-stack` to merge the entire stack locally into main (or anything in between actually) and then push. GitHub neatly recognizes that each PR in the stack is now in main and marks them all as merged. If there are subsequent PRs that weren&#x27;t merged it updates the base branch.<p>Having said that, it&#x27;s great to see GitHub getting a proper UI for this. It&#x27;s also great that it understands the intent that branch B that goes on top of branch A is a stack and thus CI runs against. I just hope that it&#x27;s not mandatory to use their CLI in order to create stacks. They do cover this briefly in the FAQ[3], but it might be necessary to use `gh stack init --adopt branch-a branch-b branch-c`. On the other hand, if that removes the need to manually create the N PRs for my stack, that&#x27;s nice.<p>[1]: <a href=\"https:&#x2F;&#x2F;git-scm.com&#x2F;docs&#x2F;git-rebase#Documentation&#x2F;git-rebase.txt---update-refs\" rel=\"nofollow\">https:&#x2F;&#x2F;git-scm.com&#x2F;docs&#x2F;git-rebase#Documentation&#x2F;git-rebase...</a><p>[2]: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;tummychow&#x2F;git-absorb\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;tummychow&#x2F;git-absorb</a><p>[3]: <a href=\"https:&#x2F;&#x2F;github.github.com&#x2F;gh-stack&#x2F;faq&#x2F;#will-this-work-with-a-different-tool-for-stacking\" rel=\"nofollow\">https:&#x2F;&#x2F;github.github.com&#x2F;gh-stack&#x2F;faq&#x2F;#will-this-work-with-...</a>",
+  "time": 1776142052,
+  "type": "comment"
+}

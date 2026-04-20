@@ -1,0 +1,8 @@
+{
+  "by": "jongjong",
+  "id": 47760237,
+  "parent": 47759709,
+  "text": "Formal proofs can only ever work to validate against requirements... But a major issue with a lot of modern software is that the requirements themselves can be incorrect and some requirements can logically conflict with other requirements... So long as we have non-technical people formulating requirements, we can never have provably correct software.<p>I&#x27;ve come across issues in the past which weren&#x27;t actually bugs. For example, the software was behaving exactly as intended but it looked like a bug to a user who didn&#x27;t understand the nuances and complexities of what was happening.<p>I also cannot count how many times a non-technical person asked me to implement conflicting functionality or functionality which would have made the UX incredibly confusing for the user.",
+  "time": 1776130765,
+  "type": "comment"
+}

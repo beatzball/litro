@@ -1,0 +1,11 @@
+{
+  "by": "watsonjs",
+  "id": 47749692,
+  "kids": [
+    47749924
+  ],
+  "parent": 47747939,
+  "text": "&gt; My initial motivation was wanting to RDP and SSH into my home workstation from a locked-down corporate laptop when I travel. I couldn&#x27;t install Tailscale on the laptop<p>I&#x27;m not sure it would work but did you try running tailscale client through a docker container so it&#x27;s not installed directly in your host system?",
+  "time": 1776072555,
+  "type": "comment"
+}

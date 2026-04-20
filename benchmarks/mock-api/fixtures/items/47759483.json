@@ -1,0 +1,12 @@
+{
+  "by": "sabedevops",
+  "id": 47759483,
+  "kids": [
+    47759539,
+    47760064
+  ],
+  "parent": 47756772,
+  "text": "ROCm is finally getting better due to a few well meaning engineers.<p>But let’s be honest, AMD has been an extremely bad citizen to non-corporate users.<p>For my iGPU I have to fake GFX900 and build things from source or staging packages to get that working. Support for GFX90c is finally in the pipeline…<p>The improvements feel like a bodyguard finally letting you through the door just because NVIDIA is eating their lunch and they don’t want their club to be empty.<p>They strongarm their customers to using “Enterprise” GPUs to be able to play with ROCm, and are only broadening their offerings for market share purposes.<p>Really shouldn’t reward this behavior.",
+  "time": 1776124317,
+  "type": "comment"
+}

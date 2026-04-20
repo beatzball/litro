@@ -1,0 +1,12 @@
+{
+  "by": "codingdave",
+  "id": 47718176,
+  "kids": [
+    47718254,
+    47718269
+  ],
+  "parent": 47718113,
+  "text": "A database is a file system when you get down to it. The reason people use them is to abstract up a layer so you can query the data and get the results you want instead of having to iterate through direct reads of a disk, then having to read, parse, and filter what you want from those reads. You could always write code to help do those things direct from disk, but you know what you have just written if you do so? A database!",
+  "time": 1775829087,
+  "type": "comment"
+}

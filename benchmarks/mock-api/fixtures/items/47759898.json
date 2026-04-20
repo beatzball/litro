@@ -1,0 +1,13 @@
+{
+  "by": "porcoda",
+  "id": 47759898,
+  "kids": [
+    47760017,
+    47760335,
+    47760285
+  ],
+  "parent": 47759709,
+  "text": "I’ve had similar experiences with code I’ve proven correct, although my issues were of the more common variety than the overflow issue - subtle spec bugs.  (I think the post mentions the denial of service issue as related to this: a spec gap)<p>If you have a spec that isn’t correct, you can certainly write code that conforms to that spec and write proofs to support it.  It just means you have verified a program that does something other than what you intended.  This is one of the harder parts of verification: clearly expressing your intention as a human.  As programs get more complex these get harder to write, which means it isn’t uncommon to have lean or rocq proofs for everything only to later find “nope, it has a bug that ultimately traces back to a subtle specification defect.”  Once you’ve gone through this a few times you quickly realize that tools like lean and rocq are tricky to use effectively.<p>I kinda worry that the “proof assistants will fix ai correctness” will lead to a false sense of assurance if the specs that capture human intention don’t get scrutinized closely.  Otherwise we’ll likely have lots of proofs for code that isn’t the code the humans actually intended due to spec flaws.",
+  "time": 1776128043,
+  "type": "comment"
+}

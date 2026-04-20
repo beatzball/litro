@@ -1,0 +1,11 @@
+{
+  "by": "coldstartops",
+  "id": 47748262,
+  "kids": [
+    47748370
+  ],
+  "parent": 47747939,
+  "text": "Pretty cool! I see on enterprise edition you also support a virtual mount, is it FUSE based? I got a similar tool but went the other way around, I wanted to browse files synchronously (and bidirectional sync of edits) between two devices via FUSE mounts, and ended up tunneling TCP for this in the end.",
+  "time": 1776061030,
+  "type": "comment"
+}

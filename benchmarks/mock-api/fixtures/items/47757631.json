@@ -1,0 +1,8 @@
+{
+  "by": "oncensher",
+  "id": 47757631,
+  "parent": 47753689,
+  "text": "I found that agents can already figure out how to do everything in CloudFlare as long as they have an API token with the right privileges. They are smart enough to figure out how to use the API. But the friction spot is that I need to make the API token by hand and basically add permission to do everything they might ever need to do. It would be nice to have a smoother way to handle the permissions so I can let them do everything they need to do frequently without asking for permission yet still make it easy to approve actions that are only needed occasionally, without having to guess in advance which permissions fall into which category",
+  "time": 1776113338,
+  "type": "comment"
+}

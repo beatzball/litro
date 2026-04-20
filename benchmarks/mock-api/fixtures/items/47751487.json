@@ -1,0 +1,11 @@
+{
+  "by": "dhrm1k",
+  "id": 47751487,
+  "kids": [
+    47752087
+  ],
+  "parent": 47747939,
+  "text": "ah nice. i’ve actually been building something pretty similar on top of wireguard too<p>my use case is a bit different though. i started because i wanted to give friends access to specific things in my homelab, but very selectively. like “you can use jellyfin on this one machine, but you can’t ssh, and you can’t even see my other devices”<p>tailscale is honestly amazing for getting devices connected, i still use it a lot. but once i started trying to do these very specific “this machine can talk to that machine only on this port” kind of setups, it started feeling more complex than it should be, at least for personal use. ACL editor is more confusing when it comes to this. i know we have got option for tags and things, but those are very poorly documented and i haven&#x27;t found a single tutorial that works nicely.<p>your userspace approach is really interesting btw, especially the no tun &#x2F; no root part. makes sense to run it on rigit enterprise environments.",
+  "time": 1776086030,
+  "type": "comment"
+}

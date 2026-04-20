@@ -1,0 +1,12 @@
+{
+  "by": "musicale",
+  "id": 47745110,
+  "kids": [
+    47745170,
+    47748899
+  ],
+  "parent": 47739174,
+  "text": "Does Oberon still require capitalized keywords? That always seemed to be emphasizing the wrong thing:<p><pre><code>    IF disaster THEN abort;</code></pre>",
+  "time": 1776031921,
+  "type": "comment"
+}

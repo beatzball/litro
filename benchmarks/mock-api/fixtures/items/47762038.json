@@ -1,0 +1,8 @@
+{
+  "by": "madbo1",
+  "id": 47762038,
+  "parent": 47756772,
+  "text": "This seems quite significant. While many people still think about AI as something cloud bound, there are limitations such as latency, cost and, most importantly, lack of control involved.<p>By moving AI agents into an execution environment where they work locally, one gets both deterministic execution, reduced latency and avoids transferring information to remote clouds all the time. In certain application scenarios, for instance, when building a personal assistant or implementing automation routines, this makes a huge difference.<p>The problem here is not only running the model locally – that seems increasingly easy to achieve, with developments like Ollama  but also managing multiple agents and coordinating them in a manner that doesn’t require powerful hardware resources.<p>In case GAIA manages to simplify this process to make local execution of multiple AI agents feasible, this might very well lead to a transition from &#x27;AI as a service&#x27; to &#x27;AI as personal infrastructure&#x27;.<p>Pretty exciting stuff, really.",
+  "time": 1776148655,
+  "type": "comment"
+}

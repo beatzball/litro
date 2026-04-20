@@ -1,0 +1,11 @@
+{
+  "by": "isaacphi",
+  "id": 47724192,
+  "kids": [
+    47727854
+  ],
+  "parent": 47721997,
+  "text": "This looks incredible, great job!<p>I&#x27;ve been revisiting OpenSCAD recently but find it very frustrating. I just got started with build123d which is great but I&#x27;ll definitely be trying this. The workflow is exactly what I&#x27;m looking for.<p>I&#x27;ll drop an issue if I have feedback. Are you open to PRs?",
+  "time": 1775858597,
+  "type": "comment"
+}

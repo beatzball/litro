@@ -1,0 +1,13 @@
+{
+  "by": "vanflymen",
+  "descendants": 1,
+  "id": 47753245,
+  "kids": [
+    47753246
+  ],
+  "score": 6,
+  "time": 1776093409,
+  "title": "Show HN: 15 yrs of Django in prod: patterns I keep using (agent skills)",
+  "type": "story",
+  "url": "https://github.com/dvf/opinionated-django"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "aetherspawn",
+  "id": 47759681,
+  "kids": [
+    47760987,
+    47759862
+  ],
+  "parent": 47753689,
+  "text": "Please add resource groups and the ability to enforce permissions per resource group before you do this so that we don’t have agents (or people) blowing up prod from their command line. Thank you.<p>Currently you can only enforce zone-based permissions (domain based) BUT plenty of resources, such as workers, don’t belong to zones so essentially their code can be replaced or deleted with the lowest level permission. And there’s no way to block it…<p>Alternatively if you could please allow us to create multiple accounts that share a single super account (for SSO and such), similar to GitHub Enterprise which has Enterprises and Organisations. Then we could have ACME Corp. and ACME Corp (Prod) and segregate the two and resource groups wouldn’t be strictly required.",
+  "time": 1776126071,
+  "type": "comment"
+}

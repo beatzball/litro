@@ -1,0 +1,8 @@
+{
+  "by": "PaulHoule",
+  "id": 47718254,
+  "parent": 47718176,
+  "text": "I&#x27;d say the <i>filesystem is a database</i>.<p>It would be straightforward,  for instance,  to implement a lot of the functionality of a filesystem in a database with BLOBs.  Random access might be a hassle,  but people are getting used to &quot;filesystem-like&quot; systems which are bad at random access like S3.",
+  "time": 1775829425,
+  "type": "comment"
+}

@@ -1,0 +1,15 @@
+{
+  "by": "imankulov",
+  "id": 47753726,
+  "kids": [
+    47754046,
+    47753860,
+    47757624,
+    47755023,
+    47756148
+  ],
+  "parent": 47752819,
+  "text": "I left tmux for zellij after several unsuccessful attempts to get Shift+Enter working.<p>Was quite impressed initially and invested weeks in building new muscle memory, but somehow Zellij crashed with panic more than once, leaving all my processes orphaned. Decided to go back to tmux, and found a simple fix for my Shift+Enter issue.<p>In case anyone is looking for it, the fix is &quot;bind-key -T root S-Enter send-keys C-j&quot; borrowed from <a href=\"https:&#x2F;&#x2F;github.com&#x2F;anthropics&#x2F;claude-code&#x2F;issues&#x2F;6072\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;anthropics&#x2F;claude-code&#x2F;issues&#x2F;6072</a>.",
+  "time": 1776095181,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "abhikul0",
+  "id": 47748438,
+  "parent": 47746849,
+  "text": "When the app only shows posts that are more than 10 hours old even when sorting by &quot;hot&quot; and shoving down the algorithmic feed on the app&#x27;s home page, how are people still using the app?<p>Lately I&#x27;ve only been visiting a few subs that I&#x27;m interested in and keeping them open in safari with ublock; it&#x27;s been a far better experience. This has drastically cut my reddit time now and if I do want to mindlessly scroll, I just use redlib(hosted in docker or one of their public instances)[0]. It has the same &quot;sort&quot; that&#x27;s used on the desktop site.<p>[0] <a href=\"https:&#x2F;&#x2F;github.com&#x2F;redlib-org&#x2F;redlib\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;redlib-org&#x2F;redlib</a>",
+  "time": 1776062242,
+  "type": "comment"
+}

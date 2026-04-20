@@ -1,0 +1,11 @@
+{
+  "by": "cbchhaya",
+  "descendants": 0,
+  "id": 47760680,
+  "score": 3,
+  "text": "prmana replaces static SSH keys with short-lived OIDC tokens validated at the host through PAM. What makes it different from other OIDC-for-SSH approaches is DPoP (RFC 9449) — every authentication includes a cryptographic proof that the token holder has the private key. Stolen tokens can&#x27;t be replayed.<p>Three components: a PAM module (pam_prmana.so), a client agent (prmana-agent), and a shared OIDC&#x2F;JWKS library (prmana-core). All Rust.<p>DPoP keys can be software, YubiKey (PKCS#11), or TPM 2.0. No gateway, no SSH CA, no patches to sshd. Standard ssh client, standard sshd, PAM in between.<p>Tested against Keycloak, Auth0, Google, and Entra ID.<p>The name is from Sanskrit — pramana (प्रमाण) means &quot;proof.&quot;",
+  "time": 1776135074,
+  "title": "Show HN: Prmana – OIDC SSH Login for Linux with DPoP (Rust, Apache 2.0)",
+  "type": "story",
+  "url": "https://github.com/prodnull/prmana"
+}

@@ -1,0 +1,13 @@
+{
+  "by": "deadbabe",
+  "id": 47756429,
+  "kids": [
+    47759470,
+    47757318,
+    47756751
+  ],
+  "parent": 47755091,
+  "text": "Why bother with OpenClaw? Just call the CLI command directly. That is the point of a CLI.",
+  "time": 1776106742,
+  "type": "comment"
+}

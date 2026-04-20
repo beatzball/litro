@@ -1,0 +1,15 @@
+{
+  "by": "adamwk",
+  "id": 47757695,
+  "kids": [
+    47758017,
+    47757740,
+    47758225,
+    47760884,
+    47760826
+  ],
+  "parent": 47757495,
+  "text": "As someone who used phabricator and mercurial, using GitHub and git again feels like going back to the stone ages. Hopefully this and jujutsu can recreate stacked-diff flow of phabricator.<p>It’s not just nice for monorepos. It makes both reviewing and working on long-running feature projects so much nicer. It encourages smaller PRs or diffs so that reviews are quick and easy to do in between builds (whereas long pull requests take a big chunk of time).",
+  "time": 1776113713,
+  "type": "comment"
+}

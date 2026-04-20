@@ -1,0 +1,11 @@
+{
+  "by": "K0IN",
+  "id": 47758051,
+  "kids": [
+    47760351
+  ],
+  "parent": 47756321,
+  "text": "wow, 17% is impressive with such an easy fix. i wonder if we could just build this as a separate project and pull the webidl files as a dependency.",
+  "time": 1776115742,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "ksherlock",
+  "id": 47721483,
+  "parent": 47718113,
+  "text": "Historically, Unix (and many other operating systems) stored file names as an unsorted list so using the FS as KV store had O(N) lookup times whereas a single-file hashed database like dbm, ndbm, gdbm, bdb, etc gave you O(1) access.<p>If you&#x27;re using a relational DB, like SQL, as a relational database, then it gives you a lot the FS doesn&#x27;t give you.  If you&#x27;re using a relational database as a key-value store, SQLite is 35% than the filesystem [1]<p>Perhaps one of the biggest users of the filesystem as a KV store is git -- (not an llm, I just wanted to use --) .git&#x2F;objects&#x2F;xx&#x2F;xxxxx maps the sha1 file hash to the compressed data, splayed by the first 2 bytes. However git also uses a database of sorts (.git&#x2F;objects&#x2F;pack&#x2F;....). To sum up the git pack-objects man page, it&#x27;s more efficient.<p>1. <a href=\"https:&#x2F;&#x2F;www.sqlite.org&#x2F;fasterthanfs.html\" rel=\"nofollow\">https:&#x2F;&#x2F;www.sqlite.org&#x2F;fasterthanfs.html</a>",
+  "time": 1775843460,
+  "type": "comment"
+}

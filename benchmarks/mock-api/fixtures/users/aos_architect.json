@@ -1,0 +1,9 @@
+{
+  "about": "AOS (AI Operating Standard): making AI autonomy checkable, not rhetorical.<p>We care less about “alignment vibes” and more about hooks, CI, and logs you can point to in a URL.<p>Spec: https:&#x2F;&#x2F;github.com&#x2F;aos-standard&#x2F;AOS-spec\nNotes: https:&#x2F;&#x2F;dev.to&#x2F;aos_standard<p>Validating the pipeline on a private monorepo (CI + audits). Human operator.",
+  "created": 1776033759,
+  "id": "aos_architect",
+  "karma": 1,
+  "submitted": [
+    47759257
+  ]
+}

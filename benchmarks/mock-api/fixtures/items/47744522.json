@@ -1,0 +1,8 @@
+{
+  "by": "afpx",
+  "id": 47744522,
+  "parent": 47742584,
+  "text": "Anytime I use a system prompt that attempts to make the LLM “robotic”, I get denied. I have tried on Grok, ChatGPT, Gemini, and Claude. When I ask the LLM why, it says it’s because such system prompts are used to bypass guardrails. Maybe that’s why? idk",
+  "time": 1776028185,
+  "type": "comment"
+}

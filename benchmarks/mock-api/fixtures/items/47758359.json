@@ -1,0 +1,15 @@
+{
+  "by": "WhyNotHugo",
+  "id": 47758359,
+  "kids": [
+    47758878,
+    47760968,
+    47760402,
+    47759933,
+    47759811
+  ],
+  "parent": 47757495,
+  "text": "I really don&#x27;t get the point of stacked PRs.<p>Just using git, you&#x27;d send a set of patches, which can be reviewed, tested and applied individually.<p>The PR workflow makes a patch series an undivisible set of changes, which must be reviewed, tested and applied in unison.<p>And stacked PRs tries to work around this issue, but the issue is how PRs are implemented in the first place.<p>What you really want is the ability to review individual commits&#x2F;patches again, rather than work on entire bundles at once. Stacked PRs seems like a second layer of abstraction to work around issues with the first layer of abstractions.",
+  "time": 1776117310,
+  "type": "comment"
+}

@@ -1,0 +1,31 @@
+{
+  "by": "Rochus",
+  "descendants": 93,
+  "id": 47739174,
+  "kids": [
+    47749384,
+    47741564,
+    47742394,
+    47756575,
+    47748849,
+    47745110,
+    47745018,
+    47739764,
+    47753150,
+    47742705,
+    47744695,
+    47743922,
+    47741330,
+    47741201,
+    47742280,
+    47746447,
+    47749874,
+    47741168,
+    47749327
+  ],
+  "score": 237,
+  "time": 1775999204,
+  "title": "Show HN: Oberon System 3 runs natively on Raspberry Pi 3 (with ready SD card)",
+  "type": "story",
+  "url": "https://github.com/rochus-keller/OberonSystem3Native/releases"
+}

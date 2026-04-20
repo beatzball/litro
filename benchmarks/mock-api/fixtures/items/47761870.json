@@ -1,0 +1,12 @@
+{
+  "by": "nfw2",
+  "id": 47761870,
+  "kids": [
+    47761995,
+    47761961
+  ],
+  "parent": 47761609,
+  "text": "I still don&#x27;t get why RSC is better. This post takes things for granted that don&#x27;t seem obvious to me. Why would I want heavy rendering tasks to all be done on my wimpy aws box instead of the clients macbooks and iphones?<p>Shipping moment for dates is a pain sure but that can be chunked and cached too? It&#x27;s hard to imagine the benefit of reducing bundle by X kbs could really be worth doing a roundtrip to server whenever I need format a date in the UI.<p>RSC seems like something only library maintainers like, although I appreciate tanstack not forcing them down my throat like next I guess.",
+  "time": 1776147169,
+  "type": "comment"
+}

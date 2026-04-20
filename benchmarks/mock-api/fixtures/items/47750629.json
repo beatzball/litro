@@ -1,0 +1,12 @@
+{
+  "by": "63stack",
+  "id": 47750629,
+  "kids": [
+    47751241,
+    47751338
+  ],
+  "parent": 47750485,
+  "text": "The era of sharing some small programs that you made with others to benefit from is over imo.<p>You can just vibe code it yourself. If your requirements are narrower (eg. you only need support for 3 networks and not 12), you will end up with something that takes less time to develop (possibly less than a day), it will have a smaller surface for problems, and it will be much better tailored to your specific needs. If you pay attention to what the LLM is doing it will also be easier to maintain or extend further.<p>The surface for security vulnerabilities also gets narrower, since you &quot;only&quot; have to trust the LLM (which is still a huge ask, but still better than LLM + 1 random person).",
+  "time": 1776080578,
+  "type": "comment"
+}

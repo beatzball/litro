@@ -1,0 +1,11 @@
+{
+  "by": "raw_anon_1111",
+  "id": 47739946,
+  "kids": [
+    47740486
+  ],
+  "parent": 47736831,
+  "text": "The only private key that my agents have access to are <i>temporary</i> AWS access keys to a dev environment with decently locked down permissions.<p>I let it troubleshoot my web code using a temporary JWT in a dev environment using headless chrome and Puppeteer in a Docker container.<p>Everything else is in AWS Secrets Manager inaccessible  by the IAM role the agent has access to.<p>I don’t store the temporary AWS keys in a file anywhere.  They are in environment variables.  All AWS SDKs and the CLI look in the environment variables by default.<p>I sure as hell don’t store API keys anywhere on my local computer.",
+  "time": 1776003331,
+  "type": "comment"
+}

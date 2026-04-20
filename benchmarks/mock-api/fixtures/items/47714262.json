@@ -1,0 +1,11 @@
+{
+  "by": "KurSix",
+  "id": 47714262,
+  "kids": [
+    47714777
+  ],
+  "parent": 47701139,
+  "text": "Mad respect. I tried extracting a clean .o file out of a statically linked ELF once, and it&#x27;s an absolute nightmare. How are you handling switch tables and indirect jumps? Without dynamic analysis, it&#x27;s sometimes physically impossible to figure out what a register is actually pointing to",
+  "time": 1775801633,
+  "type": "comment"
+}

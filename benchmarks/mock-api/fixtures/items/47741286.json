@@ -1,0 +1,13 @@
+{
+  "by": "toomanyrichies",
+  "id": 47741286,
+  "kids": [
+    47742098,
+    47742722,
+    47741905
+  ],
+  "parent": 47739457,
+  "text": "Your comment made me ask myself: &quot;Then why remove it? If it really is just a system prompt, I can&#x27;t imagine tech debt or maintenance are among the reasons.&quot;<p>My best guess is this is product strategy.  A markdown file doesn&#x27;t require maintenance, but a feature&#x27;s surface area does.  Every exposed mode is another thing to document, support, A&#x2F;B test, and explain to new users who stumble across it.  I&#x27;m guessing that someone decided &quot;Study Mode isn&#x27;t hitting retention metrics&quot;, and decided to kill it.  As an autodidact, I loved the feature, but as a software engineer I can respect the decision.<p>What I&#x27;m wondering about is whether there&#x27;s a security angle to this as well.  Assuming exposed system prompts are a jailbreak surface, if users can infer the prompt structure, would it make certain prompt injection attacks easier?  I&#x27;m not well-versed in ML security, and I&#x27;d be curious to hear from someone who is.",
+  "time": 1776009767,
+  "type": "comment"
+}

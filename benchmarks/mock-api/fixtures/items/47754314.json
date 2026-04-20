@@ -1,0 +1,11 @@
+{
+  "by": "kodablah",
+  "id": 47754314,
+  "kids": [
+    47754649
+  ],
+  "parent": 47753689,
+  "text": "&gt; You can try the technical preview today by running npx cf. Or you can install it globally by running npm install -g cf.<p>A couple of obvious questions - Is it open source (npmjs side doesn&#x27;t point to repo)? And in general will it be available as a single binary instead of requiring nodejs tooling to install&#x2F;use? If so, using recently-acquired Bun or another product&#x2F;approach?",
+  "time": 1776097126,
+  "type": "comment"
+}

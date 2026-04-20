@@ -1,0 +1,8 @@
+{
+  "by": "the__alchemist",
+  "id": 47705865,
+  "parent": 47700460,
+  "text": "I&#x27;m building OSS structural biology libraries in Rust (+ CUDA), and a GUI application that ties them together. It is kind of an integration of functionality traditionally in separate tools: Viewing, editing, therapeutic properties + pharmacokinetics, molecular dynamics etc.",
+  "time": 1775752749,
+  "type": "comment"
+}

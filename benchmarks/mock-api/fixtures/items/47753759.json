@@ -1,0 +1,8 @@
+{
+  "by": "zipy124",
+  "id": 47753759,
+  "parent": 47753684,
+  "text": "Likely one large contributor is that for a normal service, if it&#x27;s down it&#x27;s as simple as re-routing to another service, and there is basically an unlimited amount of CPU servers around the world to spin up on demand. GPU servers are much harder to spin up on demand, as supply is so constrained.<p>Another factor is just it&#x27;s a new field and move fast and break things is still the go to as competition is high, and the stakes are incredibly high monetary wise.<p>A pessimistic,  but perhaps true theory is also just vibe-coding&#x2F;slop is reducing their reliability.<p>A counter point is that regular services like github seem to go down almost as frequently.",
+  "time": 1776095294,
+  "type": "comment"
+}

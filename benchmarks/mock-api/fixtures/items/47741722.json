@@ -1,0 +1,8 @@
+{
+  "by": "Rochus",
+  "id": 47741722,
+  "parent": 47741564,
+  "text": "Thanks. In contrast to Smalltalk or Lisp, Oberon is originally a native language, and the Oberon System originally was conceived as the native operating system of the Ceres computer used for teaching in the nineties at ETH Zurich. So there is no image as in Lisp or Smalltalk. Oberon lives on today in the form of various dialects and derivatives (such as my Oberon+ or Micron languages, see <a href=\"https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;oberon\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;oberon</a> and <a href=\"https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;micron\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;rochus-keller&#x2F;micron</a>). There are indeed Oberon implementations which run on Java or ECMA 335 runtimes, which is possible due to the very restricted pointer handling and memory management of Oberon.",
+  "time": 1776012063,
+  "type": "comment"
+}

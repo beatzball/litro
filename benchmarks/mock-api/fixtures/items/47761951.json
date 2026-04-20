@@ -1,0 +1,11 @@
+{
+  "by": "friendzis",
+  "id": 47761951,
+  "kids": [
+    47762036
+  ],
+  "parent": 47761535,
+  "text": "Nothing loaded from the web should be able to fiddle with any browser behavior, yet here we are.",
+  "time": 1776147912,
+  "type": "comment"
+}

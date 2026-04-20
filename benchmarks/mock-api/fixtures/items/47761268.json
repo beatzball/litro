@@ -1,0 +1,8 @@
+{
+  "by": "aidenn0",
+  "id": 47761268,
+  "parent": 47760799,
+  "text": "As someone who has discovered a bug in a CPU that was previously unknown to our chip vendor, I would like to point out that the rabbit hole is deep.<p>On the other hand, I&#x27;ve discovered thousands of bugs that weren&#x27;t hardware bugs, and dozens of bugs due to people not having read hardware errata documents, so just formally modeling what we can model will absurdly reduce the bug quantity.",
+  "time": 1776141055,
+  "type": "comment"
+}

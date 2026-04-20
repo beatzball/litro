@@ -1,0 +1,8 @@
+{
+  "by": "ddtaylor",
+  "id": 47759228,
+  "parent": 47758883,
+  "text": "Ollama works very well in Linux on my AMD hardware. I have a 6800 XT which isn&#x27;t even originally supported by the ROCm stack in some ways and it &quot;just works&quot; for a ton of very nice models, especially if I seek out quantized versions of the model.",
+  "time": 1776122281,
+  "type": "comment"
+}

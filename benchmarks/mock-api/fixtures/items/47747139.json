@@ -1,0 +1,14 @@
+{
+  "by": "alun",
+  "id": 47747139,
+  "kids": [
+    47747438,
+    47747841,
+    47754950,
+    47747374
+  ],
+  "parent": 47741889,
+  "text": "It&#x27;s interesting how Anthropic haven&#x27;t shipped their own IDE for more vertical integration.<p>All it would take is implementing their own forked version of VSCode (like Cursor did) and making Claude the default choice.<p>Obviously I&#x27;m simplifying here, but they definitely have the capability to do it.",
+  "time": 1776049998,
+  "type": "comment"
+}

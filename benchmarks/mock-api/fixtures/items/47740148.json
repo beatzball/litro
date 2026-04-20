@@ -1,0 +1,18 @@
+{
+  "by": "danirod",
+  "id": 47740148,
+  "kids": [
+    47740949,
+    47740413,
+    47747471,
+    47741002,
+    47742193,
+    47747821,
+    47741539,
+    47748919
+  ],
+  "parent": 47738883,
+  "text": "Heh, lucky you, at least you get a message. My ISP just drops traffic to the affected IPs. No ping, no traceroute, just a spinner in the browser until it says &quot;page not found&quot;.<p>Every response and comment from LaLiga, the football organization responsible for this, has been so far that this is a minor issue that only affects a few bunch of nerds who talk about &quot;docker images&quot; or &quot;github repositories&quot; or &quot;whatever that means&quot;.<p>Meanwhile, there are testimonies of smart home devices like anti-theft alarms or automatic doors, that stop working whenever there is a football match, because their backends rely on Cloudflare.<p>Last week, a woman asked for help on social media, as the GPS tracking app she uses to see where her father with dementia is, went offline during a match. It was getting late and he still wasn&#x27;t back home, and she couldn&#x27;t locate the tag he was wearing to find him: <a href=\"https:&#x2F;&#x2F;www.infobae.com&#x2F;america&#x2F;agencias&#x2F;2026&#x2F;04&#x2F;05&#x2F;laliga-desmiente-que-sus-sistemas-antipirateria-hayan-hecho-fallar-un-dispositivo-de-localizacion-personal&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;www.infobae.com&#x2F;america&#x2F;agencias&#x2F;2026&#x2F;04&#x2F;05&#x2F;laliga-d...</a><p>It&#x27;s hard to say this, because no one should experience an event like this, but as stressful as these are, it&#x27;s the only way to make the mainstream people care about this censorship. &quot;I cannot pull a docker image&quot; will never be on nightly news, but safety and personal security is a more powerful driver for discourses.",
+  "time": 1776004268,
+  "type": "comment"
+}

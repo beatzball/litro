@@ -1,0 +1,12 @@
+{
+  "by": "dcre",
+  "id": 47754848,
+  "kids": [
+    47754970,
+    47755889
+  ],
+  "parent": 47753689,
+  "text": "Wonderful post and I will be taking inspiration from it. Surprised not to see TypeSpec <a href=\"https:&#x2F;&#x2F;typespec.io&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;typespec.io&#x2F;</a> mentioned, which is a TypeScript-like schema language that I like to describe as &quot;what if OpenAPI was good&quot;. I&#x27;m guessing they considered it and decided building their own would be both simpler and more flexible. The cost of BYO has come down a lot thanks to agents.",
+  "time": 1776099278,
+  "type": "comment"
+}

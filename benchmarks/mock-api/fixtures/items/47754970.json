@@ -1,0 +1,8 @@
+{
+  "by": "thegagne",
+  "id": 47754970,
+  "parent": 47754848,
+  "text": "Love TypeSpec, agree it makes writing OpenAPI really easy.<p>But I’ve moved to using <a href=\"https:&#x2F;&#x2F;aep.dev\" rel=\"nofollow\">https:&#x2F;&#x2F;aep.dev</a> style APIs as much as possible (sometimes written with TypeSpec), because the consistency allows you to use prebaked aepcli or very easily write your own since everything behaves like know “resources” with a consistent pattern.<p>Also Terraform works out of the box, with no needing to write a provider.",
+  "time": 1776099763,
+  "type": "comment"
+}

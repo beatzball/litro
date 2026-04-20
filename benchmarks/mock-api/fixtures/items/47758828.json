@@ -1,0 +1,8 @@
+{
+  "by": "iainmerrick",
+  "id": 47758828,
+  "parent": 47753689,
+  "text": "<i>Tell us your hopes and dreams for a Cloudflare-wide CLI</i><p>This is only partly about the CLI and mostly about the API itself, but a straightforward and consistent way to manage environments would be nice.<p>I have a project using CF workers and Astro, with an ugly but working wrangler.toml defining multiple environments. When Cloudflare acquired Astro, I assumed that would be a good thing, but the latest version of the Cloudflare plugin (mandatory if you want to use the latest Astro) seems to manage environments in its own special incompatible way.",
+  "time": 1776119778,
+  "type": "comment"
+}

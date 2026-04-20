@@ -1,0 +1,8 @@
+{
+  "by": "lifeisstillgood",
+  "id": 47759575,
+  "parent": 47756259,
+  "text": "&gt;&gt;&gt; We know how to write software with very few bugs (although we often choose not to)<p>I see this as primarily a social issue - OSS projects are frequently free of the WTF bugs enterprise software can suffer from (things that one lone developer with access to their own OS would never do - call it “I can’t install X so no logging at all happens”) and frequently free of the bugs that a lone developer would slowly fix (call it “proof of concept got released because a rewrite would need approval” bugs). That alone removes entire classes of bugs before we it logic bugs and off by one errors.<p>The social cost of “is that honestly the best you can do” is enormous, and being part of a dysfunctional organisation allows human nature to stick on “in this place, in this culture - yes”<p>Chnaging that culture in a small team is possible - at scale it’s really costly",
+  "time": 1776125155,
+  "type": "comment"
+}

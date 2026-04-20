@@ -1,0 +1,8 @@
+{
+  "by": "Rochus",
+  "id": 47741785,
+  "parent": 47741330,
+  "text": "Oberon is both a programming language and an operating system used mostly for teaching, much like e.g. xv6 or xinu. Similar to the latter, Wirth has written text books about the system, some of which can be downloaded for free (see <a href=\"https:&#x2F;&#x2F;projectoberon.net&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;projectoberon.net&#x2F;</a> for the PDF links).",
+  "time": 1776012400,
+  "type": "comment"
+}

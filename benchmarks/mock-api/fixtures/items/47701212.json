@@ -1,0 +1,8 @@
+{
+  "by": "flossly",
+  "id": 47701212,
+  "parent": 47700460,
+  "text": "JDBC does not allow pipelining (a Postgres only feature).<p>It can reduce the number of db round-trips a lot, especially when using Supabase+RLS (or other systems that require frequent setting of configuration values that are basically fire-and-forget).<p>Meet Bpdbi, a library with first-class pipelining, which provides a Postgres db driver (that&#x27;s binary only, as the legacy text-based protocol is no longer needed, it just takes up space) and exposes an API that&#x27;s more close to Jdbi&#x27;s that to JDBC&#x27;s (developer friendly).<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;bpdbi\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;bpdbi</a><p>It has an extensive benchmark that shows it&#x27;s on par or faster compared to other db connectivity stacks.",
+  "time": 1775726631,
+  "type": "comment"
+}

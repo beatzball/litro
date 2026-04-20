@@ -1,0 +1,11 @@
+{
+  "by": "astroalex",
+  "id": 47722722,
+  "kids": [
+    47722833
+  ],
+  "parent": 47722302,
+  "text": "One obvious difference I can see at a glance is that Maker.js doesn&#x27;t support 3D models, while FluidCAD does. I assume Maker.js is a lower level library aimed at interfacing directly with CNC machines, while FluidCAD is focused on 3D design.",
+  "time": 1775850071,
+  "type": "comment"
+}

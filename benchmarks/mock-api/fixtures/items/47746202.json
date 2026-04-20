@@ -1,0 +1,11 @@
+{
+  "by": "halfwhey",
+  "id": 47746202,
+  "kids": [
+    47747818
+  ],
+  "parent": 47746085,
+  "text": "Not everyone has tmux. I default to tmux if you have it and fallback to xterm.js",
+  "time": 1776041316,
+  "type": "comment"
+}

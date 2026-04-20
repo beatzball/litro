@@ -1,0 +1,8 @@
+{
+  "by": "rtpg",
+  "id": 47760351,
+  "parent": 47758051,
+  "text": "managing deps as a separate project introduces a lot of day-to-day annoyances, especially if the files are actually changed decently often.",
+  "time": 1776131887,
+  "type": "comment"
+}

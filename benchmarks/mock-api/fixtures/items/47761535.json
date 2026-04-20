@@ -1,0 +1,13 @@
+{
+  "by": "andreareina",
+  "id": 47761535,
+  "kids": [
+    47761689,
+    47761951,
+    47761942
+  ],
+  "parent": 47760764,
+  "text": "&gt; Notably, some instances of back button hijacking may originate from the site&#x27;s ... advertising platform<p>I feel like anything loaded from a third party domain shouldn&#x27;t be allowed to fiddle with the history stack.",
+  "time": 1776143921,
+  "type": "comment"
+}

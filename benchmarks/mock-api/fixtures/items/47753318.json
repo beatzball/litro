@@ -1,0 +1,16 @@
+{
+  "by": "alecsm",
+  "id": 47753318,
+  "kids": [
+    47758096,
+    47753548,
+    47755100,
+    47754893,
+    47755141,
+    47753539
+  ],
+  "parent": 47752819,
+  "text": "I had my tmux customized to the point I forgot how to use it on a clean install which is a problem when I&#x27;m sshing into a server.<p>I wish it had better defaults but now I run it as is. After a while you get used to it. The only thing I always have to change is the mouse scroll and my brain cannot retain the exact command.",
+  "time": 1776093687,
+  "type": "comment"
+}

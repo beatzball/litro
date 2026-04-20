@@ -87,14 +87,17 @@ export async function measureFramework(
   config: FrameworkConfig,
   appsDir: string,
   runs: number,
+  routes?: string[],
+  env?: Record<string, string>,
 ): Promise<FrameworkResult> {
   const appDir = join(appsDir, config.dir);
   console.log(`\n[cross-framework] ${config.name}`);
+  const execEnv = env ? { ...process.env, ...env } : undefined;
 
   // Install deps if needed
   if (!existsSync(join(appDir, 'node_modules'))) {
     console.log(`  Installing dependencies...`);
-    execSync(config.installCmd, { cwd: appDir, stdio: 'pipe' });
+    execSync(config.installCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
   }
 
   // Build N times
@@ -104,7 +107,7 @@ export async function measureFramework(
     rmSync(outputDir, { recursive: true, force: true });
 
     const start = performance.now();
-    execSync(config.buildCmd, { cwd: appDir, stdio: 'pipe' });
+    execSync(config.buildCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
     const elapsed = Math.round(performance.now() - start);
 
     times.push(elapsed);
@@ -123,7 +126,7 @@ export async function measureFramework(
   try {
     await waitForReady(baseUrl, SERVER_READY_TIMEOUT);
 
-    for (const route of CROSS_FRAMEWORK_ROUTES) {
+    for (const route of (routes ?? CROSS_FRAMEWORK_ROUTES)) {
       const res = await fetch(baseUrl + route);
       const buf = Buffer.from(await res.arrayBuffer());
       pageWeight[route] = {

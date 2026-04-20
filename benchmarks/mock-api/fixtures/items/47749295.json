@@ -1,0 +1,15 @@
+{
+  "by": "greggman65",
+  "descendants": 1,
+  "id": 47749295,
+  "kids": [
+    47753871,
+    47749889
+  ],
+  "score": 11,
+  "text": "This is almost entirely created by Claude, not me. I know some people aren&#x27;t into that. I was one of them 3 months ago. Since the beginning of the year I finally started getting more serious about trying out AI. The company I work for also had an AI week with lots of training. All I can say is I&#x27;m pretty blown away. My entire life feels like it changed over the last month from someone who mostly writes code to mostly someone that prompts AI to write code. And just for a tiny bit of context, I&#x27;m 60yrs old and have been coding since 1980.<p>I get all the concerns, and I review all AI code at work and most AI code for personal projects. This one in particular though, not so much. I get that&#x27;s frowned on but this is a small, limited scope, personal project. Not that I didn&#x27;t pay attention, Claude did do some things in strange ways and I asked it to fix them quite often. But, conversely, I have zero rust experience, zero OpenXR experience, zero wgpu expericence, next to zero relevant Windows experience.<p>I&#x27;m guessing I spent about ~30 hours in total prompting Claude for each step. I started with &quot;make a windows app that opens a window&quot;. Then I had it add wgpu and draw hello triangles. Then I had it add OpenXR and draw those triangles in VR. That actually took it some time as it tried to figure out how to connect a wgpu texture to the surface being drawn in OpenXR. It figured it out though, far far faster than I would have. I&#x27;d have tried to find a working example or given up.<p>I then sat on that for about a month and finally got back to it this weekend and zoomed through getting Claude to make it work. The only parts I did was make some programmer art icons.<p>I can post the prompts in the repo if anyone is interested, and assming I can find them.<p>Also in the last 2 weeks I&#x27;ve resurrected an old project that bit-rot. Claude got it all up to date, and fixed a bunch of bugs, and checked off a bunch of features I&#x27;d always wanted to add. I also had Claude write 2 libraries, a zip library, an rar decompression library, as well as refactor an existing zip decompression library to use some modern features. It&#x27;s been really fun! For those I read the code much more than I did for this one. Still, &quot;what I time to be alive&quot;!",
+  "time": 1776068801,
+  "title": "Show HN: Equirect – a Rust VR video player",
+  "type": "story",
+  "url": "https://github.com/greggman/equirect"
+}

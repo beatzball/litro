@@ -1,0 +1,11 @@
+{
+  "by": "minimaltom",
+  "id": 47760345,
+  "kids": [
+    47760684
+  ],
+  "parent": 47760269,
+  "text": "Is it fair when it comes to formally-verified software to only consider bugs that violate a proof, and ignore everything else?<p>Formally-verified software is usually advertised &quot;look ma no bugs!&quot; Not &quot;look ma no bugs*&quot; *As long as this complicated chain of lemmas appropriately represents the correctness of everything we care about.<p>In boating theres often debate of right of way rules in certain situations, and some people are quick to point out that giant tanker ships should be giving way to tiny sailboats and get all worked up about it*. The best answer I&#x27;ve heard: they&#x27;re dead right! that is to say as right as they are dead (if they didnt yield) lol. In the same vein, I think someone who assumed that a formally-verified software was perfect and got hacked or whatever is going to be a bit wiggly about the whole thing.<p>* = Technically the rules prioritize the tankers if they are &quot;restricted in ability to maneuver&quot; but everyone loves to argue about that.",
+  "time": 1776131847,
+  "type": "comment"
+}

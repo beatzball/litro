@@ -1,0 +1,8 @@
+{
+  "by": "jagged-chisel",
+  "id": 47760368,
+  "parent": 47759960,
+  "text": "Define “fixing.” If you’re building on ephemeral containers, an external cache is necessary for files that don’t change.",
+  "time": 1776132032,
+  "type": "comment"
+}

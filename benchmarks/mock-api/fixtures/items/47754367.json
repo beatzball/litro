@@ -1,0 +1,12 @@
+{
+  "by": "jzer0cool",
+  "id": 47754367,
+  "kids": [
+    47756006,
+    47755063
+  ],
+  "parent": 47752819,
+  "text": "Could never get mouse copy to work well (using mac at moment). When I make text selection, selects yellow and upon release goes to terminal prompt.  I had one config work at one point and it kept selecting from all panes, not just one the one I&#x27;m in. Any ideas?",
+  "time": 1776097333,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "rstuart4133",
+  "id": 47758736,
+  "parent": 47750669,
+  "text": "I suspect this horse has bolted.  When I see a photo on a website and I want to know where it&#x27;s taken, I assume it&#x27;s been stripped already and ask an AI.  The accuracy is uncanny.<p>Since it&#x27;s a rare web site that leaves the EXIF data intact, I guess this is aimed at apps harvesting photos on the device itself.  I hope Firefox gets a new site permission that allows you to upload photos with the EXIF intact, because that&#x27;s often what I want.  But that won&#x27;t happen for a while, and until apps do get their permissions updated it&#x27;s going to be annoying.  It will be a right proper PITA to discover later your EXIF data is gone from the photos you transferred to your laptop.",
+  "time": 1776119095,
+  "type": "comment"
+}

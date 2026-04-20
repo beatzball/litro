@@ -1,0 +1,8 @@
+{
+  "by": "mnahkies",
+  "id": 47761405,
+  "parent": 47715389,
+  "text": "Aside from data consistency issues mentioned, you can also quickly get yourself into connection pool exhaustion issues, where concurrent requests have already obtained a transaction but are asking for another accidentally, then all stall holding the first open until timeouts occur.",
+  "time": 1776142654,
+  "type": "comment"
+}

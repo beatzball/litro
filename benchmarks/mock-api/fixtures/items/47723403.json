@@ -1,0 +1,11 @@
+{
+  "by": "ramses0",
+  "id": 47723403,
+  "kids": [
+    47727946
+  ],
+  "parent": 47721997,
+  "text": "I&#x27;ll throw my hat in on the feedback... looks great!<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;openscad&#x2F;openscad&#x2F;pull&#x2F;4478#issuecomment-1747429401\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;openscad&#x2F;openscad&#x2F;pull&#x2F;4478#issuecomment-...</a><p>My pet use case is: &quot;My naive approach as a programmer would be: `pen := new Pen(q,r,s,t); box := new Box( pen.L, pen.W, pen.H )`&quot; along with being able to sometimes work with the whole pen, and sometimes touch the pen vs. the cap separately.<p>Since it&#x27;s all javascript, it seems like there&#x27;s a chance that this use case would work (ie: `p = Pen(...).render().getWidth()`)?  Additionally, your intermediate step screenshots really makes it seem like a SketchUp-ish GUI would be perfect!  Obviously a ton of work, but SketchUp&#x27;s &quot;grab face + extrude &#x2F; push&quot;, but if it were &quot;sticky&quot; to the underlying parametric components seems like it&#x27;d be an awesome combo... something like group&#x2F;components, but backed by code instead of GUI-only (or GUI-centric) editing.",
+  "time": 1775853538,
+  "type": "comment"
+}

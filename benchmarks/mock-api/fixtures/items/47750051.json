@@ -1,0 +1,11 @@
+{
+  "by": "Rochus",
+  "id": 47750051,
+  "kids": [
+    47750241
+  ],
+  "parent": 47748849,
+  "text": "Thanks. Preparations for the migraion of AOS&#x2F;Bluebottle are underway. Concerning memory safety: it&#x27;s only memory safe if you don&#x27;t use the SYSTEM module features, and OberonSystem 3 (and later) heavily depend on those features.",
+  "time": 1776075726,
+  "type": "comment"
+}

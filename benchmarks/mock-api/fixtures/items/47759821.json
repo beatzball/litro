@@ -1,0 +1,11 @@
+{
+  "by": "owenpalmer",
+  "id": 47759821,
+  "kids": [
+    47759840
+  ],
+  "parent": 47728823,
+  "text": "I can&#x27;t seem to tell exactly what they built. They call it a runtime, but they&#x27;re using NodeJS?<p>Did they implement a transpiler in Rust?<p>They also seem to be calling Rust from JS, but not through wasm...<p>They seem to be doing something with Rust and http, but they&#x27;re also just using &quot;Pingora&quot;...<p>Additionally, their homepage is about 20 fps while scrolling on my phone (pixel 4a, brave)<p>I would honestly love for someone to explain to me wtf is going on.",
+  "time": 1776127318,
+  "type": "comment"
+}

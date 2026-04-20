@@ -1,0 +1,11 @@
+{
+  "by": "yangm97",
+  "id": 47741633,
+  "kids": [
+    47745325
+  ],
+  "parent": 47738883,
+  "text": "Maybe it’s time to reflect upon the reliance on centralized services?\nNot long ago docker hub started rate limiting access and we all turned to blanket solutions like the GitLab registry cache.\nI wonder if the IPFS distributed docker registry thing still exists&#x2F;works.",
+  "time": 1776011589,
+  "type": "comment"
+}

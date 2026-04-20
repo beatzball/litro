@@ -1,0 +1,11 @@
+{
+  "by": "brookst",
+  "id": 47760285,
+  "kids": [
+    47760328
+  ],
+  "parent": 47759898,
+  "text": "Been thinking about this a lot recently.<p>I think we need a way to verify the specs. A combo of formal logic and adversarial thinking (probably from LLMs) that will produce an exhaustive list of everything the program will do, and everything it won’t do, and everything that is underspecified.<p>Still not quite sure what it looks like, but if you stipulate that program generation will be provable, it pushes the correctness challenge up to the spec (and once we solve that, it’ll be pushed up to the requirements…)",
+  "time": 1776131211,
+  "type": "comment"
+}

@@ -1,0 +1,13 @@
+{
+  "by": "mrvaibh",
+  "id": 47740390,
+  "kids": [
+    47741452,
+    47741181,
+    47750890
+  ],
+  "parent": 47738883,
+  "text": "This is a great example of why blanket IP blocking is such a terrible enforcement mechanism. Cloudflare hosts hundreds of thousands of services behind shared IP ranges — blocking one IP to stop a piracy stream\n  takes out everything else on that IP, including Docker registries, API endpoints, and CDNs that have nothing to do with football.<p><pre><code>  The real fix on your end until Spain sorts this out: set up a pull-through registry cache (e.g. registry:2 with proxy.remoteurl) on a VPS outside Spain, and point your Docker daemon&#x27;s mirror config at it. Your\n  GitLab runner pulls from the cache, the cache pulls from Docker Hub via a non-blocked IP. Also insulates you from Docker Hub rate limits.\n\n  But yeah, the fact that a court order about football streaming can break docker pull for an entire country is genuinely absurd.</code></pre>",
+  "time": 1776005376,
+  "type": "comment"
+}

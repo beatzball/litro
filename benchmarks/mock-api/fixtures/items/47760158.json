@@ -1,0 +1,8 @@
+{
+  "by": "0xbadcafebee",
+  "id": 47760158,
+  "parent": 47729350,
+  "text": "Call me crazy, but wouldn&#x27;t 15 minutes on GLM 5.1 produce a working implementation? I haven&#x27;t looked at the code, but a non-production-grade Go implementation can&#x27;t be that complicated.<p>Edit: Minio is written in Go, and is AGPL3... fork it (publicly), strip out the parts you don&#x27;t want, run it locally.",
+  "time": 1776130144,
+  "type": "comment"
+}

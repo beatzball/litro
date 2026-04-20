@@ -1,0 +1,11 @@
+{
+  "by": "redknight666",
+  "descendants": 0,
+  "id": 47754296,
+  "score": 4,
+  "text": "AI agents are great at writing code but blind at runtime. They guess, print, and waste tokens.<p>I built dbg to give them a real debugger experience. Since it is backend based with the few I implemented (still at basic level) it can support 15+ languages with one simple CLI (still some work needed but it is functional as it is):<p>LLDB, Delve, PDB, JDB, node inspect, rdbg, phpdbg, GHCi, etc.\nProfilers too (perf, pprof, cProfile, Valgrind…)<p>I also added GPU profiling via `gdbg` (CUDA, PyTorch, Triton kernels). It auto-dispatches and shares the same unified interface. (Planning to bring those advanced concepts back to the main dbg).<p>Works with Claude &amp; Codex (probably works on others but didn&#x27;t try them)<p>Quick start:\n``` \ncurl -sSf <a href=\"https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;redknightlois&#x2F;dbg&#x2F;main&#x2F;install.sh\" rel=\"nofollow\">https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;redknightlois&#x2F;dbg&#x2F;main&#x2F;ins...</a> | sh\ndbg --init claude (for claude)\n```<p>Then just say: “use dbg to debug the crash in src&#x2F;foo.rs”<p>Docs: <a href=\"https:&#x2F;&#x2F;redknightlois.github.io&#x2F;dbg&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;redknightlois.github.io&#x2F;dbg&#x2F;</a>\nGitHub (MIT Licensed): <a href=\"https:&#x2F;&#x2F;github.com&#x2F;redknightlois&#x2F;dbg\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;redknightlois&#x2F;dbg</a><p>Would love feedback from anyone building agents. What languages or features are you missing most? Ping me at @federicolois on X or open issues.",
+  "time": 1776097073,
+  "title": "Show HN: Dbg – One CLI debugger for every language (AI-agent ready)",
+  "type": "story",
+  "url": "https://redknightlois.github.io/dbg/"
+}

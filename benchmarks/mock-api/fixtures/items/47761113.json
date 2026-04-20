@@ -1,0 +1,11 @@
+{
+  "by": "colechristensen",
+  "id": 47761113,
+  "kids": [
+    47761647
+  ],
+  "parent": 47759721,
+  "text": "&gt;Writing the code hasn’t been the bottle neck to developing software for a long time.<p>Then we&#x27;re doing different things.<p>I didn&#x27;t like GitHub so I wrote my own.  60k lines of code later... yes writing code was the bottleneck which has been eliminated.  The bottleneck is now design, review, and quality assessments that can&#x27;t be done trivially.<p>This isn&#x27;t even the project I wanted to be doing, the tools that were available were holding me back so I wrote my own.  It also consumes a few hours a week.<p>If you think writing code isn&#x27;t the bottleneck then you aren&#x27;t thinking big enough.  If you don&#x27;t WANT to think big enough, that&#x27;s fine, I also do things for the joy of doing them.",
+  "time": 1776139553,
+  "type": "comment"
+}

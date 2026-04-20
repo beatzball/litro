@@ -1,0 +1,8 @@
+{
+  "by": "csenshi",
+  "id": 47755564,
+  "parent": 47755563,
+  "text": "I built a PostgreSQL extension in Rust (pgrx) that lets you call gRPC services from SQL.<p>SELECT * FROM grpc_call(&#x27;user-service:50051&#x27;, &#x27;GetUser&#x27;, &#x27;{&quot;id&quot;: 123}&#x27;);<p>Use case: trigger external services from triggers&#x2F;functions without leaving the database - no application layer needed.<p>v0.1.0 - currently uses gRPC reflection only. Next up: proto+connection caching, manually loading port files<p>Still early - feedback on the API and what you&#x27;d actually use this for would be great.",
+  "time": 1776102601,
+  "type": "comment"
+}

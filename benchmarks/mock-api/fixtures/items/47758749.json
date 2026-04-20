@@ -1,0 +1,13 @@
+{
+  "by": "dminik",
+  "id": 47758749,
+  "kids": [
+    47758825,
+    47759967,
+    47758845
+  ],
+  "parent": 47757495,
+  "text": "Maybe this is just a skill issue, but even with several attempts I just can&#x27;t figure out why I would use stacked diffs&#x2F;PRs. Though maybe that&#x27;s because of the way I work?<p>I notice a lot of examples just vaguely mention &quot;oh, you can have others review your previous changes while you continue working&quot;, but this one doesnt make sense to me. Often times, the first set of commits doesn&#x27;t even make it to the end result. I&#x27;m working on a feature using lexical, and at this point I had to rewrite the damn thing 3 times. The time of other devs is quite valuable and I can&#x27;t imagine wasting it by having them review something that doesn&#x27;t even make it in.<p>Now, I have been in situations where I have some ready changes and I need to build something on top. But it&#x27;s not something just making another branch on top + rebase once the original is merged wouldn&#x27;t solve.<p>Is this really worth so much hype?",
+  "time": 1776119150,
+  "type": "comment"
+}

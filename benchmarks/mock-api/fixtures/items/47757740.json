@@ -1,0 +1,12 @@
+{
+  "by": "kardianos",
+  "id": 47757740,
+  "kids": [
+    47757776,
+    47761599
+  ],
+  "parent": 47757695,
+  "text": "I continue to use gerrit explicitly because I cannot stand github reviews. Yes, in theory, make changes small. But if I&#x27;m doing larger work (like updating a vendored  dep, that I still review), reviewing files is... not great... in github.",
+  "time": 1776113964,
+  "type": "comment"
+}

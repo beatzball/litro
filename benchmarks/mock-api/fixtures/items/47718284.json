@@ -1,0 +1,18 @@
+{
+  "by": "mpweiher",
+  "descendants": 8,
+  "id": 47718284,
+  "kids": [
+    47761629,
+    47761139,
+    47761708,
+    47760978,
+    47761350,
+    47760173
+  ],
+  "score": 95,
+  "time": 1775829566,
+  "title": "Design and implementation of DuckDB internals",
+  "type": "story",
+  "url": "https://duckdb.org/library/design-and-implementation-of-duckdb-internals/"
+}

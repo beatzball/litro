@@ -1,0 +1,11 @@
+{
+  "by": "timfinnigan",
+  "descendants": 0,
+  "id": 47761453,
+  "score": 2,
+  "text": "Wrote this to clean up my Downloads folder. It moves top-level files into subfolders named after their extension. photo.PNG goes into png&#x2F;, files with no extension go into no_extension&#x2F;. --dry-run if you want to see what it would do first.<p>A few details: it doesn&#x27;t recurse into existing subfolders, extensions are lowercased so you don&#x27;t get png&#x2F; and PNG&#x2F; coexisting, and it handles name        \n  collisions by appending _1, _2, etc. rather than overwriting.<p>~150 lines of Rust, no dependencies outside of tempfile in dev.<p>cargo install --git <a href=\"https:&#x2F;&#x2F;github.com&#x2F;timfinnigan&#x2F;groupr\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;timfinnigan&#x2F;groupr</a>                                                                                                   \ngroupr ~&#x2F;Downloads --dry-run",
+  "time": 1776143257,
+  "title": "Show HN: Groupr – Rust CLI that sorts files into subfolders by extension",
+  "type": "story",
+  "url": "https://github.com/TimFinnigan/groupr"
+}

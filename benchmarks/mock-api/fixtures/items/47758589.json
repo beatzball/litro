@@ -1,0 +1,14 @@
+{
+  "by": "xrd",
+  "id": 47758589,
+  "kids": [
+    47759382,
+    47758633,
+    47759958,
+    47759744
+  ],
+  "parent": 47756772,
+  "text": "I wanted to believe but anyone who has spent any time trying to run models locally knows this is not going to be solved by two lines of python running on rocm as the example shows.",
+  "time": 1776118367,
+  "type": "comment"
+}

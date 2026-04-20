@@ -1,0 +1,8 @@
+{
+  "by": "elsuave",
+  "id": 47749529,
+  "parent": 47736831,
+  "text": "Instead of sharing it directly I like to put in in a .env file.<p>Then simply I tell to the AI to just import from the .env file and do not read from the file.",
+  "time": 1776070955,
+  "type": "comment"
+}

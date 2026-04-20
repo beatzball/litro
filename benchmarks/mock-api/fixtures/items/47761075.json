@@ -1,0 +1,8 @@
+{
+  "by": "galbar",
+  "id": 47761075,
+  "parent": 47760340,
+  "text": "FWIW, I have managed 10 simultaneous live transcoded streams on a ARC B580 and it could have managed a few more. With couple of them you cold be fine.<p>The other aspect is you could share the media storage over NFS and have multiple jellyfin instances running for different houeshold groups.<p>With 2 or 3 nodes like that I think you could make it work.",
+  "time": 1776139278,
+  "type": "comment"
+}

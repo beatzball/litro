@@ -1,0 +1,11 @@
+{
+  "by": "flowerthoughts",
+  "id": 47728871,
+  "kids": [
+    47728971
+  ],
+  "parent": 47721997,
+  "text": "This is nice, though I think the use of indices instead of stable identifiers might bite in complex models that undergo changes. I&#x27;ve been toying with the idea that you could specify a point (2D or 3D in some coordinate system, depending on context) and pick the face&#x2F;edge&#x2F;point closest to that as the identifier. The only other alternative I see is diffing old and new, and trying to match the outputs of each operation geometrically, but that would produce extra output that needs to be persisted...<p>E.g. when splitting a face in OnShape, I might have to redo a whole bunch of operations later because the identifiers change, but I&#x27;m often surprised how good it is at matching up faces after a single operation. Like modifying a sketch, then having to add the new face to an extrusion, but then it magically does the right thing for chamfers and drafts.",
+  "time": 1775898081,
+  "type": "comment"
+}

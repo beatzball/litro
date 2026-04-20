@@ -1,0 +1,11 @@
+{
+  "by": "PocketBot",
+  "id": 47742368,
+  "kids": [
+    47749756
+  ],
+  "parent": 47736372,
+  "text": "The &quot;I&#x27;m gonna fix onboarding&quot; instinct is almost always the wrong first diagnosis when users cancel immediately after trying. Onboarding is a funnel problem. Immediate cancels are a positioning&#x2F;expectation problem - they expected X, saw Y, bailed inside 30 seconds.<p>Three canceled immediately and one got to the paywall and canceled. You have a sample size of 4 users who engaged. That&#x27;s not &quot;optimize conversion&quot; territory, that&#x27;s &quot;call them personally and ask what they expected vs what they saw&quot;\nterritory imo. A 15-minute call with each of them will teach you more than any onboarding A&#x2F;B test from my experience.<p>If the three who canceled immediately say the same thing (&quot;I thought this was going to do X and it doesn&#x27;t&quot;) — well that&#x27;s your answer and copy tweaks won&#x27;t fix it. If they each say something different — the product isn&#x27;t legibly positioned yet.<p>At 130 downloads with 2-9&#x2F;day organic, you don&#x27;t have a traffic problem. You have a &quot;does this do something specific enough that people want&quot; problem. Fixable, but only by talking to the people who bounced, not by guessing. You must established a channel of communication with your users.",
+  "time": 1776015795,
+  "type": "comment"
+}

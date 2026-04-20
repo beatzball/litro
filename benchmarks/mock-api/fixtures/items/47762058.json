@@ -1,0 +1,8 @@
+{
+  "by": "jiggawatts",
+  "id": 47762058,
+  "parent": 47761254,
+  "text": "&gt; handles so damn well when it comes to color editing<p>I know it sounds shocking to criticise the color editing capabilities of a dedicated <i>colorist</i> tool, but...<p>Resolve only got HDR output support on Windows <i>recently!</i> Up to version 18 or 19 it output gibberish that only specialised (super expensive) monitors could display. So you could have a HDR OLED 4K monitor and you&#x27;d get a washed out mess unless you <i>also</i> spent a ton of money on SDI cards for no good reason.<p>Sure, they fixed that now, but the pedigree of &quot;we&#x27;re a hardware company first, software company second&quot; remains. They&#x27;re <i>not</i> a photo editing company and have no idea what makes Lightroom &quot;the&quot; industry standard.<p>&gt; conservative culture (photography) vs progressive (video editing)<p>I&#x27;ve found the exact opposite to be true!<p>Lightroom has used &quot;scene referred&quot; (correct) color management since forever. 32-bit float ultra-wide-gamut HDR throughout. This is a &quot;new&quot; feature in Resolve! [1]<p>Similarly, I just tried Resolve 21 photo export and it exports... SDR. Probably in sRGB, who knows? Appears to be totally uncalibrated.<p>Meanwhile Lightroom can export 16-bit PNGs, wide-gamut, true HDR, HDR gain maps, JPEG XL, etc, etc.<p>Resolve is <i>way</i> behind on the basics.<p>[1] There are excuses for this, mostly to do with performance when editing real-time footage vs a still image.",
+  "time": 1776148842,
+  "type": "comment"
+}

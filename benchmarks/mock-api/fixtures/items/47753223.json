@@ -1,0 +1,15 @@
+{
+  "by": "jcremona",
+  "descendants": 5,
+  "id": 47753223,
+  "kids": [
+    47760069,
+    47756473,
+    47753901
+  ],
+  "score": 5,
+  "text": "I&#x27;m specifically asking about software system design tasks like:<p>Designing backend architectures\nTradeoff analysis (DB, queues, caching, others)\nInfra diagrams\nDocumentation<p>My current pick would be Claude Opus 4.6, because I&#x27;ve found it strong at structured reasoning and long context<p>But I&#x27;m curious what others are using today",
+  "time": 1776093305,
+  "title": "Ask HN: What's the best AI model for system design nowadays?",
+  "type": "story"
+}

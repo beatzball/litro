@@ -1,0 +1,8 @@
+{
+  "by": "teekert",
+  "id": 47761590,
+  "parent": 47729350,
+  "text": "Fwiw, yesterday I was messing about with GitLab backups. One of the options for direct off-site is S3. But I want that S3 bucket to live on a box on my own Tailnet.<p>So I too just want simple S3. Minio used to be the no-brainer. I&#x27;ll checkout RustFS as well.<p>It does not sound hard (although it is hard for me!). It sounds like it should be some LinuxServer io container. Doesn&#x27;t it? At this point S3 is just as standard as WebDav or anything right?",
+  "time": 1776144372,
+  "type": "comment"
+}

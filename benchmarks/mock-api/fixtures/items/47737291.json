@@ -1,0 +1,12 @@
+{
+  "by": "devendra116",
+  "id": 47737291,
+  "kids": [
+    47739490,
+    47739385
+  ],
+  "parent": 47736932,
+  "text": "keyring is one of solution but even substituting values at excution does not gaurantee the security as agents can read the process itself.<p>im building a safe agent execution layer, A runtime where agents can act, but cannot access secrets. kinda sidecar that is callable by agent for using api keys, secrets, private keys, etc and plus one can add policy on how and what a agent can do.<p>does this seems good?",
+  "time": 1775982301,
+  "type": "comment"
+}

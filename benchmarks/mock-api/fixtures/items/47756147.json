@@ -1,0 +1,8 @@
+{
+  "by": "amingilani",
+  "id": 47756147,
+  "parent": 47753689,
+  "text": "&gt; So we introduced a new TypeScript schema that can define the full scope of APIs, CLI commands and arguments, and context needed to generate any interface. The schema format is “just” a set of TypeScript types with conventions, linting, and guardrails to ensure consistency.<p>I&#x27;m confused though, why isn&#x27;t <i>that</i> tool&#x2F;framework being shown here. What is it and how does it work? It is similar to the TypeSpec tool someone else posted?",
+  "time": 1776105303,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "varenc",
+  "id": 47733714,
+  "kids": [
+    47735872,
+    47735718
+  ],
+  "parent": 47727960,
+  "text": "Extracted all the raw pardons here: <a href=\"https:&#x2F;&#x2F;gist.githubusercontent.com&#x2F;varenc&#x2F;cb2e2dacf1c92d36bcee2fab04a44631&#x2F;raw&#x2F;pardonned.com_2026-04-11_paradons.json\" rel=\"nofollow\">https:&#x2F;&#x2F;gist.githubusercontent.com&#x2F;varenc&#x2F;cb2e2dacf1c92d36bc...</a><p>I wanted to do some stuff with this data so need a raw format.<p>(process was so easy since its included on a single page load, so I assume you don&#x27;t mind! thanks for making this )",
+  "time": 1775939097,
+  "type": "comment"
+}

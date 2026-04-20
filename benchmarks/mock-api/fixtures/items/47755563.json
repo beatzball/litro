@@ -1,0 +1,13 @@
+{
+  "by": "csenshi",
+  "descendants": 1,
+  "id": 47755563,
+  "kids": [
+    47755564
+  ],
+  "score": 7,
+  "time": 1776102601,
+  "title": "Show HN: pg_grpc – Call gRPC services directly from PostgreSQL",
+  "type": "story",
+  "url": "https://github.com/CSenshi/pg_grpc"
+}

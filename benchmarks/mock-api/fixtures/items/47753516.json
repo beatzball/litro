@@ -1,0 +1,8 @@
+{
+  "by": "strogonoff",
+  "id": 47753516,
+  "parent": 47752819,
+  "text": "There’s many ways tmux could be used, but when it is part of IDE the most important usability tweaks that make tmux rock for me personally are:<p>— session configuration save&#x2F;recall (with pane layout for each tab and directory for each pane[0]),<p>— nvim integration (for seamless split navigation and so that I can create or reattach to a tmux session in an nvim float, even though that nvim usually runs inside tmux),<p>— a bind to force-reload a pane if (when!) a command hangs.<p>For switching between tabs, I find that the ideal bind is simply Cmd + pane number. There’s never more than ten tabs that I’d often want to switch to within a single session. The highest number is probably four tabs. Each tab is typically assigned a high-level part of the project.<p>[0] I always forget what terminology a given multiplexer uses, so let’s just call them “panes” and “tabs”.",
+  "time": 1776094430,
+  "type": "comment"
+}

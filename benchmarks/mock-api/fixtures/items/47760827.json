@@ -1,0 +1,12 @@
+{
+  "by": "nynx",
+  "id": 47760827,
+  "kids": [
+    47760997,
+    47760845
+  ],
+  "parent": 47708457,
+  "text": "I don’t understand why this is a useful effort. It seems like a solution in source of a problem. It’s going to be incredibly easy to end up with hopelessly inefficient programs that need a full redesign in a normal gpu programming model to be useful.",
+  "time": 1776136543,
+  "type": "comment"
+}

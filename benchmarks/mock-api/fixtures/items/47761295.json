@@ -1,0 +1,11 @@
+{
+  "by": "conor_f",
+  "id": 47761295,
+  "kids": [
+    47761392
+  ],
+  "parent": 47757495,
+  "text": "This just reeks to me of bad practice. Why use this as opposed to breaking your change into smaller PRs and merging them individually behind a feature flag or similar? With this, you have a marginally better UX for reviewing through the Github website, but the underlying issues are the same. The change being introduced is not sufficiently testable by itself, or it&#x27;s (somehow) too tightly coupled to other parts of the UI&#x2F;codebase that it can&#x27;t be split. You still need to test for integration issues at every point of the stack, and some architecture issues or points of code reuse can&#x27;t be seen from stacked changes like this.<p>Not for me, but I&#x27;m glad it fits other people&#x27;s workflows. I just hope it doesn&#x27;t encourage people to try make poorly reasoned changes!",
+  "time": 1776141394,
+  "type": "comment"
+}

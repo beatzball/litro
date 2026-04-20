@@ -1,0 +1,12 @@
+{
+  "by": "jpfaraco",
+  "id": 47747415,
+  "kids": [
+    47747885,
+    47752449
+  ],
+  "parent": 47741527,
+  "text": "Finally being able to build something I&#x27;ve wanted for years: an alarm app that wakes me up 1 min earlier each day until I reach my wake time goal. Not sure if there is already anything like this out there, but I don&#x27;t really care. I&#x27;ve been learning a ton about native Android development and so far it&#x27;s been a painless process to be able to wake up earlier.",
+  "time": 1776052653,
+  "type": "comment"
+}

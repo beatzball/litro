@@ -1,0 +1,11 @@
+{
+  "by": "sjdv1982",
+  "id": 47738873,
+  "kids": [
+    47740555
+  ],
+  "parent": 47736831,
+  "text": "I wanted to ask almost this question, then saw that it is on #1 right now.<p>My use case is ssh. I would like to stick my private key into a local Docker container, have a ssh-identical cli that reverse proxies into the container, and have some rules about what ssh commands the container may proxy or not.<p>Does anyone know of something like this?",
+  "time": 1775996866,
+  "type": "comment"
+}

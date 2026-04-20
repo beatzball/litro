@@ -1,0 +1,8 @@
+{
+  "by": "Paracompact",
+  "id": 47760582,
+  "parent": 47760305,
+  "text": "Formal methods practitioner here.<p>&gt; That means proving the absence of bugs, and you cannot prove a negative. The best thing you can do is fail to find a bug, but that doesn&#x27;t mean it isn&#x27;t there.<p>You can conclusively (up my next point) prove a specific bug or class of bugs aren&#x27;t there. But &quot;entirely free of (all) bugs&quot; is indeed a big misconception for what formal methods does.<p>&gt; how do you know your formal verification is bug-free? Answer: you don&#x27;t. Or if you try to formally verify your formal verification then you&#x27;re just translating the problem to a new layer. It&#x27;s just a chain of proofs that is always ultimately based on an unproven one, which invalidates the whole chain.<p>It&#x27;s another misconception of formal methods to say that any result is established conclusively, without any caveats whatsoever. But then again neither is mathematics, or any other intellectual discipline. What formal methods does is reduce the surface area where mistakes could reasonably be expected to reside. Trusting the Rocq kernel, or a highly scrutinized model of computation and language semantics, is much easier than trusting the totality of random unannotated code residing in the foggiest depths of your average C compiler, for instance.",
+  "time": 1776134032,
+  "type": "comment"
+}

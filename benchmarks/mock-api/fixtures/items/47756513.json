@@ -1,0 +1,8 @@
+{
+  "by": "tuvix",
+  "id": 47756513,
+  "parent": 47701095,
+  "text": "This is awesome! Last year I was working on a VST using NIH-Plug in Rust that could load in synth voices and effects written in Lua (executed using LuaJIT), this kind of reminds me of some of what I was doing (this is way cooler though).",
+  "time": 1776107107,
+  "type": "comment"
+}

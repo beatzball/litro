@@ -1,0 +1,11 @@
+{
+  "by": "FabDee",
+  "id": 47757811,
+  "kids": [
+    47760212
+  ],
+  "parent": 47757371,
+  "text": "About the cf domains -h vs cf dns -h drift you flagged, in my case, I&#x27;ve watched Claude learn one subcommand format, then take for granted the same flags on a sibling with a different help shape.<p>It&#x27;s not cosmetic. Uniform help is a way to not let agents hallucinate.\nOtherwise you end up with invalid commands, or worse, silent ones that go through without doing anything at all, or go totally wrong.",
+  "time": 1776114361,
+  "type": "comment"
+}

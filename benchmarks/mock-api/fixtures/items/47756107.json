@@ -1,0 +1,16 @@
+{
+  "by": "ori_b",
+  "id": 47756107,
+  "kids": [
+    47760004,
+    47759391,
+    47756222,
+    47759722,
+    47756770,
+    47756775
+  ],
+  "parent": 47753032,
+  "text": "Once I discovered window managers and graphics, I stopped using half-baked features to emulate them in the terminal.<p>I use tmux to reattach to programs after the network connection dies, and not really anything else. I would welcome a version of it that stripped out everything but that, and just replayed the last few pages of scrollback on reattach.",
+  "time": 1776105096,
+  "type": "comment"
+}

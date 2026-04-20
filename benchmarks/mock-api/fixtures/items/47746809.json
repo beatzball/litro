@@ -1,0 +1,11 @@
+{
+  "by": "jikimi",
+  "id": 47746809,
+  "kids": [
+    47746857
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;ve been building Jikimi, a privacy-first parental control platform. It started because my kids were spending too much time on the computer, only stopping if we asked them to. If we forgot, they&#x27;d just keep playing. We were also worried about online predatory behaviour like grooming, bullying, that kind of thing.<p>So I built an on-device OCR engine (PaddleOCR) that reads screen text locally and feeds it into an AI sentiment analysis pipeline. No screenshots leave the machine. We now get alerts if there&#x27;s detection of concerning interactions. The client is written in Rust, with DNS filtering, game detection (Steam&#x2F;Wine&#x2F;Proton), and screen time enforcement built in.<p>It started as a home project that worked really well. My wife suggested other families wouldbenefit, so I&#x27;ve been building it out as a product. The client shipped on Linux first, we&#x27;re a Linux gaming family, with Windows coming soon.<p><a href=\"https:&#x2F;&#x2F;jikimi.app\" rel=\"nofollow\">https:&#x2F;&#x2F;jikimi.app</a><p>There are many more features I haven&#x27;t touched on. Would love feedback from other parents who&#x27;ve dealt with this space. The goal is to protect children and empower parents with tooling that&#x27;s transparent and effective.",
+  "time": 1776046742,
+  "type": "comment"
+}

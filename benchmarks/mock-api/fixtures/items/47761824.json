@@ -1,0 +1,8 @@
+{
+  "by": "PeterM2",
+  "id": 47761824,
+  "parent": 47741527,
+  "text": "I&#x27;m working on curyo.xyz. The main idea is to create a new rating system for the age of AI, since we think we need better&#x2F;new quality signals for the web.<p>Current features: Using zero-knowledge proofs for a proof of personhood (no personal data shared), Reputation as a conviction signal and gamification (gain reputation), Blind voting phase to fight herding, Using a public ledger&#x2F;blockchain in the background for transparency<p>We know that the current implementation is far from a perfect rating system, but that’s why we are here, trying to get as much feedback as possible and finding the right balance between hard to attack and user-friendly.",
+  "time": 1776146670,
+  "type": "comment"
+}

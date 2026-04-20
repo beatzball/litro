@@ -1,0 +1,11 @@
+{
+  "by": "ay",
+  "id": 47744613,
+  "kids": [
+    47745637
+  ],
+  "parent": 47743616,
+  "text": "I’ve made something very similar that is <i>almost</i> backend-agnostic: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;ayourtch-llm&#x2F;tttt\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;ayourtch-llm&#x2F;tttt</a> - and it does auto inject the MCP in case of Claude, but it is trivial to adapt to other backends.",
+  "time": 1776028719,
+  "type": "comment"
+}

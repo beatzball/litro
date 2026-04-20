@@ -1,0 +1,11 @@
+{
+  "by": "swyx",
+  "id": 47754949,
+  "kids": [
+    47755249
+  ],
+  "parent": 47753472,
+  "text": "&gt; Heroku Workflow\nThe shell helpers use either an explicit app name argument or HEROKU_APP_NAME.<p>nice to see heroku still alive...",
+  "time": 1776099709,
+  "type": "comment"
+}

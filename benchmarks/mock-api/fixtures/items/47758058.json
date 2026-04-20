@@ -1,0 +1,12 @@
+{
+  "by": "amelius",
+  "id": 47758058,
+  "kids": [
+    47759201,
+    47758423
+  ],
+  "parent": 47757529,
+  "text": "Does ccache fetch compiled code from a central server using checksums?",
+  "time": 1776115773,
+  "type": "comment"
+}

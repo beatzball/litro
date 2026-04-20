@@ -1,0 +1,8 @@
+{
+  "by": "brianwmunz",
+  "id": 47751356,
+  "parent": 47736831,
+  "text": "Most of this thread is about protecting keys on a single developer&#x27;s machine, but the problem gets way harder when you&#x27;re managing credentials across customer tenants... env vars and secrets managers don&#x27;t solve the orchestration problem as much the storage problem. The hard part is making sure the right token gets used for the right customer&#x27;s API call at the right time without any cross-tenant leakage.",
+  "time": 1776085237,
+  "type": "comment"
+}

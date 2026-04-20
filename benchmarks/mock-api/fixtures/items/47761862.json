@@ -1,0 +1,8 @@
+{
+  "by": "ffsm8",
+  "id": 47761862,
+  "parent": 47760764,
+  "text": "I would like to mention that Google own SPA framework, angular, has redirect routes which effectively do back button hijacking if used, because they add the url you&#x27;re redirecting from to the history.<p><a href=\"https:&#x2F;&#x2F;angular.dev&#x2F;guide&#x2F;routing&#x2F;redirecting-routes\" rel=\"nofollow\">https:&#x2F;&#x2F;angular.dev&#x2F;guide&#x2F;routing&#x2F;redirecting-routes</a>",
+  "time": 1776147127,
+  "type": "comment"
+}

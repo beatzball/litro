@@ -1,0 +1,11 @@
+{
+  "by": "paulmooreparks",
+  "id": 47701105,
+  "kids": [
+    47720818
+  ],
+  "parent": 47700460,
+  "text": "I&#x27;m building my own cloud (I <i>actually</i> typed claude instead of cloud there... wow). There&#x27;s no IaaS or PaaS; it&#x27;s much simpler. I wanted my own way of connecting to machines and the TCP services on those machines without having to install Tailscale (not allowed on a locked-down corporate PC) or pay for Azure or AWS or GCP or even Hetzner or Linode. I&#x27;ve got 10gbps fibre and a huge workstation at home, and I&#x27;ve got lots of laptops and VMs and other outboard stuff that I want to work in concert with that workstation, so I started building something I call Tela (Filipino for fabric; I was sitting in Ninoy Aquino International Airport waiting for a flight when I had the idea, and it&#x27;s implemented as a network fabric).<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;paulmooreparks&#x2F;tela\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;paulmooreparks&#x2F;tela</a>",
+  "time": 1775725942,
+  "type": "comment"
+}

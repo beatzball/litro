@@ -1,0 +1,15 @@
+{
+  "by": "leonhfr",
+  "descendants": 3,
+  "id": 47715389,
+  "kids": [
+    47761790,
+    47761571,
+    47761405
+  ],
+  "score": 28,
+  "time": 1775811665,
+  "title": "I shipped a transaction bug, so I built a linter",
+  "type": "story",
+  "url": "https://leonh.fr/posts/go-transaction-linter/"
+}

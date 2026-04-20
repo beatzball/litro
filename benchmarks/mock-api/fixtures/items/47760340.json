@@ -1,0 +1,13 @@
+{
+  "by": "monocasa",
+  "id": 47760340,
+  "kids": [
+    47760404,
+    47761075,
+    47760945
+  ],
+  "parent": 47759341,
+  "text": "Has anyone tried to horizontally scale jellyfin to running on a multi node cluster?<p>I&#x27;m wanting to set it up for around 20 households to share, and with transcoding that exceeds a single (cheap) node.",
+  "time": 1776131798,
+  "type": "comment"
+}

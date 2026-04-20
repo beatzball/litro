@@ -1,0 +1,11 @@
+{
+  "by": "cperciva",
+  "id": 47745785,
+  "kids": [
+    47747262
+  ],
+  "parent": 47741527,
+  "text": "The same thing I do every night - try to make FreeBSD work better on EC2!<p>Ok in all seriousness, right now I&#x27;m tracking down an issue with the ENA network interface which results in sporadic packet loss.  Triggering the issue is hard and seems to require a large number of TCP segments being pushed to the NIC very fast.  So far I&#x27;ve found that my reproducer stops reproducing when I turn off write combining on the MMIO space used for low latency queueing, which is... just a little bit weird.",
+  "time": 1776037751,
+  "type": "comment"
+}

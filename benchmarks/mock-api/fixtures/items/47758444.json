@@ -1,0 +1,12 @@
+{
+  "by": "CobrastanJorji",
+  "id": 47758444,
+  "kids": [
+    47758931,
+    47758985
+  ],
+  "parent": 47729350,
+  "text": "This is an interesting write up, but I&#x27;m curious about the use case. If you don&#x27;t need to scale, and you don&#x27;t need to replicate anything, why do you want S3 specifically? Are you using a tool that wants to write to something S3-like? Do you just like reading and writing objects via HTTP POST and GET? Are you moving an app to or from the cloud?",
+  "time": 1776117683,
+  "type": "comment"
+}

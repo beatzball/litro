@@ -1,0 +1,8 @@
+{
+  "by": "mrtimo",
+  "id": 47761139,
+  "parent": 47718284,
+  "text": "If you are a data scientist or do anything with data... duckdb is like a swiss army knife. So many great ways it can help your workflow. The original video from CMU in 2020 [1] is a classic. Minutes 3-8 present a good argument for adding duckdb to your data cleaning&#x2F;processing workflow.<p>And if you want to add a semantic layer on top of data, Malloy [2] is my favorite so far (it has duckdb built in):<p>[1]: <a href=\"https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=PFUZlNQIndo\" rel=\"nofollow\">https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=PFUZlNQIndo</a>\n[2]: <a href=\"https:&#x2F;&#x2F;docs.malloydata.dev&#x2F;documentation&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;docs.malloydata.dev&#x2F;documentation&#x2F;</a>",
+  "time": 1776139872,
+  "type": "comment"
+}

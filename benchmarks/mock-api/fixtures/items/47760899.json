@@ -1,0 +1,8 @@
+{
+  "by": "sbinnee",
+  "id": 47760899,
+  "parent": 47752819,
+  "text": "Though I also customize my tmux setup, the best way to use tmux is just to learn and remember the basics. Once you change the prefix bind or any other basic binds, you will have hard time on a new machine.<p>Btw, you can place tmux config at ~&#x2F;.config&#x2F;tmux&#x2F;tmux.cong. No reason to clutter home dir.",
+  "time": 1776137264,
+  "type": "comment"
+}

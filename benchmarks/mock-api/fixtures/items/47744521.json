@@ -1,0 +1,11 @@
+{
+  "by": "kay_o",
+  "id": 47744521,
+  "kids": [
+    47744996
+  ],
+  "parent": 47739684,
+  "text": "These will stop curl-based requests but will not do anything against headless browsers. mCaptcha mostly dead.<p>It increases cost to bot only and does not stop anything unless you sign up for the monthly subscription pay per request plan from Altcha for example. Then you are in a paid Turnstile situation. And not self host. (<a href=\"https:&#x2F;&#x2F;altcha.org&#x2F;docs&#x2F;v2&#x2F;sentinel&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;altcha.org&#x2F;docs&#x2F;v2&#x2F;sentinel&#x2F;</a> - with third party API services, paid IP databases, additional paid subscription key, this is only mode that will do anything of much value)",
+  "time": 1776028170,
+  "type": "comment"
+}

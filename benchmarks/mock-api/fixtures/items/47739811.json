@@ -1,0 +1,11 @@
+{
+  "by": "faangguyindia",
+  "id": 47739811,
+  "kids": [
+    47740520
+  ],
+  "parent": 47736831,
+  "text": "I share with gemini, claude and openai.<p>If I get my stuff hacked (because I use a machine with nothing else on it other than coding agents) I&#x27;ll know these services are not removing my personal info from their logs.<p>I don&#x27;t operate chinese models where my high value api keys are.<p>It&#x27;s pretty hard to debug stuff without using real api keys, service accounts etc...otjerwise",
+  "time": 1776002712,
+  "type": "comment"
+}

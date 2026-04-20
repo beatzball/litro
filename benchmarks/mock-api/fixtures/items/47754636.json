@@ -1,0 +1,14 @@
+{
+  "by": "amans9712",
+  "descendants": 1,
+  "id": 47754636,
+  "kids": [
+    47755066,
+    47761389
+  ],
+  "score": 7,
+  "text": "Bloomberg Terminal exists because financial traders needed one place to see everything: prices, risk, routing, counterparty health. You can&#x27;t trade blind.<p>LLM engineers are trading blind.<p>Which provider is degraded right now? What does this model actually cost when you factor in overhead, not just token price? If traffic shifts between providers, what happens to cost and latency? Is your stack dangerously concentrated on one provider?<p>These are operational questions every production LLM system has. Nobody&#x27;s built the tooling for them until now, so most teams either fly blind or patch together status pages, spreadsheets, and gut feel.<p>We built the LLM Ops Toolkit to fix that:<p>1. Provider uptime monitor across 18+ LLM providers, live status in one view\n2. Cost calculator that includes overhead, not just raw token pricing\n3. Routing simulator to model cost and latency impact before you shift traffic\n4. Model diversity audit to surface concentration risk before it becomes an incident<p>Free, open-source, no signup. Dashboard is at tools.lamatic.ai<p>The routing simulator is the most experimental piece and has the roughest edges. Genuinely curious how others think about provider concentration risk.<p>We&#x27;ve been treating it as dependency risk in software but that framing may not hold at scale.<p>Also live on Product Hunt today: producthunt.com&#x2F;products&#x2F;lamatic-ai",
+  "time": 1776098398,
+  "title": "Show HN: Bloomberg Terminal for LLM ops – free and open source",
+  "type": "story"
+}

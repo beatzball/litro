@@ -1,0 +1,8 @@
+{
+  "by": "pveierland",
+  "id": 47760702,
+  "parent": 47729350,
+  "text": "Garage has worked well for me and gives a good sense of stability. They provide helm charts for deployment and a CLI. There&#x27;s also very few concepts to learn to start to use it, while e.g. for SeaweedFS I feel like you need to parse a lot of docs and understand more specific terminology.",
+  "time": 1776135336,
+  "type": "comment"
+}

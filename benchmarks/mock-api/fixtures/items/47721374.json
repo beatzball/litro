@@ -1,0 +1,8 @@
+{
+  "by": "stanfordkid",
+  "id": 47721374,
+  "parent": 47718113,
+  "text": "I think there are a lot of good answers here, but it really comes down to the type of content being stored and access patterns.<p>A database is a data structure with (generally) many small items that need to be precisely updated, read and manipulated.<p>A lot of files don&#x27;t necessarily have this access pattern (for instance rendering a large video file) ... a filesystem has a generic access pattern and is a lower level primitive than a database.<p>For this same reason you even have different kinds of database for different types of access patterns and data types (e.g Elasticsearch for full text search, MongoDB for JSON, Postgres for SQL)<p>Filesystem is generic and low-level, database is a higher order abstraction.",
+  "time": 1775842956,
+  "type": "comment"
+}

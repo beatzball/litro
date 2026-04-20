@@ -1,0 +1,11 @@
+{
+  "by": "halfwhey",
+  "id": 47743693,
+  "kids": [
+    47743859
+  ],
+  "parent": 47743616,
+  "text": "Codex and Gemini have ACP servers already:<p><a href=\"https:&#x2F;&#x2F;github.com&#x2F;zed-industries&#x2F;codex-acp\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;zed-industries&#x2F;codex-acp</a>\n<a href=\"https:&#x2F;&#x2F;geminicli.com&#x2F;docs&#x2F;cli&#x2F;acp-mode&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;geminicli.com&#x2F;docs&#x2F;cli&#x2F;acp-mode&#x2F;</a><p>In fact Codex, in OpenAI fashion, have their own protocol as well:<p><a href=\"https:&#x2F;&#x2F;developers.openai.com&#x2F;codex&#x2F;app-server\" rel=\"nofollow\">https:&#x2F;&#x2F;developers.openai.com&#x2F;codex&#x2F;app-server</a><p>Opencode too. These tools are already so programmable and embeddable, it&#x27;s just Claude Code is a sticking point. But maybe it would be useful to provide a unified CLI and Daemon for all of them.",
+  "time": 1776023430,
+  "type": "comment"
+}

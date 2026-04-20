@@ -1,0 +1,8 @@
+{
+  "by": "colechristensen",
+  "id": 47758985,
+  "parent": 47758444,
+  "text": "I want my application servers to be stateless and I&#x27;ve got state to keep that looks a lot more like files than database rows.<p>And I want things like backup, replication, scaling, etc. to be generic.<p>I wrote a git library implementation that uses S3 to store repositories for example.",
+  "time": 1776120765,
+  "type": "comment"
+}

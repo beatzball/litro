@@ -1,0 +1,13 @@
+{
+  "by": "llagerlof",
+  "id": 47753105,
+  "kids": [
+    47753183,
+    47754420,
+    47753412
+  ],
+  "parent": 47753032,
+  "text": "I used tmux for a few years, until one day I discovered Zellij. With its significantly better UI and overall user experience, I was instantly convinced.",
+  "time": 1776092854,
+  "type": "comment"
+}

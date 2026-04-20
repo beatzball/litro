@@ -1,0 +1,18 @@
+{
+  "by": "mbitsnbites",
+  "descendants": 29,
+  "id": 47756321,
+  "kids": [
+    47759018,
+    47759960,
+    47759151,
+    47758051,
+    47757529,
+    47758372
+  ],
+  "score": 160,
+  "time": 1776106208,
+  "title": "How to make Firefox builds 17% faster",
+  "type": "story",
+  "url": "https://blog.farre.se/posts/2026/04/10/caching-webidl-codegen/"
+}

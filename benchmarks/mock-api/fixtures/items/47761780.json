@@ -1,0 +1,8 @@
+{
+  "by": "mbitsnbites",
+  "id": 47761780,
+  "parent": 47758372,
+  "text": "For what it&#x27;s worth, browser uptake is largely dictated by the browser being default shipped with some major OS. Very few users make an active choice (statistically speaking).<p>Safari is popular because it ships with iOS and macOS.<p>Edge (previously IE) is popular because it ships with Windows.<p>Chrome, however, is popular for several reasons. One reason is that it ships with Android and ChromeOS, but before that Google had a very aggressive multi-channel campaign where they pushed it with large banners on Google search (everyone used Google) and they made deals with Windows AV vendors so that when a user installed anti-virus on their computer Chrome was automatically installed and made the default browser. Another reason is that Google has consistently develeoped Chrome together with their web services, so things like search, maps, gmail, docs etc tend to work best in Chrome.<p>The only default channels that Firefox has, that I&#x27;m aware of, are verious Linux distros, and they have a pretty thin market slice.",
+  "time": 1776146289,
+  "type": "comment"
+}

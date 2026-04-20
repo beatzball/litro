@@ -1,0 +1,12 @@
+{
+  "by": "chongli",
+  "id": 47761102,
+  "kids": [
+    47761192,
+    47761150
+  ],
+  "parent": 47761026,
+  "text": "It really comes down to JavaScript. The web was fine when sites were static HTML, images, and forms with server-side rendering (allowing for forums and blogs).",
+  "time": 1776139480,
+  "type": "comment"
+}

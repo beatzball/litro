@@ -1,0 +1,12 @@
+{
+  "by": "iamcalledrob",
+  "id": 47751059,
+  "kids": [
+    47751273,
+    47751089
+  ],
+  "parent": 47750669,
+  "text": "Similarly, the native Android photo picker strips the original filename.\nThis causes daily customer support issues, where people keep asking the app developer why they&#x27;re renaming their files.<p><a href=\"https:&#x2F;&#x2F;issuetracker.google.com&#x2F;issues&#x2F;268079113\" rel=\"nofollow\">https:&#x2F;&#x2F;issuetracker.google.com&#x2F;issues&#x2F;268079113</a>\nStatus: Won&#x27;t Fix (Intended Behavior).",
+  "time": 1776083526,
+  "type": "comment"
+}

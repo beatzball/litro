@@ -1,0 +1,8 @@
+{
+  "by": "eggy",
+  "id": 47752584,
+  "parent": 47721997,
+  "text": "Looks great! Nice work.\nI am steeped in CAD for my work flow, so I used to program AutoCAD in AutoLISP, Rhino in Rhinoscript, now F#, and FreeCAD in Python as well as Blender. They have the geometry engines built-in and tested over decades. I think this is good for the maker with a 3D printer to do parts that are relatively simple (not discounting parametric code to make complex shapes here). Industry needs integration of CAD, BIM, CAM, Viz, etc. Take a look at this now older (2014) project where Rhino and F# were used to design and manufacture complex geometry for a real world build: <a href=\"https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=ZY-bvZZZZnE\" rel=\"nofollow\">https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=ZY-bvZZZZnE</a>",
+  "time": 1776090799,
+  "type": "comment"
+}

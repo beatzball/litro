@@ -1,0 +1,15 @@
+{
+  "by": "msolomentsev",
+  "id": 47746957,
+  "kids": [
+    47751435,
+    47747009,
+    47749367,
+    47747525,
+    47755221
+  ],
+  "parent": 47741527,
+  "text": "I&#x27;ve been writing a &#x27;book&#x27; (more of an extended blog post that I&#x27;d like to put out for free) attempting to explain quantum computing to a layman-ish audience.<p>I sort of got inspired to do this after seeing so many QC PR posts on HN, and finding the educational material in this space to be either too academic, too narrow in scope, or totally facile. I think given the incredible hype (and potential promise) of this industry, there should be on-ramps for technically minded people to get an understanding of what&#x27;s going on. I don&#x27;t think you should need to be a quantum physicist to be able to follow the field (I am only an electrical engineer).<p>My book tries to cover the computational theory, the actual hardware implementations, and the potential applications of quantum computers. More than that, I want to be unbiased and stray away from what I feel is misleading hype. It&#x27;s been a work in progress for about 6 months now, with a lot of time spent gaining fluency in the field. But the end is in sight! :)",
+  "time": 1776048075,
+  "type": "comment"
+}

@@ -1,0 +1,16 @@
+{
+  "by": "PaulHoule",
+  "descendants": 13,
+  "id": 47708457,
+  "kids": [
+    47760827,
+    47761281,
+    47761451,
+    47761781
+  ],
+  "score": 40,
+  "time": 1775762410,
+  "title": "Rust Threads on the GPU",
+  "type": "story",
+  "url": "https://www.vectorware.com/blog/threads-on-gpu/"
+}

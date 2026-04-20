@@ -1,0 +1,8 @@
+{
+  "by": "sameenkarim",
+  "id": 47759587,
+  "parent": 47758067,
+  "text": "Yes, we handle this both in the CLI and server using git rebase --onto<p><pre><code>  git rebase --onto &lt;new_commit_sha_generated_by_squash&gt; &lt;original_commit_sha_from_tip_of_merged_branch&gt; &lt;branch_name&gt;\n</code></pre>\nSo for ex in this scenario:<p><pre><code>  PR1: main &lt;- A, B              (branch1)\n  PR2: main &lt;- A, B, C, D        (branch2)\n  PR3: main &lt;- A, B, C, D, E, F  (branch3)\n</code></pre>\nWhen PR 1 and 2 are squash merged, main now looks like:<p><pre><code>  S1 (squash of A+B), S2 (squash of C+D)\n</code></pre>\nThen we run the following:<p><pre><code>  git rebase --onto S2 D branch3\n</code></pre>\nWhich rewrites branch3 to:<p><pre><code>  S1, S2, E, F\n</code></pre>\nThis operation moves the unique commits from the unmerged branch and replays them on top of the newly squashed commits on the base branch, avoiding any merge conflicts.",
+  "time": 1776125265,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "dchftcs",
+  "id": 47760074,
+  "kids": [
+    47760085,
+    47760276
+  ],
+  "parent": 47759709,
+  "text": "This is analogous to the fundamental problem of better automation in programming - eventually, the complexity and correctness of of the spec takes over, and if we don&#x27;t manage that well, creating the spec is not that much less work than the programming part. If your program was for the wrong thing, a proof of it is also wrong.",
+  "time": 1776129456,
+  "type": "comment"
+}

@@ -1,0 +1,12 @@
+{
+  "by": "NelsonMinar",
+  "id": 47751995,
+  "kids": [
+    47754203,
+    47752968
+  ],
+  "parent": 47750669,
+  "text": "I wish they&#x27;d just switch to fuzzing the location instead of stripping it entirely. Instead of specifying 6 digits of lat&#x2F;lon, publish 1 digit to identify what rough area you&#x27;re in (to about 10km).<p>I&#x27;ve done a lot of neat projects with geolocation over the years. Including a personal travel diary, a bunch of visualizations of tweets and Flickr photos, etc etc. I am sad that&#x27;s become nearly impossible but I do respect that most people don&#x27;t understand the privacy risk.<p>Meanwhile on the advertising backend Google knows your exact location and is using it to help third parties target ads to you. And sleazy apps like Grindr sell location streams to anyone who asks. The bad guys get this data, just not the useful apps.",
+  "time": 1776088379,
+  "type": "comment"
+}

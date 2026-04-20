@@ -1,0 +1,8 @@
+{
+  "by": "maouida",
+  "id": 47727861,
+  "parent": 47724122,
+  "text": "Most of the CAD operations are supported, some are just basic implementations which will be improved soon.\n<a href=\"https:&#x2F;&#x2F;fluidcad.io&#x2F;docs&#x2F;category&#x2F;3d-operations\" rel=\"nofollow\">https:&#x2F;&#x2F;fluidcad.io&#x2F;docs&#x2F;category&#x2F;3d-operations</a><p>Assemblies will come but not anytime soon. I did some research and tests and it is going to be a challenge. You can  still add multiple parts in one scene but no actual joints implementation.",
+  "time": 1775887138,
+  "type": "comment"
+}

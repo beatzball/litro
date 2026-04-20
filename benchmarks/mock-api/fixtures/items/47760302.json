@@ -1,0 +1,12 @@
+{
+  "by": "nickvec",
+  "id": 47760302,
+  "kids": [
+    47760387,
+    47760308
+  ],
+  "parent": 47760269,
+  "text": "Yeah, extremely misleading title even if it is technically true semantically. The phrasing gives the impression that a bug was found in `lean-zip` as part of the proof boundary when it was part of the unverified archive-handling code.",
+  "time": 1776131433,
+  "type": "comment"
+}

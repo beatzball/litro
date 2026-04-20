@@ -1,0 +1,15 @@
+{
+  "by": "johnfn",
+  "id": 47754123,
+  "kids": [
+    47761880,
+    47754724,
+    47758195,
+    47761072,
+    47754513
+  ],
+  "parent": 47752819,
+  "text": "Guys, did you know about tmux control mode? It tells the host terminal to treat tmux tabs as actual tabs in the terminal. That means that things like scrollback, tab navigation, copy paste, keyboard shortcuts, etc are all handled natively, and you can <i>visually see</i> all your tmux tabs! It doesn&#x27;t have great support across all terminals, but it does work great in iTerm 2.<p>Try `tmux -CC` in iTerm.<p>For a tmux novice like me, this was a total game changer :)",
+  "time": 1776096392,
+  "type": "comment"
+}

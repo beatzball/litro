@@ -1,0 +1,8 @@
+{
+  "by": "xixixao",
+  "id": 47758107,
+  "parent": 47757981,
+  "text": "Workflows can vary, but what I like:<p>PR&#x2F;MR is an &quot;atomic&quot; change (ideally the smallest change that can be landed separately - smallest makes it easier to review, bisect and revert)<p>Individual commits (or what &quot;versions&quot; are in Phabricator) are used for the evolution of the PR&#x2F;MR to achieve that change.<p>But really I have 2 use cases for the commits:<p>1. the PR&#x2F;MR is still too big, so I split it into individual commits (I know they will land together)<p>2. I keep the history of the evolution of the PR&#x2F;MR in the commits (&quot;changed foo to bar cause its a better approach&quot;)",
+  "time": 1776116065,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "klodolph",
+  "id": 47760257,
+  "kids": [
+    47760745
+  ],
+  "parent": 47760164,
+  "text": "NFS in practice is too different from S3 to make this work.<p>I’ve been at a couple companies where somebody tried putting an S3 interface in front of an NFS cluster. In practice, the semantics of S3 and NFS are different enough that I’ve had to then deal with software failures. Software designed to work with S3 is designed to work with S3 semantics and S3 performance. Hook it up to an S3 API on what is otherwise an NFS server and you can get problems.<p>“You can get replication with RAID” is technically true, but it’s just not good enough in most NFS systems. S3 style replication keeps files available in spite of multiple node failures.<p>The problems I’m talking about arise because when you use an S3-compatible API on your NFS system, it’s <i>often</i> true that you’re rolling the dice with three different vendors—you have the storage appliance vendor, you have the vendor for the software talking to S3, and you have Amazon who wrote the S3 client libraries. It’s kind of a nightmare of compatibility problems in my experience. Amazon changes how the S3 client library works, the change wasn’t tested against the storage vendor’s implementation, and boom, things stop working. But your first call is to the application vendor, and they are completely unfamiliar with your storage appliance. :-(",
+  "time": 1776130971,
+  "type": "comment"
+}

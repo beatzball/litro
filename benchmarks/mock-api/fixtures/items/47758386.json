@@ -1,0 +1,13 @@
+{
+  "by": "namanyayg",
+  "id": 47758386,
+  "kids": [
+    47759976,
+    47761528,
+    47759962
+  ],
+  "parent": 47757552,
+  "text": "I&#x27;ve seen a lot of such systems come and go. One of my friends is working on probably the best (VC-funded) memory system right now.<p>The problem always is that when there are too many memories, the context gets overloaded and the AI starts ignoring the system prompt.<p>Definitely not a solved problem, and there  need to be benchmarks to evaluate these solutions. Benchmarks themselves can be easily gamed and not universally applicable.",
+  "time": 1776117467,
+  "type": "comment"
+}

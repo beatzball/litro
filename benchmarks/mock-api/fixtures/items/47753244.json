@@ -1,0 +1,8 @@
+{
+  "by": "seemaze",
+  "id": 47753244,
+  "parent": 47752819,
+  "text": "I&#x27;ve been thoroughly impressed with tmux control mode[0] in iTerm2. This lets you manage remote terminal windows with your local window management provider. It is currently in the process of being implemented in ghostty[1] as well, can&#x27;t wait!<p>[0] <a href=\"https:&#x2F;&#x2F;github.com&#x2F;tmux&#x2F;tmux&#x2F;wiki&#x2F;Control-Mode\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;tmux&#x2F;tmux&#x2F;wiki&#x2F;Control-Mode</a><p>[1] <a href=\"https:&#x2F;&#x2F;github.com&#x2F;ghostty-org&#x2F;ghostty&#x2F;issues&#x2F;1935#issuecomment-3984405896\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;ghostty-org&#x2F;ghostty&#x2F;issues&#x2F;1935#issuecomm...</a>",
+  "time": 1776093407,
+  "type": "comment"
+}

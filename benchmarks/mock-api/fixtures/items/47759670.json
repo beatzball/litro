@@ -1,0 +1,11 @@
+{
+  "by": "jjfoooo4",
+  "descendants": 0,
+  "id": 47759670,
+  "score": 4,
+  "text": "I very frequently use Excalidraw for presentations and writing, but the charting ability is relatively limited.\nThis project surfaces a CLI which supports a wider variety of chart types and parameters.<p>Outputting a .excalidraw file means that rather than endlessly tweaking parameters to get chart elements positioned just right, you can simply drag them around like any other Excalidraw scene.",
+  "time": 1776126008,
+  "title": "Show HN: Excalicharts – Charting Library for Excalidraw",
+  "type": "story",
+  "url": "https://github.com/tombedor/excalicharts"
+}

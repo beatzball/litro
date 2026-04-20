@@ -1,0 +1,29 @@
+{
+  "by": "devendra116",
+  "descendants": 28,
+  "id": 47736831,
+  "kids": [
+    47753362,
+    47739946,
+    47751356,
+    47742037,
+    47751847,
+    47749936,
+    47739811,
+    47738873,
+    47741758,
+    47737207,
+    47738816,
+    47749529,
+    47739370,
+    47736932,
+    47738763,
+    47747278,
+    47737572
+  ],
+  "score": 15,
+  "text": "are you ok sharing secrets or api keys to you ai agent via .env?<p>or is there any other tool or mechanism that one use to safegaurd from potential exploit or leaks",
+  "time": 1775977024,
+  "title": "Ask HN: Do you trust AI agents with API keys / private keys?",
+  "type": "story"
+}

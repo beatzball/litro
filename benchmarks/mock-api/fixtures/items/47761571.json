@@ -1,0 +1,8 @@
+{
+  "by": "dgunay",
+  "id": 47761571,
+  "parent": 47715389,
+  "text": "I wrote exactly this linter a while back after making the same mistake. Very annoying. Unlike you I did try to get it into golangci-lint but the process wore me down. In the age of LLMs maybe it&#x27;d be worth another try.",
+  "time": 1776144222,
+  "type": "comment"
+}

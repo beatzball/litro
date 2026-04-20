@@ -1,0 +1,8 @@
+{
+  "by": "heavyset_go",
+  "id": 47760945,
+  "parent": 47760340,
+  "text": "Yes, it was annoying, SQLite sucks as single source of truth for clusters, and it cost less than $100 to just buy hardware that can handle multiple high res transcoding sessions at once, but not 20 households&#x27; worth.",
+  "time": 1776137656,
+  "type": "comment"
+}

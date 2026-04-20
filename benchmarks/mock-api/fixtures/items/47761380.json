@@ -1,0 +1,8 @@
+{
+  "by": "__farre__",
+  "id": 47761380,
+  "parent": 47758372,
+  "text": "Post author here. I should&#x27;ve expected these comments, which makes me want to clarify a couple of things.<p>1. Just because I&#x27;m a dev at Mozilla and I got support for buildcache landed in the Firefox repo doesn&#x27;t make this a Mozilla project. I do this on my own time to help me be more efficient when I actually work.<p>2. I mainly do this because it&#x27;s fun. Including the blogging.<p>3. Sccache is still the compiler cache we&#x27;re officially developing at Mozilla",
+  "time": 1776142299,
+  "type": "comment"
+}

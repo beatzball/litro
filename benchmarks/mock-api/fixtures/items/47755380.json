@@ -1,0 +1,8 @@
+{
+  "by": "f-serif",
+  "id": 47755380,
+  "parent": 47753689,
+  "text": "I wish there were CLI preview command when making changes in Cloudflare.<p>I have few domains on Cloudflare and when making some changes, I wish there were a way to apply the same changes to multiple domains for consistency.<p>CLI preview for UI action will make it possible.",
+  "time": 1776101820,
+  "type": "comment"
+}

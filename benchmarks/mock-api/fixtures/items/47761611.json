@@ -1,0 +1,13 @@
+{
+  "by": "dnnddidiej",
+  "id": 47761611,
+  "kids": [
+    47761725,
+    47761939,
+    47761685
+  ],
+  "parent": 47760764,
+  "text": "Easy fix:<p>JS doesn&#x27;t let you change back button behaviour.<p>Q. But what about SPA?<p>A. Draw your own app-level back button top left of page.<p>Another solution: make it a permisson.",
+  "time": 1776144559,
+  "type": "comment"
+}

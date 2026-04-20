@@ -1,0 +1,11 @@
+{
+  "by": "estebarb",
+  "id": 47760164,
+  "kids": [
+    47760257
+  ],
+  "parent": 47729350,
+  "text": "Personally I would suggest that the &quot;easiest S3&quot; would be simply using NFS. You can get replication with RAID.<p>S3 is simple for the users, not the operators. For replicating something like S3 you need to manage a lot of parts and take a lot of decisions. The design space is huge:<p>Replication: RAID, distributed copies, distributed erasure codes...<p>Coordination: centralized, centralized with backup, decentralized, logic in client...<p>How to handle huge files: nope, client concats them, a coordinator node concats them...<p>How will be the network: local networking, wan, a mix. Slow or fast?<p>Nature of storage: 24&#x2F;7 or sporadically connected.<p>How to handle network partitions, pick CAP sides...<p>Just for instance: network topology. In your own DC you may say each connection has the same cost. In AWS you may want connections to stay in the same AZ, use certain IPs for certain source-destination to leverage cheaper prices and so on...",
+  "time": 1776130193,
+  "type": "comment"
+}

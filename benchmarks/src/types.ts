@@ -41,6 +41,7 @@ export interface BenchmarkResults {
     ssr: Record<string, StreamingResult>;
   };
   crossFramework?: FrameworkResult[];
+  hnBenchmark?: FrameworkResult[];
 }
 
 export interface RunStats {

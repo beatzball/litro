@@ -119,11 +119,12 @@ export interface ShellOptions {
   appScriptUrl?: string;
   /**
    * When true, injects a polling script that checks /_litro/_litro-version.json
-   * every 300 ms. Written by the Vite content plugin on each Markdown change;
+   * every 2.5s. Written by the Vite content plugin on each Markdown change;
    * served at /_litro/ by the existing publicAssets handler. When v changes the
-   * browser calls location.reload(). Only injected in dev mode.
+   * browser calls location.reload(). Only injected in dev mode for apps that
+   * use the content layer — apps without content skip this to avoid 404 noise.
    */
-  devMode?: boolean;
+  contentDevPolling?: boolean;
   /**
    * Skip links rendered at the top of `<body>`. Each link is visually hidden
    * until focused, allowing keyboard/screen reader users to jump to key
@@ -181,7 +182,7 @@ export function buildShell(
     ? `\n  <script type="application/json" id="__litro_data__">${safeJson}</script>`
     : '';
   const appScriptUrl = options?.appScriptUrl ?? '/_litro/app.js';
-  const devReloadScript = options?.devMode
+  const devReloadScript = options?.contentDevPolling
     ? `\n  <script>(function(){var v=null;setInterval(function(){fetch('/_litro/_litro-version.json?_t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(v===null){v=d.v}else if(v!==d.v){location.reload()}}).catch(function(){})},2500)})();</script>`
     : '';
 

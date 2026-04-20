@@ -1,0 +1,11 @@
+{
+  "by": "uticus",
+  "id": 47718269,
+  "kids": [
+    47720635
+  ],
+  "parent": 47718176,
+  "text": "&gt; You could always write code to help doing those things direct from disk, but you know what you have just written if you do so? A database!<p>Yes, but that&#x27;s my point. Why is this not a part of the standard library &#x2F; typical package with very little friction with the rest of the code, instead of a separate program that the standard library &#x2F; typical packages provide in an attempt to reduce the friction?<p>Or are you making the general point that databases already existed prior to the standard libraries etc, and this is just a case of interfacing with an existing technology instead of rebuilding from scratch?",
+  "time": 1775829517,
+  "type": "comment"
+}

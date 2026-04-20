@@ -1,0 +1,10 @@
+{
+  "by": "abhay_ramesh",
+  "descendants": 0,
+  "id": 47761892,
+  "score": 2,
+  "text": "I was tired setting up file uploads for multiple projects with bloated aws-sdk so built my own, my first attempt was next-s3-uploader, it worked but needed much better developer experience and wanted to get all benifits of typesafe Typescript, and wanted to have a very light weight toolkit that can do all things a dev needs to manage s3.<p>Credits to `aws4fetch` which made it be able to run in edge enviornments and cloudflare workers, now im trying to expand and build towards non Reactjs frameworks too and have support.<p>Setting up file uploads shouldnt be hard, but is. the easier options have vendor lockin&#x27;s.<p>So made a DX friendly, typesafe file upload library, enjoy. Happy to discuss any improvements and options.",
+  "time": 1776147418,
+  "title": "Show HN: Pushduck – S3 uploads that run on Cloudflare Workers, no AWS SDK",
+  "type": "story"
+}

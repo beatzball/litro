@@ -1,0 +1,8 @@
+{
+  "by": "jFriedensreich",
+  "id": 47757929,
+  "parent": 47753689,
+  "text": "I really dislike wrangler, though i understand the need to make something for mainstream appeal (agent cli tools + npx execution) It would be really nice if the cli was a layer on top of a git ops enabled declarative layer that was usable directly. (The terraform provider does not count...)",
+  "time": 1776115016,
+  "type": "comment"
+}

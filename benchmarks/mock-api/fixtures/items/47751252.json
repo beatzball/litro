@@ -1,0 +1,11 @@
+{
+  "by": "vampiregrey",
+  "id": 47751252,
+  "kids": [
+    47752879
+  ],
+  "parent": 47750069,
+  "text": "I&#x27;ve been using Claude Code as my primary agent orchestration tool for a few weeks now. Running cron-style loops for browser automation through a remote Playwright instance. Haven&#x27;t tried Codex at this depth yet, but from what I&#x27;ve seen it&#x27;s more focused on code generation while Claude Code is more of a general-purpose agent runtime. The things that make Claude Code powerful for me are the persistent session with tool access, the ability to run background tasks on schedules, and the hook&#x2F;skill system for customization. If Codex matches that plus adds better async execution (Claude Code&#x27;s scheduled tasks die when the session ends), it could be compelling. But for now Claude Code handles my use case better than anything else I&#x27;ve tried.",
+  "time": 1776084676,
+  "type": "comment"
+}

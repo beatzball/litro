@@ -1,0 +1,11 @@
+{
+  "by": "somat",
+  "id": 47726762,
+  "kids": [
+    47727925
+  ],
+  "parent": 47721997,
+  "text": "These code base cad systems are pretty great. But all of them are imperative languages and as such can only solve imperative constraints. Including declarative constraints would be very welcome. I mean, sure, Theoretically we could enter the turing tarpit and build our own constraint solver, but it would be nice to see one included as a standard library.<p>I am trying to think of an example, declarative constraints are usually the domain of a graphical cad system(like solvespace). but I suspect it would look like a set of relationships you can enter in any order and it solves for the missing one. so... prolog? has there ever been a cad system in prolog?",
+  "time": 1775875053,
+  "type": "comment"
+}

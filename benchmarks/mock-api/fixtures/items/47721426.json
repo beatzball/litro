@@ -1,0 +1,12 @@
+{
+  "by": "AyanamiKaine",
+  "id": 47721426,
+  "kids": [
+    47722958,
+    47722769
+  ],
+  "parent": 47718243,
+  "text": "But this would only relate to local databases wouldn&#x27;t it? Having to connect to a postgres server or something similar. The latency for queries would be far higher than using the file system.",
+  "time": 1775843237,
+  "type": "comment"
+}

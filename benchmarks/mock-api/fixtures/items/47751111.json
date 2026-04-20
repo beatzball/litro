@@ -1,0 +1,13 @@
+{
+  "by": "embedding-shape",
+  "id": 47751111,
+  "kids": [
+    47751156,
+    47751605,
+    47751317
+  ],
+  "parent": 47751082,
+  "text": "&gt; I’d wager 99.9% of the users didn’t realize that they are effectively sending their live GPS coords to a random website when taking a photo.<p>I&#x27;d wager 90% of the photos on Google Maps associated with various listings don&#x27;t actually know their photos are in public. I keep coming across selfies and other photos that look very personal, but somehow someone uploaded to Google Maps, the photo is next to a store or something and Google somehow linked them together, probably by EXIF.",
+  "time": 1776083868,
+  "type": "comment"
+}

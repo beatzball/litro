@@ -1,0 +1,8 @@
+{
+  "by": "theozero",
+  "id": 47753362,
+  "parent": 47736831,
+  "text": "You will probably like varlock - it helps get your keys out of plaintext, while giving your agents a schema and additional tools so it can interact with env vars safely. The next step is injecting your keys via proxy, but just varlock is a huge improvement as a first step. Generally provides a ton of quality of live improvements as well, whether working solo or on a team.",
+  "time": 1776093858,
+  "type": "comment"
+}

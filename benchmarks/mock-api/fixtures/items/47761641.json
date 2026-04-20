@@ -1,0 +1,8 @@
+{
+  "by": "lmeyerov",
+  "id": 47761641,
+  "parent": 47761281,
+  "text": "We have this issue in GFQL right now. We wrote the first OSS GPU cypher query language impl, where we make a query plan of gpu-friendly collective operations... But today their steps are coordinated via the python, which has high constant overheads.<p>We are looking to shed something of the python&lt;-&gt;c++&lt;-&gt;GPU overheads by pushing macro steps out of python and into C++. However, it&#x27;d probably be way better to skip all the CPU&lt;&gt;GPU back-and-forth by coordinating the task queue in the GPU to beginwith . It&#x27;s 2026 so ideally we can use modern tools and type as safety for this.<p>Note: I looked at the company&#x27;s GitHub and didn&#x27;t see any relevant oss, which changes the calculus for a team like our&#x27;s. Sustainable infra is hard!",
+  "time": 1776144882,
+  "type": "comment"
+}

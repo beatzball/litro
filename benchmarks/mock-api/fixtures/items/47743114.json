@@ -1,0 +1,12 @@
+{
+  "by": "a-ve",
+  "id": 47743114,
+  "kids": [
+    47743904,
+    47746472
+  ],
+  "parent": 47742920,
+  "text": "Hi there - I ran into the same issue myself, but sadly I still haven&#x27;t found a way to show the badge count without opening the app. I&#x27;m still experimenting with it.<p>I expected some pushback on subscriptions, but after trying uBar and running into quite a few issues with it I wanted to build something that feels reliable and polished. I’m pretty much all-in on the Apple ecosystem now, even though I only switched ~6 months ago. My intention is to keep supporting boringBar regularly, as I use it every day myself.",
+  "time": 1776020176,
+  "type": "comment"
+}

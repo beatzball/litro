@@ -1,0 +1,18 @@
+{
+  "by": "lifis",
+  "id": 47743616,
+  "kids": [
+    47743785,
+    47743693,
+    47745825,
+    47745940,
+    47744613,
+    47747499,
+    47746564,
+    47746124
+  ],
+  "parent": 47741889,
+  "text": "That&#x27;s cool but by only supporting Claude Code you are contributing to the Anthropic lock-in problem.<p>This needs to support at least Gemini CLI, Codex and OpenCode as well, preferably by being generic as much as possible.",
+  "time": 1776023034,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "Zak",
+  "id": 47752143,
+  "kids": [
+    47754248
+  ],
+  "parent": 47750669,
+  "text": "I don&#x27;t like this. The Right Thing is for camera apps to not add location metadata by default.<p>If you go in and turn location on (which should have a warning on it), then you&#x27;re the sort of person who changes defaults, a more sophisticated user than the majority of the population who is able to take responsibility for the consequences. Yes, I can imagine a scenario where someone ends up with this setting turned on through no fault of their own, but it shouldn&#x27;t be the role of an OS vendor to prevent every possible mistake.",
+  "time": 1776088999,
+  "type": "comment"
+}

@@ -1,0 +1,8 @@
+{
+  "by": "ahmadyan",
+  "id": 47759784,
+  "parent": 47757981,
+  "text": "the best implementation i&#x27;ve worked with was SuperSmartLog (SSL) at Meta, which was open-sourced at interactive smartlog (<a href=\"https:&#x2F;&#x2F;sapling-scm.com&#x2F;docs&#x2F;addons&#x2F;isl&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;sapling-scm.com&#x2F;docs&#x2F;addons&#x2F;isl&#x2F;</a>). There are also extension for it in VSCode, etc.<p>Surprisingly it never gained the adoption it deserved.",
+  "time": 1776126979,
+  "type": "comment"
+}

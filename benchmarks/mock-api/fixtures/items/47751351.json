@@ -1,0 +1,12 @@
+{
+  "by": "d-lo",
+  "id": 47751351,
+  "kids": [
+    47760021,
+    47752914
+  ],
+  "parent": 47750069,
+  "text": "I’ve mostly switched to Codex (GPT-5.4 high) over Claude Code (Opus 4.6) in the last few weeks. I think my style of workflow and prompting seems to generate a bit better results with it. I have a thin CLI based issue tracker and an associated skill that I use instead of markdown files and Codex does a better job of interacting with it and updating existing tasks over time whereas Claude Code tends to create duplicate tasks with slight changes.\n I find the code quality of both to be pretty on par with some style differences; Claude has been leaving very verbose comments as of late<p>I do slightly prefer the Codex app over the Claude Code TUI and Visual Studio Code integrations.",
+  "time": 1776085208,
+  "type": "comment"
+}

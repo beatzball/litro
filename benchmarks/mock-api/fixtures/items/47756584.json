@@ -1,0 +1,11 @@
+{
+  "by": "rooagi",
+  "descendants": 0,
+  "id": 47756584,
+  "score": 3,
+  "text": "We’re RooAGI. We built Lint-AI, a Rust CLI for indexing and retrieving evidence from large AI-generated corpora.<p>As AI systems create more task notes, traces, and reports, storing documents isn’t the only challenge.<p>The real problem is finding the right evidence when the same idea appears in multiple places, often with different wording.<p>Lint-AI is our current retrieval layer for that problem.<p>What Lint-AI does currently:<p>* Indexes large documentation corpora.\n* Extracts lightweight entities and important terms.\n* Supports hybrid retrieval using lexical, entity, term, and graph-aware scoring\n* Returns chunk-level evidence with --llm-context for downstream reviewer &#x2F; LLM \n* Use exports doc, chunk, and entity graphs.<p>Example:<p>* .&#x2F;lint-ai &#x2F;path&#x2F;to&#x2F;docs --llm-context &quot;where docs describe the same concept differently&quot; --result-count 8 --simplified<p><pre><code>  That command does not decide whether documents are in contradiction. It retrieves the most relevant chunks so that a reviewer layer can compare them.\n</code></pre>\nRepo: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;RooAGI&#x2F;Lint-AI\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;RooAGI&#x2F;Lint-AI</a><p>We’d appreciate feedback on:<p>* Retrieval&#x2F;ranking design for documentation corpora.\n* How to evaluate evidence retrieval quality for alignment workflows.\n* What kinds of entity&#x2F;relationship modeling would actually be useful here?<p>Visit: <a href=\"https:&#x2F;&#x2F;rooagi.com&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;rooagi.com&#x2F;</a>",
+  "time": 1776107518,
+  "title": "Show HN: Lint-AI by RooAGI, a Rust CLI for AI Doc Retrieval",
+  "type": "story",
+  "url": "https://github.com/RooAGI/Lint-AI"
+}

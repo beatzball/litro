@@ -1,0 +1,13 @@
+{
+  "by": "toniantunovi",
+  "id": 47756498,
+  "kids": [
+    47757474,
+    47757132,
+    47758441
+  ],
+  "parent": 47755629,
+  "text": "The supply chain attack surface in WordPress plugins has always been particularly dangerous because the ecosystem encourages users to install many small single-purpose plugins from individual developers, most of whom aren&#x27;t security-focused organizations. Buying out an established plugin with a large install base is a clever approach because you inherit years of user trust that took the original developer a long time to build.<p>The deeper structural issue is that plugin update notifications function as an implicit trust signal. Users see &quot;update available&quot; and click without questioning whether the author is still the same person. A package signing and transfer transparency system similar to what npm has been working toward would help here, but the WordPress ecosystem has historically moved slowly on security infrastructure.",
+  "time": 1776107054,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "porphyra",
+  "id": 47761655,
+  "kids": [
+    47761987
+  ],
+  "parent": 47761254,
+  "text": "Darktable is great, but notably, it doesn&#x27;t have any neural network-based denoising, even though that&#x27;s now standard in Lightroom, Capture One, and other apps. Darktable only has rather outdated wavelet and non-local means denoising. So a photo that would be perfectly fine at ISO 6400 in other apps will still look grainy, or worse, splotchy in Darktable.",
+  "time": 1776145023,
+  "type": "comment"
+}

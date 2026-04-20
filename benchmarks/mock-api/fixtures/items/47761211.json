@@ -1,0 +1,11 @@
+{
+  "by": "throwaway81523",
+  "id": 47761211,
+  "kids": [
+    47761387
+  ],
+  "parent": 47760805,
+  "text": "&gt; When a user clicks the &quot;back&quot; button in the browser, they have a clear expectation: they want to return to the previous page. Back button hijacking breaks this fundamental expectation.<p>It seems pretty stupid.  Instead of expanding the SEO policy bureaucracy to address a situation where a spammer hijacks the back button, the browser should have been designed in the first place to never allow that hijacking to happen.  Second best approach is modify it now.  While they&#x27;re at it, they should also make it impossible to hijack the mode one.... oh yes, Google itself does that.",
+  "time": 1776140559,
+  "type": "comment"
+}

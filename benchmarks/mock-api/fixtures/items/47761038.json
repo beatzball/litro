@@ -1,0 +1,11 @@
+{
+  "by": "xvilka",
+  "id": 47761038,
+  "kids": [
+    47761520
+  ],
+  "parent": 47753032,
+  "text": "Zellij still can&#x27;t hide&#x2F;show the status bar on the fly[1] and doesn&#x27;t support windows preview in the windows list mode. Just these two (and many more) things are enough to stop me from migrating from tmux.<p>[1] <a href=\"https:&#x2F;&#x2F;github.com&#x2F;zellij-org&#x2F;zellij&#x2F;issues&#x2F;694\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;zellij-org&#x2F;zellij&#x2F;issues&#x2F;694</a>",
+  "time": 1776138611,
+  "type": "comment"
+}

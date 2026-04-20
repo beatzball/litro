@@ -1,0 +1,8 @@
+{
+  "by": "dpark",
+  "id": 47761329,
+  "parent": 47759721,
+  "text": "&gt; <i>Writing the code hasn’t been the bottle neck to developing software for a long time. It’s usually the thinking that takes most of the time</i><p>Does your coding not involve thinking? And if not, why are you not delighted to have AI take that over? Writing unthinking boilerplate is tedious garbage work.<p>Today I wanted to address a bug I found on a product I work on. At the intersection of platform migration and backwards compatibility I found some customers getting neither.  I used an LLM to research the code paths and ensure that my understanding of the break was correct and what the potential side effects of my proposed fix would be. AI saved me stepping through code for hours to understand the side effects. I asked it for a nice description of the flow and it gave it to me, including the pieces I didn’t really know because I’d never even touched that code before. I could have done this. Would it have been a better use of my time than moving on to the next thing? Probably not. Stepping through function calls in an IDE is not my idea of good “thinking” work. Tracing through glue to understand how a magical property gets injected is a great job for a machine.",
+  "time": 1776141687,
+  "type": "comment"
+}

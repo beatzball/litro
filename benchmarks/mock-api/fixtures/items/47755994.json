@@ -1,0 +1,11 @@
+{
+  "by": "zzyzxd",
+  "id": 47755994,
+  "kids": [
+    47756927
+  ],
+  "parent": 47752819,
+  "text": "&gt; Less awkward prefix keys<p>&gt; Probably the most common change among tmux users is to change the prefix from the rather awkward C-b to something that’s a little more accessible.<p>I like the awkwardness of the default prefix key. I have almost never activated it by accident.<p>&gt; Intuitive Split Commands<p>&gt; Another thing I personally find quite difficult to remember is the pane splitting commands.&quot; to split vertically and % to split horizontally just doesn’t work for my brain.<p>This is super intuitive to me. two &#x27; in parallel means splitting horizontally. two ° split by an almost horizontal line means splitting vertically.<p>&gt; Easy Config Reloads<p>I reloaded config over a few hundreds of times in my first week learning tmux a decade ago. I only reloaded config once in the last 5 years if I recall correctly. It&#x27;s not something you should memorize.",
+  "time": 1776104635,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "p4bl0",
+  "id": 47761736,
+  "kids": [
+    47762034
+  ],
+  "parent": 47760764,
+  "text": "That&#x27;s cool if they can make it work.<p>I don&#x27;t understand how Google&#x27;s indexing work anymore. I&#x27;ve had some website very well indexed for years and years which suddenly disappeared from the index with no explanation, even on the Search Console (&quot;visited, not indexed&quot;). Simple blog entries, lightweight pages, no JavaScript, no ads, no bad practices, https enabled, informative content that is linked from elsewhere including well indexed websites (some entries even performed well on Reddit).\nAt the same time, for the past few years I&#x27;ve found Google search to be a less and less reliable tool because the results are less often what I need.<p>Anyway, let&#x27;s hope this new policy can improve things a little.",
+  "time": 1776145765,
+  "type": "comment"
+}

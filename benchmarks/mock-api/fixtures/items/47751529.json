@@ -1,0 +1,11 @@
+{
+  "by": "butlike",
+  "id": 47751529,
+  "kids": [
+    47752389
+  ],
+  "parent": 47742200,
+  "text": "The issue I have with UI replacements is that I now have a dependency that MUST be installed, otherwise I have to learn how to UX again from scratch. If I ever get a new Mac, I now MUST install boringBar, otherwise it will be like learning a new OS workflow, akin from  switching from Mac to Windows. If Apple ever updates anything to where the plugin would stop working, I now need to do the same adaptation. It&#x27;s fun for a while to do things like this, but in my older computing age, I can&#x27;t bear the cognitive effort, so I tend to just use mostly-default UI.",
+  "time": 1776086210,
+  "type": "comment"
+}

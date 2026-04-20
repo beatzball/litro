@@ -1,0 +1,15 @@
+{
+  "by": "maccard",
+  "id": 47751219,
+  "kids": [
+    47751530,
+    47760572,
+    47751423,
+    47751399,
+    47751367
+  ],
+  "parent": 47751105,
+  "text": "If google really cared about privacy, they wouldn&#x27;t have moved maps away from a subdomain. now if I want maps to have my location (logical), I need to grant google _search_ my location too.",
+  "time": 1776084516,
+  "type": "comment"
+}

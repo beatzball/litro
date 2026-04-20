@@ -1,0 +1,12 @@
+{
+  "by": "NewsaHackO",
+  "id": 47761125,
+  "kids": [
+    47762043,
+    47761236
+  ],
+  "parent": 47760024,
+  "text": "To me, saying that there is a bug in the lean runtime means lean-zip has a bug is like saying a bug in JRE means a Java app that uses the runtime has a bug, even though the Java app code itself does have a bug. It seems like the author is being intentionally misleading about his findings.",
+  "time": 1776139685,
+  "type": "comment"
+}

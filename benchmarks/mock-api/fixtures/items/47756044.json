@@ -1,0 +1,13 @@
+{
+  "by": "mmh0000",
+  "id": 47756044,
+  "kids": [
+    47759308,
+    47757063,
+    47756646
+  ],
+  "parent": 47752819,
+  "text": "I love tmux! It&#x27;s perfectly usable! You only need a 400-line custom-built configuration file[1]!<p>[1] <a href=\"https:&#x2F;&#x2F;doc.xn0.org&#x2F;.tmux.conf\" rel=\"nofollow\">https:&#x2F;&#x2F;doc.xn0.org&#x2F;.tmux.conf</a><p>Disclaimer: I am being silly but serious. tmux is absolutely not user-friendly out of the box. It is, however, extremely nice after an absurd amount of tweaking, which is either an endorsement or a damning, depending on your perspective.",
+  "time": 1776104833,
+  "type": "comment"
+}

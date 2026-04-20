@@ -13,6 +13,10 @@
     "@beatzball/litro-docs-ui",
     "@beatzball/litro-docs-ssr",
     "@beatzball/litro-benchmarks",
-    "bench-litro"
+    "bench-litro",
+    "bench-hn-litro",
+    "bench-hn-litro-fast",
+    "bench-hn-litro-elena",
+    "@beatzball/hn-mock-api"
   ]
 }

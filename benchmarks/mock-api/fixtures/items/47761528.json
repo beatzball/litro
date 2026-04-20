@@ -1,0 +1,8 @@
+{
+  "by": "wenhan_zhou",
+  "id": 47761528,
+  "parent": 47758386,
+  "text": "Context bloat is real, but the architecture has the potential to solve it.<p>You need clever naming for the filesystem and exploration policy in AGENTS.md. (not trivial!)<p>The benchmark is definitely the core bottleneck. I don&#x27;t know any good benchmark for this, probably an open research question in itself.",
+  "time": 1776143889,
+  "type": "comment"
+}

@@ -6,7 +6,9 @@
     "bench": "tsx src/runner.ts",
     "bench:quick": "tsx src/runner.ts --skip-lighthouse",
     "bench:cross": "tsx src/runner.ts --cross-framework --skip-lighthouse",
-    "bench:full": "tsx src/runner.ts --cross-framework"
+    "bench:full": "tsx src/runner.ts --cross-framework",
+    "bench:hn": "tsx src/runner.ts --hn --skip-lighthouse",
+    "bench:hn:full": "tsx src/runner.ts --hn"
   },
   "devDependencies": {
     "autocannon": "^8.0.0",

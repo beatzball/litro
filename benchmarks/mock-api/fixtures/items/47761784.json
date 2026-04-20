@@ -1,0 +1,11 @@
+{
+  "by": "mark124mj",
+  "id": 47761784,
+  "kids": [
+    47761832
+  ],
+  "parent": 47750669,
+  "text": "It&#x27;s interesting that Android is actually ahead of iOS on this, as simonw pointed out, iOS still doesn&#x27;t strip location data from photos uploaded via web forms. This should be the default on both platforms. Most people have no idea they&#x27;re attaching exact GPS coordinates to every photo they share, and the safety implications alone (stalking, doxxing) make it worth the tradeoff for the small number of use cases that rely on it.",
+  "time": 1776146337,
+  "type": "comment"
+}

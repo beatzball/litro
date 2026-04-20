@@ -1,0 +1,14 @@
+{
+  "by": "shchess",
+  "descendants": 2,
+  "id": 47731361,
+  "kids": [
+    47737539,
+    47731444
+  ],
+  "score": 13,
+  "text": "I&#x27;ve been testing Tor Browser on Android (rooted tablet + Bluetooth tether sniffer). Here&#x27;s what I found:<p>These requests contain:<p>· Your real IP address\n· The .onion URL in the Referer header\n· Tor Browser user-agent<p>The evidence (captured live):<p>```\n[18:12:10] 10.188.1.98 -&gt; 192.178.183.95 (Akamai)\n[18:12:14] 10.188.1.98 -&gt; 142.251.14.95 (Google)\n[18:12:22] 10.188.1.98 -&gt; 142.251.20.95 (Google)\n```<p>HTTP attempts: 5\nHTTPS SNI captured: 0<p>All plain text. No encryption. Tor not involved.<p>What this means:<p>Every time you use Tor Browser on Android, switch to Desktop Mode, and visit a .onion site, you&#x27;re broadcasting your real IP to Google, Amazon, and anyone monitoring your network.",
+  "time": 1775920759,
+  "title": "Tor Browser on Android leaks IP in desktop mode",
+  "type": "story"
+}

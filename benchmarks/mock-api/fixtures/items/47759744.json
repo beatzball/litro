@@ -1,0 +1,8 @@
+{
+  "by": "cyberax",
+  "id": 47759744,
+  "parent": 47758589,
+  "text": "Uhmm... I have a local Ollama setup on Linux+AMD, and it was only a bit more involved than this sample. And only because I wanted to run everything in a container.<p>If you mean that you can&#x27;t just run the largest unquantized models, then it&#x27;s indeed true.",
+  "time": 1776126660,
+  "type": "comment"
+}

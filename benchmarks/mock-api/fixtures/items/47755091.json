@@ -1,0 +1,11 @@
+{
+  "by": "porphyra",
+  "id": 47755091,
+  "kids": [
+    47756429
+  ],
+  "parent": 47753689,
+  "text": "Ironically, with the advent of AI agents and stuff, we&#x27;re going back from &quot;checkbox engineering&quot; in GUI webpages to CLI tools. Every time I need to clear cache in cloudflare when I upload a new version of an asset, I have to click through a bunch of things. Would be nice to just message my openclaw agent to do it.",
+  "time": 1776100391,
+  "type": "comment"
+}

@@ -1,75 +1,75 @@
 {
   "meta": {
-    "timestamp": "2026-04-02T09:01:28.998Z",
+    "timestamp": "2026-04-20T03:05:47.000Z",
     "nodeVersion": "v24.7.0",
     "platform": "darwin",
     "arch": "arm64",
     "cpuModel": "Apple M4 Max",
     "cpuCount": 16,
     "memoryGB": 128,
-    "commitSha": "9b31ea1",
-    "commitMessage": "chore: version packages (#51)"
+    "commitSha": "434121f",
+    "commitMessage": "docs: update homepage to framework-agnostic branding (#72)"
   },
   "buildTime": {
     "ssg": {
       "runs": [
-        4154,
-        4572,
-        4151
+        9795,
+        9755,
+        9655
       ],
-      "mean": 4292,
-      "median": 4154,
-      "p95": 4572,
-      "stddev": 198,
-      "min": 4151,
-      "max": 4572
+      "mean": 9735,
+      "median": 9755,
+      "p95": 9795,
+      "stddev": 59,
+      "min": 9655,
+      "max": 9795
     },
     "ssr": {
       "runs": [
-        4404,
-        4331,
-        4294
+        5173,
+        5201,
+        5158
       ],
-      "mean": 4343,
-      "median": 4331,
-      "p95": 4404,
-      "stddev": 46,
-      "min": 4294,
-      "max": 4404
+      "mean": 5177,
+      "median": 5173,
+      "p95": 5201,
+      "stddev": 18,
+      "min": 5158,
+      "max": 5201
     }
   },
   "bundleSize": {
     "ssg": {
-      "clientJS": 1258277,
+      "clientJS": 1267565,
       "clientCSS": 7796,
       "serverBundle": 0,
-      "staticHTML": 3798576,
-      "totalOutput": 8562573
+      "staticHTML": 4824356,
+      "totalOutput": 10800657
     },
     "ssr": {
-      "clientJS": 1280357,
+      "clientJS": 1281108,
       "clientCSS": 0,
-      "serverBundle": 5771922,
+      "serverBundle": 6691287,
       "staticHTML": 0,
-      "totalOutput": 9275895
+      "totalOutput": 13936448
     }
   },
   "httpPerf": {
     "ssg": {
       "/": {
         "latency": {
-          "mean": 0.05,
+          "mean": 0.03,
           "p50": 0,
-          "p97_5": 1,
+          "p97_5": 0,
           "p99": 1,
-          "max": 4
+          "max": 5
         },
         "requests": {
-          "mean": 14604,
-          "total": 160641
+          "mean": 16168.73,
+          "total": 177843
         },
         "throughput": {
-          "mean": 674067549.1
+          "mean": 762862871.28
         },
         "errors": 0,
         "timeouts": 0,
@@ -78,18 +78,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 0.18,
+          "mean": 0.29,
           "p50": 0,
           "p97_5": 1,
           "p99": 1,
-          "max": 3
+          "max": 4
         },
         "requests": {
-          "mean": 13100.73,
-          "total": 144105
+          "mean": 11576.37,
+          "total": 127340
         },
         "throughput": {
-          "mean": 739984849.46
+          "mean": 803471360
         },
         "errors": 0,
         "timeouts": 0,
@@ -98,18 +98,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 1.27,
-          "p50": 1,
-          "p97_5": 3,
-          "p99": 3,
-          "max": 14
+          "mean": 1.83,
+          "p50": 2,
+          "p97_5": 4,
+          "p99": 4,
+          "max": 6
         },
         "requests": {
-          "mean": 5094.4,
-          "total": 50937
+          "mean": 4436.4,
+          "total": 44358
         },
         "throughput": {
-          "mean": 945186406.4
+          "mean": 909954252.8
         },
         "errors": 0,
         "timeouts": 0,
@@ -118,18 +118,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 0.05,
+          "mean": 0.04,
           "p50": 0,
           "p97_5": 1,
           "p99": 1,
-          "max": 8
+          "max": 2
         },
         "requests": {
-          "mean": 16966.55,
-          "total": 186638
+          "mean": 17189.1,
+          "total": 189085
         },
         "throughput": {
-          "mean": 470155264
+          "mean": 477948090.19
         },
         "errors": 0,
         "timeouts": 0,
@@ -140,18 +140,18 @@
     "ssr": {
       "/": {
         "latency": {
-          "mean": 7.09,
-          "p50": 6,
-          "p97_5": 12,
-          "p99": 14,
-          "max": 40
+          "mean": 37.72,
+          "p50": 37,
+          "p97_5": 48,
+          "p99": 55,
+          "max": 142
         },
         "requests": {
-          "mean": 1304.28,
-          "total": 14347
+          "mean": 261.19,
+          "total": 2873
         },
         "throughput": {
-          "mean": 63282455.28
+          "mean": 13027141.82
         },
         "errors": 0,
         "timeouts": 0,
@@ -160,18 +160,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 14.28,
-          "p50": 14,
-          "p97_5": 16,
-          "p99": 20,
-          "max": 47
+          "mean": 87.01,
+          "p50": 84,
+          "p97_5": 107,
+          "p99": 161,
+          "max": 537
         },
         "requests": {
-          "mean": 681.5,
-          "total": 6815
+          "mean": 113.82,
+          "total": 1252
         },
         "throughput": {
-          "mean": 41467904
+          "mean": 8556544
         },
         "errors": 0,
         "timeouts": 0,
@@ -180,18 +180,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 20.91,
-          "p50": 20,
-          "p97_5": 26,
-          "p99": 29,
-          "max": 63
+          "mean": 77.61,
+          "p50": 76,
+          "p97_5": 92,
+          "p99": 147,
+          "max": 451
         },
         "requests": {
-          "mean": 467,
-          "total": 4670
+          "mean": 127.5,
+          "total": 1275
         },
         "throughput": {
-          "mean": 88834048
+          "mean": 26853376
         },
         "errors": 0,
         "timeouts": 0,
@@ -200,18 +200,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 3.58,
-          "p50": 3,
-          "p97_5": 7,
-          "p99": 8,
-          "max": 31
+          "mean": 16.48,
+          "p50": 15,
+          "p97_5": 30,
+          "p99": 32,
+          "max": 109
         },
         "requests": {
-          "mean": 2444.4,
-          "total": 24440
+          "mean": 589,
+          "total": 6479
         },
         "throughput": {
-          "mean": 69756518.41
+          "mean": 17079947.64
         },
         "errors": 0,
         "timeouts": 0,
@@ -223,204 +223,212 @@
   "pageWeight": {
     "ssg": {
       "/": {
-        "rawBytes": 45977,
-        "gzipBytes": 8304,
+        "rawBytes": 47000,
+        "gzipBytes": 8372,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 56297,
-        "gzipBytes": 11322,
+        "rawBytes": 69218,
+        "gzipBytes": 12984,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 185368,
-        "gzipBytes": 33849,
+        "rawBytes": 204930,
+        "gzipBytes": 37217,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 27526,
-        "gzipBytes": 7266,
+        "rawBytes": 27622,
+        "gzipBytes": 7224,
         "statusCode": 200
       }
     },
     "ssr": {
       "/": {
-        "rawBytes": 45901,
-        "gzipBytes": 8295,
+        "rawBytes": 47169,
+        "gzipBytes": 8386,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 56183,
-        "gzipBytes": 11330,
+        "rawBytes": 69349,
+        "gzipBytes": 13011,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 185906,
-        "gzipBytes": 33843,
+        "rawBytes": 205785,
+        "gzipBytes": 37242,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 27452,
-        "gzipBytes": 7267,
+        "rawBytes": 27793,
+        "gzipBytes": 7252,
         "statusCode": 200
       }
     }
   },
   "lighthouse": {
-    "ssg": {
-      "/": {
-        "performance": 80,
-        "fcp": 2423.4320500000003,
-        "lcp": 4771.386750000001,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 2423.4320500000003
-      },
-      "/docs/introduction": {
-        "performance": 63,
-        "fcp": 4809.750849999999,
-        "lcp": 9768.6678,
-        "cls": 0,
-        "tbt": 58,
-        "speedIndex": 4809.750849999999
-      },
-      "/blog": {
-        "performance": 75,
-        "fcp": 3032.2529499999996,
-        "lcp": 5286.088250000001,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 3032.2529499999996
-      },
-      "/blog/welcome": {
-        "performance": 63,
-        "fcp": 4660.0617999999995,
-        "lcp": 9619.0824,
-        "cls": 0,
-        "tbt": 58,
-        "speedIndex": 4660.0617999999995
-      }
-    },
-    "ssr": {
-      "/": {
-        "performance": 0,
-        "fcp": 0,
-        "lcp": 0,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 0
-      },
-      "/docs/introduction": {
-        "performance": 0,
-        "fcp": 0,
-        "lcp": 0,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 0
-      },
-      "/blog": {
-        "performance": 0,
-        "fcp": 0,
-        "lcp": 0,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 0
-      },
-      "/blog/welcome": {
-        "performance": 0,
-        "fcp": 0,
-        "lcp": 0,
-        "cls": 0,
-        "tbt": 0,
-        "speedIndex": 0
-      }
-    }
+    "ssg": {}
   },
   "streaming": {
     "ssr": {
       "/": {
         "ttfb": 1,
-        "ttlb": 1,
-        "delta": 0,
-        "totalBytes": 45901
+        "ttlb": 5,
+        "delta": 4,
+        "totalBytes": 47169
       },
       "/docs/introduction": {
-        "ttfb": 2,
-        "ttlb": 2,
-        "delta": 0,
-        "totalBytes": 56183
+        "ttfb": 1,
+        "ttlb": 11,
+        "delta": 10,
+        "totalBytes": 69349
       },
       "/blog": {
-        "ttfb": 2,
-        "ttlb": 3,
-        "delta": 1,
-        "totalBytes": 185906
+        "ttfb": 1,
+        "ttlb": 9,
+        "delta": 8,
+        "totalBytes": 205785
       },
       "/blog/welcome": {
-        "ttfb": 1,
-        "ttlb": 1,
-        "delta": 0,
-        "totalBytes": 27452
+        "ttfb": 0,
+        "ttlb": 2,
+        "delta": 2,
+        "totalBytes": 27793
       }
     }
   },
-  "crossFramework": [
+  "hnBenchmark": [
     {
-      "name": "litro",
-      "version": "0.5.0",
+      "name": "litro-lit",
+      "version": "0.8.0",
       "buildTime": {
         "runs": [
-          1369,
-          1211,
-          1220
+          1831,
+          1810,
+          1817
         ],
-        "mean": 1267,
-        "median": 1220,
-        "p95": 1369,
-        "stddev": 72,
-        "min": 1211,
-        "max": 1369
+        "mean": 1819,
+        "median": 1817,
+        "p95": 1831,
+        "stddev": 9,
+        "min": 1810,
+        "max": 1831
       },
-      "outputSize": 35652,
+      "outputSize": 2510406,
       "pageWeight": {
         "/": {
-          "rawBytes": 4456,
-          "gzipBytes": 2016,
+          "rawBytes": 45597,
+          "gzipBytes": 9019,
           "statusCode": 200
         },
-        "/blog/hello": {
-          "rawBytes": 1641,
-          "gzipBytes": 772,
-          "statusCode": 404
+        "/ask": {
+          "rawBytes": 55632,
+          "gzipBytes": 15424,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 69088,
+          "gzipBytes": 18851,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 62485,
+          "gzipBytes": 15088,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 12117,
+          "gzipBytes": 5703,
+          "statusCode": 200
         }
       }
     },
     {
-      "name": "nuxt",
-      "version": "3.21.2",
+      "name": "litro-fast",
+      "version": "0.8.0",
       "buildTime": {
         "runs": [
-          3317,
-          2591,
-          2543
+          1864,
+          1859,
+          1866
         ],
-        "mean": 2817,
-        "median": 2591,
-        "p95": 3317,
-        "stddev": 354,
-        "min": 2543,
-        "max": 3317
+        "mean": 1863,
+        "median": 1864,
+        "p95": 1866,
+        "stddev": 3,
+        "min": 1859,
+        "max": 1866
       },
-      "outputSize": 204880,
+      "outputSize": 2196381,
       "pageWeight": {
         "/": {
-          "rawBytes": 1278,
-          "gzipBytes": 664,
+          "rawBytes": 38319,
+          "gzipBytes": 8618,
           "statusCode": 200
         },
-        "/blog/hello": {
-          "rawBytes": 1284,
-          "gzipBytes": 665,
+        "/ask": {
+          "rawBytes": 48645,
+          "gzipBytes": 15134,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 59260,
+          "gzipBytes": 17827,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 52544,
+          "gzipBytes": 11518,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 11856,
+          "gzipBytes": 5593,
+          "statusCode": 200
+        }
+      }
+    },
+    {
+      "name": "litro-elena",
+      "version": "0.8.0",
+      "buildTime": {
+        "runs": [
+          1557,
+          1548,
+          1579
+        ],
+        "mean": 1561,
+        "median": 1557,
+        "p95": 1579,
+        "stddev": 13,
+        "min": 1548,
+        "max": 1579
+      },
+      "outputSize": 1926726,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 29458,
+          "gzipBytes": 8090,
+          "statusCode": 200
+        },
+        "/ask": {
+          "rawBytes": 41068,
+          "gzipBytes": 14579,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 50399,
+          "gzipBytes": 17138,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 48840,
+          "gzipBytes": 11037,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 10669,
+          "gzipBytes": 5049,
           "statusCode": 200
         }
       }
@@ -430,27 +438,87 @@
       "version": "14.2.35",
       "buildTime": {
         "runs": [
-          6638,
-          6405,
-          6427
+          6810,
+          6879,
+          7220
         ],
-        "mean": 6490,
-        "median": 6427,
-        "p95": 6638,
-        "stddev": 105,
-        "min": 6405,
-        "max": 6638
+        "mean": 6970,
+        "median": 6879,
+        "p95": 7220,
+        "stddev": 179,
+        "min": 6810,
+        "max": 7220
       },
-      "outputSize": 719695,
+      "outputSize": 4472711,
       "pageWeight": {
         "/": {
-          "rawBytes": 4013,
-          "gzipBytes": 1541,
+          "rawBytes": 44033,
+          "gzipBytes": 6188,
           "statusCode": 200
         },
-        "/blog/hello": {
-          "rawBytes": 4974,
-          "gzipBytes": 1627,
+        "/ask": {
+          "rawBytes": 33795,
+          "gzipBytes": 4593,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 42860,
+          "gzipBytes": 5427,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 63621,
+          "gzipBytes": 16231,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 6333,
+          "gzipBytes": 1858,
+          "statusCode": 200
+        }
+      }
+    },
+    {
+      "name": "nuxt",
+      "version": "3.21.2",
+      "buildTime": {
+        "runs": [
+          3181,
+          3163,
+          3185
+        ],
+        "mean": 3176,
+        "median": 3181,
+        "p95": 3185,
+        "stddev": 10,
+        "min": 3163,
+        "max": 3185
+      },
+      "outputSize": 1469205,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 18400,
+          "gzipBytes": 4758,
+          "statusCode": 200
+        },
+        "/ask": {
+          "rawBytes": 14839,
+          "gzipBytes": 3521,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 17630,
+          "gzipBytes": 4117,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 29305,
+          "gzipBytes": 9906,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 4828,
+          "gzipBytes": 1734,
           "statusCode": 200
         }
       }

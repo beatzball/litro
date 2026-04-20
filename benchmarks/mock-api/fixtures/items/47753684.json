@@ -1,0 +1,16 @@
+{
+  "by": "realberkeaslan",
+  "descendants": 6,
+  "id": 47753684,
+  "kids": [
+    47753999,
+    47754940,
+    47753759,
+    47758415
+  ],
+  "score": 3,
+  "text": "It feels like every few days one of the big AI services is down, degraded, or just slow. I don&#x27;t mean this as a complaint. I&#x27;m just genuinely curious. These are well-funded companies with smart people. What is it about running these models that makes reliability so elusive? Is it just demand nobody predicted, or is there something fundamentally different about serving AI vs. a normal web app?",
+  "time": 1776095021,
+  "title": "Ask HN: What makes it so hard to keep LLMs online?",
+  "type": "story"
+}

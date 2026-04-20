@@ -1,0 +1,11 @@
+{
+  "by": "lgeorget",
+  "id": 47718243,
+  "kids": [
+    47721426
+  ],
+  "parent": 47718113,
+  "text": "More of a sidenote than an answer but a database system can be faster than using the disk directly: <a href=\"https:&#x2F;&#x2F;sqlite.org&#x2F;fasterthanfs.html#approx\" rel=\"nofollow\">https:&#x2F;&#x2F;sqlite.org&#x2F;fasterthanfs.html#approx</a>.<p>It turns out having a defined abstraction like a database makes things faster than having to rely on a rawer interface like filesystems because you can then reduce the number of system calls and context switches necessary. If you wanted to optimize that in your own code rather than relying on a database, you&#x27;d end up reinventing a database system of sorts, when (probably) better solutions already exist.",
+  "time": 1775829374,
+  "type": "comment"
+}

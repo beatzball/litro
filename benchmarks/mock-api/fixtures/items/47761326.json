@@ -1,0 +1,8 @@
+{
+  "by": "dbdr",
+  "id": 47761326,
+  "parent": 47760024,
+  "text": "&gt; obviously no one’s running any compiled Lean code in any kind of production hot path<p>Ignorant question: why not? Is there an unacceptable performance penalty? And what&#x27;s the recommended way in that case to make use of proven Lean code in production that keeps the same guarantees?",
+  "time": 1776141677,
+  "type": "comment"
+}

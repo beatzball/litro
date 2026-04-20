@@ -1,0 +1,11 @@
+{
+  "by": "wjakob",
+  "id": 47749730,
+  "kids": [
+    47749823
+  ],
+  "parent": 47742200,
+  "text": "I am running the trial and it seems great except for two crucial deviations from Dock behavior. Clicking on a button (&quot;chip&quot;) does not bring the associated window to the foreground. It <i>does</i> work when I hover over a chip and then click the preview of a specific window. But nothing happens when I directly click the button in the bar. The issue occurs regardless of whether an app has 1 or &gt;1 windows open. In the latter case, I would prefer if clicking the button brings the most recently used window to the top.<p>Another observation: many macOS apps (e.g. pages, mail, keynote, etc.) like to stay open even without having any active windows. This is completely hidden by boringBar, which leads to tons of apps being open without the user being aware of it (-&gt; memory waste). Furthermore, actually using such an app then requires me to awkwardly type the name of the app even though it&#x27;s already open.<p>I think it would be better if such passive apps without windows still have chips, perhaps smaller ones without a window title.<p>Regarding the foreground issue, in case it&#x27;s relevant: The app has all the permissions it requested. This is on a macOS 26.2 on a M4 MBP.",
+  "time": 1776072910,
+  "type": "comment"
+}

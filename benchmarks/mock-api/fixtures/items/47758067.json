@@ -1,0 +1,18 @@
+{
+  "by": "akersten",
+  "id": 47758067,
+  "kids": [
+    47759587,
+    47758137,
+    47758700,
+    47759611,
+    47758167,
+    47758125,
+    47759752,
+    47759506
+  ],
+  "parent": 47757495,
+  "text": "Does it fix the current UX issue with Squash &amp; Merge?<p>Right now I manually do &quot;stacked PRs&quot; like this:<p>main &lt;- PR A &lt;- PR B (PR B&#x27;s merge target branch is PR A) &lt;- PR C, etc.<p>If PR B merges first, PR A can merge to main no problems. If PR A merges to main first, fixing PR B is a nightmare. The GitHub UI automatically changes the &quot;target&quot; branch of the PR to main, but instantly conflicts spawn from nowhere. Try to rebase it and you&#x27;re going to be manually looking at every non-conflicting change that ever happened on that branch, for no apparent reason (yes, the reason is that PR A merging to main created a new merge commit at the head of main, and git just can&#x27;t handle that or whatever).<p>So I don&#x27;t really need a new UI for this, I need the tool to Just Work in a way that makes sense to anyone who wasn&#x27;t Linus in 1998 when the gospel of rebase was delivered from On High to us unwashed Gentry through his fingertips..",
+  "time": 1776115827,
+  "type": "comment"
+}

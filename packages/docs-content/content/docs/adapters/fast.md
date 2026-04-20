@@ -91,11 +91,40 @@ The FAST adapter:
 - Keeps `@microsoft/fast-*` packages **external** (not inlined) to avoid dual-copy SSR issues
 - Does not modify esbuild settings (FAST does not use legacy decorators)
 
+## SSR Output Fidelity
+
+FAST SSR renders component templates as Declarative Shadow DOM, but not all template features produce server-side output:
+
+- **Arrow function bindings** (`${x => x.title}`) — rendered correctly
+- **`repeat()` directives** — rendered correctly
+- **`:innerHTML` property bindings** — **not rendered server-side**. The element is emitted as an empty tag. Content appears after client-side hydration.
+- **Conditional templates** (`${x => x.data ? html\`...\` : html\`...\`}`) — rendered based on state at first evaluation. If `serverData` isn't populated before the template evaluates, the loading/fallback branch renders.
+
+This means FAST SSG output is smaller than Lit for pages with `:innerHTML` bindings (e.g. comment trees, Markdown content), because that content is missing from the static HTML. The content still loads correctly after hydration, but is not available to users or search engines with JavaScript disabled.
+
+**Workaround:** For content that must appear in the static HTML, use template interpolation instead of `:innerHTML`:
+
+```ts
+// Instead of:
+html`<div :innerHTML="${rawHtml}"></div>`
+
+// Render the HTML into the template directly:
+function renderComments(comments) {
+  return comments.map(c => `<div class="comment">${c.text}</div>`).join('');
+}
+// ... then use a string binding in the parent template
+```
+
+### crawlLinks and SSG Prerendering
+
+When using Nitro's `crawlLinks: true` for SSG, FAST pages may discover fewer links than Lit or Elena pages because `:innerHTML` content (which may contain `<a>` tags) is absent from the prerendered HTML. If your pages contain links inside `:innerHTML` bindings, use explicit `prerender.routes` in your Nitro config instead of relying on crawlLinks.
+
 ## Limitations
 
 - **No `@observable` with jiti** — Nitro's jiti loader cannot process `@observable` decorators. Use `Observable.defineProperty()` for properties that need to work during SSR. Client-side `@observable` works fine.
 - **FAST packages must stay external** — inlining them into the server bundle creates duplicate copies of `@microsoft/fast-element`, breaking SSR's element registry.
 - **ESM top-level await** — does not block sibling modules. The adapter uses synchronous code for DOM shims instead.
+- **`:innerHTML` not rendered in SSR** — see [SSR Output Fidelity](#ssr-output-fidelity) above.
 
 ## Further Reading
 

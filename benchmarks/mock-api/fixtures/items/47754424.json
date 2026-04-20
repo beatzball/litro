@@ -1,0 +1,11 @@
+{
+  "by": "ruaraidh",
+  "descendants": 0,
+  "id": 47754424,
+  "score": 3,
+  "text": "Aeolus is a Python library to provide a unified interface for air quality data from sources around the world.<p>Air quality data is now very widely available, but managing access to multiple networks is challenging when they all have different access requirements, APIs and data formats. Some great solutions exist (like openair and openAQ) but these are limited in the data they cover.<p>Integrating new APIs could be a full-time job, but it&#x27;s something AI can do very well given a pattern. It sometimes involves working through some &quot;interesting&quot; problems - for example, the EEA has a csv endpoint that actually returns a .zip with mimetype &quot;text&#x2F;html&quot;...<p>Beyond data access, Aeolus has basic analytics (for descriptive and regulatory stats) and graphing, as well as quality-of-life improvements like caching.<p>This is really for me as I build out my company working on turning air quality data into actionable information, but it&#x27;s open source and freely available to all under GPLv3+. Let me know if you find it useful!",
+  "time": 1776097568,
+  "title": "Show HN: Aeolus – a library for unified access to air quality sensor networks",
+  "type": "story",
+  "url": "https://github.com/southlondonscientific/aeolus"
+}

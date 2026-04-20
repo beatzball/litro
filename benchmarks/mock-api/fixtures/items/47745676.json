@@ -1,0 +1,21 @@
+{
+  "by": "cmos",
+  "id": 47745676,
+  "kids": [
+    47747993,
+    47749051,
+    47754651,
+    47750617,
+    47747178,
+    47747724,
+    47746464,
+    47747545,
+    47749458,
+    47745736,
+    47751584
+  ],
+  "parent": 47741527,
+  "text": "My mother is living alone in her house and we are getting to the point where she might not be able to live alone.  I built &quot;Still Kicking&quot;, a picture frame that monitors her motion and sends back basic reports and can detect falls and sleep quality to a phone app, to help give her more time at home.<p>It&#x27;s just an mmWave sensor connected to an ESP32.  But it works nicely, and I&#x27;m thinking of starting a company making them, though I&#x27;m not clear if the elderly would be ok with this minimal (no camera) intrusion.<p>It would just work out of the box..  the real one would have a small cell modem so it wouldn&#x27;t need any networking setup, and it would act as a gateway if you have more than one in a house.  There are industrial versions of this for nursing homes.  This would be a bit more warm and fuzzy for home use.<p><a href=\"https:&#x2F;&#x2F;moveometer.com\" rel=\"nofollow\">https:&#x2F;&#x2F;moveometer.com</a>",
+  "time": 1776037140,
+  "type": "comment"
+}

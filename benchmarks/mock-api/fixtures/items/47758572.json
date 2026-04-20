@@ -1,0 +1,14 @@
+{
+  "by": "herpdyderp",
+  "id": 47758572,
+  "kids": [
+    47758676,
+    47758652,
+    47759507,
+    47758610
+  ],
+  "parent": 47757495,
+  "text": "I thrive on stacked PRs but this sure seems like a weird way to implement support for it. Just have each branch point to their parent in the chain, the end. Just native Git. I&#x27;ve been longing for better GitHub support for this but the CLI is not where I need that support: just the UI.",
+  "time": 1776118293,
+  "type": "comment"
+}

@@ -1,0 +1,11 @@
+{
+  "by": "rtpg",
+  "id": 47760404,
+  "kids": [
+    47760565
+  ],
+  "parent": 47760340,
+  "text": "For hardware acceleration you might be interested in the remote hardware acceleration strategy...<p><a href=\"https:&#x2F;&#x2F;jellyfin.org&#x2F;docs&#x2F;general&#x2F;post-install&#x2F;transcoding&#x2F;hardware-acceleration&#x2F;#remote-hardware-acceleration\" rel=\"nofollow\">https:&#x2F;&#x2F;jellyfin.org&#x2F;docs&#x2F;general&#x2F;post-install&#x2F;transcoding&#x2F;h...</a><p>The jellyfin DB itself is unfortunately sqlite instead of being DB agnostic. Maybe you could hack together something such that only one node handles writes and everyone else handles reads... if getting multiple cheap nodes gets your more bandwidth. I have to imagine that jellyfin fairly quickly stops being in charge of the media stream directly.<p>But yeah I think the transcoding and the size of your data pipe is the only &quot;hard&quot; part. The DB read&#x2F;writes themselves are going to not be an issue (I think)",
+  "time": 1776132287,
+  "type": "comment"
+}

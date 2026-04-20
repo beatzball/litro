@@ -1,0 +1,11 @@
+{
+  "by": "the_arun",
+  "id": 47760692,
+  "kids": [
+    47761179
+  ],
+  "parent": 47756569,
+  "text": "Do you use any DB? like Neo4J? or static jsons generated at build time?",
+  "time": 1776135205,
+  "type": "comment"
+}

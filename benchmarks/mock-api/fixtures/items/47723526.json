@@ -1,0 +1,12 @@
+{
+  "by": "eleventhborn",
+  "id": 47723526,
+  "kids": [
+    47759644,
+    47738472
+  ],
+  "parent": 47722081,
+  "text": "I&#x27;m interviewing currently. I&#x27;ve come across the following.<p>* Non-technical recruiters using a list of technical trivia questions and a keywords list to check if you answer correctly (e.g. what is the default isolation level in postgres) - this is the worst.<p>* Code reviews but on non-generic code, like on a specific framework&#x2F;product&#x2F;SDK code in which you may or may not have prior experience - slightly less worse, but if you are going to do this, it is counter intuitive to hire someone who doesn&#x27;t have production experience in that area.<p>* take home assignments where they say &quot;we recommend you to not spend more than x hours on this&quot;, but then, they expect a very sophisticated work and will reject you if you turn-in a &quot;simple&quot; implementation. Maybe they expect speed and quality?<p>* leetcode is still a thing.<p>* non-leetcode, but livecoding, on a likely OOP many to many relationship problem<p>* give a spec in the first x minutes and leave the interview, you do your thing and then they join in the last y minutes - this is my favorite.<p>I haven&#x27;t yet participated in a Agentic AI interview. It is not that common AFAIK.<p>a coding interview that is objective, repeatable, doesn&#x27;t put the interviewee under pressure (and doesn&#x27;t trigger unconscious bias based on accent&#x2F;appearence)<p>* take home assigment with minimum requirements criteria and tell them &quot;add a feature of  your own&quot; or &quot;any extra work is appreciated&quot;.<p>* Pay them for their time and tokens.<p>* Use a custom agent to review the code and see how many &quot;high&quot;, &quot;medium&quot;, &quot;low&quot; issues the agent identifies.",
+  "time": 1775854412,
+  "type": "comment"
+}

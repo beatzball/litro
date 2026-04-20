@@ -1,0 +1,16 @@
+{
+  "by": "KronisLV",
+  "id": 47757463,
+  "kids": [
+    47757575,
+    47757644,
+    47760617,
+    47759606,
+    47757549,
+    47760336
+  ],
+  "parent": 47756259,
+  "text": "&gt; We know how to write software with very few bugs (although we often choose not to)<p>Do we, really? Because a week doesn’t go by when I don’t run into bugs of some sort.<p>Be it in PrimeVue (even now the components occasionally have bugs, seems like they’re putting out new major versions but none are truly stable and bug free) or Vue (their SFC did not play nicely with complex TS types), or the greater npm ecosystem, or Spring Boot or Java in general, or Oracle drivers, or whatever unlucky thread pooling solution has to manage those Oracle connections, or kswapd acting up in RHEL compatible distros and eating CPU to a degree to freeze the whole system instead of just doing OOM kills, or Ansible failing to make systed service definitions be reloaded, or llama.cpp speculative decoding not working for no good reason, or Nvidia driver updates bringing the whole VM down after a restart, or Django having issues with MariaDB or just general weirdness around Celery and task management and a million different things.<p>No matter where I look, up and down the stack, across different OSes and tech stacks, there are bugs. If there is truly bug free code (or as close to that as possible) then it must be in planes or spacecraft, cause when it comes to the kind of development that I do, bug free code might as well be a myth. I don&#x27;t think everyone made a <i>choice</i> like that - most are straight up unable to write code without bugs, often due to factors outside of their control.",
+  "time": 1776112394,
+  "type": "comment"
+}

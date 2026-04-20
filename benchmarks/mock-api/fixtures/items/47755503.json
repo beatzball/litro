@@ -1,0 +1,11 @@
+{
+  "by": "dheera",
+  "id": 47755503,
+  "kids": [
+    47755671
+  ],
+  "parent": 47755315,
+  "text": "Strategies like this can easily be positive EV <i>until</i> enough people discover it and that actually is the driving force behind efficient pricing.<p>Here&#x27;s how the mechanism works: I find that something is statistically worth $0.70 but I am able to buy it for $0.60 and statistically sell it for $0.70 (in the average). I make $0.10 each trade on average. Until you come along, copy my strategy and change $0.60 to $0.61 to frontrun my trades. Then someone else does it for $0.62. Until the market finally reprices to $0.70 where it should be. The guy who tries $0.71 loses money and stops, and then it goes back to $0.70. It&#x27;s a stable feedback loop.<p>There are lots of positive EV strategies lying around in these inefficient markets that Citadel hasn&#x27;t (yet) descended upon. The best advice I can give is if you find one, trade the hell out of it and don&#x27;t open source it or tell anyone about it, because as soon as more people run it, it will cease to be positive EV and then after that it becomes an infrastructure game.<p>If it&#x27;s popular on Github it probably doesn&#x27;t work.<p>If you found something that works and is paying your rent, don&#x27;t put it on Github. My 2 cents.",
+  "time": 1776102339,
+  "type": "comment"
+}

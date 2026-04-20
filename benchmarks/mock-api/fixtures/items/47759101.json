@@ -1,0 +1,13 @@
+{
+  "by": "estebank",
+  "id": 47759101,
+  "kids": [
+    47759488,
+    47759511,
+    47759663
+  ],
+  "parent": 47759018,
+  "text": "There was an experimental PR that treats proc macros as idempotent with the corresponding colpike speed up. I don&#x27;t know what happened with it, and stabilization required a lot of design work to not break backcompat. But this is something in the team&#x27;s radar.",
+  "time": 1776121400,
+  "type": "comment"
+}

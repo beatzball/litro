@@ -1,0 +1,11 @@
+{
+  "by": "koito17",
+  "id": 47761267,
+  "kids": [
+    47762009
+  ],
+  "parent": 47760024,
+  "text": "Yeah, the title made me think the author found a bug in the Lean kernel, thus making an invalid proof pass Lean&#x27;s checks. The article instead uncovers bugs in the Lean runtime and lean-zip, but these bugs are less damning than e.g. the kernel, which must be trusted to be correct, or else you can&#x27;t trust any proof in Lean.",
+  "time": 1776141053,
+  "type": "comment"
+}

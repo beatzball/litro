@@ -1,0 +1,11 @@
+{
+  "by": "kator",
+  "id": 47755693,
+  "kids": [
+    47761837
+  ],
+  "parent": 47753032,
+  "text": "I tried tmux so many times, could not commit the sequences to memory, but then zellij was just out of the gate, easy to &quot;discover,&quot; and then I started writing plugins (rust wasm), and I even submitted a PR which got accepted to support background colors in panes&#x2F;tabs.<p>I am a monthly donor, I think it has the right balance of community plus the lead dev has a vision, opinionated but open to inputs, and focused.",
+  "time": 1776103192,
+  "type": "comment"
+}

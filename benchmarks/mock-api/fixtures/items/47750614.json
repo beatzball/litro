@@ -1,0 +1,11 @@
+{
+  "by": "dontwannahearit",
+  "id": 47750614,
+  "kids": [
+    47750721
+  ],
+  "parent": 47749688,
+  "text": "How much of the specs themselves came from the LLM? The development schedule <a href=\"https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;blob&#x2F;main&#x2F;development_specs&#x2F;feature-spec-social-media-management-v2.md#10-build-phases\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;blob&#x2F;main...</a> has very AI-looking estimates for exampl and I can see a commit in the architecture.md file which is exclusively changing em-dashes to normal dashes (<a href=\"https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;commit&#x2F;74d0a07b624b7f402e91d84696c64af1e51c13c5\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;brightbeanxyz&#x2F;brightbean-studio&#x2F;commit&#x2F;74...</a>) which suggests you wanted to make it seem less LLM-generated?<p>I ask, not to condemn, but to find out what your process was for developing the requirements. Clearly it was done with LLM help but what was the refinement process?",
+  "time": 1776080450,
+  "type": "comment"
+}

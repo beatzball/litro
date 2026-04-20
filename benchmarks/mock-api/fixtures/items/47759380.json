@@ -1,0 +1,8 @@
+{
+  "by": "jgalt212",
+  "id": 47759380,
+  "parent": 47758261,
+  "text": "S3 with tree-shaking. i.e. specify the features you need, out comes an executable for that subset of S3 features you desire.<p>Or like lodash custom builds.<p><a href=\"https:&#x2F;&#x2F;lodash.com&#x2F;custom-builds\" rel=\"nofollow\">https:&#x2F;&#x2F;lodash.com&#x2F;custom-builds</a>",
+  "time": 1776123561,
+  "type": "comment"
+}

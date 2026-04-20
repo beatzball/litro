@@ -1,0 +1,11 @@
+{
+  "by": "maouida",
+  "id": 47728971,
+  "kids": [
+    47738815
+  ],
+  "parent": 47728871,
+  "text": "Yep, topological naming solving is a hard problem to solve. It took FreeCAD many years to get it to work correctly. That&#x27;s why I went with indices for this version. You can also use filters like extrusion.endFaces(face().arc()) to get only arc edges.<p>Regarding the picking; that&#x27;s exactly the region picking feature in this screenshot: <a href=\"https:&#x2F;&#x2F;fluidcad.io&#x2F;img&#x2F;region-extrude.gif\" rel=\"nofollow\">https:&#x2F;&#x2F;fluidcad.io&#x2F;img&#x2F;region-extrude.gif</a><p>When the user click on a region we insert a 2D point, then the extrude feature will find the nearest face.\nI have experimented with adding this picking logic to selections too select().pick() which will probably be merged in future releases.",
+  "time": 1775899245,
+  "type": "comment"
+}

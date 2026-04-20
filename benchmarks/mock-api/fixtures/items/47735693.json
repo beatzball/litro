@@ -1,0 +1,14 @@
+{
+  "by": "whycombinetor",
+  "descendants": 3,
+  "id": 47735693,
+  "kids": [
+    47735957,
+    47739839
+  ],
+  "score": 2,
+  "text": "I get good, cheap, fast feature coding success with grok-4.1-fast for planning and grok-code-fast-1 for execution. But according to the Openrouter usage stats, grok-code-fast-1 is now old hat - usage dropped off a cliff in mid-Feb.<p>What are you using now? (That&#x27;s around the same price per token) (AND also blazing fast (100+tps)? is that possible?)<p>(I&#x27;m finding Minimax M2.5 usable, but I think I still prefer grok-code-fast-1. Opus rocks but is expensive - good to have in the quiver for planning a big refactor.)",
+  "time": 1775961297,
+  "title": "Ask HN: Former grok-code-fast-1 users, what coding model are you using now?",
+  "type": "story"
+}

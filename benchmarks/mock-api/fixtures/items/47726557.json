@@ -1,0 +1,8 @@
+{
+  "by": "kokken",
+  "id": 47726557,
+  "parent": 47722081,
+  "text": "You should interview for the skill that is required in the age of AI-assisted coding.<p>That is, looking at code that&#x27;s been written by AI and see what&#x27;s wrong, what&#x27;s superfluous and what&#x27;s missing.<p>For preparing the code for the interview, I would suggest prompting Claude Code using a requirements document that&#x27;s purposefully a bit vague so that the AI will have to make choices when writing that code.<p>When you have the interviewee come over, show them the code and have them criticize those choices and edit the code manually (I know) so that they can demonstrate that they can intervene in the AI process at the correct inflection points.",
+  "time": 1775873491,
+  "type": "comment"
+}

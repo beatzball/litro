@@ -1,0 +1,8 @@
+{
+  "by": "wenhan_zhou",
+  "id": 47761645,
+  "parent": 47758335,
+  "text": "Minimalism is my design philosophy :-)<p>Good question. Since it is just an LLM reading files, it depends entirely on how fast it can call tools, so it depends on the token&#x2F;s of the model.<p>Haven&#x27;t done a formal benchmark, but from the vibes, it feels like a few seconds for GPT-5.4-high per query.<p>There is an implicit &quot;caching&quot; mechanism, so the more you use it, the smoother it will feel.",
+  "time": 1776144901,
+  "type": "comment"
+}

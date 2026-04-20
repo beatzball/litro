@@ -1,0 +1,8 @@
+{
+  "by": "h4kunamata",
+  "id": 47759382,
+  "parent": 47758589,
+  "text": "Not entirely.<p>I am running OpenWeb UI + Ollama + 7B on a Proxmox LXC container, it consumes less than 2GB, the GPU only has 4GB, and 50% CPU, it is very usable, sometimes faster than online ones to start giving you the answer and 100% offline.<p>If I replace the GPU with a faster one, I have no need to use online ones.",
+  "time": 1776123586,
+  "type": "comment"
+}

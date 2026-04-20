@@ -1,0 +1,11 @@
+{
+  "by": "himata4113",
+  "id": 47753680,
+  "kids": [
+    47754107
+  ],
+  "parent": 47752819,
+  "text": "I highly recommend just turning the mouse on, it&#x27;s amazing for resizing panels and the rightclick menu is nice.<p><pre><code>  set -g mouse on\n</code></pre>\nfor multi-monitor setups<p><pre><code>  setw -g aggressive-resize on\n</code></pre>\nis also really nice.",
+  "time": 1776095011,
+  "type": "comment"
+}

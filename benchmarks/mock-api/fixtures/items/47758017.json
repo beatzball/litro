@@ -1,0 +1,17 @@
+{
+  "by": "smallmancontrov",
+  "id": 47758017,
+  "kids": [
+    47761676,
+    47758302,
+    47758406,
+    47758264,
+    47758188,
+    47758213,
+    47759325
+  ],
+  "parent": 47757695,
+  "text": "I&#x27;m so glad git won the dvcs war. There was a solid decade where mercurial kept promoting itself as &quot;faster than git*†‡&quot; and every time I tried it wound up being dog slow (always) or broken (some of the time). Git is fugly but it&#x27;s fast, reliable, and fugly, and I can work with that.",
+  "time": 1776115487,
+  "type": "comment"
+}

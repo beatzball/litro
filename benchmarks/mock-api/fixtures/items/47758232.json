@@ -1,0 +1,15 @@
+{
+  "by": "ninkendo",
+  "id": 47758232,
+  "kids": [
+    47758416,
+    47760927,
+    47759984,
+    47758726,
+    47758443
+  ],
+  "parent": 47757495,
+  "text": "&gt; a chain of small, focused pull requests that build on each other — each one independently reviewable.<p>I have never understood what this even means.<p>Either changes are orthogonal (and can be merged independently), or they’re not. If they are, they can each be their own PR. If they’re not, why do you want to <i>review</i> them independently?<p>If you reject change A and approve change B, nothing can merge, because B needs A to proceed. If you approve change A and reject change B, then the feature is only half done.<p>Is it just about people wanting to <i>separate</i> logical chunks of a change so they can avoid get distracted by other changes? Because that seems like something you can already do by just breaking a PR into commits and letting people look at one of those at a time.<p>I’ve tried my best to give stacked-diff proponents the benefit of the doubt but <i>none</i> of it actually makes sense to me.",
+  "time": 1776116775,
+  "type": "comment"
+}

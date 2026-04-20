@@ -1,0 +1,12 @@
+{
+  "by": "PunchyHamster",
+  "id": 47759169,
+  "kids": [
+    47761964,
+    47759240
+  ],
+  "parent": 47729350,
+  "text": "S3 isn&#x27;t &quot;simple&quot; tho.<p>It doesn&#x27;t need to care about POSIX mess but there is whole swathes of features many implementations miss or are incomplete, both on frontend side (serving files with right headers, or with right authentication) and backend (user&#x2F;policy management, legal hold, versioning etc.)<p>It gets even more messy when migrating, for example migrating your backups to garagefs will lose you versioning, which means that if your S3 secret used to write backups gets compromised, your backups are gone vs on implementation that supports versioning you can just rollback.<p>Similarly with password, some will give you secret and login but won&#x27;t allow setting your own so you&#x27;d have to re-key every device using it, some will allow import, but only in certain format so you can restore from backup, bot not migrate from other software.",
+  "time": 1776121876,
+  "type": "comment"
+}

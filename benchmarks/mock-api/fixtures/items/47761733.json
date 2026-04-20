@@ -1,0 +1,11 @@
+{
+  "by": "mark124mj",
+  "id": 47761733,
+  "kids": [
+    47761750
+  ],
+  "parent": 47751781,
+  "text": "Lots of good discussion on systemic fixes, but if you&#x27;re running WordPress today: do a plugin audit. Go through every plugin and check whether the developer is still active and whether ownership has changed — you can see this on the wordpress.org plugin page. Remove anything you&#x27;re not actively using. A plugin you forgot about is exactly the kind of thing an attacker buys.<p>More broadly, the rules around plugin marketplaces were set up for a different time. There&#x27;s no requirement to disclose ownership transfers, no mandatory code review after a sale, and no way for users to get notified when the person behind a plugin they trust is no longer the same person. The laws and platform policies need to catch up to the reality that plugin acquisitions are now a known attack vector.",
+  "time": 1776145737,
+  "type": "comment"
+}

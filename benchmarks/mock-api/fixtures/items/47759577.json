@@ -1,0 +1,8 @@
+{
+  "by": "LinXitoW",
+  "id": 47759577,
+  "parent": 47753032,
+  "text": "Last time I tried zellij, a bunch of the default keybinds conflicted with default commands, or maybe vim commands, I can&#x27;t remember. But the &quot;solution&quot; back then was constantly jumping in and out of &quot;locked&quot; mode, where no zellij keybindings except unlock work.<p>Didn&#x27;t seem worth it, considering the giant footprint in comparison to tmux.",
+  "time": 1776125163,
+  "type": "comment"
+}

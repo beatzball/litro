@@ -1,0 +1,12 @@
+{
+  "by": "evmar",
+  "id": 47759960,
+  "kids": [
+    47761887,
+    47760368
+  ],
+  "parent": 47756321,
+  "text": "I’m not too familiar with Firefox builds.  Why are clobber builds common?  At first glance it seems weird to add a cache around your build system vs fixing your build system.",
+  "time": 1776128491,
+  "type": "comment"
+}

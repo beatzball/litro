@@ -1,0 +1,8 @@
+{
+  "by": "blemis",
+  "id": 47758415,
+  "parent": 47753684,
+  "text": "honestly it&#x27;s mostly gpu supply. scaling up to handle load means spinning up new nodes, and that takes minutes not seconds because the models are huge and need multiple coordinated gpus per instance.<p>also worth saying, even when things are &quot;up&quot; you often get different answers to the same question. that&#x27;s the reliability problem nobody talks about. fine for a chatbot, not fine if you&#x27;re building anything that needs to be repeatable and deterministic... i moved more to the ML route, but i guess it depends on what you are trying to do.",
+  "time": 1776117583,
+  "type": "comment"
+}
