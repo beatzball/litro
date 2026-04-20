@@ -1,5 +1,15 @@
 # litro
 
+## 0.9.0
+
+### Minor Changes
+
+- 08cf41c: Add Portless support: CLI honours PORT env var and logs PORTLESS_URL when detected
+
+### Patch Changes
+
+- 3a28b6b: Narrow dev-mode content polling to apps that use the content layer. The `<script>` that polls `/_litro/_litro-version.json` is now only injected when the content plugin is active (signaled via `LITRO_HAS_CONTENT=true`), eliminating 404 noise in dev for apps without Markdown content. Polling interval relaxed from 300ms to 2.5s. Internally, `ShellOptions.devMode` is renamed to `ShellOptions.contentDevPolling`; external consumers of `buildShell()` should update the option name.
+
 ## 0.8.1
 
 ### Patch Changes
