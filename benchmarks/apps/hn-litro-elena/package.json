@@ -13,8 +13,8 @@
   "dependencies": {
     "@beatzball/litro": "workspace:*",
     "@beatzball/litro-router": "workspace:*",
-    "@elenajs/core": "1.0.0-rc.13",
-    "@elenajs/ssr": "1.0.0-alpha.9",
+    "@elenajs/core": "1.0.0",
+    "@elenajs/ssr": "1.0.0-alpha.10",
     "h3": "^1.15.6"
   },
   "devDependencies": {

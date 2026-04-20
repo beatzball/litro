@@ -88,11 +88,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/litro-router
       '@elenajs/core':
-        specifier: 1.0.0-rc.13
-        version: 1.0.0-rc.13
+        specifier: 1.0.0
+        version: 1.0.0
       '@elenajs/ssr':
-        specifier: 1.0.0-alpha.9
-        version: 1.0.0-alpha.9(@elenajs/core@1.0.0-rc.13)
+        specifier: 1.0.0-alpha.10
+        version: 1.0.0-alpha.10(@elenajs/core@1.0.0)
       h3:
         specifier: ^1.15.6
         version: 1.15.9
