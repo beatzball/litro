@@ -25,7 +25,7 @@
 
 import type { Nitro } from 'nitropack';
 import fastGlob from 'fast-glob';
-import { resolve, join } from 'pathe';
+import { resolve, join, relative } from 'pathe';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { fileToRoute, compareRoutes } from './path-to-route.js';
 import { resolveAdapter } from '../adapter/resolve.js';
@@ -59,43 +59,86 @@ async function scanPageFiles(rootDir: string): Promise<string[]> {
   return files.sort();
 }
 
+/** Absolute path of the on-disk stub file. Relative import specifiers in the
+ *  physical stub are computed relative to this location. */
+const STUB_REL_PATH = join('server', 'stubs', 'page-manifest.ts');
+
+/** Convert an absolute page path to a POSIX-style relative import specifier with
+ *  a .js extension, computed from the directory that will contain the generated
+ *  manifest file on disk. Relative specifiers with .js extensions are the ESM
+ *  convention with bundler moduleResolution — they resolve to the .ts source
+ *  at build time and typecheck without `allowImportingTsExtensions`. */
+function toRelativeImportSpecifier(fromFile: string, toFile: string): string {
+  const rel = relative(join(fromFile, '..'), toFile).replace(/\.tsx?$/, '.js');
+  return rel.startsWith('.') ? rel : `./${rel}`;
+}
+
 /**
- * Generates the TypeScript source for the `#litro/page-manifest` virtual module.
+ * Generate the page-manifest source.
  *
- * The generated module exports a `routes` array of LitroRoute objects that
- * the catch-all Nitro handler imports at runtime to decide which component to render.
+ * Two variants are produced from the same data because the module is consumed
+ * from two places with different path-resolution rules:
+ *
+ *   - `'virtual'` → string fed to Rollup via `nitro.options.virtual`.
+ *     The virtual id has no real directory, so relative imports cannot be
+ *     resolved. Absolute filesystem paths are used; Rollup + esbuild accept
+ *     them directly. This source is never typechecked by the consumer.
+ *
+ *   - `'stub'` → string written to `<rootDir>/server/stubs/page-manifest.ts`.
+ *     This file IS picked up by the consumer's `tsc --noEmit`, so it uses
+ *     relative `.js` specifiers (no absolute paths, no `.ts` extensions) and
+ *     leads with `// @ts-nocheck` so any remaining generator artefacts don't
+ *     break strict typechecking.
  */
-function generateManifestModule(routes: LitroRoute[], pageFiles: string[], preamble?: string, postamble?: string): string {
+function generateManifestModule(
+  routes: LitroRoute[],
+  pageFiles: string[],
+  rootDir: string,
+  variant: 'virtual' | 'stub',
+  preamble?: string,
+  postamble?: string,
+): string {
   const routesJson = JSON.stringify(routes, null, 2);
 
-  // Static imports of every page module.
-  // These are processed by Rollup's TypeScript/esbuild plugin at build time —
-  // the TypeScript is compiled and bundled as side effects. This registers all
-  // @customElement decorators (calls customElements.define()) so that
-  // the SSR renderer can find the component definitions at render time.
-  // No runtime dynamic import of .ts files is needed.
+  const importSpecifier = (f: string): string => {
+    if (variant === 'virtual') return f; // absolute path; resolvable by Rollup
+    const stubPath = join(rootDir, STUB_REL_PATH);
+    return toRelativeImportSpecifier(stubPath, f);
+  };
+
   const imports = pageFiles
-    .map((f, i) => `import * as _page${i} from ${JSON.stringify(f)};`)
+    .map((f, i) => `import * as _page${i} from ${JSON.stringify(importSpecifier(f))};`)
     .join('\n');
 
-  // Registry mapping filePath → bundled module object.
-  // Consumed by createPageHandler() via the catch-all route to access
-  // pageData exports without a separate runtime dynamic import.
+  // Registry keys are `route.filePath` (absolute) in both variants — the
+  // catch-all handler looks up `pageModules[route.filePath]`, so the key
+  // format is an internal framework contract shared across both sources.
   const registryEntries = pageFiles
     .map((f, i) => `  ${JSON.stringify(f)}: _page${i}`)
     .join(',\n');
 
-  // NOTE: This must be valid JavaScript (no TypeScript syntax) because it is
-  // fed directly to Rollup as a virtual module source. TypeScript-specific
-  // syntax (e.g. `import type`) would cause a parse error at bundle time.
-  // The static imports above ARE TypeScript files but Rollup's esbuild plugin
-  // compiles them — the virtual module source itself is plain JS.
-  // Adapter preamble: some frameworks (e.g. FAST) need initialisation imports
-  // to run before any component code is evaluated. The preamble appears before
-  // the page imports in the generated module so Rollup evaluates it first.
+  // NOTE: Both variants must be valid JavaScript (no TypeScript syntax) — the
+  // virtual variant is fed directly to Rollup, and the stub lives in the
+  // consumer's project where TS syntax would be surprising in generated code.
+  // Adapter preamble: some frameworks (e.g. FAST, Elena) need initialisation
+  // imports to run before any component code is evaluated.
   const preambleBlock = preamble ? `${preamble}\n` : '';
 
-  return `// @generated by litro page scanner — do not edit
+  // `@ts-nocheck` only matters for the stub variant, but including it in both
+  // keeps the two outputs byte-identical apart from the import specifiers.
+  // That makes diffing the two variants during debugging trivial.
+  // The stub variant gets a TS cast on `pageModules` so the catch-all handler's
+  // `pageModules[route.filePath]` lookup typechecks (TS7053 otherwise — a
+  // literal-key object has no string index signature). The virtual variant
+  // stays as plain JS because it's fed directly to Rollup via
+  // `nitro.options.virtual` and may not run through a TS transform.
+  const pageModulesExport =
+    variant === 'stub'
+      ? `const _pageModules = {\n${registryEntries}\n};\nexport const pageModules: Record<string, Record<string, unknown>> = _pageModules;`
+      : `export const pageModules = {\n${registryEntries}\n};`;
+
+  return `// @ts-nocheck
+// @generated by litro page scanner — do not edit
 // This is the #litro/page-manifest virtual module.
 // It is re-generated on every build and dev-reload.
 ${preambleBlock}${imports}
@@ -104,9 +147,7 @@ export const routes = ${routesJson};
 
 // Module registry — maps filePath strings to bundled module objects.
 // Allows the catch-all handler to access pageData without a .ts runtime import.
-export const pageModules = {
-${registryEntries}
-};
+${pageModulesExport}
 
 // Default export for backward compatibility with: import pages from '#litro/page-manifest'
 export default routes;
@@ -123,16 +164,14 @@ ${postamble ? `\n${postamble}` : ''}`;
  *   { path: string, action?: () => Promise<void>, component?: string }
  */
 function generateClientRoutes(routes: LitroRoute[], rootDir: string): string {
+  // routes.generated.ts lives at <rootDir>/routes.generated.ts, so import
+  // specifiers for pages are relative-to-file — i.e. `./pages/foo.js`. This
+  // passes tsc --noEmit under strict + bundler moduleResolution, while still
+  // resolving to the .ts source via Vite's bundler resolution at dev/build time.
+  const clientFilePath = join(rootDir, 'routes.generated.ts');
   const routeLines = routes
     .map(route => {
-      // Convert absolute filePath to a root-relative import path for the client.
-      // The client imports pages relative to the project root (served by Vite).
-      const relPath = route.filePath
-        .replace(rootDir, '')
-        .replace(/\.tsx?$/, '.js');
-
-      // Ensure the path starts with /
-      const importPath = relPath.startsWith('/') ? relPath : `/${relPath}`;
+      const importPath = toRelativeImportSpecifier(clientFilePath, route.filePath);
 
       return [
         `  {`,
@@ -144,7 +183,8 @@ function generateClientRoutes(routes: LitroRoute[], rootDir: string): string {
     })
     .join('\n');
 
-  return `// @generated by litro page scanner — do not edit
+  return `// @ts-nocheck
+// @generated by litro page scanner — do not edit
 // This file is consumed by the Litro client bootstrap (app.ts).
 // Re-generated on every build.
 
@@ -269,9 +309,13 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
 
     if (pageFiles.length === 0) {
       nitro.logger.info('[litro] No page files found in pages/.');
-      const emptyModule = generateManifestModule([], [], preamble);
-      nitro.options.virtual['#litro/page-manifest'] = emptyModule;
-      await writeServerManifest(rootDir, emptyModule);
+      nitro.options.virtual['#litro/page-manifest'] = generateManifestModule(
+        [], [], rootDir, 'virtual', preamble,
+      );
+      await writeServerManifest(
+        rootDir,
+        generateManifestModule([], [], rootDir, 'stub', preamble),
+      );
       return;
     }
 
@@ -293,15 +337,20 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     // (both are sorted).
     const pageModuleVars = pageFiles.map((_, i) => `_page${i}`);
     const postamble = adapter.manifestPostamble?.(pageModuleVars) ?? '';
-    const manifestContent = generateManifestModule(routes, pageFiles, preamble, postamble);
+    // 3a. Set the virtual module — used by Rollup in production Nitro builds
+    //     (no real directory, so absolute-path imports are required).
+    nitro.options.virtual['#litro/page-manifest'] = generateManifestModule(
+      routes, pageFiles, rootDir, 'virtual', preamble, postamble,
+    );
 
-    // 3a. Set the virtual module — used by Vite's dev resolver.
-    nitro.options.virtual['#litro/page-manifest'] = manifestContent;
-
-    // 3b. Write the physical stub file — used by @rollup/plugin-node-resolve in
-    //     production builds (it intercepts '#' imports via package.json imports
-    //     before Nitro's virtual module plugin can handle them).
-    await writeServerManifest(rootDir, manifestContent);
+    // 3b. Write the physical stub file — used by @rollup/plugin-node-resolve
+    //     via playground package.json "imports" and picked up by the consumer's
+    //     `tsc --noEmit`. Uses relative .js specifiers so it typechecks cleanly
+    //     under strict + bundler moduleResolution.
+    await writeServerManifest(
+      rootDir,
+      generateManifestModule(routes, pageFiles, rootDir, 'stub', preamble, postamble),
+    );
 
     // 4. Write routes.generated.ts for the Litro client bootstrap
     try {
