@@ -30,7 +30,7 @@ pnpm install
 pnpm dev
 ```
 
-The dev server starts on `http://localhost:3030` by default. Vite handles HMR for your Lit components; Nitro handles SSR and API routes — both on a single port.
+The dev server starts on `http://localhost:3000` by default. Vite handles HMR for your Lit components; Nitro handles SSR and API routes — both on a single port.
 
 ## Writing Posts
 

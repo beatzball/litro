@@ -27,7 +27,7 @@ pnpm install
 pnpm dev
 ```
 
-The dev server starts on `http://localhost:3030`. Changes to Lit components and Markdown content are reflected immediately.
+The dev server starts on `http://localhost:3000`. Changes to Lit components and Markdown content are reflected immediately.
 
 ## Project Structure
 

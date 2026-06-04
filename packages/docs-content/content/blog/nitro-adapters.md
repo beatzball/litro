@@ -45,7 +45,7 @@ These presets work with Litro today:
 | `aws-lambda` | `NITRO_PRESET=aws-lambda litro build` | Lambda handler bundle |
 | `deno-deploy` | `NITRO_PRESET=deno-deploy litro build` | Deno-compatible output |
 | `bun` | `NITRO_PRESET=bun litro build` | Bun-compatible server |
-| `static` | `NITRO_PRESET=static litro build` | Pre-rendered static HTML |
+| `static` | `litro build --mode static` (or `litro generate`) | Pre-rendered static HTML; the static preset is selected automatically when Litro is in SSG mode |
 
 The `static` preset is what `litro build` uses when you configure SSG mode. The others are SSR presets.
 

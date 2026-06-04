@@ -76,4 +76,4 @@ Before deploying, preview the production build locally:
 pnpm preview
 ```
 
-This serves the `.output/` directory using Nitro's static preset server on `http://localhost:3030`.
+This serves the `.output/` directory using Nitro's static preset server on `http://localhost:3000`.

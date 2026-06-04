@@ -51,4 +51,4 @@ After installing, start the dev server:
 pnpm dev
 ```
 
-Navigate to `http://localhost:3030`. You should see the splash page with the sidebar navigation.
+Navigate to `http://localhost:3000`. You should see the splash page with the sidebar navigation.

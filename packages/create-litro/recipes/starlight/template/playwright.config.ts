@@ -7,13 +7,13 @@ export default defineConfig({
   workers: 1,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3030',
+    baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:3030',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
   },

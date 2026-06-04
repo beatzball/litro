@@ -31,7 +31,7 @@ Researched the Lit SSR pipeline: server rendering, DSD output, client hydration,
 - `@lit-labs/ssr` renders Lit components to DSD HTML via an async generator; `RenderResultReadable` wraps it as a Node.js `Readable` for streaming with Nitro's `sendStream()`
 - `@lit-labs/ssr-client/lit-element-hydrate-support.js` must load as the first `<script type="module">` before any Lit code -- it patches `LitElement.prototype.createRenderRoot()`
 - A MutationObserver-based DSD polyfill is needed for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
-- Components accessing `window`/`document` at module eval time crash the server; guard with `isServer` or use `<litro-client-only>` -- VM sandbox mode is not recommended
+- Components accessing `window`/`document` at module eval time crash the server; guard with `typeof window !== 'undefined'` or move the access into lifecycle hooks (`connectedCallback`, `firstUpdated`). VM sandbox mode is not recommended.
 - Edge adapters (Cloudflare, Vercel Edge) require `externals.inline: ['@lit-labs/ssr']` in Nitro config; `RenderResultReadable` is Node-only so edge targets need manual `ReadableStream` conversion
 
 Full findings archived in git history (R-2-findings.md, ~1,500 lines).

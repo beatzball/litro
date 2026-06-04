@@ -98,7 +98,7 @@ Generated app includes:
 ```bash
 cd my-app
 pnpm install
-pnpm dev      # start dev server on http://localhost:3030
+pnpm dev      # start dev server on http://localhost:3000
 pnpm build    # production build
 pnpm preview  # preview the production build
 ```

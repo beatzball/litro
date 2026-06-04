@@ -36,4 +36,4 @@ The `tags` field accepts a list. Every post in `content/blog/` automatically inh
 
 Litro reads your Markdown files at build time (or on-demand in dev mode) using its content layer. The `getPosts()` function returns all published posts sorted newest-first, with each post's Markdown rendered to HTML in the `body` field. The `getPost(slug)` function fetches a single post by its URL slug, derived from the filename. For example, this file — `hello-world.md` — is available at `/blog/hello-world`.
 
-Run `litro dev` to start the development server and visit `http://localhost:3030` to see your blog live. Changes to content files are picked up immediately without restarting the server.
+Run `litro dev` to start the development server and visit `http://localhost:3000` to see your blog live. Changes to content files are picked up immediately without restarting the server.

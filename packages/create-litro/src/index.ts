@@ -233,7 +233,7 @@ async function main(): Promise<void> {
 
     cd ${projectName}
     npm install          # or: pnpm install / yarn install
-    npm run dev          # start dev server on http://localhost:3030
+    npm run dev          # start dev server on http://localhost:3000
 
   Commands:
     npm run dev          start development server

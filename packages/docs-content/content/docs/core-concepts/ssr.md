@@ -55,4 +55,4 @@ override firstUpdated() {
 }
 ```
 
-For components that can't be made SSR-safe, use `<litro-client-only>` to skip SSR entirely.
+For components that genuinely cannot be made SSR-safe, move the browser-only work into a lifecycle hook (`connectedCallback`, `firstUpdated`) or behind a `typeof window !== 'undefined'` guard, and dynamic-`import()` any browser-only modules from inside that hook so they never load on the server. If a component still throws during SSR, Litro's page handler logs the error and falls back to serving the client-only HTML shell — the page remains usable, but you lose the SSR benefits.
