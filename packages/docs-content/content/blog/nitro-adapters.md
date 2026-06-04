@@ -15,7 +15,7 @@ This post explains what Nitro presets actually do, which ones work with Litro, a
 
 Nitro is the server engine that powers Nuxt.js. It's a standalone package (`nitropack`) that handles routing, middleware, API handlers (via H3), and — most importantly — output targets.
 
-Litro's server is a Nitro server. The `litro.config.ts` you write in your project is a thin wrapper around `nitro.config.ts`. Every H3 handler, every middleware, every route rule you configure goes through Nitro. If you've used Nuxt, you've already used Nitro.
+Litro's server is a Nitro server. You configure it directly through `nitro.config.ts` — Litro doesn't wrap or shadow Nitro's config. The one Litro-specific piece of configuration is the framework adapter, which you select by setting `process.env.LITRO_ADAPTER` at the top of `nitro.config.ts` (the scaffolded templates do this for you). Every H3 handler, every middleware, every route rule you configure goes through Nitro. If you've used Nuxt, you've already used Nitro.
 
 Analog (the Angular meta-framework) also builds on Nitro. So does SolidStart. Litro is one of several frameworks that made the same bet: use Nitro for the server layer and inherit everything it provides. For a comparison of how this plays out vs Nuxt specifically, see [Litro vs Nuxt.js](/compare/nuxt).
 
@@ -52,7 +52,7 @@ The `static` preset is what `litro build` uses when you configure SSG mode. The 
 You can also set the preset in your config:
 
 ```ts
-// litro.config.ts
+// nitro.config.ts
 import { defineNitroConfig } from 'nitropack/config';
 
 export default defineNitroConfig({

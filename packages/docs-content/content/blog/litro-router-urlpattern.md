@@ -13,7 +13,7 @@ Client-side routing in web components has a few requirements that generic router
 
 ## The URLPattern API
 
-[URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is a web platform API for matching URLs against patterns. It reached Baseline in September 2025 — available in Chrome, Firefox, and Safari without a polyfill.
+[URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is a web platform API for matching URLs against patterns. It reached [Baseline Newly Available](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern#browser_compatibility) in September 2025 (Chrome 95+, Edge 95+, Firefox 119+, Safari 18.2+). For browsers without the native API — Safari 16.4–18.1 / iOS < 18.2 — `@beatzball/litro-router` ships a built-in fallback that activates automatically, so you don't need an external polyfill.
 
 ```ts
 const pattern = new URLPattern({ pathname: '/blog/:slug' });
@@ -43,47 +43,48 @@ The package is ESM-only and has zero runtime dependencies.
 import { LitroRouter } from '@beatzball/litro-router';
 import type { LitroLocation } from '@beatzball/litro-router';
 
-const router = LitroRouter.instance();
+// 1. The outlet element must already be in the DOM. The router takes
+//    ownership of its children and swaps them on every navigation.
+const outlet = document.getElementById('outlet')!;
+const router = new LitroRouter(outlet);
 
+// 2. setRoutes() configures the route table, attaches a popstate listener,
+//    and triggers an initial resolution for the current URL.
 router.setRoutes([
   {
     path: '/',
     component: 'page-home',
-    isDynamic: false,
-    isCatchAll: false,
+    action: () => import('./pages/home.js'),
   },
   {
     path: '/blog/:slug',
     component: 'page-blog-post',
-    isDynamic: true,
-    isCatchAll: false,
+    action: () => import('./pages/blog-post.js'),
   },
   {
-    path: '/docs/:slug*',
-    component: 'page-docs',
-    isDynamic: true,
-    isCatchAll: true,
+    path: '/:all(.*)*',                          // catch-all — must be last
+    component: 'page-not-found',
+    action: () => import('./pages/not-found.js'),
   },
 ]);
-
-router.mount(document.getElementById('outlet')!);
-router.start();
 ```
 
-`LitroRouter` is a singleton — `LitroRouter.instance()` returns the same instance every time. This is intentional: only one router should be managing the URL at a time.
+`new LitroRouter(outlet)` creates a router bound to the given outlet element; nothing happens until you call `setRoutes()`, which kicks off the first resolution synchronously. There is no separate `mount()` or `start()` step.
 
 ## The Route Object
 
 ```ts
 interface Route {
-  path: string;       // URL pattern — '/blog/:slug', '/docs/:rest*'
-  component: string;  // Custom element tag name
-  isDynamic: boolean; // true if path contains :params
-  isCatchAll: boolean; // true if path ends with :param*
+  /** Path pattern — h3/path-to-regexp syntax (e.g. '/', '/blog/:slug', '/:all(.*)*'). */
+  path: string;
+  /** Custom element tag name to render. Routes without a component are skipped. */
+  component?: string;
+  /** Optional async callback run BEFORE the component is mounted — typically a dynamic import. */
+  action?: () => Promise<void> | void;
 }
 ```
 
-Routes are sorted automatically: static routes match before dynamic, dynamic before catch-all. You don't need to sort them yourself.
+Routes are matched in the order they're registered — there is no automatic sorting, so put more-specific routes before catch-alls. The router converts h3-style `:param(.*)*` catch-alls into URLPattern's `:param*` form at registration time via the exported `h3ToURLPattern()` helper.
 
 ## `onBeforeEnter`
 
@@ -114,9 +115,9 @@ export class BlogPostPage extends LitroPage {
 ```ts
 interface LitroLocation {
   pathname: string;
-  params: Record<string, string>;
-  search: string;
-  hash: string;
+  params: Record<string, string | undefined>;  // optional params can be undefined
+  search: string;                              // includes '?' or ''
+  hash: string;                                // includes '#' or ''
 }
 ```
 
@@ -139,30 +140,31 @@ Plain `<a>` tags do full page reloads — LitroRouter does not intercept them. T
 ```ts
 import { LitroRouter } from '@beatzball/litro-router';
 
-LitroRouter.instance().go('/blog/new-post');
+LitroRouter.go('/blog/new-post');
 ```
 
-`go()` pushes a new history state and triggers a navigation. Use this for navigation from event handlers, form submissions, or after an async operation completes.
+`LitroRouter.go()` is a static method — it pushes a new history entry and dispatches a synthetic `popstate`, which the active router instance picks up. Use it from event handlers, form submissions, or after an async operation completes.
 
 ### Back and forward
 
-`LitroRouter` listens for `popstate` events automatically. Browser back and forward navigation works without any additional setup.
+The router attaches its `popstate` listener inside `setRoutes()`, so browser back/forward navigation works as soon as you've registered your routes.
 
-Fragment-only `popstate` events (clicking a `#section` link that only changes the hash) are skipped — the router guards on `_lastPathname` and won't re-render the page for hash-only changes.
+Hash-only navigations (clicking a `<a href="#section">`) still fire `popstate` per the HTML spec, but the router compares `location.pathname + location.search` against the previously rendered value (stored on `_lastPathAndSearch`) and skips the re-render when only the hash changed.
 
 ## Shadow DOM Scroll-to-Hash
 
 Standard `window.location.hash` scrolling doesn't work inside shadow roots because `document.getElementById()` can't see elements inside a closed or open shadow root at arbitrary nesting depth.
 
-LitroRouter's `_scrollToHash()` traverses the shadow DOM recursively to find elements with matching `id` attributes:
+LitroRouter's internal `_scrollToHash()` traverses the shadow DOM recursively to find elements with matching `id` attributes:
 
 ```ts
-private _findDeep(root: Element | ShadowRoot, id: string): Element | null {
-  for (const el of root.querySelectorAll(`[id="${id}"], *`)) {
-    if ((el as Element).id === id) return el as Element;
-    const shadow = (el as HTMLElement).shadowRoot;
-    if (shadow) {
-      const found = this._findDeep(shadow, id);
+private _findDeep(root: Document | ShadowRoot | Element, id: string): Element | null {
+  const sel = `#${CSS.escape(id)}`;
+  const direct = root.querySelector(sel);
+  if (direct) return direct;
+  for (const el of root.querySelectorAll('*')) {
+    if (el.shadowRoot) {
+      const found = this._findDeep(el.shadowRoot, id);
       if (found) return found;
     }
   }
@@ -170,9 +172,9 @@ private _findDeep(root: Element | ShadowRoot, id: string): Element | null {
 }
 ```
 
-After each navigation, if `location.hash` is set, the router waits for the mounted component's `updateComplete` promise (if it's a LitElement), then calls `_findDeep()` starting from `document.body`. This handles heading links in server-rendered docs pages where the headings live inside shadow roots.
+After each navigation, if `location.hash` is set, the router waits for the mounted component's `updateComplete` promise (if it's a LitElement), then calls `_findDeep()` starting from `document`. This handles heading links in server-rendered docs pages where the headings live inside shadow roots.
 
-If you're using the router standalone with non-Lit components, you can call `router.scrollToHash(hash)` directly.
+This is handled internally; there is no public hook to call. The router takes care of fragment scrolling automatically on every navigation, including the initial one and back/forward navigations.
 
 ## Using Standalone — Without Litro
 
@@ -187,35 +189,34 @@ import './pages/home.js';
 import './pages/about.js';
 import './pages/blog-post.js';
 
-const router = LitroRouter.instance();
+// Outlet must already be in the DOM. setRoutes() takes care of the rest.
+const outlet = document.getElementById('app')!;
+const router = new LitroRouter(outlet);
 
 router.setRoutes([
-  { path: '/', component: 'page-home', isDynamic: false, isCatchAll: false },
-  { path: '/about', component: 'page-about', isDynamic: false, isCatchAll: false },
-  { path: '/blog/:slug', component: 'page-blog-post', isDynamic: true, isCatchAll: false },
+  { path: '/',           component: 'page-home' },
+  { path: '/about',      component: 'page-about' },
+  { path: '/blog/:slug', component: 'page-blog-post' },
 ]);
-
-// Mount to any container element
-router.mount(document.getElementById('app')!);
-router.start();
 ```
 
-The outlet element should be in the DOM before calling `mount()`. The router appends the current page component as a child of the outlet element and replaces it on each navigation.
+The router appends the current page component as a child of the outlet element and replaces it on each navigation. If you prefer lazy-loaded page modules, pass an `action` on each route that imports the module — `action()` runs before the component is mounted, so `customElements.define()` is guaranteed to have run before `document.createElement(tag)` is called.
 
 ## SSR Safety
 
-LitroRouter accesses `window`, `history`, and `document` at runtime — not at module evaluation time. The import itself is safe on the server. No side effects execute until `start()` is called.
+LitroRouter accesses `window`, `history`, and `document` only at call time — never at module evaluation time. The import itself is safe on the server: nothing touches `window` until you construct a `LitroRouter` and call `setRoutes()`.
 
-In Litro, the router is dynamically imported inside `LitroOutlet.firstUpdated()`:
+In Litro's default Lit adapter, the router is dynamically imported inside `LitroOutlet.firstUpdated()`, which runs once after the element's first render and is guaranteed never to fire on the server:
 
 ```ts
 override async firstUpdated() {
   const { LitroRouter } = await import('@beatzball/litro-router');
-  // ...
+  this.router = new LitroRouter(this);
+  this.router.setRoutes(this._routes);
 }
 ```
 
-This ensures the module is never evaluated during SSR. If you're using the router standalone in a setup with server rendering, apply the same dynamic import pattern.
+The FAST and Elena adapters use `connectedCallback()` with a one-shot init flag for the same effect (FAST and Elena don't have a `firstUpdated()` hook). If you're using the router standalone in a setup with server rendering, apply the same dynamic-import-inside-a-client-only-lifecycle pattern.
 
 ## Monotonic Navigation Token
 
@@ -237,7 +238,7 @@ Only the most recently initiated navigation can commit. Earlier navigations that
 
 **pushState only — no hash routing.** Hash routing is a workaround for environments that don't support HTML5 history. In 2026, all deployment targets Litro supports handle pushState correctly (including static hosting on Cloudflare Pages and GitHub Pages with proper `_redirects` / `404.html` fallbacks).
 
-**Singleton.** One router per page. If you need sub-routers for deeply nested components, use conditional rendering inside `onBeforeEnter` rather than nested `LitroRouter` instances.
+**One router per outlet.** The router class isn't a singleton, but in practice you should only create one instance — multiple routers competing for the same `popstate` events would fight over the URL. If you need sub-routers for deeply nested components, use conditional rendering inside `onBeforeEnter` rather than nested `LitroRouter` instances.
 
 ## Further Reading
 

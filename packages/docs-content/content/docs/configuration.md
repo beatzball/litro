@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configure your Litro project via litro.config.ts (extends nitro.config.ts) and vite.config.ts.
+description: Configure your Litro project via nitro.config.ts and vite.config.ts. Adapter selection via the LITRO_ADAPTER env var (set in the shell or at the top of nitro.config.ts) or the --adapter CLI flag at scaffolding time.
 date: 2026-01-01
 ---
 
@@ -62,5 +62,7 @@ export default defineConfig({
 
 | Variable | Description | Default |
 |---|---|---|
+| `LITRO_ADAPTER` | Selects the framework adapter: `lit`, `fast`, or `elena`. Typically set at the top of `nitro.config.ts`. | `lit` |
+| `LITRO_MODE` | Build mode: `server` (SSR) or `static` (SSG). Set by the CLI when you pass `--mode static`. | `server` |
 | `LITRO_BASE_PATH` | Sub-path prefix for GitHub Pages project sites (e.g. `/litro`) | `''` |
 | `SITE_URL` | Canonical base URL for SEO meta tags | `https://litro.dev` |
