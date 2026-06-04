@@ -108,7 +108,7 @@ Then:
 ```bash
 cd my-app
 pnpm install
-pnpm dev           # dev server on http://localhost:3030
+pnpm dev           # dev server on http://localhost:3000
 pnpm build         # Stage 0: page scan → Stage 1: vite build → Stage 2: nitro build
 pnpm preview       # preview the production build
 ```
@@ -151,11 +151,11 @@ node /path/to/litro/packages/create-litro/dist/src/index.js --list-recipes
 
 **Step 3 — point the app at the local `litro` package:**
 
-Open the generated `my-app/package.json` and replace the `litro` version with a `file:` reference:
+Open the generated `my-app/package.json` and replace the `@beatzball/litro` version with a `file:` reference:
 
 ```json
 "dependencies": {
-  "litro": "file:/path/to/litro/packages/framework",
+  "@beatzball/litro": "file:/path/to/litro/packages/framework",
   ...
 }
 ```
@@ -166,7 +166,7 @@ Open the generated `my-app/package.json` and replace the `litro` version with a 
 cd my-app
 pnpm install
 pnpm run build     # Stage 0: page scan → Stage 1: vite build → Stage 2: nitro build
-pnpm run preview   # starts http://localhost:3030
+pnpm run preview   # starts http://localhost:3000
 ```
 
 The `fullstack` scaffolded app includes:
@@ -207,7 +207,7 @@ cd playground
 litro dev
 ```
 
-The dev server starts on `http://localhost:3030` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port, and `litro dev --host` to expose the server to the network (listen on `0.0.0.0`).
+The dev server starts on `http://localhost:3000` serving both Vite (JS modules, HMR) and Nitro (API routes, HTML shell) on a single port. Use `litro dev --port <n>` to change the port, and `litro dev --host` to expose the server to the network (listen on `0.0.0.0`).
 
 ### Named URLs with Portless
 
@@ -281,8 +281,8 @@ pages/[[lang]]/index.ts →  /:lang?
 ```typescript
 // pages/index.ts
 import { customElement, state } from "lit/decorators.js";
-import { LitroPage } from "litro/runtime";
-import { definePageData } from "litro";
+import { LitroPage } from "@beatzball/litro/runtime";
+import { definePageData } from "@beatzball/litro";
 
 export const pageData = definePageData(async (event) => {
   // event is the H3 event — access headers, cookies, params, etc.
@@ -445,13 +445,13 @@ Directory data: place a `.11tydata.json` file alongside your posts to set defaul
 
 For TypeScript types, add to your project's `tsconfig.json`:
 ```json
-{ "compilerOptions": { "types": ["litro/content/env"] } }
+{ "compilerOptions": { "types": ["@beatzball/litro/content/env"] } }
 ```
 
 The content plugin must be registered in `nitro.config.ts`:
 
 ```typescript
-import contentPlugin from 'litro/content/plugin';
+import contentPlugin from '@beatzball/litro/content/plugin';
 
 export default defineNitroConfig({
   hooks: {
@@ -496,7 +496,7 @@ pnpm test:e2e                                   # Playwright e2e tests (92 tests
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 # Playgrounds
-cd playground && litro dev      # fullstack playground on :3030
+cd playground && litro dev      # fullstack playground on :3000
 pnpm dev:11ty                   # 11ty-blog playground
 pnpm dev:starlight              # starlight playground
 

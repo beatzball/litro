@@ -202,7 +202,7 @@ export async function generateRoutes(): Promise<string[]> {
 }
 ```
 
-Litro runs `generateRoutes()` at build time with `NITRO_PRESET=static` and prerenders each returned path to a static HTML file in `dist/static/`.
+Litro runs `generateRoutes()` at build time when invoked with `litro build --mode static` (or `litro generate`) and prerenders each returned path to a static HTML file in `dist/static/`.
 
 ## Deployment
 
@@ -216,7 +216,7 @@ NITRO_PRESET=vercel litro build
 NITRO_PRESET=cloudflare-workers litro build
 
 # Static (CDN)
-NITRO_PRESET=static litro build
+litro build --mode static
 ```
 
 No custom adapter code required — Nitro's presets handle the runtime differences.

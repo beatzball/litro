@@ -173,8 +173,10 @@ NITRO_PRESET=cloudflare-workers litro build
 # Deploy to Vercel
 NITRO_PRESET=vercel litro build
 
-# Static generation
-NITRO_PRESET=static litro build
+# Static generation (triggers generateRoutes() prerendering)
+litro build --mode static
+# or equivalently
+litro generate
 ```
 
 Deployment adapter docs, environment variables, and `routeRules` from your `nuxt.config.ts` all transfer to `nitro.config.ts` without changes.

@@ -23,7 +23,8 @@ import { getPosts, getGlobalData } from 'litro:content';
 // List all posts
 const posts = await getPosts();
 
-// Get global metadata (from content/_data/global.json)
+// Get global metadata. Reads `content/_data/metadata.js` (default export) first,
+// then falls back to `content/_data/metadata.json`, then returns `{}`.
 const meta = await getGlobalData();
 ```
 
@@ -48,13 +49,16 @@ Content goes here.
 
 `getPosts()` parses all `.md` files in `content/blog/` and returns an array of `Post` objects. Each post has:
 
+- `slug` — the filename without extension (e.g. `my-first-post`)
 - `title` — from frontmatter
 - `description` — from frontmatter (optional)
-- `date` — from frontmatter
+- `date` — from frontmatter, parsed as a `Date`
 - `tags` — from frontmatter (array)
+- `draft` — from frontmatter; drafts are excluded from `getPosts()` in production unless `{ includeDrafts: true }` is passed
 - `body` — rendered HTML
 - `rawBody` — original Markdown
-- `url` — content path (e.g. `/content/blog/my-first-post`)
+- `url` — resolved URL path (e.g. `/blog/my-first-post`)
+- `frontmatter` — full parsed frontmatter object (pass-through)
 
 ## Blog Index Page
 
@@ -68,11 +72,17 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
 
+// Post.date is a Date on the server, but after the JSON round-trip into
+// __litro_data__ it becomes a string on the client. Normalise before use.
+function toDate(d: Date | string): Date {
+  return d instanceof Date ? d : new Date(d as string);
+}
+
 export const pageData = definePageData(async (_event) => {
   const allPosts = await getPosts();
   const posts = allPosts
-    .filter(p => p.url.startsWith('/content/blog/'))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .filter(p => p.url.startsWith('/blog/'))
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return { posts };
 });
@@ -91,15 +101,12 @@ export class BlogIndex extends LitroPage {
       <main>
         <h1>Blog</h1>
         <ul>
-          ${data.posts.map(post => {
-            const slug = post.url.slice('/content/blog/'.length);
-            return html`
-              <li>
-                <a href="/blog/${slug}">${post.title}</a>
-                <time>${post.date}</time>
-              </li>
-            `;
-          })}
+          ${data.posts.map(post => html`
+            <li>
+              <a href="${post.url}">${post.title}</a>
+              <time datetime="${toDate(post.date).toISOString()}">${toDate(post.date).toLocaleDateString()}</time>
+            </li>
+          `)}
         </ul>
       </main>
     `;
@@ -123,10 +130,16 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
 
+// Post.date is a Date on the server, but after the JSON round-trip into
+// __litro_data__ it becomes a string on the client. Normalise before use.
+function toDate(d: Date | string): Date {
+  return d instanceof Date ? d : new Date(d as string);
+}
+
 export const pageData = definePageData(async (event) => {
   const slug = event.context.params?.slug ?? '';
   const posts = await getPosts();
-  const post = posts.find(p => p.url === `/content/blog/${slug}`);
+  const post = posts.find(p => p.slug === slug);
 
   if (!post) {
     throw createError({ statusCode: 404, message: `Post not found: ${slug}` });
@@ -138,8 +151,8 @@ export const pageData = definePageData(async (event) => {
 export async function generateRoutes(): Promise<string[]> {
   const posts = await getPosts();
   return posts
-    .filter(p => p.url.startsWith('/content/blog/'))
-    .map(p => '/blog' + p.url.slice('/content/blog'.length));
+    .filter(p => p.url.startsWith('/blog/'))
+    .map(p => p.url);
 }
 
 export const routeMeta = {
@@ -153,13 +166,13 @@ export class BlogPost extends LitroPage {
     if (!data) return html`<p>Loading&hellip;</p>`;
 
     const { post } = data;
-    const slug = post.url.slice('/content/blog/'.length);
+    const date = toDate(post.date);
 
     return html`
       <main>
         <article>
           <h1>${post.title}</h1>
-          <time datetime="${post.date}">${post.date}</time>
+          <time datetime="${date.toISOString()}">${date.toLocaleDateString()}</time>
           ${unsafeHTML(post.body)}
         </article>
         <a href="/blog">&larr; Back to Blog</a>
@@ -171,7 +184,7 @@ export class BlogPost extends LitroPage {
 export default BlogPost;
 ```
 
-`generateRoutes()` is the static generation hook. During `litro build` with `NITRO_PRESET=static`, Litro calls this function and prerenders each returned path.
+`generateRoutes()` is the static generation hook. During `litro build --mode static` (or `litro generate`), Litro calls this function and prerenders each returned path.
 
 ## Tag Pages
 
@@ -191,10 +204,10 @@ export const pageData = definePageData(async (event) => {
   const posts = await getPosts();
   const tagged = posts
     .filter(p =>
-      p.url.startsWith('/content/blog/') &&
+      p.url.startsWith('/blog/') &&
       p.tags.includes(tag)
     )
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   if (tagged.length === 0) {
     throw createError({ statusCode: 404, message: `Tag not found: ${tag}` });
@@ -207,7 +220,7 @@ export async function generateRoutes(): Promise<string[]> {
   const posts = await getPosts();
   const tags = new Set(
     posts
-      .filter(p => p.url.startsWith('/content/blog/'))
+      .filter(p => p.url.startsWith('/blog/'))
       .flatMap(p => p.tags)
   );
   return Array.from(tags).map(tag => `/blog/tags/${tag}`);
@@ -230,7 +243,7 @@ export class BlogTagPage extends LitroPage {
         <h1>Posts tagged: ${data.tag}</h1>
         <ul>
           ${data.posts.map(post => {
-            const slug = post.url.slice('/content/blog/'.length);
+            const slug = post.slug;
             return html`
               <li>
                 <a href="/blog/${slug}">${post.title}</a>
@@ -249,10 +262,12 @@ export default BlogTagPage;
 
 ## Static Generation
 
-For a blog deployed as static HTML (GitHub Pages, S3, Netlify), use the static preset:
+For a blog deployed as static HTML (GitHub Pages, S3, Netlify), build in static mode:
 
 ```bash
-NITRO_PRESET=static litro build
+litro build --mode static
+# or, equivalently
+litro generate
 ```
 
 Litro runs `generateRoutes()` on each page that exports it, collects all paths, and prerenders them to `dist/static/`. The output is a directory of `.html` files ready to serve from any CDN.
@@ -286,9 +301,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install
-      - run: pnpm run build
+      - run: pnpm exec litro generate
         env:
-          NITRO_PRESET: static
           LITRO_BASE_PATH: /your-repo-name
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -314,19 +328,18 @@ export default defineEventHandler(async (event) => {
 
   const posts = await getPosts();
   const blogPosts = posts
-    .filter(p => p.url.startsWith('/content/blog/'))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .filter(p => p.url.startsWith('/blog/'))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 20);
 
   const items = blogPosts.map(post => {
-    const slug = post.url.slice('/content/blog/'.length);
-    const url = `${SITE_URL}/blog/${slug}`;
+    const url = `${SITE_URL}${post.url}`;
     return `
     <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${url}</link>
       <guid>${url}</guid>
-      <pubDate>${new Date(post.date).toUTCString()}</pubDate>
+      <pubDate>${post.date.toUTCString()}</pubDate>
     </item>`;
   });
 
