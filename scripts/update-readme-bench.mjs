@@ -22,23 +22,35 @@ const BEGIN = '<!-- BENCH:BEGIN -->';
 const END = '<!-- BENCH:END -->';
 
 function fmtMs(ms) {
+  if (!Number.isFinite(ms)) return 'n/a';
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms.toFixed(0)}ms`;
 }
 
 function fmtBytes(b) {
+  if (!Number.isFinite(b)) return 'n/a';
   return b >= 1024 ? `${(b / 1024).toFixed(1)} KB` : `${b} B`;
 }
 
-/** Average gzip page weight across routes that returned 200. */
+/**
+ * Average gzip page weight across routes that returned 200.
+ * Returns NaN when no routes succeeded — picks downstream skip NaN, so a
+ * framework whose every route 404'd cannot be crowned the page-weight winner.
+ */
 function avgPageWeight(pageWeight) {
-  const live = Object.values(pageWeight).filter((r) => r.statusCode === 200);
-  if (live.length === 0) return 0;
+  const live = Object.values(pageWeight ?? {}).filter((r) => r.statusCode === 200);
+  if (live.length === 0) return NaN;
   return live.reduce((sum, r) => sum + r.gzipBytes, 0) / live.length;
 }
 
+/** Returns the index of the lowest finite value, or -1 if no value is finite. */
 function pickLowest(values, lowerIsBetter = true) {
-  let bestIdx = 0;
-  for (let i = 1; i < values.length; i++) {
+  let bestIdx = -1;
+  for (let i = 0; i < values.length; i++) {
+    if (!Number.isFinite(values[i])) continue;
+    if (bestIdx === -1) {
+      bestIdx = i;
+      continue;
+    }
     if (lowerIsBetter ? values[i] < values[bestIdx] : values[i] > values[bestIdx]) {
       bestIdx = i;
     }
