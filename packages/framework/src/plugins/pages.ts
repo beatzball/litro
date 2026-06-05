@@ -302,8 +302,10 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
 
     // Resolve the adapter to get the manifest preamble/postamble (if any).
     // Some frameworks (e.g. FAST) need SSR init imports before component code.
-    // Elena needs a postamble to register components with @elenajs/ssr after
-    // all page modules have been imported.
+    // Elena uses the preamble to install the customElements shim; it does not
+    // currently need a postamble because component classes are captured into
+    // the shim registry as a side effect of `.define()` during page module
+    // evaluation.
     const adapter = await resolveAdapter();
     const preamble = adapter.manifestPreamble?.() ?? '';
 

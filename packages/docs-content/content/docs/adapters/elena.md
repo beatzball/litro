@@ -127,9 +127,11 @@ The Elena adapter has minimal configuration:
 
 ## SSR Details
 
-### Internal Registry
+### Component Registry
 
-Elena's `@elenajs/ssr` uses its own internal component registry, separate from the browser's `customElements` registry. Components must be explicitly registered by calling `.define()` — the Litro page scanner handles this automatically for page components, but if you create non-page custom elements used inside page templates, they must also call `.define()` or they will render as empty tags during SSR.
+The Elena adapter does not depend on `@elenajs/ssr`. Instead, the adapter's manifest preamble installs a lightweight `HTMLElement` shim plus a `customElements` shim for Node.js, and renders pages by instantiating component classes directly and stringifying their `render()` output. The shim's `customElements.define()` captures every registered class into `globalThis.__litro_elena_ce_map__`, which the page renderer reads to look up tags and recursively expand nested custom elements in the rendered HTML.
+
+Components must still call `.define()` (Elena exposes a class-level helper for this) so the renderer can find them — the Litro page scanner handles this automatically for page components, but if you create non-page custom elements used inside page templates, they must also call `.define()` or they will render as empty tags during SSR.
 
 ### Wrapper Components and Attributes
 

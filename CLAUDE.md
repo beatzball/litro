@@ -51,7 +51,7 @@ my-app/
     middleware/       ← Nitro middleware
   public/             ← Static assets
   app.ts              ← Client entry
-  litro.config.ts     ← Framework config (extends nitro.config.ts)
+  nitro.config.ts     ← Server config (Nitro). Adapter via LITRO_ADAPTER env (set in shell or at the top of this file as `process.env.LITRO_ADAPTER = 'fast'`); also picked up from `--adapter` at scaffolding time
   vite.config.ts
 ```
 

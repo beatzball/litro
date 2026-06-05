@@ -33,7 +33,7 @@
 ### Minor Changes
 
 - d459a96: Add FAST Element adapter with SSR, hydration, and client runtime support
-- 8c081a8: Elena framework adapter — light DOM SSR via @elenajs/ssr, progressive enhancement (no hydration), no DSD polyfill. Includes runtime components (LitroOutlet, LitroLink, LitroPage), manifestPostamble API for post-import component registration.
+- 8c081a8: Elena framework adapter — direct light DOM SSR (component classes are instantiated and stringified by the adapter; no `@elenajs/ssr` dependency), progressive enhancement (no hydration), no DSD polyfill. Includes runtime components (LitroOutlet, LitroLink, LitroPage), `manifestPostamble` API for post-import component registration (currently unused by Elena, which registers via the bundled `customElements` shim during page module imports).
 
 ### Patch Changes
 

@@ -141,13 +141,17 @@ Litro is a web component meta-framework — think "Nuxt, but the components are 
 
 The adapter system is how we support three component libraries without forking the framework. Each adapter provides a native implementation of the core primitives (Outlet, Link, Page, SSR renderer) and a small Vite/Nitro config. The router, page scanner, data layer, and build pipeline are adapter-agnostic.
 
-In practice, this means you write `litro.config.ts` once:
+In practice, this means you pick the adapter once. The simplest path is at scaffold time: `pnpm create @beatzball/litro --adapter <lit|fast|elena>` chooses the right recipe template. For non-default adapters, the scaffolded `nitro.config.ts` sets `process.env.LITRO_ADAPTER` on its first line so the framework picks up the right adapter at build time:
 
 ```ts
-export default defineConfig({
-  adapter: 'lit',    // or 'fast' | 'elena'
-});
+// nitro.config.ts (scaffolded for FAST or Elena)
+process.env.LITRO_ADAPTER = 'fast';   // or 'elena'
+
+import { defineNitroConfig } from 'nitropack/config';
+// …rest of the config
 ```
+
+The default Lit template omits this line because `lit` is the resolver's fallback. You can also set the env var in your shell (`LITRO_ADAPTER=fast pnpm dev`) without touching `nitro.config.ts`.
 
 …and your pages are authored in Lit, FAST, or Elena. The app is the same app. Same routes, same data fetching, same deployment. If you have a team that prefers FAST for its Fluent UI integration, or a docs site where Elena's light DOM is the right call, you don't have to pick a different framework — you pick a different adapter.
 
