@@ -51,7 +51,7 @@ A server can render:
 </my-component>
 ```
 
-The browser parses this natively — no JavaScript needed. The shadow DOM is attached before the first paint. Crawlers get real content. The approach is now Baseline (Chrome since 2021, Safari since March 2023, Firefox since October 2023), and the older attribute name `shadowroot` has been updated to `shadowrootmode`.
+The browser parses this natively — no JavaScript needed. The shadow DOM is attached before the first paint. Crawlers get real content. Declarative Shadow DOM reached web-platform Baseline in February 2024 once Firefox 123 shipped support (Chrome since 2021, Safari since March 2023, Firefox since February 2024), and the older attribute name `shadowroot` has been replaced by `shadowrootmode`.
 
 ## How `@lit-labs/ssr` Implements This
 

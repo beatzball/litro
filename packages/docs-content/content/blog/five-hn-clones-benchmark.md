@@ -49,11 +49,11 @@ All runs on the same machine, same Node.js version, median of three runs. Full J
 
 | Framework     | Time   |
 |---------------|--------|
-| litro-elena   | 1523   |
-| litro-lit     | 1526   |
-| litro-fast    | 1709   |
-| nuxt          | 2465   |
-| nextjs        | 5233   |
+| litro-elena   | 1175   |
+| litro-lit     | 1352   |
+| litro-fast    | 1425   |
+| nuxt          | 2468   |
+| nextjs        | 5239   |
 
 Litro's three adapters build the same 79 story pages + 10 user pages + 3 list pages (92 total routes) in just over a second. Next.js takes nearly four times longer for the same output. Most of the gap is Next.js's RSC compilation step and the extra toolchain layers (SWC, `generateStaticParams` evaluation, static export pipeline). Nuxt sits in the middle — faster than Next.js, slower than Litro, because Nitro's prerender runs per-route but Nuxt compiles Vue SFCs and resolves auto-imports on top of it.
 

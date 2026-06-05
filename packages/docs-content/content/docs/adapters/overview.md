@@ -107,7 +107,7 @@ Where an adapter limitation requires a workaround, it currently lives in the **a
 
 **Scope caveat:** the HN benchmark is intentionally narrow — list pages, param routes, nested comments, no forms, no streaming SSR, no user input. "No workarounds needed" is a claim about this scope, not a proof of full adapter parity under every real-world workload.
 
-**Lighthouse note:** Lighthouse cannot measure paint events inside shadow roots, so Lit and FAST SSR pages always score 0 on performance. Lighthouse scores are only meaningful for SSG output or Elena (light DOM). This is a Lighthouse limitation, not a rendering issue — the content is visible to users.
+**Lighthouse note:** Lighthouse measures Declarative Shadow DOM correctly when scoring static (SSG) output, so Lit, FAST, and Elena all return real performance scores in the HN benchmark numbers. We deliberately skip per-request SSR Lighthouse runs because the scored variable in that mode is server warm-up cost rather than the framework's render path, which makes adapter-to-adapter comparison noisy. None of the adapters score 0 because of Shadow DOM — the content is visible to users and to the scoring engine alike.
 
 ## Per-Adapter Guides
 

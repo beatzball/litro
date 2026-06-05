@@ -25,7 +25,7 @@ React's ecosystem today, or web platform standards for the next decade.
 <tr><td>Data fetching</td><td><code>fetch()</code> in Server Components</td><td><code>definePageData()</code></td></tr>
 <tr><td>API routes</td><td><code>app/api/route.ts</code></td><td><code>server/api/*.ts</code> (H3)</td></tr>
 <tr><td>Client routing</td><td>Next Router</td><td>LitroRouter (URLPattern)</td></tr>
-<tr><td>Hello World JS (gzipped)</td><td>~90 kB</td><td>~8 kB</td></tr>
+<tr><td>Client bundle</td><td>React runtime + RSC payloads</td><td>Web component runtime (Lit / FAST / Elena) — see <a href="/benchmarks">benchmarks</a></td></tr>
 <tr><td>Server engine</td><td>Custom</td><td>Nitro (same as Nuxt)</td></tr>
 <tr><td>Virtual DOM</td><td class="check">✓</td><td class="dash">—</td></tr>
 <tr><td>W3C standard components</td><td class="dash">—</td><td class="check">✓</td></tr>
@@ -127,7 +127,7 @@ export class BlogPost extends LitroPage {
 ## What Changes
 
 - **React → web components** — choose Lit, FAST Element, or Elena. Function components become class components; JSX becomes tagged template literals
-- **No React runtime** — the client bundle drops from ~90 kB to ~8 kB for Hello World
+- **No React runtime** — Litro ships only the chosen web-component runtime (Lit, FAST, or Elena) instead of React + RSC payloads; see the [benchmarks page](/benchmarks) for current per-route gzipped weights.
 - **Shadow DOM instead of CSS Modules** — component styles are scoped at the browser level
 - **H3 API routes** — import `defineEventHandler` from `h3` rather than using Next's Web Request/Response format
 - **Server engine** — Nitro instead of Next's custom server (more deployment targets, same Vercel support)

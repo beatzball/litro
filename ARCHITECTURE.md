@@ -98,9 +98,9 @@ Runtime:     catch-all handler imports manifest -> matches request path -> SSR -
 
 ---
 
-## 5. Critical Import Ordering Constraint for SSR Hydration (Lit/FAST only)
+## 5. Critical Import Ordering Constraint for SSR Hydration (Lit and FAST)
 
-The hydration support module must be the first import in `app.ts` and the first `<script type="module">` in the HTML `<head>`. This does not apply to Elena (light DOM, no hydration).
+The hydration support module must be the first import in `app.ts` and the first `<script type="module">` in the HTML `<head>`. The example below shows the Lit form (`@lit-labs/ssr-client/lit-element-hydrate-support.js`); the FAST adapter uses the analogous `@microsoft/fast-element/install-element-hydration` import with the same first-import requirement. This does not apply to Elena (light DOM, no hydration).
 
 ```typescript
 // app.ts -- CORRECT
@@ -114,7 +114,7 @@ import '@lit-labs/ssr-client/lit-element-hydrate-support.js'; // TOO LATE
 
 ---
 
-## 6. Externals Inlining for Edge Adapters (Lit/FAST only)
+## 6. Externals Inlining for Edge Adapters (Lit and FAST — handled by the framework)
 
 ```typescript
 externals: {

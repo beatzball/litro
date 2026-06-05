@@ -1,7 +1,7 @@
 {
   "name": "@beatzball/litro",
   "version": "0.9.1",
-  "description": "Fullstack web framework for Lit components — file-based routing, streaming SSR, SSG, and Nitro deployment adapters. A standards-based Next.js / Nuxt.js alternative.",
+  "description": "Fullstack web framework for web components — choose Lit, FAST Element, or Elena via an adapter. File-based routing, streaming SSR, SSG, and Nitro deployment adapters. A standards-based Next.js / Nuxt.js alternative.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -165,7 +165,6 @@
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
     "@resvg/resvg-js": "^2.6.0",
-    "execa": "^8.0.1",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",
     "h3": "^1.15.6",
@@ -192,8 +191,10 @@
     "vitest": "^2.1.8"
   },
   "keywords": [
-    "lit",
     "web-components",
+    "lit",
+    "fast-element",
+    "elena",
     "ssr",
     "ssg",
     "static-site-generation",

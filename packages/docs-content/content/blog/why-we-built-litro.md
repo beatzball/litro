@@ -20,7 +20,7 @@ Three APIs define what's changed:
 
 **Custom Elements** — define reusable, encapsulated HTML elements with lifecycle hooks. Supported in all modern browsers since 2020 (Chrome since 2016, Safari since 2017, Firefox since 2018, Chromium Edge since 2020). Your components are standard HTML elements: they work in any framework, in vanilla HTML, in any environment that renders HTML and runs JavaScript.
 
-**Shadow DOM and Declarative Shadow DOM** — true style encapsulation without CSS Modules hacks. And with [Declarative Shadow DOM](https://developer.chrome.com/docs/css-ui/declarative-shadow-dom) (Baseline since 2023), the server can render shadow DOM directly into HTML — crawlers and browsers get the content before JavaScript runs.
+**Shadow DOM and Declarative Shadow DOM** — true style encapsulation without CSS Modules hacks. And with [Declarative Shadow DOM](https://developer.chrome.com/docs/css-ui/declarative-shadow-dom) (Baseline since Firefox 123 shipped in February 2024), the server can render shadow DOM directly into HTML — crawlers and browsers get the content before JavaScript runs.
 
 **URLPattern** — a native browser API for matching URL patterns, including named groups and wildcards. It's what `@beatzball/litro-router` is built on. No regex string parsing, no custom path-to-regexp, no external dependency.
 

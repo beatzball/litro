@@ -86,7 +86,7 @@ yarn create @beatzball/litro my-app
 bun create @beatzball/litro my-app
 
 # deno
-deno create npm:@beatzball/litro@latest -- my-app
+deno init --npm @beatzball/litro my-app
 ```
 
 Follow the interactive prompts to choose a recipe, rendering mode, and framework adapter, or pass flags to skip them:
@@ -493,11 +493,11 @@ Static routes (`/`, `/about`, `/blog`) are automatically added to the prerender 
 pnpm install                                    # install all workspace deps
 pnpm --filter @beatzball/litro-router build     # compile litro-router (required once)
 pnpm --filter @beatzball/litro build            # compile framework (required once)
-pnpm --filter @beatzball/litro-router test      # run router unit tests (18 tests)
-pnpm --filter @beatzball/litro test             # run framework unit tests (228 tests)
-pnpm --filter @beatzball/create-litro test      # run scaffolding tests (17 tests)
-pnpm test:docs                                  # run docs unit tests (97 tests)
-pnpm test:e2e                                   # Playwright e2e tests (92 tests, 5 projects)
+pnpm --filter @beatzball/litro-router test      # run router unit tests
+pnpm --filter @beatzball/litro test             # run framework unit tests
+pnpm --filter @beatzball/create-litro test      # run scaffolding tests
+pnpm test:docs                                  # run docs unit tests (docs + docs-ui workspaces)
+pnpm test:e2e                                   # Playwright e2e tests across every playground + docs project
 pnpm --filter @beatzball/litro dev              # watch-compile framework
 
 # Playgrounds

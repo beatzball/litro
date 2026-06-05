@@ -1,6 +1,6 @@
 ---
 title: Welcome to Litro
-description: Introducing Litro — a fullstack web framework built on Lit, Nitro, and Vite.
+description: Introducing Litro — a fullstack web framework for web components (Lit, FAST Element, or Elena via an adapter) on Nitro and Vite.
 date: 2026-03-12
 tags:
   - blog
@@ -11,7 +11,7 @@ tags:
 
 We're excited to introduce **Litro** — a fullstack web framework that combines the best of:
 
-- **Lit** — web components, no VDOM, no proprietary runtime
+- **Web Components** — author pages in [Lit](https://lit.dev) (default), [FAST Element](https://www.fast.design/), or [Elena](https://elenajs.com/) via Litro's adapter system; no VDOM, no proprietary runtime
 - **Nitro** — battle-tested server engine (the same one powering Nuxt)
 - **Vite** — fast HMR and modern bundling
 

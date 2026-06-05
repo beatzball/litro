@@ -20,8 +20,10 @@ pnpm create @beatzball/litro my-app
 ```
 my-app/
   pages/
-    index.ts          ← home page
-    about.ts          ← about page
+    index.ts          ← home page (with definePageData server fetch)
+    blog/
+      index.ts        ← blog listing
+      [slug].ts       ← dynamic blog post route with generateRoutes()
   server/
     api/
       hello.ts        ← GET /api/hello

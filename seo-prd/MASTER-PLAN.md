@@ -6,6 +6,8 @@ Establish litro.dev as a discoverable, authoritative resource for developers sea
 SSR/SSG frameworks, Next.js / Nuxt.js alternatives, and web components tooling. All work
 targets organic search traffic from developers.
 
+> **Historical document (2026-03-18).** Most work tracked here has shipped. Several path references in this plan and its sub-PRDs (PRD-1, PRD-2, etc.) point at the pre-extraction layout — `docs/src/seo.ts` is now `packages/docs-ui/src/seo.ts`, and `docs/content/...` is now `packages/docs-content/content/...`. Treat the file references as historical pointers, not current locations.
+
 ## Current State (as of 2026-03-18)
 
 - SEO utility exists (`docs/src/seo.ts`) — meta, OG, canonical, Twitter cards
