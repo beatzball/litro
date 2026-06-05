@@ -34,7 +34,7 @@ Everything under the server layer — Nitro, H3, deployment presets — is share
 <tr><td>Server engine</td><td>Nitro</td><td class="same">Identical ↔</td></tr>
 <tr><td>Deployment adapters</td><td>All Nitro presets</td><td class="same">Identical ↔</td></tr>
 <tr><td>Client routing</td><td>vue-router</td><td>LitroRouter (URLPattern)</td></tr>
-<tr><td>Hello World JS (gzipped)</td><td>~60 kB</td><td>~8 kB</td></tr>
+<tr><td>Client bundle</td><td>Vue runtime + hydration payload</td><td>Web component runtime (Lit / FAST / Elena) — see <a href="/benchmarks">benchmarks</a></td></tr>
 <tr><td>Virtual DOM</td><td class="check">✓ (Vue)</td><td class="dash">—</td></tr>
 <tr><td>W3C standard components</td><td class="dash">—</td><td class="check">✓</td></tr>
 <tr><td>TypeScript</td><td class="check">✓</td><td class="check">✓</td></tr>
@@ -163,7 +163,7 @@ export default defineEventHandler(async () =&gt; {
 ## What Changes
 
 - **Vue SFCs → web components** — choose Lit, FAST Element, or Elena. `<script setup>` becomes `definePageData()`; `<template>` becomes `render()`
-- **No Vue runtime** — bundle drops from ~60 kB to ~8 kB
+- **No Vue runtime** — Litro ships only the chosen web-component runtime (Lit, FAST, or Elena) instead of Vue plus its hydration payload; the [benchmarks page](/benchmarks) has current per-route gzipped weights for both frameworks.
 - **vue-router → LitroRouter** — different API, built on URLPattern
 - **`<NuxtLink>` → `<litro-link>`** — SPA navigation; attribute is `href` not `to`
 

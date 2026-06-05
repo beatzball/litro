@@ -7,6 +7,8 @@ from day one)
 **Dependencies:** PRD-1 deployed before going live (for JSON-LD and sitemap); content
 writing can begin in parallel
 
+> **Historical document.** Path references — `docs/content/docs/migrate/...`, `docs/content/...` — predate the Phase 1 extraction. Migration guides now live under `packages/docs-content/content/docs/migrate/`. The PRD's substance still applies; only the locations changed.
+
 ---
 
 ## Problem

@@ -5,6 +5,8 @@
 **Phase:** 1 (run in parallel with PRD-4 and first two blog posts)
 **Dependencies:** None — start immediately
 
+> **Historical document.** Path references — `docs/src/seo.ts`, `docs/content/...` — predate the Phase 1 extraction. The SEO utilities are now in `packages/docs-ui/src/seo.ts` and Markdown content is in `packages/docs-content/content/...`. The PRD's substance still applies; only the locations changed.
+
 ---
 
 ## Problem

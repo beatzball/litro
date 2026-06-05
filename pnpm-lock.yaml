@@ -383,9 +383,6 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.0
         version: 2.6.2
-      execa:
-        specifier: ^8.0.1
-        version: 8.0.1
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3

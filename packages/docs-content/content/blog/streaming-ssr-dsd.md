@@ -86,14 +86,16 @@ Litro's SSR pipeline for a page request:
 2. Route handler calls definePageData.fetcher(event)
 3. Returns { post: {...} }
 4. buildShell() generates <head> + <body> HTML string
-5. renderToStream(html`<page-blog-slug .serverData=${data}>`)
-   → AsyncIterable<string>
-6. RenderResultReadable wraps the iterable as a Node.js Readable
+5. adapter.renderPage(tag, serverData)
+   → AsyncIterable<string>          ← Lit: render() from @lit-labs/ssr
+                                       FAST: @microsoft/fast-ssr templateRenderer
+                                       Elena: direct instantiate + stringify
+6. iterableToReadable() wraps the iterable as a Node.js Readable
 7. PassThrough stream: shell.head | SSR output | shell.foot
 8. sendStream(event, combined) → HTTP chunked transfer encoding
 ```
 
-The key function is `renderToStream` from `@lit-labs/ssr`. It takes a Lit `html` template and returns an `AsyncIterable<string>` — each yielded string is a chunk of HTML. The chunks include DSD templates for each Lit component in the tree.
+The adapter contract is `renderPage(tag, serverData): AsyncIterable<string>`. For Lit (the default), the adapter calls `render()` from `@lit-labs/ssr` and yields the flattened chunks of the resulting `RenderResult`; the chunks include DSD templates for each Lit component in the tree. FAST and Elena adapters produce the same `AsyncIterable<string>` shape via different mechanisms — see `packages/framework/src/adapter/{lit,fast,elena}/index.ts` for the implementations.
 
 ## The Shell Split
 
@@ -180,16 +182,16 @@ Streaming SSR directly improves two Core Web Vitals metrics:
 
 **LCP (Largest Contentful Paint):** Because the DSD template includes the actual rendered content (headings, text, images), the LCP element is in the initial HTML payload. It doesn't wait for JavaScript to render it. Googlebot sees the same content.
 
-**FID / INP (Interaction to Next Paint):** The app bundle is small (~8 kB gzipped). JavaScript parse time is minimal compared to React or Vue SSR apps.
+**FID / INP (Interaction to Next Paint):** The app bundle is small — JavaScript parse time is minimal compared to React or Vue SSR apps. See the [benchmarks](/benchmarks) for the current per-route gzipped weights across all three Litro adapters and the framework's competitors.
 
 ## Edge Adapter Note
 
-`RenderResultReadable` (from `@lit-labs/ssr/lib/render-result-readable.js`) extends Node.js's `stream.Readable`. It's not available in Cloudflare Workers or other edge runtimes that lack Node.js stream APIs.
+Litro's default stream plumbing uses `iterableToReadable()` (see `packages/framework/src/adapter/stream.ts`), which is a small wrapper around Node's `stream.Readable`. That doesn't run in Cloudflare Workers or other edge runtimes that lack Node stream APIs.
 
-For Cloudflare Workers, convert the `AsyncIterable<string>` from `renderToStream()` to a Web `ReadableStream` manually:
+For Cloudflare Workers, the adapter's `AsyncIterable<string>` output can be wrapped in a Web `ReadableStream` instead:
 
 ```ts
-const ssrIterable = renderToStream(template);
+const ssrIterable = adapter.renderPage(tag, serverData);
 
 const stream = new ReadableStream({
   async start(controller) {
@@ -201,7 +203,7 @@ const stream = new ReadableStream({
 });
 ```
 
-This is why `externals: { inline: ['@lit-labs/ssr', '@lit-labs/ssr-client'] }` is required in `nitro.config.ts` for edge targets — the SSR package must be bundled (not external) since edge runtimes don't have access to the Node.js module system.
+Litro's Lit adapter already inlines `@lit-labs/ssr` and `@lit-labs/ssr-client` for every preset (see `litAdapter.nitroConfig()` in `packages/framework/src/adapter/lit/index.ts`), and the FAST adapter handles `@microsoft/fast-ssr` similarly — so for the supported adapters you don't need to add anything in `nitro.config.ts` for edge deployment to bundle them. The Elena adapter doesn't pull in either package and ships the smallest edge footprint of the three.
 
 ## What to Read Next
 

@@ -24,11 +24,12 @@ my-blog/
       .11tydata.json
       first-post.md
   pages/
-    index.ts          ← blog listing
+    index.ts          ← home / blog landing
     blog/
-      [slug].ts       ← blog post
-      tags/
-        [tag].ts      ← tag listing
+      index.ts        ← blog listing
+      [slug].ts       ← individual post (dynamic, with generateRoutes())
+    tags/
+      [tag].ts        ← tag listing (sibling of `blog/`, not nested)
   public/
   app.ts
   nitro.config.ts     ← uses ssgPreset()

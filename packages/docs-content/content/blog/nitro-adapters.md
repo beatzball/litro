@@ -90,25 +90,28 @@ Without this, you'll get a module-not-found error at runtime on Workers.
 
 ### 2. Streaming API Differences
 
-`RenderResultReadable` from `@lit-labs/ssr` is a Node.js `Readable` stream. Node.js `Readable` is not available in Cloudflare Workers.
+Litro's adapter contract is `renderPage(tag, serverData): AsyncIterable<string>`. The framework wraps that iterable with `iterableToReadable()` (`packages/framework/src/adapter/stream.ts`) — a small Node.js `Readable` adapter — and hands it to Nitro's `sendStream()`. Node `Readable` is not available in Cloudflare Workers or other edge runtimes that lack Node stream APIs.
 
-Litro's page handler uses Nitro's `sendStream()`, which accepts either a Node.js `Readable` or a standard WHATWG `ReadableStream`. For edge targets, you need to convert:
+For edge targets, wrap the same `AsyncIterable<string>` in a WHATWG `ReadableStream` instead:
 
 ```ts
-import { render } from '@lit-labs/ssr';
-import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
+const ssrIterable = adapter.renderPage(tag, serverData);
 
-// Node.js targets — use RenderResultReadable directly
-import { RenderResultReadable } from '@lit-labs/ssr/lib/render-result-readable.js';
-const readable = new RenderResultReadable(renderResult);
-return sendStream(event, readable);
+// Node.js targets — the default Litro pipeline handles this via iterableToReadable
+return sendStream(event, iterableToReadable(ssrIterable));
 
-// Edge targets — convert to WHATWG ReadableStream
-const html = await collectResult(renderResult);
-return html;
+// Edge targets — wrap in WHATWG ReadableStream
+return new Response(new ReadableStream({
+  async start(controller) {
+    for await (const chunk of ssrIterable) {
+      controller.enqueue(new TextEncoder().encode(chunk));
+    }
+    controller.close();
+  },
+}));
 ```
 
-Litro's built-in page handler detects the runtime automatically. If you're writing a custom handler for an edge target, keep this difference in mind.
+Litro's built-in page handler uses the Node path. If you're writing a custom handler for an edge target, keep the runtime difference in mind.
 
 ## Vercel Deployment Example
 
@@ -129,21 +132,27 @@ The output follows Vercel's [Build Output API](https://vercel.com/docs/build-out
 NITRO_PRESET=cloudflare-workers litro build
 
 # Deploy with Wrangler
-wrangler publish dist/server/index.mjs
+wrangler deploy
 ```
 
-The `wrangler.toml` for a Litro Workers deployment:
+After the build, Nitro prints the exact output paths it generated — the Workers preset writes its entry under `dist/server/` (Litro's overridden `output.dir`). Use the path Nitro prints rather than hardcoding it, since Nitro can move files between presets and releases.
+
+A minimal `wrangler.toml` for a Litro Workers deployment:
 
 ```toml
 name = "my-litro-app"
-main = "dist/server/index.mjs"
 compatibility_date = "2025-09-01"
 
+# Fill in `main` from the path Nitro prints at the end of the build —
+# it sits under `dist/server/` but the exact filename can change between
+# Nitro releases and Cloudflare preset variants.
+main = "<path-printed-by-nitro>"
+
 [site]
-bucket = "./dist/server/public"
+bucket = "<asset-dir-printed-by-nitro>"
 ```
 
-Static assets are served by the Worker via KV bindings — Nitro generates the necessary asset manifest automatically.
+Static assets are served by the Worker via KV bindings — Nitro generates the necessary asset manifest automatically. Always copy the `main` and `bucket` values from the build output rather than hardcoding them; the layout under `dist/server/` is owned by Nitro and may evolve.
 
 ## Coolify and Self-Hosted Node.js
 

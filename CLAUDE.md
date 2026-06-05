@@ -10,7 +10,7 @@ Litro is a greenfield fullstack web framework being built in this repo. It combi
 
 - **Web Components** — framework-agnostic via adapter system: Lit (default), FAST Element, Elena
 - **Nitro** — server engine (same server that powers Nuxt), handles routing, API, SSR, deployment adapters
-- **SSR** — Lit/FAST use `@lit-labs/ssr` (Declarative Shadow DOM, streaming); Elena uses light DOM SSR (no DSD, no hydration)
+- **SSR** — Lit uses `@lit-labs/ssr`, FAST uses `@microsoft/fast-ssr` (both Declarative Shadow DOM, streaming); Elena uses light DOM SSR (no DSD, no hydration)
 - **`LitroRouter`** — built-in client-side router (URLPattern API), no external dependency
 - **Vite** — client bundle build and HMR
 - **pnpm workspaces** — monorepo tooling
@@ -26,7 +26,8 @@ Nitro Server
     ├── /api/**  →  server/api/ route files (plain H3 handlers)
     └── /**      →  Page Handler
                         ├── SSR mode: FrameworkAdapter.renderPage() → streams HTML
-                        │     ├── Lit/FAST: @lit-labs/ssr → DSD HTML → client hydrates
+                        │     ├── Lit: @lit-labs/ssr → DSD HTML → client hydrates
+                        │     ├── FAST: @microsoft/fast-ssr → DSD HTML → client hydrates
                         │     └── Elena: light DOM SSR → no hydration, progressive enhancement
                         └── Static mode: prerendered .html files served by Nitro static preset
 ```

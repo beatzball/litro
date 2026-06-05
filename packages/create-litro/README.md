@@ -18,7 +18,7 @@ yarn create @beatzball/litro my-app
 bun create @beatzball/litro my-app
 
 # deno
-deno create npm:@beatzball/litro@latest -- my-app
+deno init --npm @beatzball/litro my-app
 ```
 
 Follow the interactive prompts to choose a recipe, rendering mode, and framework adapter, or pass flags directly to skip them:
