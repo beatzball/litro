@@ -531,7 +531,7 @@ docker run -p 3000:3000 litro-docs-ssr
 | Hydration     | [@lit-labs/ssr-client](https://github.com/lit/lit/tree/main/packages/labs/ssr-client) | Client-side DSD hydration (Lit/FAST)   |
 | Client router | [`litro-router`](./packages/litro-router) (URLPattern API)                            | Web component-aware pushState router   |
 | Server        | [Nitro](https://nitro.unjs.io)                                                        | Routing, API, SSR, deployment adapters |
-| Client build  | [Vite 5](https://vitejs.dev)                                                          | Client bundle, HMR                     |
+| Client build  | [Vite 8](https://vitejs.dev)                                                          | Client bundle, HMR                     |
 | Language      | TypeScript 5                                                                          | Required throughout                    |
 | Monorepo      | pnpm workspaces                                                                       | Package management                     |
 
