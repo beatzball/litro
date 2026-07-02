@@ -1,5 +1,16 @@
 # create-litro
 
+## 0.6.0
+
+### Minor Changes
+
+- 1f4d669: Scaffolded projects now use Vite 8 (was Vite 5). All recipe templates (fullstack, 11ty-blog, starlight) across the Lit, FAST, and Elena adapters pin `vite` to `^8`. New projects require Node `^20.19.0 || >=22.12.0`.
+
+### Patch Changes
+
+- 658550d: Fix port mismatch and stale references in scaffolder output and recipe templates: post-scaffold success message, recipe playwright configs, and recipe content all said `localhost:3030` while the default Litro dev server listens on `3000`.
+- fe81671: npm metadata and scaffolder docs: rewrite the package description and keywords to mention all three adapters (Lit / FAST / Elena), and fix the README's Deno scaffold command (`deno init --npm @beatzball/litro my-app` — the older `deno create npm:…` form was removed in Deno 2.x).
+
 ## 0.5.2
 
 ### Patch Changes
