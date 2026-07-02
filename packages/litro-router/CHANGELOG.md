@@ -1,5 +1,11 @@
 # litro-router
 
+## 0.1.9
+
+### Patch Changes
+
+- fe81671: npm metadata: rewrite the package description and keywords to reflect that the router is framework-agnostic — it works with Lit, FAST, Elena, or plain custom elements, not just Lit.
+
 ## 0.1.8
 
 ### Patch Changes

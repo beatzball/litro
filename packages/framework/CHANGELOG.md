@@ -1,5 +1,20 @@
 # litro
 
+## 0.10.0
+
+### Minor Changes
+
+- 1f4d669: Upgrade Vite from 5 to 8 (Rolldown + Oxc bundler). Builds are substantially faster and the toolchain moves onto the Oxc transform pipeline. The Lit decorator transpile (`experimentalDecorators` / `useDefineForClassFields` from `tsconfig.json`) is honored by Oxc exactly as it was by esbuild, so client bundles are unchanged. No Litro config changes were required — `build.rollupOptions` is accepted via Vite's compatibility layer.
+
+  **Breaking for consumers:** Vite 8 requires Node `^20.19.0 || >=22.12.0` (Node 18 is no longer supported). Existing projects should bump their own `vite` dependency to `^8` and ensure they are on a supported Node version. See the Vite 8 upgrade note for details.
+
+### Patch Changes
+
+- f0e3423: Docs accuracy: correct the published Elena 0.8.0 CHANGELOG entry to reflect that the adapter uses direct light DOM SSR (no `@elenajs/ssr` dependency); fix the JSDoc on `LitroConfig` and the comment in `plugins/pages.ts` that misdescribed adapter selection (the only working path is `process.env.LITRO_ADAPTER`, not a `runtimeConfig.litro.adapter` block).
+- fe81671: npm metadata + dependency cleanup: rewrite the package description and keywords to reflect that all three adapters (Lit / FAST / Elena) are first-class, and drop the unused `execa` runtime dependency (the CLI uses `child_process.spawn` directly per `cli/index.ts:18`).
+- Updated dependencies [fe81671]
+  - @beatzball/litro-router@0.1.9
+
 ## 0.9.1
 
 ### Patch Changes
