@@ -122,6 +122,38 @@ describe('createActionHandler', () => {
     expect(res.status).toBe(200);
   });
 
+  it('returns 403 when Origin is present but Host is missing', async () => {
+    const { defineEventHandler } = await import('h3');
+    const app = createApp();
+    // Strip the Host header before the action handler runs, simulating a
+    // client that sends Origin without Host.
+    app.use(defineEventHandler((event) => {
+      delete event.node.req.headers.host;
+    }));
+    const router = createRouter();
+    router.post('/_litro/action/:id', createActionHandler(entries));
+    app.use(router);
+    const stripServer = createServer(toNodeListener(app));
+    await new Promise<void>((resolve) => stripServer.listen(0, resolve));
+    const port = (stripServer.address() as AddressInfo).port;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/_litro/action/${ID_ADD}`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-litro-action': '1',
+          origin: `http://127.0.0.1:${port}`,
+        },
+        body: serializeValue([1, 2]),
+      });
+      expect(res.status).toBe(403);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        stripServer.close((e) => (e ? reject(e) : resolve())),
+      );
+    }
+  });
+
   it('returns 400 on a malformed body', async () => {
     const res = await post(ID_ADD, 'not json at all');
     expect(res.status).toBe(400);

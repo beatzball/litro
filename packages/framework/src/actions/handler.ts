@@ -94,14 +94,14 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
     }
     const origin = getRequestHeader(event, 'origin');
     const host = getRequestHeader(event, 'host');
-    if (origin && host) {
+    if (origin) {
       let originHost: string | undefined;
       try {
         originHost = new URL(origin).host;
       } catch {
         originHost = undefined;
       }
-      if (originHost !== host) {
+      if (!host || originHost !== host) {
         return sendError(event, new LitroActionError('Origin does not match request host', { status: 403 }));
       }
     }
