@@ -47,6 +47,11 @@
       "import": "./dist/actions/index.js",
       "types": "./dist/actions/index.d.ts"
     },
+    "./actions/client": {
+      "source": "./src/actions/client.ts",
+      "import": "./dist/actions/client.js",
+      "types": "./dist/actions/client.d.ts"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "import": "./dist/plugins/pages.js",
