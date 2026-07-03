@@ -42,6 +42,11 @@
       "import": "./dist/runtime/*.js",
       "types": "./dist/runtime/*.d.ts"
     },
+    "./actions": {
+      "source": "./src/actions/index.ts",
+      "import": "./dist/actions/index.js",
+      "types": "./dist/actions/index.d.ts"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "import": "./dist/plugins/pages.js",
