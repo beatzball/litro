@@ -16,7 +16,7 @@ Only export what should be reachable over HTTP. The Vite plugin detects some non
 
 ## Setup
 
-Four one-time edits wire the feature into a Litro project. Add them once per project; there is nothing per-action. The `server/stubs/` directory is generated on every build and dev restart and should be gitignored.
+Five one-time edits wire the feature into a Litro project. Add them once per project; there is nothing per-action. The `server/stubs/` directory is generated on every build and dev restart and should be gitignored.
 
 ### nitro.config.ts
 

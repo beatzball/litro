@@ -21,10 +21,11 @@
  * (relPath, exportName) pairs itself — so this plugin never parses
  * TypeScript.
  *
- * Consumer wiring (four one-time edits, see playground):
+ * Consumer wiring (five one-time edits, see playground):
  *   - nitro.config.ts:   await actionsPlugin(nitro) in hooks['build:before']
  *   - nitro.config.ts:   handlers entry for POST /__litro/action/:id -> ./server/stubs/action-handler.ts
  *   - package.json:      "imports": { "#litro/action-manifest": "./server/stubs/action-manifest.ts" }
+ *   - nitro.config.ts:   routeRules '/__litro/action/**' -> cache-control no-store
  *   - vite.config.ts:    litroActionsPlugin() from '@beatzball/litro/vite'
  */
 import type { Nitro } from 'nitropack';

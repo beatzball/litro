@@ -68,7 +68,7 @@ The draft RFC (authored outside this repo) used conventions that do not exist in
 - **Opaque** — source paths do not leak into URLs.
 - Computed identically and independently by both plugins; a shared `hashActionId(relPath, exportName)` util lives in framework `src/actions/` and is unit-tested for stability (snapshot of known inputs → known ids).
 
-Renaming a file or export intentionally changes the id (it is a different contract). Collision handling: the scanner errors at build time if two actions produce the same id.
+Renaming a file or export intentionally changes the id (it is a different contract). Collision handling: none in v1 — a 12-hex-char sha256 prefix makes accidental collision negligible for realistic action counts; the server registry would silently prefer the later module. Build-time collision detection is deferred.
 
 ### 4.2 Server side — Nitro build plugin (`packages/framework/src/plugins/actions.ts`)
 
@@ -94,7 +94,7 @@ Request lifecycle for `POST /__litro/action/:id`:
 
 1. **CSRF gate (default-on):** require the `x-litro-action: 1` header; if `Sec-Fetch-Site` is present it must be `same-origin` or `none`; if `Origin` is present it must match the request host. Cross-origin form posts cannot set custom headers, so this closes classic CSRF without session/token infrastructure. (Token machinery arrives with the forms milestone, which actually needs it.) Failure → 403.
 2. **Lookup:** id → manifest entry; unknown → 404.
-3. **Deserialize** the request body with seroval → args array (plain function) or input value (defineAction).
+3. **Deserialize** the request body with seroval → always an args array; for defineAction exports the input is `args[0]`.
 4. **Dispatch:**
    - `defineAction` export → validate input against its Standard Schema (failure → 400 with the validator's issues array), then `handler(input, { event })`.
    - Plain async function export → call with the args array spread.
@@ -107,9 +107,10 @@ Request lifecycle for `POST /__litro/action/:id`:
 - The plugin reads the real file once with es-module-lexer to enumerate export names, then emits:
   ```ts
   import { callAction } from '@beatzball/litro/actions/client';
-  export const getPost = (...args) => callAction('a1b2c3d4e5f6', args);
-  export const createPost = (input) => callAction('f6e5d4c3b2a1', [input]);
+  export const getPost = (...args) => callAction("a1b2c3d4e5f6", args);
+  export const createPost = (...args) => callAction("f6e5d4c3b2a1", args);
   ```
+  (Every export gets the same rest-args stub; the handler extracts `args[0]` as the input for defineAction exports.)
 - Default exports are supported (`export default (...args) => callAction(...)`).
 - Definitely-non-function exports (Literal/Object/Array/Template/Binary/Unary/Update initializers) from a server module are a **build error** with a message explaining that everything exported from `.server.ts` becomes an endpoint (RFC §5 point 3). The guard is best-effort: initializers whose type is statically ambiguous (identifiers, member expressions, conditionals) pass the build, and any export that is not a function at runtime is simply never registered — calling it yields a 404, never an execution or data leak.
 - The real module's code is discarded at transform time, so its imports (DB, secrets) are structurally absent from `dist/client/` — enforced by test (§7), not hope.
@@ -221,4 +222,4 @@ Requirement from design review: documentation stays current with the code, and *
 
 ## 10. Rollout order relative to `@litro/agent`
 
-Server Actions v1 (this spec) → Server Actions milestone 2 (forms + streaming) → `@litro/agent` prototype (§11 of the agent spec), which consumes: seroval streaming, `/_litro/*` runtime endpoints, Standard Schema validation, and the `.server.ts` boundary for agent tool modules. The agent spec's `litro.config.ts` surface must be re-drafted against the real config model (`nitro.config.ts` + env) before its own design review.
+Server Actions v1 (this spec) → Server Actions milestone 2 (forms + streaming) → `@litro/agent` prototype (§11 of the agent spec), which consumes: seroval streaming, `/__litro/*` runtime endpoints, Standard Schema validation, and the `.server.ts` boundary for agent tool modules. The agent spec's `litro.config.ts` surface must be re-drafted against the real config model (`nitro.config.ts` + env) before its own design review.
