@@ -1,5 +1,5 @@
 /**
- * Runtime HTTP handler for POST /_litro/action/:id.
+ * Runtime HTTP handler for POST /__litro/action/:id.
  *
  * Consumed by the generated stub server/stubs/action-handler.ts, which passes
  * in the actionModules array from #litro/action-manifest. The registry maps

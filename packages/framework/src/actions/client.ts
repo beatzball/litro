@@ -9,7 +9,7 @@ import { serializeValue, deserializeValue } from './serialize.js';
 import { LitroActionError, type ActionErrorPayload } from './error.js';
 
 export async function callAction<T = unknown>(id: string, args: unknown[]): Promise<T> {
-  const res = await fetch(`/_litro/action/${id}`, {
+  const res = await fetch(`/__litro/action/${id}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

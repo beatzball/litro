@@ -10,7 +10,7 @@
 A typed function-call boundary between client and server. Export an async function from a `*.server.ts` module and import it anywhere:
 
 - **On the server (SSR, other server code):** the import resolves to the real module; calls are plain in-process function calls.
-- **In the browser:** a Vite plugin replaces the import with a generated stub that serializes arguments, POSTs to `/_litro/action/:id`, and deserializes the result. TypeScript resolves the import to the real file in both cases, so the call is fully typed with no schema duplication.
+- **In the browser:** a Vite plugin replaces the import with a generated stub that serializes arguments, POSTs to `/__litro/action/:id`, and deserializes the result. TypeScript resolves the import to the real file in both cases, so the call is fully typed with no schema duplication.
 
 Server module code and its transitive dependencies (DB drivers, secrets) structurally never enter the client bundle.
 
@@ -49,7 +49,7 @@ The draft RFC (authored outside this repo) used conventions that do not exist in
   - push handler into nitro.options.handlers     - emit stub module per export
         │                                               │
         ▼                                               ▼
-  POST /_litro/action/:id   ◄──── HTTP (seroval) ────  callAction(id, args)
+  POST /__litro/action/:id   ◄──── HTTP (seroval) ────  callAction(id, args)
   - lookup id → lazy import
   - validate (Standard Schema) if defineAction
   - call handler / plain fn
@@ -81,16 +81,16 @@ Sibling of the existing page scanner (`plugins/pages.ts`), registered the same w
    };
    ```
    Also write a physical stub (like `server/stubs/page-manifest.ts`) so tsc resolves the virtual module.
-3. Register the runtime handler at `POST /_litro/action/:id` with **no consumer route file**. ⚠️ **Spike question 1 — the mechanism is unproven.** No existing code pushes into `nitro.options.handlers`; vite-dev middleware is registered via a static `handlers` array in each consumer's `nitro.config.ts` pointing at a consumer-owned file, and the repo documents (playground `nitro.config.ts:96-101`, framework `plugins/vite-dev.ts:25-38`) that the dev server reads handler arrays *before* `build:before` fires — which is exactly why an earlier `devHandlers`-push approach failed. The spike must determine which works in both dev and build:
+3. Register the runtime handler at `POST /__litro/action/:id` with **no consumer route file**. ⚠️ **Spike question 1 — the mechanism is unproven.** No existing code pushes into `nitro.options.handlers`; vite-dev middleware is registered via a static `handlers` array in each consumer's `nitro.config.ts` pointing at a consumer-owned file, and the repo documents (playground `nitro.config.ts:96-101`, framework `plugins/vite-dev.ts:25-38`) that the dev server reads handler arrays *before* `build:before` fires — which is exactly why an earlier `devHandlers`-push approach failed. The spike must determine which works in both dev and build:
    - (a) `nitro.options.handlers.push(...)` from the actions plugin at `build:before` (or an earlier hook if one is available to config-invoked plugins);
    - (b) fallback: a static `handlers` entry in `nitro.config.ts` pointing at a framework-exported handler (`@beatzball/litro/actions/handler`) — still no consumer-owned file, one config line, added to templates/playgrounds like the existing vite-dev entry.
-4. Scope the `/_litro/**` immutable-cache route rule so it does not apply to `/_litro/action/**`. Note: this rule is copy-pasted across 10+ consumer configs (all playgrounds, docs-ssr, benchmark apps) and the create-litro templates — v1 applies the carve-out only to apps that adopt actions (playground + playground-elena); create-litro templates get wired in milestone 2 (forms), which touches the templates anyway. Until then the docs' setup section covers manual wiring.
+4. Scope the `/_litro/**` immutable-cache route rule so it does not apply to `/__litro/action/**`. Note: this rule is copy-pasted across 10+ consumer configs (all playgrounds, docs-ssr, benchmark apps) and the create-litro templates — v1 applies the carve-out only to apps that adopt actions (playground + playground-elena); create-litro templates get wired in milestone 2 (forms), which touches the templates anyway. Until then the docs' setup section covers manual wiring.
 
 Dev-mode behavior matches the page scanner: adding a brand-new `.server.ts` file mid-session follows whatever rescan/restart semantics `pages.ts` already has; we do not build new watcher machinery in v1.
 
 ### 4.3 Runtime handler (`packages/framework/src/actions/handler.ts`)
 
-Request lifecycle for `POST /_litro/action/:id`:
+Request lifecycle for `POST /__litro/action/:id`:
 
 1. **CSRF gate (default-on):** require the `x-litro-action: 1` header; if `Sec-Fetch-Site` is present it must be `same-origin` or `none`; if `Origin` is present it must match the request host. Cross-origin form posts cannot set custom headers, so this closes classic CSRF without session/token infrastructure. (Token machinery arrives with the forms milestone, which actually needs it.) Failure → 403.
 2. **Lookup:** id → manifest entry; unknown → 404.
@@ -121,7 +121,7 @@ Request lifecycle for `POST /_litro/action/:id`:
 export async function callAction<T>(id: string, args: unknown[]): Promise<T>;
 ```
 
-Serializes args with seroval, `fetch('/_litro/action/' + id, { method: 'POST', headers: { 'x-litro-action': '1', ... }, body })`, deserializes the response, throws `LitroActionError` on non-2xx. Browser-safe module: no Node imports (respects the client-subpath export gating in `src/index.ts`).
+Serializes args with seroval, `fetch('/__litro/action/' + id, { method: 'POST', headers: { 'x-litro-action': '1', ... }, body })`, deserializes the response, throws `LitroActionError` on non-2xx. Browser-safe module: no Node imports (respects the client-subpath export gating in `src/index.ts`).
 
 ### 4.6 `defineAction` (`packages/framework/src/actions/define.ts`, exported from `@beatzball/litro/actions`)
 
@@ -171,11 +171,15 @@ Design-system guidance (RFC §6) carries over verbatim: actions are called at th
 
 New direct dependencies of `@beatzball/litro`: `seroval` (entirely new to the workspace) and `es-module-lexer` (currently only transitive via vitest tooling).
 
-### Spike questions (resolve before core implementation)
+### Spike questions — ANSWERED 2026-07-04 (empirically, playground dev + build)
 
-1. **Handler registration mechanism** that works in both dev and build with no consumer route file (§4.2.3 options a/b).
-2. **`useEvent()` availability** in the installed nitropack 2.13.1 + behavior with `experimental.asyncContext: true` in Litro's presets.
-3. **Dev-mode stub serving:** confirm the Vite dev middleware path applies the actions plugin transform to `.server.ts` imports exactly as the production build does.
+1. **Handler registration mechanism:** option (a) — pushing into `nitro.options.handlers` at `build:before` — is NOT picked up by the dev server (verified: route 404 in dev, exactly the timing trap the repo documents for devHandlers). SHIPPED: option (b), a static `handlers` entry in consumer `nitro.config.ts` pointing at the generated `server/stubs/action-handler.ts` (same shape as the vite-dev entry). The plugin guarantees the stub exists before rollup compiles it.
+2. **`useEvent()` / asyncContext:** works in PRODUCTION builds (verified: in-process `defineAction` call during SSR resolved `ctx.event.path === '/actions'` with `experimental.asyncContext: true` from Litro's presets). Does NOT resolve in the dev worker (`ctx.event` is `undefined` in dev) — documented limitation; HTTP calls always receive the handler's own event in both modes.
+3. **Dev-mode stub serving:** confirmed — Vite dev middleware applies the actions transform identically to the production build (browser receives the stub module; RPC works in dev).
+
+**Additional integration findings (discovered during the spike, all shipped):**
+- **Endpoint moved to `POST /__litro/action/:id`** (double-underscore prefix, OUTSIDE `/_litro/`). Nitro mounts serve-placeholder middleware on the `publicAssets` baseURL `/_litro/`, which intercepts any miss under that prefix with a placeholder 404 BEFORE the router runs — in dev and prod alike. The action endpoint therefore cannot live under the static-assets prefix; the spec's earlier "coexist with the cache rule" framing understated this. Consequence: no `/_litro/**` cache-rule carve-out is needed; instead consumers add a `'/__litro/action/**': { headers: { 'cache-control': 'no-store' } }` route rule.
+- **Stub writes must be idempotent:** `server/stubs/` sits inside Nitro's watched `srcDir`; unconditional rewrites on every `dev:reload` re-trigger the watcher in an infinite reload loop. The plugin now skips writes when content is unchanged.
 
 ### Work items
 

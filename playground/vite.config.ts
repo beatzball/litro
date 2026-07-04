@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import { litroActionsPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
+  plugins: [litroActionsPlugin()],
   // base must match publicAssets.baseURL in nitro.config.ts ('/_litro/').
   // Vite embeds the base into the compiled preload URL resolver:
   //   const Ft = function(i) { return "/_litro/" + i }

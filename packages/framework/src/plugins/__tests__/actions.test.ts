@@ -58,7 +58,7 @@ describe('actionsPlugin', () => {
     expect(stub).not.toContain(rootDir); // no absolute paths in the stub
   });
 
-  it('writes the handler stub and registers the endpoint on nitro.options.handlers', async () => {
+  it('writes the handler stub without touching nitro.options.handlers', async () => {
     const nitro = mockNitro();
     await actionsPlugin(nitro as never);
     const handlerStubPath = join(rootDir, 'server', 'stubs', 'action-handler.ts');
@@ -66,18 +66,25 @@ describe('actionsPlugin', () => {
     const stub = await readFile(handlerStubPath, 'utf-8');
     expect(stub).toContain(`from '@beatzball/litro/actions/handler'`);
     expect(stub).toContain(`from '#litro/action-manifest'`);
-    expect(nitro.options.handlers).toEqual([
-      { route: '/_litro/action/:id', method: 'post', handler: handlerStubPath },
-    ]);
+    // Route registration is the consumer's static nitro.config.ts handlers
+    // entry — pushing here at build:before is too late for the dev server.
+    expect(nitro.options.handlers).toEqual([]);
   });
 
-  it('re-scans on dev:reload without duplicating the handler registration', async () => {
+  it('re-scans on dev:reload and skips rewriting unchanged stubs', async () => {
+    const { stat } = await import('node:fs/promises');
     const nitro = mockNitro();
     await actionsPlugin(nitro as never);
     expect(nitro.hooks.hook).toHaveBeenCalledWith('dev:reload', expect.any(Function));
+    const stubPath = join(rootDir, 'server', 'stubs', 'action-manifest.ts');
+    const before = (await stat(stubPath)).mtimeMs;
+    // A rescan with unchanged inputs must not rewrite the stub files —
+    // they live inside Nitro's watched srcDir and rewriting them re-triggers
+    // dev:reload in an infinite loop.
     const reload = nitro.hooks.hook.mock.calls.find((c) => c[0] === 'dev:reload')![1] as () => Promise<void>;
     await reload();
-    expect(nitro.options.handlers).toHaveLength(1);
+    const after = (await stat(stubPath)).mtimeMs;
+    expect(after).toBe(before);
   });
 
   it('generates an empty manifest when no .server files exist', async () => {

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Export an async function from a `*.server.ts` module and call it from anywhere — in-process during SSR, as a typed HTTP RPC (`POST /_litro/action/:id`) from the browser — with seroval serialization, Standard Schema validation via `defineAction`, default-on CSRF, and server code structurally excluded from the client bundle.
+**Goal:** Export an async function from a `*.server.ts` module and call it from anywhere — in-process during SSR, as a typed HTTP RPC (`POST /__litro/action/:id`) from the browser — with seroval serialization, Standard Schema validation via `defineAction`, default-on CSRF, and server code structurally excluded from the client bundle.
 
 **Architecture:** Two coordinated build plugins that never exchange artifacts: a Nitro build-time plugin (sibling of the page scanner) that scans `**/*.server.ts`, generates a `#litro/action-manifest` virtual module + physical stub, and registers the runtime handler; and a Vite plugin that replaces `.server.ts` modules in the client graph with generated `callAction` stubs. Both sides independently compute `id = sha256(relPath + '#' + exportName).slice(0,12)`. The server registry enumerates module exports at runtime (`Object.keys`), so no TS parsing is needed on the Nitro side.
 
@@ -585,12 +585,12 @@ function okResponse(value: unknown) {
 }
 
 describe('callAction', () => {
-  it('POSTs serialized args to /_litro/action/<id> with the CSRF header', async () => {
+  it('POSTs serialized args to /__litro/action/<id> with the CSRF header', async () => {
     fetchMock.mockResolvedValue(okResponse({ ok: true }));
     await callAction('abc123def456', [{ text: 'hi' }]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('/_litro/action/abc123def456');
+    expect(url).toBe('/__litro/action/abc123def456');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>)['x-litro-action']).toBe('1');
     expect((init.headers as Record<string, string>)['content-type']).toBe('application/json');
@@ -648,7 +648,7 @@ import { serializeValue, deserializeValue } from './serialize.js';
 import { LitroActionError, type ActionErrorPayload } from './error.js';
 
 export async function callAction<T = unknown>(id: string, args: unknown[]): Promise<T> {
-  const res = await fetch(`/_litro/action/${id}`, {
+  const res = await fetch(`/__litro/action/${id}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -711,7 +711,7 @@ git commit -m "feat(actions): add browser callAction runtime for generated stubs
 - Consumes: `hashActionId` (Task 1), `serializeValue`/`deserializeValue` (Task 2), `ACTION_CONFIG`/`runAction`/`LitroActionError`/`ActionErrorPayload` (Task 3).
 - Produces (used by the generated handler stub in Task 6):
   - `interface ActionModuleEntry { relPath: string; module: Record<string, unknown> }`
-  - `createActionHandler(entries: ActionModuleEntry[]): EventHandler` — an h3 event handler for route `/_litro/action/:id`.
+  - `createActionHandler(entries: ActionModuleEntry[]): EventHandler` — an h3 event handler for route `/__litro/action/:id`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -770,7 +770,7 @@ let base: string;
 beforeAll(async () => {
   const app = createApp();
   const router = createRouter();
-  router.post('/_litro/action/:id', createActionHandler(entries));
+  router.post('/__litro/action/:id', createActionHandler(entries));
   app.use(router);
   server = createServer(toNodeListener(app));
   await new Promise<void>((resolve) => server.listen(0, resolve));
@@ -782,7 +782,7 @@ afterAll(async () => {
 });
 
 function post(id: string, body: string, headers: Record<string, string> = {}) {
-  return fetch(`${base}/_litro/action/${id}`, {
+  return fetch(`${base}/__litro/action/${id}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-litro-action': '1', ...headers },
     body,
@@ -817,7 +817,7 @@ describe('createActionHandler', () => {
   });
 
   it('returns 403 when the x-litro-action header is missing', async () => {
-    const res = await fetch(`${base}/_litro/action/${ID_ADD}`, {
+    const res = await fetch(`${base}/__litro/action/${ID_ADD}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: serializeValue([1, 2]),
@@ -866,7 +866,7 @@ Expected: FAIL — `../handler.js` not found.
 ```ts
 // packages/framework/src/actions/handler.ts
 /**
- * Runtime HTTP handler for POST /_litro/action/:id.
+ * Runtime HTTP handler for POST /__litro/action/:id.
  *
  * Consumed by the generated stub server/stubs/action-handler.ts, which passes
  * in the actionModules array from #litro/action-manifest. The registry maps
@@ -1053,7 +1053,7 @@ git commit -m "feat(actions): add HTTP action handler with CSRF gates and error 
   - virtual module `#litro/action-manifest` exporting `actionModules: ActionModuleEntry[]` (absolute-path imports),
   - physical stub `server/stubs/action-manifest.ts` (relative `.js` imports, `// @ts-nocheck`),
   - physical stub `server/stubs/action-handler.ts` (imports `createActionHandler` from `@beatzball/litro/actions/handler` and `actionModules` from `#litro/action-manifest`),
-  - pushes `{ route: '/_litro/action/:id', method: 'post', handler: <abs path to action-handler.ts stub> }` into `nitro.options.handlers`.
+  - pushes `{ route: '/__litro/action/:id', method: 'post', handler: <abs path to action-handler.ts stub> }` into `nitro.options.handlers`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1128,7 +1128,7 @@ describe('actionsPlugin', () => {
     expect(stub).toContain(`from '@beatzball/litro/actions/handler'`);
     expect(stub).toContain(`from '#litro/action-manifest'`);
     expect(nitro.options.handlers).toEqual([
-      { route: '/_litro/action/:id', method: 'post', handler: handlerStubPath },
+      { route: '/__litro/action/:id', method: 'post', handler: handlerStubPath },
     ]);
   });
 
@@ -1172,7 +1172,7 @@ Expected: FAIL — `../actions.js` not found.
  *      @rollup/plugin-node-resolve via package.json "imports")
  *   3. Generates `server/stubs/action-handler.ts` — a one-line handler that
  *      feeds the manifest into createActionHandler()
- *   4. Registers POST /_litro/action/:id on nitro.options.handlers pointing
+ *   4. Registers POST /__litro/action/:id on nitro.options.handlers pointing
  *      at that generated stub (no consumer-owned route file)
  *
  * The manifest intentionally has NO export-name information: the handler
@@ -1255,7 +1255,7 @@ ${entries}
 
 const HANDLER_STUB_SOURCE = `// @ts-nocheck
 // @generated by litro action scanner — do not edit
-// Runtime handler for POST /_litro/action/:id — registered automatically by
+// Runtime handler for POST /__litro/action/:id — registered automatically by
 // the litro actions plugin (nitro.options.handlers).
 import { createActionHandler } from '@beatzball/litro/actions/handler';
 import { actionModules } from '#litro/action-manifest';
@@ -1294,7 +1294,7 @@ export default async function actionsPlugin(nitro: Nitro): Promise<void> {
   // Register the endpoint once (dev:reload only re-scans; re-pushing would
   // duplicate the route).
   nitro.options.handlers.push({
-    route: '/_litro/action/:id',
+    route: '/__litro/action/:id',
     method: 'post',
     handler: resolve(nitro.options.rootDir, HANDLER_STUB_REL),
   });
@@ -1607,7 +1607,7 @@ This task wires everything into the playground and empirically answers spike que
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–7 via the built framework (`pnpm --filter @beatzball/litro build` first).
-- Produces: a live `/actions` demo page and `/_litro/action/:id` endpoint used by the e2e specs in Task 9.
+- Produces: a live `/actions` demo page and `/__litro/action/:id` endpoint used by the e2e specs in Task 9.
 
 - [ ] **Step 1: Rebuild the framework**
 
@@ -1689,7 +1689,7 @@ export class ActionsPage extends LitElement {
   }
 
   // Client path: the same import resolves to a generated stub in the browser
-  // bundle — this is a typed RPC over POST /_litro/action/<id>. The `at`
+  // bundle — this is a typed RPC over POST /__litro/action/<id>. The `at`
   // field arrives as a real Date (seroval round-trip).
   private async runRpc(): Promise<void> {
     const res = await echoUpper({ text: 'litro actions' });
@@ -1723,7 +1723,7 @@ import actionsPlugin from '../packages/framework/dist/plugins/actions.js';
 
 ```ts
       // Run action scanner — scans **/*.server.ts, writes manifest + handler
-      // stubs, registers POST /_litro/action/:id
+      // stubs, registers POST /__litro/action/:id
       await actionsPlugin(nitro);
 ```
 
@@ -1732,7 +1732,7 @@ import actionsPlugin from '../packages/framework/dist/plugins/actions.js';
 ```ts
     // Action endpoint: dynamic RPC — must never inherit the immutable static
     // asset cache rule below.
-    '/_litro/action/**': {
+    '/__litro/action/**': {
       headers: { 'cache-control': 'no-store' },
     },
 ```
@@ -1768,9 +1768,9 @@ Run (background): `cd playground && node ../packages/framework/dist/cli/index.js
 Then:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3030/_litro/action/000000000000
+curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3030/__litro/action/000000000000
 # Expected: 403  (endpoint routed; CSRF header missing)
-curl -s -X POST http://localhost:3030/_litro/action/000000000000 -H 'x-litro-action: 1' -H 'content-type: application/json' -d '[]'
+curl -s -X POST http://localhost:3030/__litro/action/000000000000 -H 'x-litro-action: 1' -H 'content-type: application/json' -d '[]'
 # Expected: {"name":"LitroActionError","message":"Unknown action: 000000000000","status":404,...}
 curl -s http://localhost:3030/actions | grep -o 'serverNowIso'
 # Expected: serverNowIso   (SSR in-process call worked)
@@ -1780,7 +1780,7 @@ curl -s http://localhost:3030/actions | grep -o 'serverNowIso'
 
 ```ts
     {
-      route: '/_litro/action/:id',
+      route: '/__litro/action/:id',
       method: 'post',
       handler: resolve('./server/stubs/action-handler.ts'),
     },
@@ -1792,7 +1792,7 @@ Then update the Task 6 unit test expectations accordingly, re-run dev, and recor
 
 With dev still running: open `http://localhost:3030/actions`, click "Run RPC".
 Expected: `#rpc-result` shows `LITRO ACTIONS @ 2026-...` (uppercase text + ISO timestamp; `NOT-A-DATE` must not appear — that would mean the Date failed to revive, i.e. seroval or the stub path is broken).
-Also check the browser network tab: one `POST /_litro/action/<12-hex>` request with a 200.
+Also check the browser network tab: one `POST /__litro/action/<12-hex>` request with a 200.
 
 - [ ] **Step 8: Verify production build (spike question 1a — build)**
 
@@ -1800,7 +1800,7 @@ Also check the browser network tab: one `POST /_litro/action/<12-hex>` request w
 cd playground && rm -rf dist && node ../packages/framework/dist/cli/index.js build
 node ../packages/framework/dist/cli/index.js preview --port 3040 &
 sleep 2
-curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3040/_litro/action/000000000000
+curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3040/__litro/action/000000000000
 # Expected: 403
 curl -s http://localhost:3040/actions | grep -o 'serverNowIso'
 # Expected: serverNowIso
@@ -1854,7 +1854,7 @@ test('button click performs typed RPC and revives Date', async ({ page }) => {
 });
 
 test('endpoint rejects requests missing the CSRF header', async ({ request }) => {
-  const res = await request.post(`/_litro/action/${ECHO_UPPER_ID}`, {
+  const res = await request.post(`/__litro/action/${ECHO_UPPER_ID}`, {
     headers: { 'content-type': 'application/json' },
     data: serializeValue([{ text: 'x' }]),
   });
@@ -1862,7 +1862,7 @@ test('endpoint rejects requests missing the CSRF header', async ({ request }) =>
 });
 
 test('endpoint 404s unknown action ids', async ({ request }) => {
-  const res = await request.post('/_litro/action/000000000000', {
+  const res = await request.post('/__litro/action/000000000000', {
     headers: { 'content-type': 'application/json', 'x-litro-action': '1' },
     data: serializeValue([]),
   });
@@ -1870,7 +1870,7 @@ test('endpoint 404s unknown action ids', async ({ request }) => {
 });
 
 test('defineAction validation failure returns 400 with issues', async ({ request }) => {
-  const res = await request.post(`/_litro/action/${ECHO_UPPER_ID}`, {
+  const res = await request.post(`/__litro/action/${ECHO_UPPER_ID}`, {
     headers: { 'content-type': 'application/json', 'x-litro-action': '1' },
     data: serializeValue([{ text: 123 }]),
   });
@@ -1880,7 +1880,7 @@ test('defineAction validation failure returns 400 with issues', async ({ request
 });
 
 test('direct valid RPC round-trips through the endpoint', async ({ request }) => {
-  const res = await request.post(`/_litro/action/${ECHO_UPPER_ID}`, {
+  const res = await request.post(`/__litro/action/${ECHO_UPPER_ID}`, {
     headers: { 'content-type': 'application/json', 'x-litro-action': '1' },
     data: serializeValue([{ text: 'curl style' }]),
   });
@@ -1990,7 +1990,7 @@ git commit -m "test(e2e): prove server module code never reaches the client"
 
 **Files:**
 - Create: `playground-elena/actions/demo.server.ts` (identical content to `playground/actions/demo.server.ts` — copy it)
-- Modify: `playground-elena/nitro.config.ts` (same three edits as Task 8 step 4a–c: `actionsPlugin` import, `await actionsPlugin(nitro)` in `build:before`, `/_litro/action/**` route rule)
+- Modify: `playground-elena/nitro.config.ts` (same three edits as Task 8 step 4a–c: `actionsPlugin` import, `await actionsPlugin(nitro)` in `build:before`, `/__litro/action/**` route rule)
 - Modify: `playground-elena/vite.config.ts` (add `litroActionsPlugin()` to `plugins`, importing from `@beatzball/litro/vite`)
 - Modify: `playground-elena/package.json` (add `"#litro/action-manifest": "./server/stubs/action-manifest.ts"` to `"imports"`)
 - Create: `e2e/playground-elena/server-actions.spec.ts`
@@ -2010,7 +2010,7 @@ import { serializeValue } from '../../packages/framework/dist/actions/serialize.
 const ECHO_UPPER_ID = hashActionId('actions/demo.server', 'echoUpper');
 
 test('actions endpoint works under the Elena adapter', async ({ request }) => {
-  const res = await request.post(`/_litro/action/${ECHO_UPPER_ID}`, {
+  const res = await request.post(`/__litro/action/${ECHO_UPPER_ID}`, {
     headers: { 'content-type': 'application/json', 'x-litro-action': '1' },
     data: serializeValue([{ text: 'elena smoke' }]),
   });
@@ -2019,7 +2019,7 @@ test('actions endpoint works under the Elena adapter', async ({ request }) => {
 });
 
 test('CSRF gate active under the Elena adapter', async ({ request }) => {
-  const res = await request.post(`/_litro/action/${ECHO_UPPER_ID}`, {
+  const res = await request.post(`/__litro/action/${ECHO_UPPER_ID}`, {
     headers: { 'content-type': 'application/json' },
     data: serializeValue([{ text: 'x' }]),
   });
@@ -2077,9 +2077,9 @@ git add -A && git commit -m "fix(actions): full-suite regression fixes"
 
 Create `packages/docs-content/content/docs/server-actions.md` with frontmatter matching sibling docs (`title`, `description`, `date: 2026-07-03`). Required content, in order — every code sample must be copy-paste runnable against the shipped API:
 
-1. **What it is** (3 sentences): export an async function from a `*.server.ts` module, import it anywhere; SSR calls run in-process, browser calls become `POST /_litro/action/:id`; server code never enters the client bundle.
+1. **What it is** (3 sentences): export an async function from a `*.server.ts` module, import it anywhere; SSR calls run in-process, browser calls become `POST /__litro/action/:id`; server code never enters the client bundle.
 2. **Security warning, first section after the intro** (spec §5): every export of a `.server.ts` module is a **public HTTP endpoint**; treat all arguments as hostile; auth belongs in the handler; only export what should be reachable; responses go to the client — shape them.
-3. **Setup** — the three consumer wiring edits, exactly as shipped in Task 8 (verify against the final playground diff, including the fallback registration if Task 8 step 6 took that path): `actionsPlugin` in `nitro.config.ts` `build:before`, `litroActionsPlugin()` in `vite.config.ts`, the `#litro/action-manifest` entry in `package.json` `"imports"`, and the `/_litro/action/**` route rule.
+3. **Setup** — the three consumer wiring edits, exactly as shipped in Task 8 (verify against the final playground diff, including the fallback registration if Task 8 step 6 took that path): `actionsPlugin` in `nitro.config.ts` `build:before`, `litroActionsPlugin()` in `vite.config.ts`, the `#litro/action-manifest` entry in `package.json` `"imports"`, and the `/__litro/action/**` route rule.
 4. **Plain actions** — the `getServerTime` example from the playground verbatim, shown called from a `definePageData` fetcher (in-process) and from a component method (RPC).
 5. **`defineAction`** — the `echoUpper` example; note `input` accepts any Standard Schema validator (Zod, Valibot, ArkType, or hand-rolled); validation failures are 400s carrying `issues`; `ctx.event` is the live `H3Event` on HTTP calls and comes from Nitro's async context on in-process calls.
 6. **Serialization** — seroval JSON mode; `Date`/`Map`/`Set`/`BigInt`/circular refs round-trip; functions and class instances do not (loud error).
@@ -2134,7 +2134,7 @@ git add -A && git commit -m "docs: address checkpoint C validation findings"
 "@beatzball/litro": minor
 ---
 
-Add Server Actions (typed RPC). Export an async function from a `*.server.ts` module and call it from anywhere: in-process during SSR, or as a typed HTTP call (`POST /_litro/action/:id`) from the browser — the Vite plugin rewrites client imports into generated stubs, so server code and its dependencies never enter the client bundle. Includes `defineAction` with Standard Schema input validation, seroval JSON-mode serialization (`Date`/`Map`/`Set`/`BigInt`/circular refs round-trip), default-on CSRF protection (custom header + `Sec-Fetch-Site`/`Origin` checks), structured error forwarding via `LitroActionError`, and a Nitro build plugin that auto-registers the endpoint. New subpath exports: `@beatzball/litro/actions`, `@beatzball/litro/actions/client`, `@beatzball/litro/actions/handler`, `@beatzball/litro/plugins/actions`, plus `litroActionsPlugin` from `@beatzball/litro/vite`.
+Add Server Actions (typed RPC). Export an async function from a `*.server.ts` module and call it from anywhere: in-process during SSR, or as a typed HTTP call (`POST /__litro/action/:id`) from the browser — the Vite plugin rewrites client imports into generated stubs, so server code and its dependencies never enter the client bundle. Includes `defineAction` with Standard Schema input validation, seroval JSON-mode serialization (`Date`/`Map`/`Set`/`BigInt`/circular refs round-trip), default-on CSRF protection (custom header + `Sec-Fetch-Site`/`Origin` checks), structured error forwarding via `LitroActionError`, and a Nitro build plugin that auto-registers the endpoint. New subpath exports: `@beatzball/litro/actions`, `@beatzball/litro/actions/client`, `@beatzball/litro/actions/handler`, `@beatzball/litro/plugins/actions`, plus `litroActionsPlugin` from `@beatzball/litro/vite`.
 ```
 
 - [ ] **Step 4: Final full-suite run (verification before completion)**

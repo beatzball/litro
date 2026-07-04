@@ -26,7 +26,7 @@ describe('callAction', () => {
     await callAction('abc123def456', [{ text: 'hi' }]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('/_litro/action/abc123def456');
+    expect(url).toBe('/__litro/action/abc123def456');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>)['x-litro-action']).toBe('1');
     expect((init.headers as Record<string, string>)['content-type']).toBe('application/json');

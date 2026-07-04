@@ -51,7 +51,7 @@ let base: string;
 beforeAll(async () => {
   const app = createApp();
   const router = createRouter();
-  router.post('/_litro/action/:id', createActionHandler(entries));
+  router.post('/__litro/action/:id', createActionHandler(entries));
   app.use(router);
   server = createServer(toNodeListener(app));
   await new Promise<void>((resolve) => server.listen(0, resolve));
@@ -63,7 +63,7 @@ afterAll(async () => {
 });
 
 function post(id: string, body: string, headers: Record<string, string> = {}) {
-  return fetch(`${base}/_litro/action/${id}`, {
+  return fetch(`${base}/__litro/action/${id}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-litro-action': '1', ...headers },
     body,
@@ -98,7 +98,7 @@ describe('createActionHandler', () => {
   });
 
   it('returns 403 when the x-litro-action header is missing', async () => {
-    const res = await fetch(`${base}/_litro/action/${ID_ADD}`, {
+    const res = await fetch(`${base}/__litro/action/${ID_ADD}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: serializeValue([1, 2]),
@@ -131,13 +131,13 @@ describe('createActionHandler', () => {
       delete event.node.req.headers.host;
     }));
     const router = createRouter();
-    router.post('/_litro/action/:id', createActionHandler(entries));
+    router.post('/__litro/action/:id', createActionHandler(entries));
     app.use(router);
     const stripServer = createServer(toNodeListener(app));
     await new Promise<void>((resolve) => stripServer.listen(0, resolve));
     const port = (stripServer.address() as AddressInfo).port;
     try {
-      const res = await fetch(`http://127.0.0.1:${port}/_litro/action/${ID_ADD}`, {
+      const res = await fetch(`http://127.0.0.1:${port}/__litro/action/${ID_ADD}`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
