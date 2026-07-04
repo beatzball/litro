@@ -26,7 +26,7 @@
 import type { Nitro } from 'nitropack';
 import fastGlob from 'fast-glob';
 import { resolve, join, relative } from 'pathe';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { fileToRoute, compareRoutes } from './path-to-route.js';
 import { resolveAdapter } from '../adapter/resolve.js';
 import type { LitroRoute } from '../types/route.js';
@@ -206,7 +206,21 @@ ${routeLines}
  */
 async function writeClientRoutes(rootDir: string, content: string): Promise<void> {
   const outPath = join(rootDir, 'routes.generated.ts');
-  await writeFile(outPath, content, 'utf-8');
+  await writeIfChanged(outPath, content);
+}
+
+/** Write only when content differs. Generated files that live inside
+ *  Nitro's watched srcDir (server/stubs/) re-trigger dev:reload when their
+ *  mtime changes — an unconditional rewrite on every rescan turns any single
+ *  reload into an infinite reload loop. */
+async function writeIfChanged(absPath: string, content: string): Promise<void> {
+  try {
+    const existing = await readFile(absPath, 'utf-8');
+    if (existing === content) return;
+  } catch {
+    // File does not exist yet — fall through to write.
+  }
+  await writeFile(absPath, content, 'utf-8');
 }
 
 /**
@@ -249,7 +263,7 @@ async function writeServerManifest(rootDir: string, content: string): Promise<vo
   const stubDir = resolve(rootDir, 'server', 'stubs');
   await mkdir(stubDir, { recursive: true });
   const stubPath = join(stubDir, 'page-manifest.ts');
-  await writeFile(stubPath, content, 'utf-8');
+  await writeIfChanged(stubPath, content);
 }
 
 // ---------------------------------------------------------------------------
