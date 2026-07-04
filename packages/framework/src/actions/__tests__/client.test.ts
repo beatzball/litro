@@ -21,7 +21,7 @@ function okResponse(value: unknown) {
 }
 
 describe('callAction', () => {
-  it('POSTs serialized args to /_litro/action/<id> with the CSRF header', async () => {
+  it('POSTs serialized args to /__litro/action/<id> with the CSRF header', async () => {
     fetchMock.mockResolvedValue(okResponse({ ok: true }));
     await callAction('abc123def456', [{ text: 'hi' }]);
     expect(fetchMock).toHaveBeenCalledTimes(1);

@@ -63,13 +63,30 @@ describe('litroActionsPlugin', () => {
     ).rejects.toThrow(/export \*/);
   });
 
-  it('allows function-valued and call-expression exports', async () => {
+  it('allows function-valued and call-expression exports, stubbing each one', async () => {
     const out = await runTransform(
       `export const a = () => 1;\nexport const b = defineAction({});\nexport async function c() {}`,
       '/proj/x.server.ts',
     );
-    expect(out).toContain('export const a =');
-    expect(out).toContain('export const b =');
-    expect(out).toContain('export const c =');
+    for (const name of ['a', 'b', 'c']) {
+      expect(out).toContain(
+        `export const ${name} = (...args) => callAction("${hashActionId('x.server', name)}", args);`,
+      );
+    }
+    // The stub must not retain any original initializer code.
+    expect(out).not.toContain('() => 1');
+    expect(out).not.toContain('defineAction');
+  });
+
+  it('errors on definitely-non-function expression initializers', async () => {
+    await expect(
+      runTransform(`export const port = 1 + 1;`, '/proj/x.server.ts'),
+    ).rejects.toThrow(/non-function export/i);
+  });
+
+  it('ignores .server modules inside node_modules', async () => {
+    expect(
+      await runTransform('export async function f() {}', '/proj/node_modules/pkg/x.server.ts'),
+    ).toBeNull();
   });
 });

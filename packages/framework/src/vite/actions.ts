@@ -31,6 +31,9 @@ const NON_FUNCTION_INIT_TYPES = new Set([
   'ObjectExpression',
   'ArrayExpression',
   'TemplateLiteral',
+  'BinaryExpression',
+  'UnaryExpression',
+  'UpdateExpression',
 ]);
 
 function assertNoDataExports(code: string, id: string): void {
@@ -72,6 +75,10 @@ export function litroActionsPlugin(): Plugin {
 
     async transform(code, id) {
       if (!SERVER_MODULE_RE.test(id)) return null;
+      // Mirror the Nitro scanner's exclusion: third-party *.server.* files in
+      // node_modules are never registered server-side, so stubbing them would
+      // produce guaranteed-404 ids.
+      if (id.includes('/node_modules/')) return null;
       await init;
 
       assertNoDataExports(code, id);

@@ -26,10 +26,8 @@ describe('hashActionId', () => {
   });
 
   it('is stable (snapshot — this value is a wire contract, never change it)', () => {
-    // sha256('posts/posts.server#getPost') first 12 hex chars.
-    expect(hashActionId('posts/posts.server', 'getPost')).toBe(
-      hashActionId('posts/posts.server', 'getPost'),
-    );
+    // sha256('posts/posts.server#getPost') first 12 hex chars. The snapshot
+    // is the wire contract: it must never change across releases.
     expect(hashActionId('posts/posts.server', 'getPost')).toMatchInlineSnapshot(`"63b4b61acbab"`);
   });
 

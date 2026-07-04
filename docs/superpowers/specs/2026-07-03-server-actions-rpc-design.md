@@ -98,12 +98,12 @@ Request lifecycle for `POST /__litro/action/:id`:
 4. **Dispatch:**
    - `defineAction` export → validate input against its Standard Schema (failure → 400 with the validator's issues array), then `handler(input, { event })`.
    - Plain async function export → call with the args array spread.
-5. **Respond:** result serialized with seroval, `content-type: text/javascript; charset=utf-8` (seroval's native output) or a JSON envelope — implementation picks one and the stub matches it.
+5. **Respond:** result serialized with seroval JSON mode, `content-type: application/json; charset=utf-8`, `cache-control: no-store` (resolved during implementation; the stub parses the same format).
 6. **Errors:** thrown errors become a structured error payload: `{ name, message, status }` (+ stack in dev only). H3 errors keep their `statusCode`. The client throws `LitroActionError` reconstructed from the payload. No internal stack traces in production responses.
 
 ### 4.4 Client side — Vite plugin (`packages/framework/src/vite/actions.ts`)
 
-- `resolveId`/`load`: when a module id matching `*.server.*` is imported into the client graph, resolve to a virtual stub module instead of the real file. The filter must test the **resolved** filename, not the raw specifier — repo convention imports `./posts.server.js`, which Vite resolves to `posts.server.ts`.
+- A `transform` hook (normal plugin order, no `enforce`): when a resolved module id matches `*.server.{ts,tsx,js,mjs}` (and is not inside node_modules), the transpiled module code is replaced wholesale by the generated stub before Vite's import analysis runs — so the original code and its transitive imports never enter the client graph, even though Vite reads the file from disk. The filter tests the **resolved** filename, not the raw specifier — repo convention imports `./posts.server.js`, which Vite resolves to `posts.server.ts`.
 - The plugin reads the real file once with es-module-lexer to enumerate export names, then emits:
   ```ts
   import { callAction } from '@beatzball/litro/actions/client';
@@ -111,8 +111,8 @@ Request lifecycle for `POST /__litro/action/:id`:
   export const createPost = (input) => callAction('f6e5d4c3b2a1', [input]);
   ```
 - Default exports are supported (`export default (...args) => callAction(...)`).
-- Non-function exports from a server module (constants, types are erased anyway) are a **build error** with a message explaining that everything exported from `.server.ts` becomes an endpoint — this enforces RFC §5 point 3 at build time.
-- The real module is never loaded into the client graph, so its imports (DB, secrets) are structurally absent from `dist/client/` — enforced by test (§7), not hope.
+- Definitely-non-function exports (Literal/Object/Array/Template/Binary/Unary/Update initializers) from a server module are a **build error** with a message explaining that everything exported from `.server.ts` becomes an endpoint (RFC §5 point 3). The guard is best-effort: initializers whose type is statically ambiguous (identifiers, member expressions, conditionals) pass the build, and any export that is not a function at runtime is simply never registered — calling it yields a 404, never an execution or data leak.
+- The real module's code is discarded at transform time, so its imports (DB, secrets) are structurally absent from `dist/client/` — enforced by test (§7), not hope.
 - The plugin ships as part of a `litroActionsPlugin()` export from `@beatzball/litro/vite` and is added to playground/template `vite.config.ts` files.
 
 ### 4.5 Client runtime — `callAction` (`packages/framework/src/actions/client.ts`)
