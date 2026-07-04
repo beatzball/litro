@@ -185,6 +185,7 @@
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
     "@resvg/resvg-js": "^2.6.0",
+    "es-module-lexer": "^1.5.0",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",
     "h3": "^1.15.6",

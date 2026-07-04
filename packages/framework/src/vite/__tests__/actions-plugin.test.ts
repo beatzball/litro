@@ -1,0 +1,75 @@
+import { describe, it, expect } from 'vitest';
+import { litroActionsPlugin } from '../actions.js';
+import { hashActionId } from '../../actions/hash.js';
+
+// The transform receives transpiled JS (normal plugin ordering), so tests
+// feed plain JS sources.
+async function runTransform(code: string, id: string): Promise<string | null> {
+  const plugin = litroActionsPlugin();
+  (plugin.configResolved as (c: { root: string }) => void)({ root: '/proj' });
+  const result = await (
+    plugin.transform as (code: string, id: string) => Promise<{ code: string } | null>
+  )(code, id);
+  return result?.code ?? null;
+}
+
+describe('litroActionsPlugin', () => {
+  it('ignores modules that are not .server files', async () => {
+    expect(await runTransform('export const x = 1;', '/proj/pages/index.ts')).toBeNull();
+  });
+
+  it('replaces named exports with callAction stubs using the hashed id', async () => {
+    const code = `export async function getPost(id) { return db.find(id); }\nexport const createPost = defineAction({ handler: async () => 1 });`;
+    const out = await runTransform(code, '/proj/posts/posts.server.ts');
+    expect(out).toContain(`import { callAction } from '@beatzball/litro/actions/client';`);
+    expect(out).toContain(
+      `export const getPost = (...args) => callAction("${hashActionId('posts/posts.server', 'getPost')}", args);`,
+    );
+    expect(out).toContain(
+      `export const createPost = (...args) => callAction("${hashActionId('posts/posts.server', 'createPost')}", args);`,
+    );
+    // The original module body must be gone entirely:
+    expect(out).not.toContain('db.find');
+    expect(out).not.toContain('defineAction');
+  });
+
+  it('supports default exports', async () => {
+    const out = await runTransform(
+      'export default async function main() { return 1; }',
+      '/proj/x.server.ts',
+    );
+    expect(out).toContain(
+      `export default (...args) => callAction("${hashActionId('x.server', 'default')}", args);`,
+    );
+  });
+
+  it('strips Vite query suffixes from the id before hashing', async () => {
+    const out = await runTransform('export async function f() {}', '/proj/x.server.ts?v=abc');
+    expect(out).toContain(hashActionId('x.server', 'f'));
+  });
+
+  it('errors on definitely-non-function exports (data leak guard)', async () => {
+    await expect(
+      runTransform(`export const secret = "hunter2";`, '/proj/x.server.ts'),
+    ).rejects.toThrow(/non-function export/i);
+    await expect(
+      runTransform(`export const config = { key: 1 };`, '/proj/x.server.ts'),
+    ).rejects.toThrow(/non-function export/i);
+  });
+
+  it('errors on export * re-exports (names unknowable statically)', async () => {
+    await expect(
+      runTransform(`export * from './other.js';`, '/proj/x.server.ts'),
+    ).rejects.toThrow(/export \*/);
+  });
+
+  it('allows function-valued and call-expression exports', async () => {
+    const out = await runTransform(
+      `export const a = () => 1;\nexport const b = defineAction({});\nexport async function c() {}`,
+      '/proj/x.server.ts',
+    );
+    expect(out).toContain('export const a =');
+    expect(out).toContain('export const b =');
+    expect(out).toContain('export const c =');
+  });
+});
