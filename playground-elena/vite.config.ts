@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import { litroActionsPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
+  plugins: [litroActionsPlugin()],
   base: '/_litro/',
   resolve: {
     conditions: ['source', 'browser', 'module', 'import', 'default'],
