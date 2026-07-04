@@ -72,6 +72,11 @@
       "import": "./dist/plugins/og.js",
       "types": "./dist/plugins/og.d.ts"
     },
+    "./plugins/actions": {
+      "source": "./src/plugins/actions.ts",
+      "import": "./dist/plugins/actions.js",
+      "types": "./dist/plugins/actions.d.ts"
+    },
     "./config": {
       "source": "./src/config/presets.ts",
       "import": "./dist/config/presets.js",

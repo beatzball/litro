@@ -60,6 +60,12 @@ export function ssgPreset(): Partial<NitroConfig> {
       // that serve directory index files (Netlify, GitHub Pages, S3 + CloudFront).
       autoSubfolderIndex: true,
     },
+
+    // Enables Nitro's AsyncLocalStorage-based event context so in-process
+    // defineAction calls can resolve the current H3Event via useEvent().
+    experimental: {
+      asyncContext: true,
+    },
   };
 }
 
@@ -79,6 +85,12 @@ export function ssrPreset(preset = 'node-server'): Partial<NitroConfig> {
     preset,
     output: {
       dir: 'dist/server',
+    },
+
+    // Enables Nitro's AsyncLocalStorage-based event context so in-process
+    // defineAction calls can resolve the current H3Event via useEvent().
+    experimental: {
+      asyncContext: true,
     },
   };
 }
