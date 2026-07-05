@@ -42,6 +42,21 @@
       "import": "./dist/runtime/*.js",
       "types": "./dist/runtime/*.d.ts"
     },
+    "./actions": {
+      "source": "./src/actions/index.ts",
+      "import": "./dist/actions/index.js",
+      "types": "./dist/actions/index.d.ts"
+    },
+    "./actions/client": {
+      "source": "./src/actions/client.ts",
+      "import": "./dist/actions/client.js",
+      "types": "./dist/actions/client.d.ts"
+    },
+    "./actions/handler": {
+      "source": "./src/actions/handler.ts",
+      "import": "./dist/actions/handler.js",
+      "types": "./dist/actions/handler.d.ts"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "import": "./dist/plugins/pages.js",
@@ -56,6 +71,11 @@
       "source": "./src/plugins/og.ts",
       "import": "./dist/plugins/og.js",
       "types": "./dist/plugins/og.d.ts"
+    },
+    "./plugins/actions": {
+      "source": "./src/plugins/actions.ts",
+      "import": "./dist/plugins/actions.js",
+      "types": "./dist/plugins/actions.d.ts"
     },
     "./config": {
       "source": "./src/config/presets.ts",
@@ -165,6 +185,7 @@
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
     "@resvg/resvg-js": "^2.6.0",
+    "es-module-lexer": "^1.5.0",
     "fast-glob": "^3.3.3",
     "gray-matter": "^4.0.3",
     "h3": "^1.15.6",
@@ -178,6 +199,7 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
     "satori": "^0.12.0",
+    "seroval": "^1.3.0",
     "unified": "^11.0.5",
     "vite": "^8.0.16"
   },

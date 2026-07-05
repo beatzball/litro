@@ -5,7 +5,8 @@
   "description": "Litro playground — Elena adapter test app",
   "type": "module",
   "imports": {
-    "#litro/page-manifest": "./server/stubs/page-manifest.ts"
+    "#litro/page-manifest": "./server/stubs/page-manifest.ts",
+    "#litro/action-manifest": "./server/stubs/action-manifest.ts"
   },
   "scripts": {
     "dev": "litro dev",
