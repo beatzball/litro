@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { callAction } from '../client.js';
-import { serializeValue } from '../serialize.js';
+import { serializeValue, createStreamEncoder } from '../serialize.js';
 import { LitroActionError } from '../error.js';
 
 const fetchMock = vi.fn();
@@ -17,6 +17,23 @@ function okResponse(value: unknown) {
   return new Response(serializeValue(value), {
     status: 200,
     headers: { 'content-type': 'application/json' },
+  });
+}
+
+function ndjsonResponse(body: string, splitAt?: number[]) {
+  const encoder = new TextEncoder();
+  const parts = splitAt?.length
+    ? [0, ...splitAt, body.length].slice(0, -1).map((s, i, arr) => body.slice(s, arr[i + 1] ?? body.length))
+    : [body];
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const p of parts) controller.enqueue(encoder.encode(p));
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    status: 200,
+    headers: { 'content-type': 'application/x-ndjson; charset=utf-8' },
   });
 }
 
@@ -58,6 +75,59 @@ describe('callAction', () => {
   it('throws a generic LitroActionError when the error body is not JSON', async () => {
     fetchMock.mockResolvedValue(new Response('<html>gateway error</html>', { status: 502 }));
     const err = await callAction('abc123def456', []).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(LitroActionError);
+    expect((err as LitroActionError).status).toBe(502);
+  });
+});
+
+describe('callAction streaming', () => {
+  it('yields revived chunks incrementally and completes on the done line', async () => {
+    const enc = createStreamEncoder();
+    const d = new Date('2026-07-06T00:00:00.000Z');
+    fetchMock.mockResolvedValue(
+      ndjsonResponse(enc.value({ i: 1, at: d }) + enc.value({ i: 2 }) + enc.done()),
+    );
+    const iterable = await callAction<AsyncIterable<{ i: number; at?: Date }>>('abc123def456', []);
+    const got: { i: number; at?: Date }[] = [];
+    for await (const v of iterable) got.push(v);
+    expect(got.map((v) => v.i)).toEqual([1, 2]);
+    expect(got[0].at).toBeInstanceOf(Date);
+  });
+
+  it('parses lines split across network chunks', async () => {
+    const enc = createStreamEncoder();
+    const body = enc.value({ i: 1 }) + enc.value({ i: 2 }) + enc.done();
+    fetchMock.mockResolvedValue(ndjsonResponse(body, [Math.floor(body.length / 3), Math.floor((2 * body.length) / 3)]));
+    const iterable = await callAction<AsyncIterable<{ i: number }>>('abc123def456', []);
+    const got: number[] = [];
+    for await (const v of iterable) got.push(v.i);
+    expect(got).toEqual([1, 2]);
+  });
+
+  it('rethrows a mid-stream err line as LitroActionError', async () => {
+    const enc = createStreamEncoder();
+    fetchMock.mockResolvedValue(
+      ndjsonResponse(enc.value('ok') + enc.error({ name: 'Error', message: 'mid-stream boom', status: 500 })),
+    );
+    const iterable = await callAction<AsyncIterable<string>>('abc123def456', []);
+    const got: string[] = [];
+    const err = await (async () => {
+      for await (const v of iterable) got.push(v);
+    })().catch((e: unknown) => e);
+    expect(got).toEqual(['ok']);
+    expect(err).toBeInstanceOf(LitroActionError);
+    expect((err as LitroActionError).message).toBe('mid-stream boom');
+  });
+
+  it('throws 502 when the stream ends without a done line', async () => {
+    const enc = createStreamEncoder();
+    fetchMock.mockResolvedValue(ndjsonResponse(enc.value('partial')));
+    const iterable = await callAction<AsyncIterable<string>>('abc123def456', []);
+    const err = await (async () => {
+      for await (const _v of iterable) {
+        /* drain */
+      }
+    })().catch((e: unknown) => e);
     expect(err).toBeInstanceOf(LitroActionError);
     expect((err as LitroActionError).status).toBe(502);
   });
