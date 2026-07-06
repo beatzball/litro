@@ -5,7 +5,7 @@ import { createApp, createRouter, toNodeListener } from 'h3';
 import { createActionHandler, type ActionModuleEntry } from '../handler.js';
 import { defineAction } from '../define.js';
 import { hashActionId } from '../hash.js';
-import { serializeValue, deserializeValue } from '../serialize.js';
+import { serializeValue, deserializeValue, createStreamDecoder } from '../serialize.js';
 import type { StandardSchemaV1 } from '../standard-schema.js';
 
 const textSchema: StandardSchemaV1<unknown, { text: string }> = {
@@ -36,7 +36,25 @@ const demoModule: Record<string, unknown> = {
     throw new Error('internal kaboom');
   },
   notAFunction: 42,
+  streamCount,
+  streamShared,
+  streamFail,
 };
+
+async function* streamCount(): AsyncGenerator<{ i: number; at: Date }> {
+  yield { i: 1, at: new Date('2026-07-06T00:00:00.000Z') };
+  yield { i: 2, at: new Date('2026-07-06T00:00:01.000Z') };
+  yield { i: 3, at: new Date('2026-07-06T00:00:02.000Z') };
+}
+const sharedRef = { tag: 'shared' };
+async function* streamShared(): AsyncGenerator<Record<string, unknown>> {
+  yield { first: sharedRef };
+  yield { second: sharedRef };
+}
+async function* streamFail(): AsyncGenerator<string> {
+  yield 'ok';
+  throw new Error('mid-stream boom');
+}
 
 const entries: ActionModuleEntry[] = [{ relPath: 'actions/demo.server', module: demoModule }];
 
@@ -44,6 +62,9 @@ const ID_ADD = hashActionId('actions/demo.server', 'plainAdd');
 const ID_UPPER = hashActionId('actions/demo.server', 'echoUpper');
 const ID_EXPLODES = hashActionId('actions/demo.server', 'explodes');
 const ID_NOT_FN = hashActionId('actions/demo.server', 'notAFunction');
+const ID_STREAM_COUNT = hashActionId('actions/demo.server', 'streamCount');
+const ID_STREAM_SHARED = hashActionId('actions/demo.server', 'streamShared');
+const ID_STREAM_FAIL = hashActionId('actions/demo.server', 'streamFail');
 
 let server: Server;
 let base: string;
@@ -165,5 +186,49 @@ describe('createActionHandler', () => {
     const payload = JSON.parse(await res.text()) as { message: string; stack?: string };
     expect(payload.message).toBe('internal kaboom');
     expect(payload.stack).toBeUndefined();
+  });
+});
+
+async function postStream(id: string) {
+  const res = await post(id, serializeValue([]));
+  const lines = (await res.text()).split('\n').filter((l) => l.length > 0);
+  const dec = createStreamDecoder();
+  return { res, chunks: lines.map(dec) };
+}
+
+describe('streaming responses', () => {
+  it('streams AsyncIterable results as NDJSON with a done line', async () => {
+    const { res, chunks } = await postStream(ID_STREAM_COUNT);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/x-ndjson');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(chunks).toHaveLength(4);
+    const first = chunks[0] as { kind: 'value'; value: { i: number; at: Date } };
+    expect(first.value.i).toBe(1);
+    expect(first.value.at).toBeInstanceOf(Date);
+    expect(chunks[3]).toEqual({ kind: 'done' });
+  });
+
+  it('preserves object identity across chunks (shared refs)', async () => {
+    const { chunks } = await postStream(ID_STREAM_SHARED);
+    const a = (chunks[0] as { kind: 'value'; value: { first: unknown } }).value.first;
+    const b = (chunks[1] as { kind: 'value'; value: { second: unknown } }).value.second;
+    expect(a).toBe(b);
+  });
+
+  it('a mid-stream throw emits an err line (no stack outside dev) and ends the stream', async () => {
+    const { res, chunks } = await postStream(ID_STREAM_FAIL);
+    expect(res.status).toBe(200);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toEqual({ kind: 'value', value: 'ok' });
+    const err = chunks[1] as { kind: 'error'; payload: { message: string; status: number; stack?: string } };
+    expect(err.payload.message).toBe('mid-stream boom');
+    expect(err.payload.status).toBe(500);
+    expect(err.payload.stack).toBeUndefined();
+  });
+
+  it('single-shot responses are unchanged (content-type application/json)', async () => {
+    const res = await post(ID_ADD, serializeValue([2, 3]));
+    expect(res.headers.get('content-type')).toContain('application/json');
   });
 });

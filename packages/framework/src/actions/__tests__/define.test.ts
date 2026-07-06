@@ -50,6 +50,19 @@ describe('defineAction', () => {
     const echo = defineAction({ async handler(input: unknown) { return input; } });
     await expect(echo({ raw: true })).resolves.toEqual({ raw: true });
   });
+
+  it('accepts an async-generator handler; in-process call resolves to the iterable', async () => {
+    const streamy = defineAction({
+      async *handler() {
+        yield 1;
+        yield 2;
+      },
+    });
+    const iterable = await streamy(undefined as never);
+    const got: unknown[] = [];
+    for await (const v of iterable) got.push(v);
+    expect(got).toEqual([1, 2]);
+  });
 });
 
 describe('runAction', () => {

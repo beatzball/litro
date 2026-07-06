@@ -25,7 +25,9 @@ export interface ActionContext {
 
 export interface ActionConfig<In, Out> {
   input?: StandardSchemaV1<unknown, In>;
-  handler: (input: In, ctx: ActionContext) => Promise<Out>;
+  /** May return a Promise (single-shot) or an AsyncIterable/async generator
+   *  (streamed as NDJSON over HTTP; resolves to the iterable in-process). */
+  handler: (input: In, ctx: ActionContext) => Out | Promise<Out>;
 }
 
 export type ActionFunction<In, Out> = ((input: In) => Promise<Out>) & {

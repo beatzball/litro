@@ -23,7 +23,12 @@ import {
   type H3Event,
 } from 'h3';
 import { hashActionId } from './hash.js';
-import { serializeValue, deserializeValue } from './serialize.js';
+import {
+  serializeValue,
+  deserializeValue,
+  createStreamEncoder,
+  isAsyncIterable,
+} from './serialize.js';
 import { ACTION_CONFIG, runAction, type ActionConfig } from './define.js';
 import { LitroActionError, type ActionErrorPayload } from './error.js';
 
@@ -66,6 +71,38 @@ function sendError(event: H3Event, err: unknown): string {
   setResponseStatus(event, payload.status);
   setResponseHeader(event, 'content-type', 'application/json; charset=utf-8');
   return JSON.stringify(payload);
+}
+
+/** Streams an AsyncIterable result as NDJSON (see serialize.ts for the line
+ *  protocol). Errors thrown mid-iteration become an err line — headers are
+ *  already sent, so the HTTP status stays 200 and the client rethrows from
+ *  the payload. h3 1.15 sends returned web ReadableStreams natively;
+ *  backpressure comes from pull(). */
+function streamResponse(event: H3Event, iterable: AsyncIterable<unknown>): ReadableStream<Uint8Array> {
+  setResponseHeader(event, 'content-type', 'application/x-ndjson; charset=utf-8');
+  setResponseHeader(event, 'cache-control', 'no-store');
+  const encoder = createStreamEncoder();
+  const textEncoder = new TextEncoder();
+  const iterator = iterable[Symbol.asyncIterator]();
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const next = await iterator.next();
+        if (next.done) {
+          controller.enqueue(textEncoder.encode(encoder.done()));
+          controller.close();
+          return;
+        }
+        controller.enqueue(textEncoder.encode(encoder.value(next.value)));
+      } catch (err) {
+        controller.enqueue(textEncoder.encode(encoder.error(toErrorPayload(err))));
+        controller.close();
+      }
+    },
+    async cancel() {
+      await iterator.return?.();
+    },
+  });
 }
 
 export function createActionHandler(entries: ActionModuleEntry[]) {
@@ -133,6 +170,9 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
       const result = config
         ? await runAction(config, args[0], { event })
         : await fn(...args);
+      if (isAsyncIterable(result)) {
+        return streamResponse(event, result);
+      }
       setResponseHeader(event, 'content-type', 'application/json; charset=utf-8');
       setResponseHeader(event, 'cache-control', 'no-store');
       return serializeValue(result);
