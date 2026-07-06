@@ -8,3 +8,4 @@ export type { ActionConfig, ActionContext, ActionFunction } from './define.js';
 export { LitroActionError } from './error.js';
 export type { ActionErrorPayload } from './error.js';
 export type { StandardSchemaV1 } from './standard-schema.js';
+export { actionUrl, ACTION_ID } from './client.js';

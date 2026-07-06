@@ -21,12 +21,12 @@ describe('litroActionsPlugin', () => {
   it('replaces named exports with callAction stubs using the hashed id', async () => {
     const code = `export async function getPost(id) { return db.find(id); }\nexport const createPost = defineAction({ handler: async () => 1 });`;
     const out = await runTransform(code, '/proj/posts/posts.server.ts');
-    expect(out).toContain(`import { callAction } from '@beatzball/litro/actions/client';`);
+    expect(out).toContain(`import { makeStub } from '@beatzball/litro/actions/client';`);
     expect(out).toContain(
-      `export const getPost = (...args) => callAction("${hashActionId('posts/posts.server', 'getPost')}", args);`,
+      `export const getPost = makeStub("${hashActionId('posts/posts.server', 'getPost')}");`,
     );
     expect(out).toContain(
-      `export const createPost = (...args) => callAction("${hashActionId('posts/posts.server', 'createPost')}", args);`,
+      `export const createPost = makeStub("${hashActionId('posts/posts.server', 'createPost')}");`,
     );
     // The original module body must be gone entirely:
     expect(out).not.toContain('db.find');
@@ -39,7 +39,7 @@ describe('litroActionsPlugin', () => {
       '/proj/x.server.ts',
     );
     expect(out).toContain(
-      `export default (...args) => callAction("${hashActionId('x.server', 'default')}", args);`,
+      `export default makeStub("${hashActionId('x.server', 'default')}");`,
     );
   });
 
@@ -70,7 +70,7 @@ describe('litroActionsPlugin', () => {
     );
     for (const name of ['a', 'b', 'c']) {
       expect(out).toContain(
-        `export const ${name} = (...args) => callAction("${hashActionId('x.server', name)}", args);`,
+        `export const ${name} = makeStub("${hashActionId('x.server', name)}");`,
       );
     }
     // The stub must not retain any original initializer code.

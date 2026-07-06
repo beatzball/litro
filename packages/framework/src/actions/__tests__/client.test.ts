@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { callAction } from '../client.js';
+import { callAction, makeStub, actionUrl, ACTION_ID } from '../client.js';
 import { serializeValue, createStreamEncoder } from '../serialize.js';
 import { LitroActionError } from '../error.js';
 
@@ -130,5 +130,24 @@ describe('callAction streaming', () => {
     })().catch((e: unknown) => e);
     expect(err).toBeInstanceOf(LitroActionError);
     expect((err as LitroActionError).status).toBe(502);
+  });
+});
+
+describe('makeStub / actionUrl', () => {
+  it('makeStub attaches the id and forwards calls to callAction', async () => {
+    fetchMock.mockResolvedValue(okResponse({ ok: true }));
+    const stub = makeStub('abc123def456');
+    expect((stub as unknown as Record<symbol, unknown>)[ACTION_ID]).toBe('abc123def456');
+    await stub({ text: 'hi' });
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toBe('/__litro/action/abc123def456');
+  });
+
+  it('actionUrl resolves the stamped id', () => {
+    expect(actionUrl(makeStub('abc123def456'))).toBe('/__litro/action/abc123def456');
+  });
+
+  it('actionUrl throws a descriptive error for unstamped functions', () => {
+    expect(() => actionUrl(async () => undefined)).toThrow(/no action id/);
   });
 });
