@@ -39,6 +39,12 @@ const demoModule: Record<string, unknown> = {
   streamCount,
   streamShared,
   streamFail,
+  streamActionWrapped: defineAction({
+    async *handler() {
+      yield { i: 1, at: new Date('2026-07-06T00:00:00.000Z') };
+      yield { i: 2, at: new Date('2026-07-06T00:00:01.000Z') };
+    },
+  }),
 };
 
 async function* streamCount(): AsyncGenerator<{ i: number; at: Date }> {
@@ -65,6 +71,7 @@ const ID_NOT_FN = hashActionId('actions/demo.server', 'notAFunction');
 const ID_STREAM_COUNT = hashActionId('actions/demo.server', 'streamCount');
 const ID_STREAM_SHARED = hashActionId('actions/demo.server', 'streamShared');
 const ID_STREAM_FAIL = hashActionId('actions/demo.server', 'streamFail');
+const ID_STREAM_ACTION_WRAPPED = hashActionId('actions/demo.server', 'streamActionWrapped');
 
 let server: Server;
 let base: string;
@@ -230,5 +237,16 @@ describe('streaming responses', () => {
   it('single-shot responses are unchanged (content-type application/json)', async () => {
     const res = await post(ID_ADD, serializeValue([2, 3]));
     expect(res.headers.get('content-type')).toContain('application/json');
+  });
+
+  it('streams defineAction async-generator over HTTP', async () => {
+    const { res, chunks } = await postStream(ID_STREAM_ACTION_WRAPPED);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/x-ndjson');
+    expect(chunks).toHaveLength(3);
+    const first = chunks[0] as { kind: 'value'; value: { i: number; at: Date } };
+    expect(first.value.i).toBe(1);
+    expect(first.value.at).toBeInstanceOf(Date);
+    expect(chunks[2]).toEqual({ kind: 'done' });
   });
 });
