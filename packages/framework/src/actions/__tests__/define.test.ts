@@ -63,6 +63,19 @@ describe('defineAction', () => {
     for await (const v of iterable) got.push(v);
     expect(got).toEqual([1, 2]);
   });
+
+  it('carries csrf and form config through ACTION_CONFIG', () => {
+    const action = defineAction({
+      csrf: 'token',
+      form: { redirect: '/thanks' },
+      async handler() {
+        return 'ok';
+      },
+    });
+    const config = action[ACTION_CONFIG];
+    expect(config.csrf).toBe('token');
+    expect(config.form?.redirect).toBe('/thanks');
+  });
 });
 
 describe('runAction', () => {
