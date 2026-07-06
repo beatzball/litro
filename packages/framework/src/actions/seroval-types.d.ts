@@ -13,4 +13,10 @@ declare module 'seroval' {
   export type SerovalJSON = unknown;
   export function toJSON<T>(source: T): SerovalJSON;
   export function fromJSON<T>(source: SerovalJSON): T;
+  /** Opaque cross-JSON node produced by toCrossJSON(); safe for JSON.stringify.
+   *  Same NodeNext workaround as SerovalJSON above: seroval's directory
+   *  re-exports hide these symbols from tsc even though they exist at runtime. */
+  export type SerovalNode = unknown;
+  export function toCrossJSON<T>(source: T, options?: { refs?: Map<unknown, number> }): SerovalNode;
+  export function fromCrossJSON<T>(source: SerovalNode, options: { refs?: Map<number, unknown> }): T;
 }
