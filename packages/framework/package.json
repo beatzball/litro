@@ -57,6 +57,11 @@
       "import": "./dist/actions/handler.js",
       "types": "./dist/actions/handler.d.ts"
     },
+    "./actions/server": {
+      "source": "./src/actions/server.ts",
+      "import": "./dist/actions/server.js",
+      "types": "./dist/actions/server.d.ts"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "import": "./dist/plugins/pages.js",

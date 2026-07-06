@@ -93,4 +93,24 @@ describe('actionsPlugin', () => {
     await actionsPlugin(nitro as never);
     expect(nitro.options.virtual['#litro/action-manifest']).toContain('export const actionModules = [');
   });
+
+  it('writes the runtime stamping plugin to server/plugins/litro-actions.ts', async () => {
+    const nitro = mockNitro();
+    await actionsPlugin(nitro as never);
+    const pluginSrc = await readFile(join(rootDir, 'server', 'plugins', 'litro-actions.ts'), 'utf-8');
+    expect(pluginSrc).toContain("import { stampActionIds } from '@beatzball/litro/actions/server';");
+    expect(pluginSrc).toContain("import { actionModules } from '#litro/action-manifest';");
+    expect(pluginSrc).toContain('export default function');
+  });
+
+  it('keeps .mjs extensions in stub manifest import specifiers', async () => {
+    await writeFile(
+      join(rootDir, 'actions', 'legacy.server.mjs'),
+      `export async function old() { return 'old'; }\n`,
+    );
+    await actionsPlugin(mockNitro() as never);
+    const stub = await readFile(join(rootDir, 'server', 'stubs', 'action-manifest.ts'), 'utf-8');
+    expect(stub).toContain('legacy.server.mjs');
+    expect(stub).not.toContain('legacy.server.js');
+  });
 });

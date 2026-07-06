@@ -89,4 +89,17 @@ describe('litroActionsPlugin', () => {
       await runTransform('export async function f() {}', '/proj/node_modules/pkg/x.server.ts'),
     ).toBeNull();
   });
+
+  it('stubs @beatzball/litro/actions/server in client builds', async () => {
+    const plugin = litroActionsPlugin();
+    const resolved = (plugin.resolveId as (id: string) => string | undefined)(
+      '@beatzball/litro/actions/server',
+    );
+    expect(resolved).toBe('\0litro:actions-server-stub');
+    const code = (plugin.load as (id: string) => string | undefined)(resolved!);
+    expect(code).toContain('server-only');
+    expect(code).toContain('export const csrfToken');
+    expect(code).toContain('export const getFormErrors');
+    expect(code).toContain('export const stampActionIds');
+  });
 });
