@@ -18,129 +18,129 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
-      "import": "./dist/cli/index.js",
-      "types": "./dist/cli/index.d.ts"
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.js"
     },
     "./vite": {
       "source": "./src/vite/index.ts",
-      "import": "./dist/vite/index.js",
-      "types": "./dist/vite/index.d.ts"
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.js"
     },
     "./runtime": {
       "source": "./src/runtime/index.ts",
-      "import": "./dist/runtime/index.js",
-      "types": "./dist/runtime/index.d.ts"
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
     },
     "./runtime/*.js": {
       "source": "./src/runtime/*.ts",
-      "import": "./dist/runtime/*.js",
-      "types": "./dist/runtime/*.d.ts"
+      "types": "./dist/runtime/*.d.ts",
+      "import": "./dist/runtime/*.js"
     },
     "./actions": {
       "source": "./src/actions/index.ts",
-      "import": "./dist/actions/index.js",
-      "types": "./dist/actions/index.d.ts"
+      "types": "./dist/actions/index.d.ts",
+      "import": "./dist/actions/index.js"
     },
     "./actions/client": {
       "source": "./src/actions/client.ts",
-      "import": "./dist/actions/client.js",
-      "types": "./dist/actions/client.d.ts"
+      "types": "./dist/actions/client.d.ts",
+      "import": "./dist/actions/client.js"
     },
     "./actions/handler": {
       "source": "./src/actions/handler.ts",
-      "import": "./dist/actions/handler.js",
-      "types": "./dist/actions/handler.d.ts"
+      "types": "./dist/actions/handler.d.ts",
+      "import": "./dist/actions/handler.js"
     },
     "./actions/server": {
       "source": "./src/actions/server.ts",
-      "import": "./dist/actions/server.js",
-      "types": "./dist/actions/server.d.ts"
+      "types": "./dist/actions/server.d.ts",
+      "import": "./dist/actions/server.js"
     },
     "./actions/form-client": {
       "source": "./src/actions/form-client.ts",
-      "import": "./dist/actions/form-client.js",
-      "types": "./dist/actions/form-client.d.ts"
+      "types": "./dist/actions/form-client.d.ts",
+      "import": "./dist/actions/form-client.js"
     },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
-      "import": "./dist/plugins/pages.js",
-      "types": "./dist/plugins/pages.d.ts"
+      "types": "./dist/plugins/pages.d.ts",
+      "import": "./dist/plugins/pages.js"
     },
     "./plugins/ssg": {
       "source": "./src/plugins/ssg.ts",
-      "import": "./dist/plugins/ssg.js",
-      "types": "./dist/plugins/ssg.d.ts"
+      "types": "./dist/plugins/ssg.d.ts",
+      "import": "./dist/plugins/ssg.js"
     },
     "./plugins/og": {
       "source": "./src/plugins/og.ts",
-      "import": "./dist/plugins/og.js",
-      "types": "./dist/plugins/og.d.ts"
+      "types": "./dist/plugins/og.d.ts",
+      "import": "./dist/plugins/og.js"
     },
     "./plugins/actions": {
       "source": "./src/plugins/actions.ts",
-      "import": "./dist/plugins/actions.js",
-      "types": "./dist/plugins/actions.d.ts"
+      "types": "./dist/plugins/actions.d.ts",
+      "import": "./dist/plugins/actions.js"
     },
     "./config": {
       "source": "./src/config/presets.ts",
-      "import": "./dist/config/presets.js",
-      "types": "./dist/config/presets.d.ts"
+      "types": "./dist/config/presets.d.ts",
+      "import": "./dist/config/presets.js"
     },
     "./types": {
       "source": "./src/types/route.ts",
-      "import": "./dist/types/route.js",
-      "types": "./dist/types/route.d.ts"
+      "types": "./dist/types/route.d.ts",
+      "import": "./dist/types/route.js"
     },
     "./content": {
       "source": "./src/content/index.ts",
-      "import": "./dist/content/index.js",
-      "types": "./dist/content/index.d.ts"
+      "types": "./dist/content/index.d.ts",
+      "import": "./dist/content/index.js"
     },
     "./content/plugin": {
       "source": "./src/content/plugin.ts",
-      "import": "./dist/content/plugin.js",
-      "types": "./dist/content/plugin.d.ts"
+      "types": "./dist/content/plugin.d.ts",
+      "import": "./dist/content/plugin.js"
     },
     "./adapter": {
       "source": "./src/adapter/index.ts",
-      "import": "./dist/adapter/index.js",
-      "types": "./dist/adapter/index.d.ts"
+      "types": "./dist/adapter/index.d.ts",
+      "import": "./dist/adapter/index.js"
     },
     "./adapter/lit": {
       "source": "./src/adapter/lit/index.ts",
-      "import": "./dist/adapter/lit/index.js",
-      "types": "./dist/adapter/lit/index.d.ts"
+      "types": "./dist/adapter/lit/index.d.ts",
+      "import": "./dist/adapter/lit/index.js"
     },
     "./adapter/fast": {
       "source": "./src/adapter/fast/index.ts",
-      "import": "./dist/adapter/fast/index.js",
-      "types": "./dist/adapter/fast/index.d.ts"
+      "types": "./dist/adapter/fast/index.d.ts",
+      "import": "./dist/adapter/fast/index.js"
     },
     "./adapter/fast/runtime": {
       "source": "./src/adapter/fast/runtime/client.ts",
-      "import": "./dist/adapter/fast/runtime/client.js",
-      "types": "./dist/adapter/fast/runtime/client.d.ts"
+      "types": "./dist/adapter/fast/runtime/client.d.ts",
+      "import": "./dist/adapter/fast/runtime/client.js"
     },
     "./adapter/fast/ssr-init": {
       "source": "./src/adapter/fast/ssr-init.ts",
-      "import": "./dist/adapter/fast/ssr-init.js",
-      "types": "./dist/adapter/fast/ssr-init.d.ts"
+      "types": "./dist/adapter/fast/ssr-init.d.ts",
+      "import": "./dist/adapter/fast/ssr-init.js"
     },
     "./adapter/fast/page": {
       "source": "./src/adapter/fast/runtime/LitroPage.ts",
-      "import": "./dist/adapter/fast/runtime/LitroPage.js",
-      "types": "./dist/adapter/fast/runtime/LitroPage.d.ts"
+      "types": "./dist/adapter/fast/runtime/LitroPage.d.ts",
+      "import": "./dist/adapter/fast/runtime/LitroPage.js"
     },
     "./adapter/elena": {
       "source": "./src/adapter/elena/index.ts",
-      "import": "./dist/adapter/elena/index.js",
-      "types": "./dist/adapter/elena/index.d.ts"
+      "types": "./dist/adapter/elena/index.d.ts",
+      "import": "./dist/adapter/elena/index.js"
     },
     "./adapter/elena/ssr-shim": {
       "source": "./src/adapter/elena/ssr-shim.ts",
@@ -148,13 +148,13 @@
     },
     "./adapter/elena/runtime": {
       "source": "./src/adapter/elena/runtime/client.ts",
-      "import": "./dist/adapter/elena/runtime/client.js",
-      "types": "./dist/adapter/elena/runtime/client.d.ts"
+      "types": "./dist/adapter/elena/runtime/client.d.ts",
+      "import": "./dist/adapter/elena/runtime/client.js"
     },
     "./adapter/elena/page": {
       "source": "./src/adapter/elena/runtime/LitroPage.ts",
-      "import": "./dist/adapter/elena/runtime/LitroPage.js",
-      "types": "./dist/adapter/elena/runtime/LitroPage.d.ts"
+      "types": "./dist/adapter/elena/runtime/LitroPage.d.ts",
+      "import": "./dist/adapter/elena/runtime/LitroPage.js"
     },
     "./content/env": {
       "types": "./src/content/env.d.ts"
