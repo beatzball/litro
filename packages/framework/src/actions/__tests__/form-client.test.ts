@@ -131,4 +131,27 @@ describe('enhanceForms', () => {
     const e = submit(form);
     expect(e.defaultPrevented).toBe(false);
   });
+
+  it('is idempotent per root', async () => {
+    const detach1 = enhanceForms();
+    const detach2 = enhanceForms(); // Second call on same root
+    fetchMock.mockResolvedValue(okResponse({ result: 'ok' }));
+    const form = buildForm(ACTION, { name: 'test' });
+    submit(form);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1)); // Only one listener fires
+    detach1();
+    detach2(); // No-op detach
+  });
+
+  it('detach allows re-enhancement', async () => {
+    const detach1 = enhanceForms();
+    detach1();
+    const detach2 = enhanceForms(); // Re-enhance after detach
+    fetchMock.mockResolvedValue(okResponse({ result: 'ok' }));
+    const form = buildForm(ACTION, { name: 'test' });
+    const e = submit(form);
+    expect(e.defaultPrevented).toBe(true); // The form is intercepted
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    detach2();
+  });
 });

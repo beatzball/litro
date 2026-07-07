@@ -9,18 +9,28 @@
  * NOTE: 'submit' events are composed:false — they never cross shadow-root
  * boundaries. enhanceForms() on document covers light-DOM forms; components
  * that render forms inside shadow roots call enhanceForms(this.renderRoot).
+ * enhanceForms is idempotent per root — calling it multiple times on the same
+ * root is safe and will not duplicate listeners.
  */
 import { callAction } from './client.js';
 import { formDataToObject } from './form-data.js';
 
 const ACTION_PATH_RE = /^\/__litro\/action\/([0-9a-f]{12})$/;
+const enhancedRoots = new WeakSet<EventTarget>();
 
 export function enhanceForms(root: Document | ShadowRoot | Element = document): () => void {
+  if (enhancedRoots.has(root)) {
+    return () => {};
+  }
+  enhancedRoots.add(root);
   const listener = (e: Event): void => {
     onSubmit(e);
   };
   root.addEventListener('submit', listener);
-  return () => root.removeEventListener('submit', listener);
+  return () => {
+    root.removeEventListener('submit', listener);
+    enhancedRoots.delete(root);
+  };
 }
 
 function onSubmit(e: Event): void {
