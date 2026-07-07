@@ -4,10 +4,12 @@
  * Run with: pnpm --filter litro test
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ContentIndex } from './index.js';
-import { resolve } from 'pathe';
+import { resolve, join } from 'pathe';
 import { fileURLToPath } from 'node:url';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const FIXTURES_DIR = resolve(__dirname, '__fixtures__/blog');
@@ -183,5 +185,55 @@ describe('ContentIndex', () => {
     // Now exclude drafts at query time
     const publishedOnly = await draftIndex.getPosts({ includeDrafts: false });
     expect(publishedOnly.every(p => !p.draft)).toBe(true);
+  });
+});
+
+describe('duplicate slug detection', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'litro-content-collision-'));
+    await mkdir(join(dir, 'docs'), { recursive: true });
+    await mkdir(join(dir, 'blog'), { recursive: true });
+    await writeFile(
+      join(dir, 'docs', 'intro.md'),
+      '---\ntitle: Docs Intro\ndate: 2026-01-01\n---\nDocs body\n',
+    );
+    await writeFile(
+      join(dir, 'blog', 'intro.md'),
+      '---\ntitle: Blog Intro\ndate: 2026-02-01\n---\nBlog body\n',
+    );
+    await writeFile(
+      join(dir, 'blog', 'unique-post.md'),
+      '---\ntitle: Unique\ndate: 2026-03-01\n---\nBody\n',
+    );
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('build() fails loudly on cross-directory basename collisions, naming both files', async () => {
+    const idx = new ContentIndex(dir);
+    await expect(idx.build()).rejects.toThrow(
+      /duplicate content slug[\s\S]*"intro"[\s\S]*blog\/intro\.md[\s\S]*docs\/intro\.md/i,
+    );
+  });
+
+  it('index/parent-directory slugs collide too (docs/foo/index.md vs blog/foo.md)', async () => {
+    const dir2 = await mkdtemp(join(tmpdir(), 'litro-content-collision-'));
+    await mkdir(join(dir2, 'docs', 'foo'), { recursive: true });
+    await mkdir(join(dir2, 'blog'), { recursive: true });
+    await writeFile(
+      join(dir2, 'docs', 'foo', 'index.md'),
+      '---\ntitle: Foo Section\ndate: 2026-01-01\n---\nBody\n',
+    );
+    await writeFile(
+      join(dir2, 'blog', 'foo.md'),
+      '---\ntitle: Foo Post\ndate: 2026-02-01\n---\nBody\n',
+    );
+    const idx = new ContentIndex(dir2);
+    await expect(idx.build()).rejects.toThrow(/duplicate content slug[\s\S]*"foo"/i);
+    await rm(dir2, { recursive: true, force: true });
   });
 });

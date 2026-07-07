@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'pathe';
+import { dirname, join, relative } from 'pathe';
 import fg from 'fast-glob';
 import { parseMarkdownFile } from './parser.js';
 import type { Post, GetPostsOptions } from './types.js';
@@ -98,6 +98,32 @@ export class ContentIndex {
         return parseMarkdownFile(file, this.contentDir, directoryData);
       }),
     );
+
+    // Slugs are the public identity (getPost(slug), posts map key), so
+    // colliding basenames MUST fail loudly: the map would otherwise keep
+    // only one entry and silently drop the rest from every listing.
+    // parsedPosts[i] corresponds to files[i] (Promise.all preserves order).
+    const filesBySlug = new Map<string, string[]>();
+    parsedPosts.forEach((post, i) => {
+      const rel = relative(this.contentDir, files[i]);
+      const existing = filesBySlug.get(post.slug);
+      if (existing) existing.push(rel);
+      else filesBySlug.set(post.slug, [rel]);
+    });
+    const collisions = Array.from(filesBySlug.entries()).filter(
+      ([, sources]) => sources.length > 1,
+    );
+    if (collisions.length > 0) {
+      const details = collisions
+        .map(([slug, sources]) => `  "${slug}": ${sources.sort().join(', ')}`)
+        .join('\n');
+      throw new Error(
+        `[litro:content] Duplicate content slug${collisions.length === 1 ? '' : 's'} in ${this.contentDir}.\n` +
+          `Slugs are derived from the filename (or the parent directory for index.md), ` +
+          `so they must be unique across the whole content directory:\n${details}\n` +
+          `Rename the colliding files to give each a unique slug.`,
+      );
+    }
 
     // Sort by date descending — always index ALL posts (including drafts).
     // Draft filtering is deferred to getPosts() so callers can opt in per-query.
