@@ -14,6 +14,7 @@
   },
   "references": [
     { "path": "./packages/litro-router" },
+    { "path": "./packages/litro-agent" },
     { "path": "./packages/framework" },
     { "path": "./packages/create-litro" }
   ]
