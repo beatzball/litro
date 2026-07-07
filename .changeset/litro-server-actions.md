@@ -1,5 +1,0 @@
----
-"@beatzball/litro": minor
----
-
-Add Server Actions (typed RPC). Export an async function from a `*.server.ts` module and call it from anywhere: in-process during SSR, or as a typed HTTP call (`POST /__litro/action/:id`) from the browser — the Vite plugin rewrites client imports into generated stubs, so server code and its dependencies never enter the client bundle. Includes `defineAction` with Standard Schema input validation, seroval JSON-mode serialization (`Date`/`Map`/`Set`/`BigInt`/circular refs round-trip), default-on CSRF protection (custom header + `Sec-Fetch-Site`/`Origin` checks), structured error forwarding via `LitroActionError`, and a Nitro build plugin that scans action modules and generates the endpoint handler. New subpath exports: `@beatzball/litro/actions`, `@beatzball/litro/actions/client`, `@beatzball/litro/actions/handler`, `@beatzball/litro/plugins/actions`, plus `litroActionsPlugin` from `@beatzball/litro/vite`. Also fixes a latent dev-server reload loop by making generated-file writes idempotent in the page scanner.
