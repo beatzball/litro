@@ -1,5 +1,12 @@
 # playground-fast
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [a87a760]
+  - @beatzball/litro@0.11.1
+
 ## 0.0.7
 
 ### Patch Changes
