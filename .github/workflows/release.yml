@@ -14,6 +14,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # Required for npm trusted publishing (OIDC) — no NPM_TOKEN involved.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,14 +25,23 @@ jobs:
         with:
           version: 10
 
+      # No registry-url here: setup-node would write an .npmrc referencing
+      # ${NODE_AUTH_TOKEN}, and npm errors on undefined env vars in config.
+      # OIDC trusted publishing needs no auth config at all.
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+
+      # npm trusted publishing (OIDC) needs npm >= 11.5.1; Node 20 ships npm 10.
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest && npm --version
 
       - run: pnpm install --frozen-lockfile
 
+      # Publishing authenticates via OIDC trusted publishers configured on the
+      # npm packages (repo beatzball/litro, workflow release.yml) — deliberately
+      # no NPM_TOKEN/NODE_AUTH_TOKEN so npm cannot fall back to token auth.
       - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
@@ -41,5 +52,3 @@ jobs:
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
