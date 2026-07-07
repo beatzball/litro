@@ -1,0 +1,92 @@
+import type { H3Event } from 'h3';
+import { AgentError } from './errors.js';
+import type { Provider, ProviderRequest } from './providers/types.js';
+import type { StandardSchemaV1 } from '@beatzball/litro/actions';
+
+// Symbols
+export const TOOL_CONFIG = Symbol.for('litro.agent.tool');
+export const AGENT_CONFIG = Symbol.for('litro.agent.agent');
+export const ACCESS_GUARD = Symbol.for('litro.agent.access');
+
+// Re-export types from submodules
+export type * from './providers/types.js';
+export type * from './sessions/types.js';
+
+// Re-export error types
+export { AgentError };
+export type { AgentErrorPayload } from './errors.js';
+
+// Re-export framework types
+export type { StandardSchemaV1 } from '@beatzball/litro/actions';
+
+// ToolConfig and related types
+export interface ToolContext {
+  event: H3Event | undefined;
+  session: { id: string; seq: number };
+}
+
+export interface ToolConfig<In> {
+  description: string;
+  input: StandardSchemaV1<unknown, In>;
+  execute(input: In, ctx: ToolContext): unknown;
+}
+
+export interface ToolDefinition {
+  [TOOL_CONFIG]: ToolConfig<any>;
+  [key: symbol]: unknown;
+}
+
+export function defineTool<In>(config: ToolConfig<In>): ToolDefinition {
+  if (!config.input) {
+    throw new AgentError(
+      'defineTool: an input schema is required — every tool is model-callable and its input is hostile.',
+      { status: 500 }
+    );
+  }
+  return Object.assign({}, { [TOOL_CONFIG]: config });
+}
+
+// AgentConfig and related types
+export interface AgentConfig {
+  model: Provider;
+  instructions: string;
+  tools?: ToolDefinition[];
+  skills?: never[];
+  extends?: never;
+  mcp?: never[];
+  subagents?: never[];
+}
+
+export interface AgentDefinition {
+  [AGENT_CONFIG]: AgentConfig;
+  [key: symbol]: unknown;
+}
+
+export function defineAgent(config: AgentConfig): AgentDefinition {
+  for (const key of ['skills', 'extends', 'mcp', 'subagents'] as const) {
+    const v = (config as unknown as Record<string, unknown>)[key];
+    if (v !== undefined && (!Array.isArray(v) || v.length > 0)) {
+      throw new AgentError(
+        `defineAgent: "${key}" is deferred past v0 — see the design spec's deferral list.`,
+        { status: 500 }
+      );
+    }
+  }
+  return Object.assign({}, { [AGENT_CONFIG]: config });
+}
+
+// AccessGuard and related types
+export type AccessGuard = (event: H3Event) => void | Promise<void>;
+
+export function defineAccess(fn: (event: H3Event) => void | Promise<void>): AccessGuard {
+  return fn;
+}
+
+// AgentRuntimeConfig and related types
+export interface AgentRuntimeConfig {
+  sessions?: import('./sessions/types.js').SessionStore;
+}
+
+export function defineAgentConfig(config: AgentRuntimeConfig): AgentRuntimeConfig {
+  return config;
+}
