@@ -62,6 +62,11 @@
       "import": "./dist/actions/server.js",
       "types": "./dist/actions/server.d.ts"
     },
+    "./actions/form-client": {
+      "source": "./src/actions/form-client.ts",
+      "import": "./dist/actions/form-client.js",
+      "types": "./dist/actions/form-client.d.ts"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "import": "./dist/plugins/pages.js",
