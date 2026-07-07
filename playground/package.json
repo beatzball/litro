@@ -1,6 +1,6 @@
 {
   "name": "playground",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "private": true,
   "description": "Litro playground — test app using the framework locally",
   "type": "module",
