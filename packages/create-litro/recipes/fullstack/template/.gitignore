@@ -9,6 +9,8 @@ dist/
 # Generated (overwritten on every build by the pages plugin)
 server/stubs/page-manifest.ts
 routes.generated.ts
+server/stubs/action-manifest.ts
+server/stubs/action-handler.ts
 
 # TypeScript build info
 *.tsbuildinfo
