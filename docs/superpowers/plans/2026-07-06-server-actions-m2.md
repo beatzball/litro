@@ -19,7 +19,7 @@
 - **Vite actions plugin:** do NOT add `enforce: 'pre'` (transform must receive transpiled JS).
 - **One changeset file per package.** Only `@beatzball/litro` and `@beatzball/create-litro` get changesets (docs packages are ignored).
 - **No bare `#N` references** in commit messages or PR bodies (GitHub auto-links); write "PRD item N" / escape as `\#N`.
-- **No personal identifiers** (`zaidalbaker`, `/Users/...`) in any committed content; grep before every push.
+- **No personal identifiers** (author usernames, home-directory paths) in any committed content; grep before every push.
 - **No emojis** anywhere.
 - Playground e2e runs against `packages/framework/dist/` — run `pnpm --filter @beatzball/litro build` after framework changes before any playground/e2e step.
 - Commit after every task; do not push or open a PR until the final task.
@@ -2702,7 +2702,7 @@ Expected: all green.
 - [ ] **Step 4: Personal-identifier sweep (required before any push)**
 
 ```bash
-git log --format='%an %ae %s %b' main..HEAD | grep -iE 'zaid|/Users/' ; git diff main..HEAD | grep -iE 'zaid|/Users/[a-z]+' 
+git log --format='%an %ae %s %b' main..HEAD | grep -iE '<author-name-pattern>|/Users/' ; git diff main..HEAD | grep -iE '<author-name-pattern>|/Users/[a-z]+'
 ```
 
 Expected: no output from either grep (exit code 1). If anything matches, rewrite the offending commits before pushing.
