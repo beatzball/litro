@@ -53,6 +53,8 @@ interface GetPostsOptions {
 
 Returns a single post by its **slug** (the filename without the `.md` extension; nested files use just the file's own slug, not the full path). Returns `null` if not found.
 
+Because the slug is the post's identity, it must be unique across the whole content directory — `docs/setup.md` and `blog/setup.md` would collide. The content index fails the build with an error naming the colliding files rather than silently keeping only one of them; rename a file to resolve it (`index.md` files take their parent directory's name as the slug, so they participate in the same rule).
+
 ```ts
 const post = await getPost('hello-world');
 ```
