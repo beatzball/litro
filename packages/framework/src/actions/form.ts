@@ -20,10 +20,11 @@ import { setFormErrorCookie, verifyCsrfToken } from './server.js';
 
 export function isFormContentType(contentType: string | undefined): boolean {
   if (!contentType) return false;
-  return (
-    contentType.includes('application/x-www-form-urlencoded') ||
-    contentType.includes('multipart/form-data')
-  );
+  // Parse the media-type essence (strip parameters like charset/boundary) so
+  // a header such as `text/plain; x="multipart/form-data"` isn't
+  // misclassified as form mode by a naive substring match.
+  const essence = contentType.split(';')[0].trim().toLowerCase();
+  return essence === 'application/x-www-form-urlencoded' || essence === 'multipart/form-data';
 }
 
 export async function handleFormMode(
@@ -42,7 +43,12 @@ export async function handleFormMode(
     );
   }
 
-  const fd = await readFormData(event);
+  let fd: FormData;
+  try {
+    fd = await readFormData(event);
+  } catch (err) {
+    throw new LitroActionError('Malformed form request body', { status: 400, cause: err });
+  }
   if (config.csrf === 'token' && !verifyCsrfToken(event, fd.get(CSRF_FIELD))) {
     throw new LitroActionError('Invalid or missing CSRF token', { status: 403 });
   }

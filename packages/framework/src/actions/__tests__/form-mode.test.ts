@@ -181,6 +181,41 @@ describe('form mode', () => {
     expect(res.status).toBe(400);
   });
 
+  it('content-type essence match: charset parameter does not break form-mode detection', async () => {
+    const res = await postForm('formAction', { name: 'Ada' }, {
+      'content-type': 'application/x-www-form-urlencoded; charset=utf-8',
+    });
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe('/after');
+  });
+
+  it('content-type essence match: a form media-type name inside another type is not form mode', async () => {
+    // text/plain with a bogus parameter that merely mentions multipart/form-data
+    // must not be misclassified as form mode by a naive substring match. With
+    // no x-litro-action header, it should be rejected as RPC mode instead.
+    const res = await fetch(`${base}/__litro/action/${id('formAction')}`, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain; x="multipart/form-data"' },
+      body: 'name=Ada',
+      redirect: 'manual',
+    });
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { message: string };
+    expect(body.message).toContain('x-litro-action');
+  });
+
+  it('malformed multipart body returns a curated 400, not a raw 500', async () => {
+    const res = await fetch(`${base}/__litro/action/${id('formAction')}`, {
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data', 'x-litro-action': '1' },
+      body: 'not-multipart',
+      redirect: 'manual',
+    });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { message: string };
+    expect(body.message.toLowerCase()).toContain('form');
+  });
+
   it('Origin gate honors x-forwarded-host (both modes)', async () => {
     const pass = await postForm('formAction', { name: 'x' }, {
       origin: 'https://public.example',
