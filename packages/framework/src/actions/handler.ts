@@ -31,6 +31,7 @@ import {
 } from './serialize.js';
 import { ACTION_CONFIG, runAction, type ActionConfig } from './define.js';
 import { LitroActionError, type ActionErrorPayload } from './error.js';
+import { isFormContentType, handleFormMode } from './form.js';
 
 export interface ActionModuleEntry {
   /** Project-root-relative module path, posix, extension-stripped —
@@ -121,8 +122,12 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
   }
 
   return defineEventHandler(async (event) => {
+    const formMode = isFormContentType(getRequestHeader(event, 'content-type'));
+
     // --- CSRF gates -------------------------------------------------------
-    if (getRequestHeader(event, 'x-litro-action') !== '1') {
+    // Form posts cannot carry custom headers; the header gate applies to RPC
+    // mode only. Sec-Fetch-Site and Origin/Host checks apply to both modes.
+    if (!formMode && getRequestHeader(event, 'x-litro-action') !== '1') {
       return sendError(event, new LitroActionError('Missing x-litro-action header', { status: 403 }));
     }
     const secFetchSite = getRequestHeader(event, 'sec-fetch-site');
@@ -130,7 +135,11 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
       return sendError(event, new LitroActionError('Cross-site action calls are not allowed', { status: 403 }));
     }
     const origin = getRequestHeader(event, 'origin');
-    const host = getRequestHeader(event, 'host');
+    // Behind proxies that rewrite Host, the public host arrives in
+    // x-forwarded-host (first value wins). Only trustworthy at the platform
+    // level — Nitro presets set it appropriately.
+    const forwardedHost = getRequestHeader(event, 'x-forwarded-host');
+    const host = forwardedHost?.split(',')[0]?.trim() || getRequestHeader(event, 'host');
     if (origin) {
       let originHost: string | undefined;
       try {
@@ -149,6 +158,15 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
     const fn = registry.get(id);
     if (!fn) {
       return sendError(event, new LitroActionError(`Unknown action: ${id}`, { status: 404 }));
+    }
+
+    // --- Form mode (no-JS progressive enhancement) -------------------------
+    if (formMode) {
+      try {
+        return await handleFormMode(event, id, fn);
+      } catch (err) {
+        return sendError(event, err);
+      }
     }
 
     // --- Deserialize args -------------------------------------------------
