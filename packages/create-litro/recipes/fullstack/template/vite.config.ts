@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { litroActionsPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
   // base must match publicAssets.baseURL in nitro.config.ts ('/_litro/').
@@ -7,6 +8,7 @@ export default defineConfig({
   // Without this, preload requests hit the catch-all page handler and return
   // HTML, causing a MIME type error for module scripts.
   base: '/_litro/',
+  plugins: [litroActionsPlugin()],
   resolve: {
     conditions: ['source', 'browser', 'module', 'import', 'default'],
   },

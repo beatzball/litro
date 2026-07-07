@@ -23,9 +23,15 @@ import {
   type H3Event,
 } from 'h3';
 import { hashActionId } from './hash.js';
-import { serializeValue, deserializeValue } from './serialize.js';
+import {
+  serializeValue,
+  deserializeValue,
+  createStreamEncoder,
+  isAsyncIterable,
+} from './serialize.js';
 import { ACTION_CONFIG, runAction, type ActionConfig } from './define.js';
 import { LitroActionError, type ActionErrorPayload } from './error.js';
+import { isFormContentType, handleFormMode } from './form.js';
 
 export interface ActionModuleEntry {
   /** Project-root-relative module path, posix, extension-stripped —
@@ -68,6 +74,38 @@ function sendError(event: H3Event, err: unknown): string {
   return JSON.stringify(payload);
 }
 
+/** Streams an AsyncIterable result as NDJSON (see serialize.ts for the line
+ *  protocol). Errors thrown mid-iteration become an err line — headers are
+ *  already sent, so the HTTP status stays 200 and the client rethrows from
+ *  the payload. h3 1.15 sends returned web ReadableStreams natively;
+ *  backpressure comes from pull(). */
+function streamResponse(event: H3Event, iterable: AsyncIterable<unknown>): ReadableStream<Uint8Array> {
+  setResponseHeader(event, 'content-type', 'application/x-ndjson; charset=utf-8');
+  setResponseHeader(event, 'cache-control', 'no-store');
+  const encoder = createStreamEncoder();
+  const textEncoder = new TextEncoder();
+  const iterator = iterable[Symbol.asyncIterator]();
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const next = await iterator.next();
+        if (next.done) {
+          controller.enqueue(textEncoder.encode(encoder.done()));
+          controller.close();
+          return;
+        }
+        controller.enqueue(textEncoder.encode(encoder.value(next.value)));
+      } catch (err) {
+        controller.enqueue(textEncoder.encode(encoder.error(toErrorPayload(err))));
+        controller.close();
+      }
+    },
+    async cancel() {
+      await iterator.return?.();
+    },
+  });
+}
+
 export function createActionHandler(entries: ActionModuleEntry[]) {
   let registry: Map<string, AnyFn> | null = null;
 
@@ -84,8 +122,12 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
   }
 
   return defineEventHandler(async (event) => {
+    const formMode = isFormContentType(getRequestHeader(event, 'content-type'));
+
     // --- CSRF gates -------------------------------------------------------
-    if (getRequestHeader(event, 'x-litro-action') !== '1') {
+    // Form posts cannot carry custom headers; the header gate applies to RPC
+    // mode only. Sec-Fetch-Site and Origin/Host checks apply to both modes.
+    if (!formMode && getRequestHeader(event, 'x-litro-action') !== '1') {
       return sendError(event, new LitroActionError('Missing x-litro-action header', { status: 403 }));
     }
     const secFetchSite = getRequestHeader(event, 'sec-fetch-site');
@@ -93,7 +135,11 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
       return sendError(event, new LitroActionError('Cross-site action calls are not allowed', { status: 403 }));
     }
     const origin = getRequestHeader(event, 'origin');
-    const host = getRequestHeader(event, 'host');
+    // Behind proxies that rewrite Host, the public host arrives in
+    // x-forwarded-host (first value wins). Only trustworthy at the platform
+    // level — Nitro presets set it appropriately.
+    const forwardedHost = getRequestHeader(event, 'x-forwarded-host');
+    const host = forwardedHost?.split(',')[0]?.trim() || getRequestHeader(event, 'host');
     if (origin) {
       let originHost: string | undefined;
       try {
@@ -112,6 +158,15 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
     const fn = registry.get(id);
     if (!fn) {
       return sendError(event, new LitroActionError(`Unknown action: ${id}`, { status: 404 }));
+    }
+
+    // --- Form mode (no-JS progressive enhancement) -------------------------
+    if (formMode) {
+      try {
+        return await handleFormMode(event, id, fn);
+      } catch (err) {
+        return sendError(event, err);
+      }
     }
 
     // --- Deserialize args -------------------------------------------------
@@ -133,6 +188,9 @@ export function createActionHandler(entries: ActionModuleEntry[]) {
       const result = config
         ? await runAction(config, args[0], { event })
         : await fn(...args);
+      if (isAsyncIterable(result)) {
+        return streamResponse(event, result);
+      }
       setResponseHeader(event, 'content-type', 'application/json; charset=utf-8');
       setResponseHeader(event, 'cache-control', 'no-store');
       return serializeValue(result);

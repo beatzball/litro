@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { scaffold } from './scaffold.js';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -95,6 +96,41 @@ describe('scaffold', () => {
           throw new Error(`Un-interpolated placeholder in ${file}: ${matches.join(', ')}`);
         }
       }
+    });
+  });
+
+  it('fullstack template wires server actions', async () => {
+    await withTmpDir(async (targetDir) => {
+      await scaffold('fullstack', { projectName: 'cool-blog', mode: 'ssr' }, targetDir);
+
+      const nitroConfig = await readFile(join(targetDir, 'nitro.config.ts'), 'utf-8');
+      expect(nitroConfig).toContain("import actionsPlugin from '@beatzball/litro/plugins/actions';");
+      expect(nitroConfig).toContain("route: '/__litro/action/:id'");
+      expect(nitroConfig).toContain('await actionsPlugin(nitro);');
+      expect(nitroConfig).toContain("'/__litro/action/**'");
+
+      const viteConfig = await readFile(join(targetDir, 'vite.config.ts'), 'utf-8');
+      expect(viteConfig).toContain("import { litroActionsPlugin } from '@beatzball/litro/vite';");
+      expect(viteConfig).toContain('litroActionsPlugin()');
+
+      const pkg = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf-8'));
+      expect(pkg.imports['#litro/action-manifest']).toBe('./server/stubs/action-manifest.ts');
+
+      const gitignore = await readFile(join(targetDir, '.gitignore'), 'utf-8');
+      expect(gitignore).toContain('server/stubs/action-manifest.ts');
+      expect(gitignore).toContain('server/stubs/action-handler.ts');
+
+      expect(existsSync(join(targetDir, 'actions/demo.server.ts'))).toBe(true);
+
+      const appTs = await readFile(join(targetDir, 'app.ts'), 'utf-8');
+      expect(appTs).toContain('enhanceForms');
+
+      // Amendment: server/plugins/litro-actions.ts is a committed template
+      // file (not gitignored) so actionUrl() works on the very first
+      // `litro dev` run, before build:before has a chance to generate it.
+      expect(existsSync(join(targetDir, 'server/plugins/litro-actions.ts'))).toBe(true);
+      const runtimePlugin = await readFile(join(targetDir, 'server/plugins/litro-actions.ts'), 'utf-8');
+      expect(runtimePlugin).toContain('stampActionIds');
     });
   });
 

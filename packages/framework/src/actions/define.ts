@@ -23,9 +23,22 @@ export interface ActionContext {
   event: H3Event | undefined;
 }
 
+export interface ActionFormConfig {
+  /** Success-redirect target for no-JS form posts (PRG). Defaults to the
+   *  request's Referer, then '/'. */
+  redirect?: string;
+}
+
 export interface ActionConfig<In, Out> {
   input?: StandardSchemaV1<unknown, In>;
-  handler: (input: In, ctx: ActionContext) => Promise<Out>;
+  /** CSRF mode for form-mode requests. 'origin' (default): Origin/
+   *  Sec-Fetch-Site checks only. 'token': additionally require the
+   *  __Host-litro-csrf double-submit cookie to match the _litro_csrf field. */
+  csrf?: 'origin' | 'token';
+  form?: ActionFormConfig;
+  /** May return a Promise (single-shot) or an AsyncIterable/async generator
+   *  (streamed as NDJSON over HTTP; resolves to the iterable in-process). */
+  handler: (input: In, ctx: ActionContext) => Out | Promise<Out>;
 }
 
 export type ActionFunction<In, Out> = ((input: In) => Promise<Out>) & {
