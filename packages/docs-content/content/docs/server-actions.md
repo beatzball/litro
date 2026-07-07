@@ -8,6 +8,8 @@ date: 2026-07-04
 
 Export an async function from a `*.server.ts` module and import it anywhere in your application. During SSR the call runs in the same process with no network hop. In the browser the same import is replaced by a generated stub that sends a typed `POST /__litro/action/<id>` request and deserializes the result — the entire server module and all of its transitive dependencies (database drivers, secrets) never enter the client bundle.
 
+Server Actions — including the [form](#forms) and [streaming](#streaming) support on this page — require `@beatzball/litro` 0.11.0 or later. Apps scaffolded with `@beatzball/create-litro` 0.7.0 or later come pre-wired; [upgrading an existing app](#upgrading-from-010x-or-earlier) is covered under Setup.
+
 ## Security
 
 Every export of a `.server.ts` module is a public HTTP endpoint. Treat all arguments as hostile input regardless of how the action is called — in-process SSR calls and browser RPC calls share the same handler code. Authentication and authorization belong inside the handler, not at the call site. Return values are serialized and sent to the client; shape them to expose only what the caller needs. Rate limiting composes at the Nitro middleware layer (`server/middleware/`). The built-in CSRF protections guard the transport channel; they do not substitute for handler-level auth.
@@ -101,6 +103,17 @@ export default function litroActionsStampPlugin() {
 ```
 
 Unlike the `server/stubs/` files, this one is committed (not gitignored). Nitro scans `server/plugins/` before the `build:before` hook runs, so if the actions plugin generated this file at build time it would be missing on a project's first-ever dev run and `actionUrl()` would throw until a restart. The `create-litro` fullstack template ships it committed; the actions plugin keeps its content fresh on subsequent runs. Its content is static, so writing it by hand for a manual setup is safe.
+
+### Upgrading from 0.10.x or earlier
+
+`@beatzball/litro` 0.10.x and earlier have no Server Actions. Upgrading the dependency to `^0.11.0` changes nothing by itself — the feature is opt-in, no existing behavior is affected, and there are no breaking changes. To adopt actions in an existing app:
+
+1. Bump `@beatzball/litro` to `^0.11.0` in `package.json` and reinstall.
+2. Apply the six one-time edits above. All six are required before `actionUrl()` and forms work; plain RPC calls work after the first five.
+3. Check your `.gitignore`. If it ignores generated files with a broad pattern (for example `server/plugins/` or a project-wide generated-file glob), carve out `server/plugins/litro-actions.ts` — it must be committed. An ignored copy produces the confusing first-run failure described above: `actionUrl()` throws on a fresh clone until the dev server is restarted.
+4. Optionally wire `enhanceForms()` in `app.ts` (see [The enhancer](#the-enhancer)) — only needed for JavaScript-enhanced form submits. The no-JS form path and streaming need no wiring beyond the six edits: any handler that returns an async iterable streams automatically.
+
+Alternatively, scaffold a fresh reference app with `npm create @beatzball/litro` (`@beatzball/create-litro` 0.7.0+) and diff its config files against yours — the template carries the exact wiring.
 
 ## Plain actions
 
