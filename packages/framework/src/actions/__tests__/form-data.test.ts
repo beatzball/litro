@@ -22,4 +22,34 @@ describe('formDataToObject', () => {
     fd.append(CSRF_FIELD, 'token-value');
     expect(formDataToObject(fd)).toEqual({ name: 'x' });
   });
+
+  it('returns a null-prototype object', () => {
+    const fd = new FormData();
+    fd.append('title', 'hello');
+    const obj = formDataToObject(fd);
+    expect(Object.getPrototypeOf(obj)).toBeNull();
+  });
+
+  it('treats a field named `constructor` as an ordinary data key', () => {
+    const fd = new FormData();
+    fd.append('constructor', 'not-a-function');
+    const obj = formDataToObject(fd);
+    expect(obj.constructor).toBe('not-a-function');
+  });
+
+  it('collapses repeated `toString` fields into an array like any other key', () => {
+    const fd = new FormData();
+    fd.append('toString', 'a');
+    fd.append('toString', 'b');
+    const obj = formDataToObject(fd);
+    expect(obj.toString).toEqual(['a', 'b']);
+  });
+
+  it('stores `__proto__` as a plain data key without rebinding the prototype', () => {
+    const fd = new FormData();
+    fd.append('__proto__', 'evil');
+    const obj = formDataToObject(fd);
+    expect(Object.getPrototypeOf(obj)).toBeNull();
+    expect(Object.getOwnPropertyDescriptor(obj, '__proto__')?.value).toBe('evil');
+  });
 });

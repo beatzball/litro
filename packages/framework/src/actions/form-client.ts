@@ -43,7 +43,11 @@ function onSubmit(e: Event): void {
   e.preventDefault();
   // formDataToObject strips the _litro_csrf token field — the header gate
   // covers the enhanced path, and a strict schema would reject the extra key.
-  const input = formDataToObject(new FormData(form));
+  // Pass the submitter through: `new FormData(form)` alone omits the submit
+  // button's name/value, so `<button name="intent" value="delete">` would
+  // work no-JS but silently disappear once this enhancer takes over.
+  const submitter = (e as SubmitEvent).submitter ?? undefined;
+  const input = formDataToObject(new FormData(form, submitter));
   void submitViaRpc(form, match[1], input);
 }
 

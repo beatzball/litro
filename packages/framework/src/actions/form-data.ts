@@ -10,7 +10,10 @@
 export const CSRF_FIELD = '_litro_csrf';
 
 export function formDataToObject(fd: FormData): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
+  // Object.create(null) so a hostile field name like `constructor`, `toString`,
+  // or `__proto__` is stored as an ordinary own property instead of shadowing
+  // or rebinding an inherited prototype member.
+  const out: Record<string, unknown> = Object.create(null);
   for (const [key, value] of fd.entries()) {
     if (key === CSRF_FIELD) continue;
     const existing = out[key];

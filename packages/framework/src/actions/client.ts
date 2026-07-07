@@ -57,6 +57,11 @@ async function* parseActionStream(
       }
     }
   } finally {
+    try {
+      await reader.cancel();
+    } catch {
+      // Stream may already be closed or errored — nothing to cancel.
+    }
     reader.releaseLock();
   }
 }

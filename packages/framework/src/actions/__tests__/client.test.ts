@@ -131,6 +131,39 @@ describe('callAction streaming', () => {
     expect(err).toBeInstanceOf(LitroActionError);
     expect((err as LitroActionError).status).toBe(502);
   });
+
+  it('cancels the underlying reader when the consumer breaks early (infinite log tail)', async () => {
+    const enc = createStreamEncoder();
+    const encoder = new TextEncoder();
+    let cancelled = false;
+    // Only the first line is enqueued and the stream is deliberately left open
+    // (no controller.close()) to model an infinite tail — if `break` didn't
+    // cancel the reader, this stream would hang forever.
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode(enc.value({ i: 1 })));
+        controller.enqueue(encoder.encode(enc.value({ i: 2 })));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    fetchMock.mockResolvedValue(
+      new Response(stream, {
+        status: 200,
+        headers: { 'content-type': 'application/x-ndjson; charset=utf-8' },
+      }),
+    );
+
+    const iterable = await callAction<AsyncIterable<{ i: number }>>('abc123def456', []);
+    for await (const _v of iterable) {
+      break;
+    }
+
+    await vi.waitFor(() => {
+      expect(cancelled).toBe(true);
+    });
+  });
 });
 
 describe('makeStub / actionUrl', () => {

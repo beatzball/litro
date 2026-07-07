@@ -143,6 +143,36 @@ describe('enhanceForms', () => {
     detach2(); // No-op detach
   });
 
+  it('preserves the submitter field (e.g. <button name="intent" value="delete">) on the enhanced path', async () => {
+    detach = enhanceForms();
+    fetchMock.mockResolvedValue(okResponse({ ok: true }));
+    const form = buildForm(ACTION, { name: 'Ada' });
+    const button = document.createElement('button');
+    button.name = 'intent';
+    button.value = 'delete';
+    form.appendChild(button);
+
+    let e: Event;
+    if (typeof SubmitEvent === 'function') {
+      e = new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button });
+      form.dispatchEvent(e);
+    } else {
+      // jsdom in this environment lacks SubmitEvent — fall back to a plain
+      // Event (submitter undefined) and just assert the enhancer doesn't throw.
+      e = submit(form);
+    }
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const { deserializeValue } = await import('../serialize.js');
+    const [input] = deserializeValue(init.body as string) as [Record<string, unknown>];
+    if (typeof SubmitEvent === 'function') {
+      expect(input.intent).toBe('delete');
+    } else {
+      expect(input.intent).toBeUndefined();
+    }
+  });
+
   it('detach allows re-enhancement', async () => {
     const detach1 = enhanceForms();
     detach1();

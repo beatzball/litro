@@ -21,12 +21,16 @@
  * (relPath, exportName) pairs itself — so this plugin never parses
  * TypeScript.
  *
- * Consumer wiring (five one-time edits, see playground):
+ * Consumer wiring (six one-time edits, see playground):
  *   - nitro.config.ts:   await actionsPlugin(nitro) in hooks['build:before']
  *   - nitro.config.ts:   handlers entry for POST /__litro/action/:id -> ./server/stubs/action-handler.ts
  *   - package.json:      "imports": { "#litro/action-manifest": "./server/stubs/action-manifest.ts" }
  *   - nitro.config.ts:   routeRules '/__litro/action/**' -> cache-control no-store
  *   - vite.config.ts:    litroActionsPlugin() from '@beatzball/litro/vite'
+ *   - server/plugins/litro-actions.ts: committed (not gitignored) stamp plugin —
+ *     Nitro scans server/plugins/ at createNitro time, before build:before runs,
+ *     so this file must exist on a fresh checkout; the scanner keeps it fresh
+ *     via the content-compared writeStub() below.
  */
 import type { Nitro } from 'nitropack';
 import fastGlob from 'fast-glob';

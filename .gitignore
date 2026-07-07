@@ -14,7 +14,6 @@ playground/dist/
 
 # Generated files (overwritten on every build; contain machine-local absolute paths)
 playground*/server/stubs/
-playground*/server/plugins/litro-actions.ts
 playground*/routes.generated.ts
 
 # Playwright
