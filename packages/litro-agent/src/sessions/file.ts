@@ -51,22 +51,26 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
     async append(sessionId: string, event: Omit<SessionEvent, 'seq'>): Promise<SessionEvent> {
       validateSessionId(sessionId);
 
-      // Get or create the chain for this session
+      // Get or create the chain for this session. Recover from a prior
+      // rejection (`.catch(() => {})`) before chaining so a single failed
+      // append doesn't permanently poison every subsequent append for the
+      // session — the failed append still rejects to ITS caller via
+      // `newChain` below, but the chain itself continues running.
       const currentChain = chains.get(sessionId) ?? Promise.resolve();
 
       let resultEvent: SessionEvent | undefined;
 
-      const newChain = currentChain.then(async () => {
+      const newChain = currentChain.catch(() => {}).then(async () => {
         // Create directory if needed
         await mkdir(dir, { recursive: true });
 
         // Initialize seq on first touch
         await initSeqIfNeeded(sessionId);
 
-        // Increment and assign seq
+        // Compute the next seq locally; only commit it to the map after the
+        // write succeeds, so a failed append leaves no trace in memory.
         const currentSeq = seqs.get(sessionId)!;
         const seq = currentSeq + 1;
-        seqs.set(sessionId, seq);
 
         // Build complete event (payload is plain JSON in the log; seroval wraps only the WIRE, not the store)
         resultEvent = {
@@ -79,6 +83,9 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
         // Write to file
         const filePath = `${dir}/${sessionId}.jsonl`;
         await appendFile(filePath, JSON.stringify(resultEvent) + '\n');
+
+        // Only advance the in-memory counter once the write is durable.
+        seqs.set(sessionId, seq);
       });
 
       chains.set(sessionId, newChain);
