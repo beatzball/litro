@@ -293,6 +293,126 @@ describe('runTurn', () => {
     expect(persisted).toEqual(emitted);
   });
 
+  it('async-generator tool returning a UIResult: ui event (not tool-result), model only sees data', async () => {
+    const secretHtml = '<template shadowrootmode="open"><x-a>secret-html-marker</x-a></template>';
+    const genUiTool = defineTool({
+      description: 'streams then returns a card',
+      input: textSchema,
+      async *execute() {
+        yield { step: 1 };
+        return { type: 'ui' as const, html: secretHtml, data: { ok: 1 } };
+      },
+    });
+    const requests: ProviderRequest[] = [];
+    const model = scriptedProvider((req, turn) => {
+      requests.push(req);
+      if (turn === 1) {
+        return [{ type: 'tool-call', id: 'call1', name: 'gen', input: { text: 'x' } }, { type: 'done' }];
+      }
+      return [{ type: 'text-delta', text: 'ok' }, { type: 'done' }];
+    });
+    const { deps, emitted, store, sessionId } = makeDeps({ model, tools: { gen: genUiTool } });
+
+    await runTurn(deps, 'show a card');
+
+    expect(emitted.map((e) => e.kind)).toEqual([
+      'message',
+      'tool-call',
+      'tool-progress',
+      'ui',
+      'text-delta',
+      'message',
+      'turn-end',
+    ]);
+    const uiEv = emitted[3]!;
+    expect(uiEv.payload).toEqual({ type: 'ui', html: secretHtml, data: { ok: 1 } });
+
+    for (const req of requests) {
+      for (const m of req.messages) {
+        expect(m.content).not.toContain('secret-html-marker');
+        expect(m.content).not.toContain('shadowroot');
+      }
+    }
+    const secondReq = requests[1]!;
+    const toolMsg = secondReq.messages.find((m) => m.role === 'tool');
+    expect(toolMsg?.content).toBe(JSON.stringify({ ok: 1 }));
+
+    const persisted = await persistedLog(store, sessionId);
+    expect(persisted).toEqual(emitted);
+  });
+
+  it('tool returning a nested UIResult (not top-level): tool error, html never leaks, turn completes', async () => {
+    const secretHtml = '<template shadowrootmode="open"><x-a>secret-html-marker</x-a></template>';
+    const nestedTool = defineTool({
+      description: 'returns a nested ui result',
+      input: textSchema,
+      async execute() {
+        return { card: { type: 'ui' as const, html: secretHtml, data: { ok: 1 } } };
+      },
+    });
+    const requests: ProviderRequest[] = [];
+    const model = scriptedProvider((req, turn) => {
+      requests.push(req);
+      if (turn === 1) {
+        return [{ type: 'tool-call', id: 'call1', name: 'nested', input: { text: 'x' } }, { type: 'done' }];
+      }
+      return [{ type: 'text-delta', text: 'ok' }, { type: 'done' }];
+    });
+    const { deps, emitted, store, sessionId } = makeDeps({ model, tools: { nested: nestedTool } });
+
+    await runTurn(deps, 'try nested');
+
+    expect(emitted.map((e) => e.kind)).toEqual([
+      'message',
+      'tool-call',
+      'tool-result',
+      'text-delta',
+      'message',
+      'turn-end',
+    ]);
+    const resultEv = emitted[2]!;
+    const payload = resultEv.payload as { error: { message: string } };
+    expect(payload.error.message).toMatch(/nested UIResult/);
+    expect(payload.error.message).toMatch(/directly/);
+
+    for (const req of requests) {
+      for (const m of req.messages) {
+        expect(m.content).not.toContain('secret-html-marker');
+        expect(m.content).not.toContain('shadowroot');
+      }
+    }
+    const secondReq = requests[1]!;
+    const toolMsg = secondReq.messages.find((m) => m.role === 'tool');
+    expect(toolMsg?.content).toBe(JSON.stringify({ error: { message: payload.error.message } }));
+
+    const persisted = await persistedLog(store, sessionId);
+    expect(persisted).toEqual(emitted);
+  });
+
+  it('multi-round narration: pre-tool-call text persists in the final assistant message', async () => {
+    const model = scriptedProvider((_req, turn) => {
+      if (turn === 1) {
+        return [
+          { type: 'text-delta', text: 'Checking...' },
+          { type: 'tool-call', id: 'call1', name: 'echo', input: { text: 'x' } },
+          { type: 'done' },
+        ];
+      }
+      return [{ type: 'text-delta', text: 'Here you go.' }, { type: 'done' }];
+    });
+    const { deps, emitted, store, sessionId } = makeDeps({ model, tools: { echo: echoTool() } });
+
+    await runTurn(deps, 'do the thing');
+
+    const messageEv = emitted.find(
+      (e) => e.kind === 'message' && (e.payload as { role: string }).role === 'assistant'
+    )!;
+    expect(messageEv.payload).toEqual({ role: 'assistant', text: 'Checking...\n\nHere you go.' });
+
+    const persisted = await persistedLog(store, sessionId);
+    expect(persisted).toEqual(emitted);
+  });
+
   it('maxToolRounds exhausted: stops calling the provider and appends a round-limit error', async () => {
     let calls = 0;
     const model = scriptedProvider(() => {

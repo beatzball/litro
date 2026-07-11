@@ -73,6 +73,55 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/** Cycle-safe, depth-capped (~8) walk over a plain object/array result
+ *  looking for a UIResult NESTED inside it (e.g. `{ card: await ui(...) }`).
+ *  Only descends into the *children* of `value` -- the caller is expected to
+ *  have already ruled out `value` itself being a top-level UIResult, since
+ *  that is handled (and allowed) separately. */
+function containsNestedUIResult(value: unknown, depth = 0, seen: Set<unknown> = new Set()): boolean {
+  if (depth > 8 || value === null || typeof value !== 'object') return false;
+  if (seen.has(value)) return false;
+  seen.add(value);
+
+  const children = Array.isArray(value) ? value : Object.values(value as Record<string, unknown>);
+  for (const child of children) {
+    if (isUIResult(child)) return true;
+    if (child !== null && typeof child === 'object' && containsNestedUIResult(child, depth + 1, seen)) return true;
+  }
+  return false;
+}
+
+/** Finalizes a tool's (non-progress) result: a direct UIResult, a plain
+ *  value with a UIResult nested somewhere inside it, or an ordinary value.
+ *  Persists the appropriate event and returns the string to feed back to
+ *  the provider. The html half of a UIResult -- wherever it appears in the
+ *  result shape -- never reaches that return value. */
+async function finalizeToolResult(deps: TurnDeps, toolName: string, result: unknown): Promise<string> {
+  if (isUIResult(result)) {
+    // The model must NEVER see `html` -- only `data` is fed back into the
+    // conversation. The full UIResult (html included) goes to the wire via
+    // the `ui` event, not into any ChatMessage.
+    await appendEmit(deps, 'ui', result);
+    const data = result.data ?? null;
+    return JSON.stringify(data);
+  }
+
+  if (containsNestedUIResult(result)) {
+    // A UIResult buried inside a plain object/array would otherwise be
+    // JSON.stringify'd whole (html included) into the provider's tool
+    // message. Reject loudly instead of leaking it -- this is a tool-author
+    // bug, not a session-ending error.
+    const message =
+      `Tool "${toolName}" returned a nested UIResult — return the UIResult directly from ` +
+      `execute() so its html stays out of the model channel.`;
+    await appendEmit(deps, 'tool-result', { error: { message } });
+    return JSON.stringify({ error: { message } });
+  }
+
+  await appendEmit(deps, 'tool-result', result);
+  return JSON.stringify(result);
+}
+
 /** Runs one tool call to completion: looks the tool up, validates input via
  *  its Standard Schema, executes it, persists the appropriate event(s), and
  *  returns the string to feed back to the provider as the `tool` message's
@@ -112,15 +161,6 @@ async function runToolCall(
     return JSON.stringify({ error: { message } });
   }
 
-  if (isUIResult(result)) {
-    // The model must NEVER see `html` -- only `data` is fed back into the
-    // conversation. The full UIResult (html included) goes to the wire via
-    // the `ui` event, not into any ChatMessage.
-    await appendEmit(deps, 'ui', result);
-    const data = result.data ?? null;
-    return JSON.stringify(data);
-  }
-
   if (isAsyncIterable(result)) {
     const iterator = result[Symbol.asyncIterator]();
     let final: unknown;
@@ -133,13 +173,10 @@ async function runToolCall(
       }
       await appendEmit(deps, 'tool-progress', next.value);
     }
-    const value = final ?? null;
-    await appendEmit(deps, 'tool-result', value);
-    return JSON.stringify(value);
+    return finalizeToolResult(deps, call.name, final ?? null);
   }
 
-  await appendEmit(deps, 'tool-result', result);
-  return JSON.stringify(result);
+  return finalizeToolResult(deps, call.name, result);
 }
 
 export async function runTurn(deps: TurnDeps, userText: string): Promise<void> {
@@ -156,6 +193,12 @@ export async function runTurn(deps: TurnDeps, userText: string): Promise<void> {
   // built up across this turn's rounds. Never persisted as `message`
   // events -- only the turn's final accumulated assistant text is (step 6).
   const turnMessages: ChatMessage[] = [];
+
+  // Each round's non-empty narration text (e.g. text emitted before a tool
+  // call), collected across every provider round in this turn so it isn't
+  // dropped from the durable assistant `message` -- only the LAST round's
+  // text would otherwise survive into future turns' reconstructed memory.
+  const roundTexts: string[] = [];
 
   let round = 0;
   for (;;) {
@@ -201,10 +244,13 @@ export async function runTurn(deps: TurnDeps, userText: string): Promise<void> {
       return;
     }
 
+    if (accumulatedText.length > 0) roundTexts.push(accumulatedText);
+
     if (toolCallParts.length === 0) {
       // Clean finish: no pending tool calls, stream ended -- persist the
-      // final assistant message and close the turn.
-      await appendEmit(deps, 'message', { role: 'assistant', text: accumulatedText });
+      // final assistant message (narration from EVERY round this turn,
+      // not just this last one) and close the turn.
+      await appendEmit(deps, 'message', { role: 'assistant', text: roundTexts.join('\n\n') });
       await appendEmit(deps, 'turn-end', null);
       return;
     }
