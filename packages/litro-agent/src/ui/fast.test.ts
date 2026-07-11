@@ -10,6 +10,10 @@ const { FASTElement, customElement, html: fastHtml } = await import('@microsoft/
 class SpikeCard extends FASTElement {}
 void SpikeCard;
 
+@customElement({ name: 'light-note', template: fastHtml`<p>light-note-content</p>`, shadowOptions: null })
+class LightNote extends FASTElement {}
+void LightNote;
+
 const { uiFast } = await import('./fast.js');
 
 describe('uiFast', () => {
@@ -22,5 +26,25 @@ describe('uiFast', () => {
 
   it('throws AgentError when the tag is not registered on the server', async () => {
     await expect(uiFast('<unregistered-tag></unregistered-tag>')).rejects.toThrow(/not registered/);
+  });
+
+  it('renders a registered light-DOM element (shadowOptions: null) without a false-positive guard trip', async () => {
+    const r = await uiFast('<light-note></light-note>');
+    expect(r.html).toContain('light-note-content');
+    expect(r.html).not.toContain('shadowrootmode');
+  });
+
+  it('throws naming the specific unregistered tag when nested among registered tags', async () => {
+    await expect(
+      uiFast('<div><spike-card></spike-card><nope-widget></nope-widget></div>'),
+    ).rejects.toThrow(/not registered/);
+    await expect(
+      uiFast('<div><spike-card></spike-card><nope-widget></nope-widget></div>'),
+    ).rejects.toThrow(/nope-widget/);
+  });
+
+  it('renders plain HTML with no custom elements without tripping the guard', async () => {
+    const r = await uiFast('<p>hi</p>');
+    expect(r.html).toContain('hi');
   });
 });
