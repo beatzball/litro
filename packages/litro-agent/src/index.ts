@@ -16,6 +16,10 @@ export type * from './sessions/types.js';
 export { AgentError };
 export type { AgentErrorPayload } from './errors.js';
 
+// Re-export UI types
+export type { UIResult } from './ui/index.js';
+export { isUIResult } from './ui/index.js';
+
 // Re-export framework types
 export type { StandardSchemaV1 } from '@beatzball/litro/actions';
 
