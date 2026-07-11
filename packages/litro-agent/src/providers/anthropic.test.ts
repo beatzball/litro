@@ -274,4 +274,155 @@ describe('anthropic provider', () => {
       content: [{ type: 'tool_result', tool_use_id: 'toolu_9', content: '72F sunny' }],
     });
   });
+
+  it('(g) truncated stream (no message_stop) still yields exactly one terminal done', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-test');
+    const { url, close } = await sseServer([
+      { event: 'message_start', data: { type: 'message_start', message: { usage: { input_tokens: 4 } } } },
+      { event: 'content_block_start', data: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+      { event: 'content_block_delta', data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'partial' } } },
+      // Server closes the connection here — no content_block_stop, no message_stop.
+    ]);
+    cleanup = close;
+
+    const provider = anthropic({ model: 'claude-opus-4-8', apiKey: 'sk-test', baseURL: url });
+    const events = await collect(provider.stream(baseReq));
+
+    expect(events).toEqual([
+      { type: 'text-delta', text: 'partial' },
+      { type: 'done', usage: { inputTokens: 4, outputTokens: undefined } },
+    ]);
+  });
+
+  it('(h) truncated stream with an open tool_use accumulator flushes the tool-call before done', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-test');
+    const { url, close } = await sseServer([
+      { event: 'message_start', data: { type: 'message_start', message: { usage: { input_tokens: 4 } } } },
+      {
+        event: 'content_block_start',
+        data: {
+          type: 'content_block_start',
+          index: 0,
+          content_block: { type: 'tool_use', id: 'toolu_trunc', name: 'get-weather', input: {} },
+        },
+      },
+      {
+        event: 'content_block_delta',
+        data: { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: '{"city":"NYC"}' } },
+      },
+      // Connection drops mid-block: no content_block_stop, no message_stop.
+    ]);
+    cleanup = close;
+
+    const provider = anthropic({ model: 'claude-opus-4-8', apiKey: 'sk-test', baseURL: url });
+    const events = await collect(provider.stream(baseReq));
+
+    expect(events).toEqual([
+      { type: 'tool-call', id: 'toolu_trunc', name: 'get-weather', input: { city: 'NYC' } },
+      { type: 'done', usage: { inputTokens: 4, outputTokens: undefined } },
+    ]);
+  });
+
+  it('(i) a multi-tool assistant turn merges consecutive tool-role messages into one user message', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-test');
+    const capture: { headers?: Record<string, unknown>; body?: string } = {};
+    const { url, close } = await sseServer(
+      [
+        { event: 'message_start', data: { type: 'message_start', message: { usage: { input_tokens: 1 } } } },
+        { event: 'message_delta', data: { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 1 } } },
+        { event: 'message_stop', data: { type: 'message_stop' } },
+      ],
+      200,
+      capture,
+    );
+    cleanup = close;
+
+    const req: ProviderRequest = {
+      system: 'sys',
+      messages: [
+        { role: 'user', content: "what's the weather and time" },
+        {
+          role: 'assistant',
+          content: 'checking both now',
+          toolCalls: [
+            { id: 'toolu_a', name: 'get-weather', input: { city: 'NYC' } },
+            { id: 'toolu_b', name: 'get-time', input: { city: 'NYC' } },
+          ],
+        },
+        { role: 'tool', content: '72F sunny', toolCallId: 'toolu_a' },
+        { role: 'tool', content: '3:00pm', toolCallId: 'toolu_b' },
+      ],
+      tools: [],
+    };
+
+    const provider = anthropic({ model: 'claude-opus-4-8', apiKey: 'sk-test', baseURL: url });
+    await collect(provider.stream(req));
+
+    const body = JSON.parse(capture.body!);
+    expect(body.messages).toHaveLength(3);
+
+    expect(body.messages[0]).toEqual({ role: 'user', content: "what's the weather and time" });
+    expect(body.messages[1].role).toBe('assistant');
+
+    // Both tool_result blocks land in ONE user message, in order.
+    expect(body.messages[2]).toEqual({
+      role: 'user',
+      content: [
+        { type: 'tool_result', tool_use_id: 'toolu_a', content: '72F sunny' },
+        { type: 'tool_result', tool_use_id: 'toolu_b', content: '3:00pm' },
+      ],
+    });
+
+    // Roles alternate throughout: user, assistant, user.
+    expect(body.messages.map((m: { role: string }) => m.role)).toEqual(['user', 'assistant', 'user']);
+  });
+
+  it('(j) two sequential tool_use blocks (index 1 and 2) in one stream produce two well-formed tool-call events', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'sk-test');
+    const { url, close } = await sseServer([
+      { event: 'message_start', data: { type: 'message_start', message: { usage: { input_tokens: 2 } } } },
+      { event: 'content_block_start', data: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+      { event: 'content_block_delta', data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'ok' } } },
+      { event: 'content_block_stop', data: { type: 'content_block_stop', index: 0 } },
+      {
+        event: 'content_block_start',
+        data: {
+          type: 'content_block_start',
+          index: 1,
+          content_block: { type: 'tool_use', id: 'toolu_first', name: 'get-weather', input: {} },
+        },
+      },
+      {
+        event: 'content_block_delta',
+        data: { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"city":"NYC"}' } },
+      },
+      { event: 'content_block_stop', data: { type: 'content_block_stop', index: 1 } },
+      {
+        event: 'content_block_start',
+        data: {
+          type: 'content_block_start',
+          index: 2,
+          content_block: { type: 'tool_use', id: 'toolu_second', name: 'get-time', input: {} },
+        },
+      },
+      {
+        event: 'content_block_delta',
+        data: { type: 'content_block_delta', index: 2, delta: { type: 'input_json_delta', partial_json: '{"city":"LA"}' } },
+      },
+      { event: 'content_block_stop', data: { type: 'content_block_stop', index: 2 } },
+      { event: 'message_delta', data: { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 6 } } },
+      { event: 'message_stop', data: { type: 'message_stop' } },
+    ]);
+    cleanup = close;
+
+    const provider = anthropic({ model: 'claude-opus-4-8', apiKey: 'sk-test', baseURL: url });
+    const events = await collect(provider.stream(baseReq));
+
+    expect(events).toEqual([
+      { type: 'text-delta', text: 'ok' },
+      { type: 'tool-call', id: 'toolu_first', name: 'get-weather', input: { city: 'NYC' } },
+      { type: 'tool-call', id: 'toolu_second', name: 'get-time', input: { city: 'LA' } },
+      { type: 'done', usage: { inputTokens: 2, outputTokens: 6 } },
+    ]);
+  });
 });

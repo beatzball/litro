@@ -59,7 +59,31 @@ interface ToolCallAccumulator {
 }
 
 function toWireMessages(messages: ChatMessage[]): unknown[] {
-  return messages.map(toWireMessage);
+  // The Messages API requires strict user/assistant alternation, and expects
+  // all tool_result blocks belonging to one assistant turn to arrive in a
+  // SINGLE immediately-following user message. A run of consecutive
+  // `tool`-role ChatMessages (e.g. an assistant turn with multiple tool
+  // calls) must therefore be merged into one wire user message, not emitted
+  // as one user message per tool result — the latter produces consecutive
+  // top-level user messages, which the API rejects.
+  const out: unknown[] = [];
+  let i = 0;
+  while (i < messages.length) {
+    const m = messages[i];
+    if (m.role === 'tool') {
+      const content: unknown[] = [];
+      while (i < messages.length && messages[i].role === 'tool') {
+        const tm = messages[i];
+        content.push({ type: 'tool_result', tool_use_id: tm.toolCallId, content: tm.content });
+        i++;
+      }
+      out.push({ role: 'user', content });
+      continue;
+    }
+    out.push(toWireMessage(m));
+    i++;
+  }
+  return out;
 }
 
 function toWireMessage(m: ChatMessage): unknown {
@@ -70,16 +94,6 @@ function toWireMessage(m: ChatMessage): unknown {
       content.push({ type: 'tool_use', id: tc.id, name: tc.name, input: tc.input });
     }
     return { role: 'assistant', content };
-  }
-  if (m.role === 'tool') {
-    // Each tool result is sent as its own user message. Consecutive tool
-    // results could instead be merged into a single user message (both are
-    // valid per the API) — kept as separate messages here for simplicity;
-    // merging is the more API-faithful option if this needs revisiting.
-    return {
-      role: 'user',
-      content: [{ type: 'tool_result', tool_use_id: m.toolCallId, content: m.content }],
-    };
   }
   return { role: m.role, content: m.content };
 }
@@ -167,8 +181,27 @@ export function anthropic(opts: AnthropicOptions): Provider {
 
       let inputTokens: number | undefined;
       let outputTokens: number | undefined;
-      let toolAccumulator: ToolCallAccumulator | undefined;
+      // Keyed by the frame's content-block `index`. Anthropic content blocks
+      // don't interleave today, but keying defensively (matching the
+      // sibling openai-compatible adapter's pattern) avoids silent
+      // corruption if that ever changes.
+      const toolAccumulators = new Map<number, ToolCallAccumulator>();
       let currentEvent = '';
+      let doneEmitted = false;
+
+      function* flushToolCall(acc: ToolCallAccumulator): Generator<ProviderEvent, void, undefined> {
+        try {
+          const input = JSON.parse(acc.input || '{}');
+          yield { type: 'tool-call', id: acc.id, name: acc.name, input };
+        } catch (err) {
+          yield {
+            type: 'provider-error',
+            message: `anthropic provider: failed to parse tool input for "${acc.name}": ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          };
+        }
+      }
 
       for await (const line of readLines(res.body)) {
         if (line.startsWith('event: ')) {
@@ -194,11 +227,11 @@ export function anthropic(opts: AnthropicOptions): Provider {
           }
           case 'content_block_start': {
             if (frame.content_block?.type === 'tool_use') {
-              toolAccumulator = {
+              toolAccumulators.set(frame.index ?? 0, {
                 id: frame.content_block.id ?? '',
                 name: frame.content_block.name ?? '',
                 input: '',
-              };
+              });
             }
             break;
           }
@@ -206,25 +239,18 @@ export function anthropic(opts: AnthropicOptions): Provider {
             const delta = frame.delta as WireDelta | undefined;
             if (delta?.type === 'text_delta' && delta.text) {
               yield { type: 'text-delta', text: delta.text };
-            } else if (delta?.type === 'input_json_delta' && toolAccumulator) {
-              toolAccumulator.input += delta.partial_json ?? '';
+            } else if (delta?.type === 'input_json_delta') {
+              const acc = toolAccumulators.get(frame.index ?? 0);
+              if (acc) acc.input += delta.partial_json ?? '';
             }
             break;
           }
           case 'content_block_stop': {
-            if (toolAccumulator) {
-              try {
-                const input = JSON.parse(toolAccumulator.input || '{}');
-                yield { type: 'tool-call', id: toolAccumulator.id, name: toolAccumulator.name, input };
-              } catch (err) {
-                yield {
-                  type: 'provider-error',
-                  message: `anthropic provider: failed to parse tool input for "${toolAccumulator.name}": ${
-                    err instanceof Error ? err.message : String(err)
-                  }`,
-                };
-              }
-              toolAccumulator = undefined;
+            const index = frame.index ?? 0;
+            const acc = toolAccumulators.get(index);
+            if (acc) {
+              yield* flushToolCall(acc);
+              toolAccumulators.delete(index);
             }
             break;
           }
@@ -235,6 +261,7 @@ export function anthropic(opts: AnthropicOptions): Provider {
           case 'message_stop': {
             const usage =
               inputTokens !== undefined || outputTokens !== undefined ? { inputTokens, outputTokens } : undefined;
+            doneEmitted = true;
             yield usage ? { type: 'done', usage } : { type: 'done' };
             return;
           }
@@ -248,6 +275,23 @@ export function anthropic(opts: AnthropicOptions): Provider {
           default:
             break;
         }
+      }
+
+      // Stream ended without a terminal `message_stop` frame — e.g. a
+      // connection drop, the normal failure mode for a network stream. The
+      // Provider contract requires exactly one terminal `done` on every
+      // non-error path, so emit it here. Flush any content block left open
+      // by the truncation first (its `content_block_stop` never arrived),
+      // in ascending index order.
+      if (!doneEmitted) {
+        for (const index of [...toolAccumulators.keys()].sort((a, b) => a - b)) {
+          const acc = toolAccumulators.get(index);
+          if (acc) yield* flushToolCall(acc);
+        }
+        toolAccumulators.clear();
+        const usage =
+          inputTokens !== undefined || outputTokens !== undefined ? { inputTokens, outputTokens } : undefined;
+        yield usage ? { type: 'done', usage } : { type: 'done' };
       }
     },
   };
