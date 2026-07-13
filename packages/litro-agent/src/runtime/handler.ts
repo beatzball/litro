@@ -135,31 +135,75 @@ function checkGates(event: H3Event, method: string): void {
 // shared in both `litro dev` and production builds -- spike Q3, design spec
 // section 10). Keyed `${agentName}/${sessionId}`.
 const locks = new Set<string>();
-const broadcastRegistry = new Map<string, Set<(ev: SessionEvent) => void>>();
 
-function subscribe(key: string, fn: (ev: SessionEvent) => void): void {
+/** A live-tailing GET registers one of these per broadcast key. `onEvent`
+ *  is the normal per-event forward; `onClose` is the TERMINAL close signal
+ *  (Finding 1) -- invoked once, from `closeTails()`, when the POST side is
+ *  done for good (success, thrown error, or a dead turn) regardless of
+ *  whether a `turn-end` event was ever appended. It is transport-level
+ *  cleanup (encoder.done() + controller.close() + unsubscribe) and MUST be
+ *  idempotent: a subscriber that already closed itself on `turn-end` sees
+ *  a no-op call here. */
+interface Subscriber {
+  onEvent: (ev: SessionEvent) => void;
+  onClose: () => void;
+}
+const broadcastRegistry = new Map<string, Set<Subscriber>>();
+
+function subscribe(key: string, sub: Subscriber): void {
   let subs = broadcastRegistry.get(key);
   if (!subs) {
     subs = new Set();
     broadcastRegistry.set(key, subs);
   }
-  subs.add(fn);
+  subs.add(sub);
 }
 
-function unsubscribe(key: string, fn: (ev: SessionEvent) => void): void {
+function unsubscribe(key: string, sub: Subscriber): void {
   const subs = broadcastRegistry.get(key);
   if (!subs) return;
-  subs.delete(fn);
+  subs.delete(sub);
   if (subs.size === 0) broadcastRegistry.delete(key);
 }
 
 function broadcast(key: string, ev: SessionEvent): void {
   const subs = broadcastRegistry.get(key);
   if (!subs) return;
-  // Iterate a snapshot -- a subscriber's own callback (e.g. `finish()`
-  // unsubscribing itself on turn-end) mutating `subs` mid-iteration is safe
-  // either way, but this makes the safety explicit.
-  for (const fn of [...subs]) fn(ev);
+  // Iterate a snapshot -- a subscriber's own callback (e.g. unsubscribing
+  // itself on turn-end) mutating `subs` mid-iteration is safe either way,
+  // but this makes the safety explicit.
+  for (const sub of [...subs]) {
+    // Finding 2: isolate subscribers from each other. A throwing onEvent
+    // must never propagate into the POST owner's emit path -- drop the
+    // offending subscriber instead.
+    try {
+      sub.onEvent(ev);
+    } catch {
+      unsubscribe(key, sub);
+    }
+  }
+}
+
+/** Finding 1: terminal close signal for every live tail on `key`, called
+ *  unconditionally from `handlePost`'s `finally` once the turn is over (by
+ *  any path -- normal completion, thrown error, or a dead turn that never
+ *  produced a `turn-end` event). Does NOT touch the store or the broadcast
+ *  channel itself -- it only tells subscribers "stop waiting", so the
+ *  session log stays a truthful record of what actually happened. */
+function closeTails(key: string): void {
+  const subs = broadcastRegistry.get(key);
+  if (!subs) return;
+  for (const sub of [...subs]) {
+    // Finding 2: isolate here too -- a throwing onClose must not stop the
+    // rest of the tails from being closed. Force the unsubscribe below
+    // regardless, so a failing subscriber can't wedge the registry.
+    try {
+      sub.onClose();
+    } catch {
+      // dropped
+    }
+    unsubscribe(key, sub);
+  }
 }
 
 async function handlePost(
@@ -189,12 +233,38 @@ async function handlePost(
   const encoder = createStreamEncoder();
   const textEncoder = new TextEncoder();
 
+  // Durability contract (Finding 3): a POST client disconnecting mid-turn
+  // must NOT abort the turn. `clientGone` flips true the moment writing to
+  // this controller fails (or the platform calls `cancel()`); from then on
+  // `emit` SKIPS enqueueing to this dead response stream but still appends
+  // to the store and broadcasts to any live tails -- the turn always runs
+  // to completion, the persisted log stays complete, and a reconnecting
+  // client (or a fresh GET) replays everything via `?from=`.
+  let clientGone = false;
+
   return new ReadableStream<Uint8Array>({
     start(controller) {
+      const tryEnqueue = (bytes: Uint8Array): void => {
+        if (clientGone) return;
+        try {
+          controller.enqueue(bytes);
+        } catch {
+          clientGone = true;
+        }
+      };
+      const tryClose = (): void => {
+        if (clientGone) return;
+        try {
+          controller.close();
+        } catch {
+          clientGone = true;
+        }
+      };
+
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       (async () => {
         const emit = (ev: SessionEvent): void => {
-          controller.enqueue(textEncoder.encode(encoder.value(ev)));
+          tryEnqueue(textEncoder.encode(encoder.value(ev)));
           broadcast(key, ev);
         };
         const deps: TurnDeps = {
@@ -206,17 +276,27 @@ async function handlePost(
         };
         try {
           await runTurn(deps, text);
-          controller.enqueue(textEncoder.encode(encoder.done()));
-          controller.close();
+          tryEnqueue(textEncoder.encode(encoder.done()));
+          tryClose();
         } catch (err) {
-          controller.enqueue(textEncoder.encode(encoder.error(errorPayload(err, isDev()))));
-          controller.close();
+          tryEnqueue(textEncoder.encode(encoder.error(errorPayload(err, isDev()))));
+          tryClose();
         } finally {
           // Release the lock on EVERY path (success, thrown error) before
           // anything else -- a leaked lock would wedge the session forever.
           locks.delete(key);
+          // Finding 1: unconditionally close every live tail on this key
+          // now that the turn is over, whether or not it ever produced a
+          // `turn-end` event (a dead turn -- store rejection, a throwing
+          // provider generator -- must not leave GETs hanging forever).
+          closeTails(key);
         }
       })();
+    },
+    cancel() {
+      // Client disconnected: stop trying to write to this stream, but the
+      // turn above keeps running -- see the durability contract above.
+      clientGone = true;
     },
   });
 }
@@ -250,6 +330,11 @@ function handleGet(
   // disconnect) can always unhook it -- set/cleared in lockstep with every
   // subscribe()/unsubscribe() call below.
   let activeUnsub: (() => void) | undefined;
+  // Guards every controller write below: flips true the moment this stream
+  // is done, by whichever path gets there first (normal turn-end, the
+  // terminal `closeTails()` signal from Finding 1, an error, or the client
+  // disconnecting) so no path double-closes or writes-after-close.
+  let closed = false;
 
   return new ReadableStream<Uint8Array>({
     start(controller) {
@@ -258,6 +343,13 @@ function handleGet(
         let lastSeq = from - 1;
         let sawTurnEnd = false;
 
+        const finish = (): void => {
+          if (closed) return;
+          closed = true;
+          controller.enqueue(textEncoder.encode(encoder.done()));
+          controller.close();
+        };
+
         try {
           // Ordering: subscribe to the broadcast BEFORE replaying the store,
           // if a turn might be in flight. `onEvent` only BUFFERS while we
@@ -265,31 +357,38 @@ function handleGet(
           // event that lands mid-replay is never lost in the gap between
           // "replay finished reading the store" and "we started listening".
           // The buffer is drained (deduped by seq against what replay
-          // already sent) right after replay completes, below.
+          // already sent) right after replay completes, below. `onClose` is
+          // wired to `finish()` too, so a POST that dies (Finding 1) during
+          // this brief window still terminates the stream instead of
+          // hanging in the buffered-drain/live-forward code below.
           const held = locks.has(key);
           const buffered: SessionEvent[] = [];
-          const onEvent = (ev: SessionEvent): void => {
-            buffered.push(ev);
+          const bufferSub: Subscriber = {
+            onEvent: (ev) => {
+              buffered.push(ev);
+            },
+            onClose: finish,
           };
           if (held) {
-            subscribe(key, onEvent);
-            activeUnsub = () => unsubscribe(key, onEvent);
+            subscribe(key, bufferSub);
+            activeUnsub = () => unsubscribe(key, bufferSub);
           }
 
           for await (const ev of store.read(sessionId, from)) {
+            if (closed) return;
             controller.enqueue(textEncoder.encode(encoder.value(ev)));
             lastSeq = ev.seq;
             if (ev.kind === 'turn-end') sawTurnEnd = true;
           }
 
           if (!held) {
-            controller.enqueue(textEncoder.encode(encoder.done()));
-            controller.close();
+            finish();
             return;
           }
 
           if (!sawTurnEnd) {
             for (const ev of buffered) {
+              if (closed) return;
               if (ev.seq <= lastSeq) continue; // already sent by replay
               controller.enqueue(textEncoder.encode(encoder.value(ev)));
               lastSeq = ev.seq;
@@ -299,45 +398,62 @@ function handleGet(
           // Synchronous swap, no await in between -- nothing can broadcast
           // into the gap between unsubscribing the buffering listener and
           // subscribing the live-forwarding one below.
-          unsubscribe(key, onEvent);
+          unsubscribe(key, bufferSub);
           activeUnsub = undefined;
 
+          if (closed) return;
+
           if (sawTurnEnd) {
-            controller.enqueue(textEncoder.encode(encoder.done()));
-            controller.close();
+            finish();
             return;
           }
 
-          // Still live: forward new events straight through until turn-end.
+          // Still live: forward new events straight through until turn-end
+          // -- or until `onClose` fires (Finding 1: the turn died without
+          // ever producing one, e.g. a store rejection or a throwing
+          // provider generator). Either path resolves the wait and tears
+          // down the subscription exactly once.
           await new Promise<void>((resolveWait) => {
-            const forward = (ev: SessionEvent): void => {
-              if (ev.seq <= lastSeq) return;
-              lastSeq = ev.seq;
-              controller.enqueue(textEncoder.encode(encoder.value(ev)));
-              if (ev.kind === 'turn-end') {
-                unsubscribe(key, forward);
+            const forwardSub: Subscriber = {
+              onEvent: (ev) => {
+                if (ev.seq <= lastSeq) return;
+                lastSeq = ev.seq;
+                controller.enqueue(textEncoder.encode(encoder.value(ev)));
+                if (ev.kind === 'turn-end') {
+                  unsubscribe(key, forwardSub);
+                  activeUnsub = undefined;
+                  finish();
+                  resolveWait();
+                }
+              },
+              onClose: () => {
+                unsubscribe(key, forwardSub);
                 activeUnsub = undefined;
-                controller.enqueue(textEncoder.encode(encoder.done()));
-                controller.close();
+                finish();
                 resolveWait();
-              }
+              },
             };
-            subscribe(key, forward);
-            activeUnsub = () => unsubscribe(key, forward);
+            subscribe(key, forwardSub);
+            activeUnsub = () => unsubscribe(key, forwardSub);
           });
         } catch (err) {
           activeUnsub?.();
           activeUnsub = undefined;
-          controller.enqueue(textEncoder.encode(encoder.error(errorPayload(err, isDev()))));
-          controller.close();
+          if (!closed) {
+            closed = true;
+            controller.enqueue(textEncoder.encode(encoder.error(errorPayload(err, isDev()))));
+            controller.close();
+          }
         }
       })();
     },
     cancel() {
       // Client disconnected mid-tail: unsubscribe so the broadcast registry
-      // doesn't accumulate dead listeners.
+      // doesn't accumulate dead listeners, and stop any further writes to
+      // this now-gone controller.
       activeUnsub?.();
       activeUnsub = undefined;
+      closed = true;
     },
   });
 }

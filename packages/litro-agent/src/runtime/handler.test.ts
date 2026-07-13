@@ -4,13 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'pathe';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { createApp, createRouter, toNodeListener, createError } from 'h3';
+import { createApp, createRouter, toNodeListener, toWebHandler, createError } from 'h3';
 import { createAgentHandler, type AgentManifestEntry } from './handler.js';
 import { scriptedProvider } from '../providers/scripted.js';
 import { fileSessionStore } from '../sessions/file.js';
 import { defineAgent, defineAccess } from '../index.js';
 import { serializeValue, createStreamDecoder, type StreamChunk } from '@beatzball/litro/stream';
-import type { SessionEvent } from '../sessions/types.js';
+import type { SessionEvent, SessionStore } from '../sessions/types.js';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -238,5 +238,146 @@ describe('createAgentHandler -- GET reconnect tail', () => {
     const postRes = await postPromise;
     const postChunks = await readLines(postRes);
     expect(valueKinds(postChunks)).toEqual(['message', 'text-delta', 'text-delta', 'message', 'turn-end']);
+  });
+});
+
+describe('createAgentHandler -- resilience', () => {
+  it(
+    'a live-tailing GET terminates cleanly when the turn dies without ever producing turn-end',
+    async () => {
+      // A store that wraps a real fileSessionStore but rejects its 3rd
+      // append() call -- the 2nd scripted text-delta ("second"), which lands
+      // after the slow agent's 200ms mid-turn delay. This kills runTurn
+      // (append rejection propagates out of appendEmit) with no turn-end
+      // ever appended. Before the Finding 1 fix, `forward` in handleGet only
+      // unblocks on a broadcast turn-end, so a GET that was live-tailing
+      // would hang forever; `closeTails()` in handlePost's finally must
+      // terminate it regardless.
+      const flakyDir = await mkdtemp(join(tmpdir(), 'litro-agent-handler-flaky-'));
+      const baseStore = fileSessionStore({ dir: flakyDir });
+      let calls = 0;
+      const flakyStore: SessionStore = {
+        async append(sessionId, event) {
+          calls += 1;
+          if (calls === 3) throw new Error('simulated store failure');
+          return baseStore.append(sessionId, event);
+        },
+        read(sessionId, fromSeq) {
+          return baseStore.read(sessionId, fromSeq);
+        },
+      };
+
+      const flakyEntries: AgentManifestEntry[] = [
+        { name: 'slow', module: { default: slowAgent }, instructions: '', tools: [] },
+      ];
+      const handler = createAgentHandler(flakyEntries, { sessions: flakyStore });
+      const app = createApp();
+      const router = createRouter();
+      router.post('/__litro/agent/:agent/:session', handler);
+      router.get('/__litro/agent/:agent/:session', handler);
+      app.use(router);
+      const flakyServer = createServer(toNodeListener(app));
+      await new Promise<void>((resolve) => flakyServer.listen(0, resolve));
+      const flakyBase = `http://127.0.0.1:${(flakyServer.address() as AddressInfo).port}`;
+
+      try {
+        const postPromise = fetch(`${flakyBase}/__litro/agent/slow/f1`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-litro-agent': '1' },
+          body: serializeValue({ text: 'go' }),
+        });
+        await sleep(30); // let the POST acquire the lock and emit the first text-delta
+
+        const getPromise = fetch(`${flakyBase}/__litro/agent/slow/f1?from=0`);
+
+        let timer: ReturnType<typeof setTimeout>;
+        const timeout = new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error('GET hung: no closeTails termination within 2s')), 2000);
+        });
+        const getRes = await Promise.race([getPromise, timeout]);
+        clearTimeout(timer!);
+
+        expect(getRes.status).toBe(200);
+        await getRes.text(); // must resolve -- stream actually closed, not just headers
+
+        const postRes = await postPromise;
+        expect(postRes.status).toBe(200); // ndjson 200 with an error frame in-body, not an HTTP error
+        await postRes.text();
+      } finally {
+        await new Promise<void>((resolve, reject) => flakyServer.close((e) => (e ? reject(e) : resolve())));
+        await rm(flakyDir, { recursive: true, force: true });
+      }
+    },
+    5000,
+  );
+
+  it('a POST client disconnect mid-turn does not abort the turn -- log completes, lock releases', async () => {
+    // Node's http server + h3's `sendStream` pipes our returned
+    // ReadableStream via `pipeTo` without ever wiring the destination
+    // socket's 'close' event back to our stream's `cancel()` (verified by
+    // spiking it directly) -- so a real over-the-wire `fetch` abort against
+    // the `createServer`/`toNodeListener` harness above is a no-op and
+    // can't exercise this path at all. `h3`'s `toWebHandler`, by contrast,
+    // hands back OUR OWN ReadableStream as the Response body untouched
+    // (no Node bridging in between), so calling `reader.cancel()` on it
+    // invokes our stream's `cancel()` underlying-source hook exactly the
+    // way a real disconnect does on any platform that respects the WHATWG
+    // streams contract (browsers, edge runtimes, and -- per Finding 3 --
+    // is exactly what our `clientGone` handling must survive).
+    const discDir = await mkdtemp(join(tmpdir(), 'litro-agent-handler-disconnect-'));
+    try {
+      const discEntries: AgentManifestEntry[] = [
+        { name: 'slow', module: { default: slowAgent }, instructions: '', tools: [] },
+      ];
+      const discHandler = createAgentHandler(discEntries, { sessions: fileSessionStore({ dir: discDir }) });
+      const discApp = createApp();
+      const discRouter = createRouter();
+      discRouter.post('/__litro/agent/:agent/:session', discHandler);
+      discRouter.get('/__litro/agent/:agent/:session', discHandler);
+      discApp.use(discRouter);
+      const webHandler = toWebHandler(discApp);
+
+      const postRes = await webHandler(
+        new Request('http://localhost/__litro/agent/slow/s7', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-litro-agent': '1' },
+          body: serializeValue({ text: 'go' }),
+        }),
+      );
+      expect(postRes.status).toBe(200);
+
+      const reader = postRes.body!.getReader();
+      await reader.read(); // first event (message: user) has streamed
+      await reader.cancel('client disconnected'); // the disconnect signal
+
+      // Let the turn run to completion server-side despite the disconnect
+      // (200ms scripted delay + margin).
+      await sleep(400);
+
+      const getRes = await webHandler(new Request('http://localhost/__litro/agent/slow/s7?from=0'));
+      expect(getRes.status).toBe(200);
+      const getText = await getRes.text();
+      const dec = createStreamDecoder();
+      const chunks = getText
+        .split('\n')
+        .filter((l) => l.length > 0)
+        .map(dec);
+      expect(valueKinds(chunks)).toEqual(['message', 'text-delta', 'text-delta', 'message', 'turn-end']);
+      expect(chunks[chunks.length - 1]).toEqual({ kind: 'done' });
+
+      // Lock released in `finally` regardless of the disconnect -- a
+      // subsequent POST for the same session succeeds, not 409.
+      const nextRes = await webHandler(
+        new Request('http://localhost/__litro/agent/slow/s7', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-litro-agent': '1' },
+          body: serializeValue({ text: 'again' }),
+        }),
+      );
+      expect(nextRes.status).toBe(200);
+      await nextRes.text();
+    } finally {
+      await rm(discDir, { recursive: true, force: true });
+    }
   });
 });
