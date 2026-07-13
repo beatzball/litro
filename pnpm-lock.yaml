@@ -466,6 +466,9 @@ importers:
       '@beatzball/litro':
         specifier: workspace:^
         version: link:../framework
+      fast-glob:
+        specifier: ^3.3.3
+        version: 3.3.3
       h3:
         specifier: ^1.15.6
         version: 1.15.9
