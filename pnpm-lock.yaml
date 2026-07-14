@@ -518,6 +518,9 @@ importers:
       '@beatzball/litro':
         specifier: workspace:*
         version: link:../packages/framework
+      '@beatzball/litro-agent':
+        specifier: workspace:^
+        version: link:../packages/litro-agent
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
