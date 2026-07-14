@@ -109,7 +109,15 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function* sendStream(url: string, text: string): AsyncGenerator<SessionEvent, void, undefined> {
+// Named `postTurnStream`, not `sendStream` -- this file is browser code, but
+// it also ends up in Nitro's SERVER bundle (pages that import from
+// '@beatzball/litro-agent/client' are SSR'd, pulling this module in too).
+// Nitro auto-imports h3's `sendStream` utility project-wide (unimport); its
+// scanner doesn't recognize an `async function*` declaration as already
+// bound and injects `import { sendStream } from 'h3'` into this file,
+// colliding with a same-named local declaration -- "the symbol sendStream
+// has already been declared". Avoid the auto-import name entirely.
+async function* postTurnStream(url: string, text: string): AsyncGenerator<SessionEvent, void, undefined> {
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -164,7 +172,7 @@ export function agentSession(agent: string, sessionId: string, opts: { base?: st
 
   return {
     send(text: string): AsyncIterable<SessionEvent> {
-      return sendStream(url, text);
+      return postTurnStream(url, text);
     },
     resume(fromSeq = 0): AsyncIterable<SessionEvent> {
       return resumeStream(url, fromSeq);
