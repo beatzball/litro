@@ -105,7 +105,7 @@ The scanner globs `agents/*/agent.ts`. A tool's name is its filename without ext
 
 ## defineAgent and defineAccess
 
-`agent.ts` default-exports a `defineAgent` call. `model` is a provider; `instructions` is either a relative path the build inlines (`'./instructions.md'`) or a literal string; `tools` is optional and merges with the scanner-discovered `tools/` directory.
+`agent.ts` default-exports a `defineAgent` call. `model` is a provider; `instructions` is either a relative path the build inlines (`'./instructions.md'`) or a literal string. Tools are discovered from the agent's `tools/` directory only (filename = tool name) — there is no explicit `tools` array on `defineAgent`; passing a non-empty one throws a "deferred" error at definition time.
 
 ```ts
 import { defineAgent, defineAccess } from '@beatzball/litro-agent';
@@ -124,7 +124,7 @@ export const access = defineAccess((event) => {
 
 `access` is an optional named export. It runs on every request to the agent — both POST and GET — after the CSRF gate stack and before the turn. It receives the live `H3Event`; throw an h3 `createError` to reject. That error propagates unmodified (the runtime only reshapes its own `AgentError` instances), so the status code you choose is the status the client sees.
 
-The `skills`, `extends`, `mcp`, and `subagents` config keys are reserved and typed, but a non-empty value for any of them throws a "deferred past v0" error at definition time. They exist so the deferred features (see [Limitations](#limitations)) can land without a breaking change.
+The `tools`, `skills`, `extends`, `mcp`, and `subagents` config keys are reserved and typed, but a non-empty value for any of them throws a "deferred past v0" error at definition time. They exist so the deferred features (see [Limitations](#limitations)) can land without a breaking change.
 
 ## Tools
 
@@ -195,7 +195,7 @@ interface UIResult {
 Per-adapter notes:
 
 - **Lit** (`LITRO_ADAPTER=lit`, the default): pass a Lit `html` `TemplateResult`. Property bindings (`.city=${city}`) render through `@lit-labs/ssr` to Declarative Shadow DOM.
-- **FAST** (`LITRO_ADAPTER=fast`): pass an HTML **string** template with **kebab-case attributes** (HTML parsers lowercase attribute names). `@microsoft/fast-ssr` renders it to DSD.
+- **FAST** (`LITRO_ADAPTER=fast`): pass an HTML **string** template with **kebab-case attributes** (HTML parsers lowercase attribute names). `@microsoft/fast-ssr` renders it to DSD. Unlike the Lit tagged-template path, which escapes interpolations through typed bindings, this FAST string template is **not** auto-escaped — never interpolate untrusted or model-supplied strings directly into it; pass them as attribute values that the component renders through its own typed properties.
 
 In both cases **the component must be registered server-side before `ui()` renders it** — import the component module (and reference an export, as with `void DemoWeatherCard` above, so Rollup does not tree-shake the side-effect-only import) so its `@customElement` definition runs. The FAST renderer additionally guards this explicitly: an unregistered tag would otherwise silently round-trip as a plain, unrendered element, so it throws instead.
 
@@ -302,7 +302,7 @@ Any gate failure returns 403. Beyond the gates:
 - **Session privacy is the guard's job.** A session is only as private as the `access` guard makes it. There is no built-in ownership check; if a session must belong to a user, enforce it in `access`.
 - **`UIResult.html` renders only from typed template bindings.** Never `unsafeHTML` a model- or user-supplied string. The loop never feeds HTML to the provider.
 - **`.litro/` is sensitive.** Session files contain conversation data — gitignore the directory and treat it as private.
-- **No internals in production.** Error payloads follow the actions dev-only-stack rule; stacks and internal messages are stripped in production.
+- **Only stacks are dev-only.** Error payloads follow the actions dev-only-stack rule: `stack` is stripped when not in dev, but `name` and `message` are always sent — an uncaught, non-`AgentError` throw's raw message reaches the client even in production. Throw `AgentError` with a curated message for anything user-facing; don't rely on production hiding a raw throw's message.
 
 ## Limitations
 

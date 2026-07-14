@@ -39,6 +39,20 @@ describe('defineAgent', () => {
     expect(() => defineAgent({ model, instructions: 'x', skills: [{}] } as never)).toThrow(/deferred/i);
     expect(() => defineAgent({ model, instructions: 'x', mcp: [{}] } as never)).toThrow(/deferred/i);
   });
+
+  it('rejects a non-empty explicit "tools" array as deferred', () => {
+    expect(() =>
+      defineAgent({ model, instructions: 'x', tools: [{}] } as never)
+    ).toThrow(/deferred/i);
+    expect(() =>
+      defineAgent({ model, instructions: 'x', tools: [{}] } as never)
+    ).toThrow(/tools\/ directory/);
+  });
+
+  it('accepts an agent with no explicit tools (tools/ discovery only)', () => {
+    expect(() => defineAgent({ model, instructions: 'x' })).not.toThrow();
+    expect(() => defineAgent({ model, instructions: 'x', tools: [] })).not.toThrow();
+  });
 });
 
 describe('defineAccess / defineAgentConfig', () => {

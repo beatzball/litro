@@ -119,14 +119,13 @@ agents/
 export default defineAgent({
   model: openaiCompatible({ baseURL: process.env.LLM_URL, model: 'qwen3' }),
   instructions: './instructions.md',   // build-time inlined; a literal string also accepted
-  tools: [getWeather],                 // optional; scanner-discovered tools merge in
 });
 export const access = defineAccess((event) => {
   if (!event.context.user) throw createError({ statusCode: 401 });
 });
 ```
 
-Explicit `tools` and scanner-discovered `tools/` merge (explicit wins on name conflict) — filesystem-first with an explicit escape hatch. `skills`/`extends`/`mcp`/`subagents` are reserved config keys, typed but rejected at runtime in v0 with a "deferred" error message.
+In v0, tools are discovered from the `tools/` directory only — there is no explicit `tools` array on `defineAgent`. `tools`, `skills`, `extends`, `mcp`, and `subagents` are reserved config keys, typed but rejected at runtime in v0 with a "deferred" error message.
 
 ### 5.2 `defineTool`
 
@@ -307,3 +306,4 @@ Deltas discovered while implementing Tasks 1–16; each stands as a one-line cor
 - The playground demo's scripted provider branches on the request shape (the last message's role — `user` vs `tool`) rather than the per-instance turn counter, so the weather/UI path is deterministic on every session, not just the first the process sees.
 - Durability is realized as specified: a POST client disconnecting mid-turn flips a `clientGone` flag that skips writes to the dead response stream while the turn keeps appending to the store and broadcasting to live tails, so the persisted log always completes and a reconnecting client replays via `?from=`.
 - The FAST UI renderer's component DOM-shim/registration imports carry an intra-file import-ordering requirement (the `ssr-init` install must resolve before a tag's registration is checked), documented at its call site.
+- Explicit `defineAgent({ tools })` is rejected in v0 (deferred) rather than merged — tool names derive from filenames, which an explicitly-passed ToolDefinition lacks; tools are discovered from the tools/ directory.

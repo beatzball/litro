@@ -73,12 +73,12 @@ function buildAgent(entry: AgentManifestEntry): ResolvedAgent {
   const config = def[AGENT_CONFIG] as AgentConfig;
   const access = entry.module.access as AccessGuard | undefined;
 
-  // Tool merging is the Task 11 scanner's concern -- by the time entries
-  // reach this handler, `entry.tools` is the authoritative, already-merged
-  // list (explicit `config.tools` and scanner-discovered `tools/` are the
-  // SAME modules the scanner found; config.tools carries no `name` field to
-  // merge by, so the handler builds its tool Map from the manifest entries
-  // only).
+  // Tools are the Task 11 scanner's concern -- `defineAgent` rejects a
+  // non-empty `config.tools` at definition time (an explicit ToolDefinition
+  // carries no `name` field to key a Map by), so by the time entries reach
+  // this handler `entry.tools` (scanner-discovered `tools/*.ts`) is the
+  // only source; the handler builds its tool Map from the manifest entries
+  // only.
   const tools = new Map<string, ToolDefinition>();
   for (const t of entry.tools) {
     tools.set(t.name, t.module.default as ToolDefinition);

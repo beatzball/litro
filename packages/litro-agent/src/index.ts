@@ -53,7 +53,10 @@ export function defineTool<In>(config: ToolConfig<In>): ToolDefinition {
 export interface AgentConfig {
   model: Provider;
   instructions: string;
-  tools?: ToolDefinition[];
+  /** Deferred past v0 — a non-empty array throws at definition time. Tools
+   *  are discovered from the agent's `tools/` directory (filename = tool
+   *  name); an explicitly-passed `ToolDefinition` has no name to merge by. */
+  tools?: never[];
   skills?: never[];
   extends?: never;
   mcp?: never[];
@@ -65,12 +68,19 @@ export interface AgentDefinition {
   [key: symbol]: unknown;
 }
 
+const DEFERRED_KEY_MESSAGES: Partial<Record<string, string>> = {
+  tools:
+    'defineAgent: an explicit "tools" array is deferred past v0 — tools are discovered ' +
+    "from the agent's tools/ directory (agents/<name>/tools/*.ts). Move the tool into that directory.",
+};
+
 export function defineAgent(config: AgentConfig): AgentDefinition {
-  for (const key of ['skills', 'extends', 'mcp', 'subagents'] as const) {
+  for (const key of ['tools', 'skills', 'extends', 'mcp', 'subagents'] as const) {
     const v = (config as unknown as Record<string, unknown>)[key];
     if (v !== undefined && (!Array.isArray(v) || v.length > 0)) {
       throw new AgentError(
-        `defineAgent: "${key}" is deferred past v0 — see the design spec's deferral list.`,
+        DEFERRED_KEY_MESSAGES[key] ??
+          `defineAgent: "${key}" is deferred past v0 — see the design spec's deferral list.`,
         { status: 500 }
       );
     }
