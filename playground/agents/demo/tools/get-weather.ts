@@ -38,7 +38,10 @@ const getWeatherSchema: StandardSchemaV1<unknown, GetWeatherInput> = {
 };
 
 export default defineTool({
-  description: 'Looks up the current weather for a city.',
+  // Name the argument in the description: v0 hands the provider a permissive
+  // object schema, so the description carries the parameter contract. This
+  // makes tool-capable models (incl. smaller local ones) call it reliably.
+  description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
   input: getWeatherSchema,
   async execute({ city }) {
     const tempC = 21;

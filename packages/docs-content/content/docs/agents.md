@@ -155,7 +155,10 @@ const getWeatherSchema: StandardSchemaV1<unknown, GetWeatherInput> = {
 };
 
 export default defineTool({
-  description: 'Looks up the current weather for a city.',
+  // Name the argument in the description: in v0 the provider receives a
+  // permissive object schema, so the description carries the parameter
+  // contract (see "Tool calling and model support" below).
+  description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
   input: getWeatherSchema,
   async execute({ city }, ctx) {
     const data = { city, tempC: 21, summary: 'sunny' };
@@ -176,6 +179,22 @@ The input is validated before `execute` runs; a validation failure becomes a too
 - **An async generator** — each `yield` appends a `tool-progress` event; the generator's return value becomes the `tool-result`. Same async-iterable convention as streaming Server Actions.
 
 Return a `UIResult` **directly** from `execute` — a `UIResult` buried inside a plain object or array is a loud tool error, not a rendered component, because its HTML would otherwise leak into the model channel.
+
+### Tool calling and model support
+
+Two things govern whether a tool actually gets called, and they are independent:
+
+- **The model must support tool calling.** Tools are invoked by the model, not by Litro. A provider or model without tool-calling support will stream a normal reply and never emit a `tool-call` — so you get prose and no tool result, and that is the model, not the framework. Most hosted models support it; among local runtimes only some models do (check your runtime's tool-calling support before expecting a tool to fire). A stronger description cannot make a non-tool model call a tool.
+- **In v0, the tool `description` carries the parameter contract.** The framework hands the provider a permissive object schema rather than a generated JSON Schema (deeper conversion is a [v0.1 work item](#limitations)), so the model relies on the `description` to know what arguments to pass. Name the arguments explicitly:
+
+  ```ts
+  // Weak — a capable model may still guess the shape, but smaller models are unreliable:
+  description: 'Looks up the current weather for a city.'
+  // Strong — states the argument, so tool-capable models call it reliably:
+  description: 'Get the current weather for a city. Argument: { city: string } — the city name.'
+  ```
+
+  Reinforce it in the agent's `instructions.md` ("Always call `get-weather` when asked about weather; pass the city as `{ city }`."). This reliability lever only helps among tool-capable models — it is not a substitute for the first point.
 
 ## UI tools
 
