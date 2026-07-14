@@ -6,7 +6,6 @@ import type { StandardSchemaV1 } from '@beatzball/litro/actions';
 // Symbols
 export const TOOL_CONFIG = Symbol.for('litro.agent.tool');
 export const AGENT_CONFIG = Symbol.for('litro.agent.agent');
-export const ACCESS_GUARD = Symbol.for('litro.agent.access');
 
 // Re-export types from submodules
 export type * from './providers/types.js';
