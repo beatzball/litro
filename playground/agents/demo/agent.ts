@@ -26,6 +26,22 @@
  */
 import { defineAgent } from '@beatzball/litro-agent';
 import { scriptedProvider, type ScriptedEvent } from '@beatzball/litro-agent/providers/scripted';
+import { openaiCompatible } from '@beatzball/litro-agent/providers/openai-compatible';
+
+// Provider selection is env-driven so the same demo serves both purposes:
+//   - LLM_URL set   -> a real OpenAI-compatible model (OpenAI, or any local
+//     endpoint: Ollama/LM Studio/MLX/vLLM). Token streaming and tool-calling
+//     are genuine, so the chat renders token-by-token.
+//   - LLM_URL unset -> the deterministic scripted provider below (the default;
+//     what the e2e suite and keyless local runs use).
+// Env: LLM_URL (base, e.g. https://api.openai.com/v1), LLM_MODEL, and
+// OPENAI_API_KEY (omit for keyless local runtimes).
+const realModel = process.env.LLM_URL
+  ? openaiCompatible({
+      baseURL: process.env.LLM_URL,
+      model: process.env.LLM_MODEL ?? 'gpt-4o-mini',
+    })
+  : null;
 
 function withSlowDelays(events: ScriptedEvent[], slow: boolean): ScriptedEvent[] {
   if (!slow) return events;
@@ -67,4 +83,4 @@ const model = scriptedProvider((req) => {
   return withSlowDelays([{ type: 'text-delta', text: 'How can I help?' }, { type: 'done' }], slow);
 });
 
-export default defineAgent({ model, instructions: './instructions.md' });
+export default defineAgent({ model: realModel ?? model, instructions: './instructions.md' });

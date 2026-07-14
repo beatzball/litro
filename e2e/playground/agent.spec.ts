@@ -84,7 +84,11 @@ test.describe('agent demo — raw NDJSON transport', () => {
   test('POST requires x-litro-agent; a valid POST streams a ui event and terminates {"done":true}; GET replays identically', async ({
     request,
   }) => {
-    const session = 'e2e-raw';
+    // Unique per run: the session log is an append-only file, so a fixed id
+    // would accumulate turns across repeated local runs and break the
+    // GET-replays-identically assertion (GET ?from=0 would replay every past
+    // turn, not just this one).
+    const session = `e2e-raw-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
     // Gate: POST without the custom header is rejected before any turn runs.
     const missingHeader = await request.post(`/__litro/agent/demo/${session}`, {

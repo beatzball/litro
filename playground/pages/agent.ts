@@ -38,6 +38,12 @@ export class AgentPage extends LitElement {
   @query('#ui-slot') private uiSlotEl?: HTMLElement;
   @query('#fallback-data') private fallbackDataEl?: HTMLElement;
 
+  /** The <p> collecting the current run of assistant text-deltas. A real
+   *  provider streams one text-delta per token, so deltas must accumulate
+   *  into one paragraph; any non-text event (a tool call, a UI result, the
+   *  turn ending) closes the run so the next text starts a fresh paragraph. */
+  private currentTextEl?: HTMLElement;
+
   private onKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Enter') void this.handleSend();
   };
@@ -59,6 +65,7 @@ export class AgentPage extends LitElement {
     const sessionId = this.ensureSessionId();
     this.sending = true;
     input!.value = '';
+    this.currentTextEl = undefined;
     try {
       for await (const ev of agentSession('demo', sessionId).send(text)) {
         this.handleEvent(ev);
@@ -71,11 +78,20 @@ export class AgentPage extends LitElement {
   private handleEvent(ev: { kind: string; payload: unknown }): void {
     if (ev.kind === 'text-delta') {
       const text = (ev.payload as { text: string }).text;
-      const p = document.createElement('p');
-      p.className = 'chat-text';
-      p.textContent = text;
-      this.logEl?.appendChild(p);
-    } else if (ev.kind === 'ui') {
+      if (!this.currentTextEl) {
+        this.currentTextEl = document.createElement('p');
+        this.currentTextEl.className = 'chat-text';
+        this.logEl?.appendChild(this.currentTextEl);
+      }
+      this.currentTextEl.textContent += text;
+      return;
+    }
+
+    // Any non-text event ends the current text run, so the next assistant
+    // text (e.g. the narration after a tool result) starts a new paragraph.
+    this.currentTextEl = undefined;
+
+    if (ev.kind === 'ui') {
       const payload = ev.payload as Parameters<typeof hydrateUIResult>[1];
       if (this.uiSlotEl) void hydrateUIResult(this.uiSlotEl, payload);
       if (this.fallbackDataEl) this.fallbackDataEl.textContent = JSON.stringify((payload as { data?: unknown }).data);
