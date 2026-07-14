@@ -5,7 +5,9 @@
   "description": "Litro playground — FAST Element adapter test app",
   "type": "module",
   "imports": {
-    "#litro/page-manifest": "./server/stubs/page-manifest.ts"
+    "#litro/page-manifest": "./server/stubs/page-manifest.ts",
+    "#litro/agent-manifest": "./server/stubs/agent-manifest.ts",
+    "#litro/agent-config": "./server/stubs/agent-config.ts"
   },
   "scripts": {
     "dev": "litro dev",
@@ -16,6 +18,7 @@
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",
+    "@beatzball/litro-agent": "workspace:^",
     "@microsoft/fast-element": "^2.10.3",
     "@microsoft/fast-ssr": "1.0.0-beta.39",
     "h3": "^1.15.6"

@@ -602,6 +602,9 @@ importers:
       '@beatzball/litro':
         specifier: workspace:*
         version: link:../packages/framework
+      '@beatzball/litro-agent':
+        specifier: workspace:^
+        version: link:../packages/litro-agent
       '@microsoft/fast-element':
         specifier: ^2.10.3
         version: 2.10.3
