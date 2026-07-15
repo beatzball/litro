@@ -20,8 +20,16 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Runs tests in all three packages:
-      #   litro-router (16), litro/framework (174), create-litro (11)
+      # litro-agent's tests import @beatzball/litro/stream (a framework
+      # subpath) as a runtime value; vitest resolves that subpath via the
+      # built dist, so the framework (and its own build dep, litro-router)
+      # must be built before the suite runs.
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      # Runs tests in every workspace package that defines a `test` script:
+      #   litro-router, litro (framework), create-litro, litro-agent.
       - name: Run all package tests
         run: pnpm -r test
 
@@ -45,6 +53,8 @@ jobs:
       # Also verifies the cross-platform fs.cpSync recipe-copy step
       - name: Build create-litro
         run: pnpm --filter create-litro build
+      - name: Build litro-agent
+        run: pnpm --filter litro-agent build
 
   e2e:
     name: E2E Tests
@@ -64,6 +74,10 @@ jobs:
         run: pnpm --filter litro-router build
       - name: Build framework
         run: pnpm --filter litro build
+      # The agent playgrounds import @beatzball/litro-agent/dist/plugin.js in
+      # their nitro.config.ts, so the package must be built for e2e.
+      - name: Build litro-agent
+        run: pnpm --filter litro-agent build
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Run E2E tests (dev mode)
