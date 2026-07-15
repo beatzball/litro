@@ -461,6 +461,46 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.13)(jiti@2.6.1)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.46.0)(tsx@4.21.0)
 
+  packages/litro-agent:
+    dependencies:
+      '@beatzball/litro':
+        specifier: workspace:^
+        version: link:../framework
+      fast-glob:
+        specifier: ^3.3.3
+        version: 3.3.3
+      h3:
+        specifier: ^1.15.6
+        version: 1.15.9
+      pathe:
+        specifier: ^1.1.2
+        version: 1.1.2
+    devDependencies:
+      '@lit-labs/ssr':
+        specifier: ^3.3.0
+        version: 3.3.1
+      '@microsoft/fast-element':
+        specifier: ^2.10.3
+        version: 2.10.3
+      '@microsoft/fast-ssr':
+        specifier: 1.0.0-beta.39
+        version: 1.0.0-beta.39(@microsoft/fast-element@2.10.3)
+      jsdom:
+        specifier: ^25.0.0
+        version: 25.0.1
+      lit:
+        specifier: ^3.2.1
+        version: 3.3.2
+      nitropack:
+        specifier: ^2.13.1
+        version: 2.13.1(rolldown@1.0.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.13)(jiti@2.6.1)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.46.0)(tsx@4.21.0)
+
   packages/litro-router:
     devDependencies:
       jsdom:
@@ -478,6 +518,9 @@ importers:
       '@beatzball/litro':
         specifier: workspace:*
         version: link:../packages/framework
+      '@beatzball/litro-agent':
+        specifier: workspace:^
+        version: link:../packages/litro-agent
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
@@ -559,6 +602,9 @@ importers:
       '@beatzball/litro':
         specifier: workspace:*
         version: link:../packages/framework
+      '@beatzball/litro-agent':
+        specifier: workspace:^
+        version: link:../packages/litro-agent
       '@microsoft/fast-element':
         specifier: ^2.10.3
         version: 2.10.3

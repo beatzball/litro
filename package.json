@@ -71,7 +71,7 @@
     "dev:hn-litro-elena": "pnpm --filter bench-hn-litro-elena dev",
     "dev:hn-nextjs": "npm run dev --prefix benchmarks/apps/hn-nextjs",
     "dev:hn-nuxt": "npm run dev --prefix benchmarks/apps/hn-nuxt",
-    "test": "pnpm --filter @beatzball/litro test",
+    "test": "pnpm --filter @beatzball/litro test && pnpm --filter @beatzball/litro-agent test",
     "test:docs": "pnpm --filter @beatzball/litro-docs-ui test && pnpm --filter @beatzball/litro-docs test",
     "test:e2e": "playwright test",
     "test:e2e:docs-ssr": "playwright test --project docs-ssr",

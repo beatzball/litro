@@ -71,5 +71,8 @@ benchmarks/apps/hn-nuxt/.nuxt/
 benchmarks/results/*.json
 !benchmarks/results/latest.json
 
+# Agent session logs (runtime data, never committed)
+.litro/
+
 # Claude Code
 .claude/

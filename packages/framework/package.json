@@ -67,6 +67,11 @@
       "types": "./dist/actions/form-client.d.ts",
       "import": "./dist/actions/form-client.js"
     },
+    "./stream": {
+      "source": "./src/stream.ts",
+      "types": "./dist/stream.d.ts",
+      "import": "./dist/stream.js"
+    },
     "./plugins": {
       "source": "./src/plugins/pages.ts",
       "types": "./dist/plugins/pages.d.ts",

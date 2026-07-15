@@ -6,7 +6,9 @@
   "type": "module",
   "imports": {
     "#litro/page-manifest": "./server/stubs/page-manifest.ts",
-    "#litro/action-manifest": "./server/stubs/action-manifest.ts"
+    "#litro/action-manifest": "./server/stubs/action-manifest.ts",
+    "#litro/agent-manifest": "./server/stubs/agent-manifest.ts",
+    "#litro/agent-config": "./server/stubs/agent-config.ts"
   },
   "scripts": {
     "dev": "litro dev",
@@ -18,6 +20,7 @@
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",
+    "@beatzball/litro-agent": "workspace:^",
     "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
