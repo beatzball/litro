@@ -1,0 +1,64 @@
+# osv-scanner configuration for the Dependency Audit CI check.
+#
+# Replaces `pnpm audit --audit-level high`, whose npm endpoint npm retired
+# (HTTP 410). osv-scanner scans the lockfile against the OSV database with no
+# dependency on that endpoint.
+#
+# The entries below baseline the advisories present when this gate was
+# introduced. Each is either a dev/tooling dependency that is NOT shipped in
+# any published @beatzball package, or a transitive advisory below the `high`
+# severity bar the previous audit enforced. A NEW advisory — or any high/
+# critical advisory in a shipped runtime dependency — is not listed here and
+# will fail the check. Provenance verified: of these packages only nitropack
+# is a direct production dependency of a published package (@beatzball/litro),
+# and its advisories are Medium, below the enforced high threshold.
+
+# --- Dev / tooling only (never shipped to users) ---
+
+[[IgnoredVulns]]
+id = "GHSA-5xrq-8626-4rwp" # vitest 2.1.9 (Critical)
+reason = "vitest is a dev/test-only dependency; not a production dependency of any published @beatzball package, so it never ships to users."
+
+[[IgnoredVulns]]
+id = "GHSA-g7r4-m6w7-qqqr" # esbuild 0.27.3
+reason = "esbuild is a dev/build-only tool (via vite/vitest); not shipped in any published package."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq" # uuid 8.3.2 (High)
+reason = "uuid is a dev/benchmark transitive dependency; not a production dependency of any published package, so it never ships to users."
+
+# --- Transitive, below the enforced `high` severity bar (Medium/Low) ---
+
+[[IgnoredVulns]]
+id = "GHSA-8988-4f7v-96qf" # @opentelemetry/core 1.30.1
+reason = "Transitive tooling dependency (not a direct production dependency of any published package); Medium severity, below the high threshold this audit enforces."
+
+[[IgnoredVulns]]
+id = "GHSA-f886-m6hf-6m8v" # brace-expansion
+reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
+
+[[IgnoredVulns]]
+id = "GHSA-jxxr-4gwj-5jf2" # brace-expansion
+reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
+
+[[IgnoredVulns]]
+id = "GHSA-v2v4-37r5-5v8g" # ip-address 10.1.0
+reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
+
+[[IgnoredVulns]]
+id = "GHSA-h67p-54hq-rp68" # js-yaml
+reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
+
+[[IgnoredVulns]]
+id = "GHSA-vmf3-w455-68vh" # tar 7.5.11
+reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
+
+# --- Runtime dependency, below the enforced `high` bar ---
+
+[[IgnoredVulns]]
+id = "GHSA-5w89-w975-hf9q" # nitropack 2.13.1
+reason = "nitropack (a framework runtime dependency) advisory; Medium severity, below the high threshold this audit enforces (matching the prior `pnpm audit --audit-level high` posture). Fixed in nitropack 2.13.4 — tracked for a routine framework dependency bump."
+
+[[IgnoredVulns]]
+id = "GHSA-9phm-9p8f-hw5m" # nitropack 2.13.1
+reason = "nitropack (a framework runtime dependency) advisory; Medium severity, below the high threshold this audit enforces (matching the prior `pnpm audit --audit-level high` posture). Fixed in nitropack 2.13.4 — tracked for a routine framework dependency bump."
