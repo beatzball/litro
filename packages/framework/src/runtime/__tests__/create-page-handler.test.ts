@@ -8,7 +8,7 @@
  * Run with: pnpm --filter @beatzball/litro test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before any imports of the modules under test.
@@ -468,6 +468,82 @@ describe('createPageHandler — Accept: application/json content negotiation', (
     const result = await callHandlerWithResult(handler);
 
     expect(result).toEqual(payload);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// appScriptUrl — dev resolves app.ts, prod resolves app.js (issue 97)
+// ---------------------------------------------------------------------------
+
+describe('createPageHandler — appScriptUrl dev/prod resolution', () => {
+  const originalLitroDev = process.env.LITRO_DEV;
+  const originalBasePath = process.env.LITRO_BASE_PATH;
+
+  beforeEach(() => {
+    vi.mocked(buildShell).mockClear();
+    // The preceding "Accept: application/json" describe block leaves
+    // mockRequestHeaders.current set (module-scoped, no afterEach reset
+    // there) — clear it so these tests exercise the normal HTML path.
+    mockRequestHeaders.current = {};
+  });
+
+  afterEach(() => {
+    if (originalLitroDev === undefined) delete process.env.LITRO_DEV;
+    else process.env.LITRO_DEV = originalLitroDev;
+    if (originalBasePath === undefined) delete process.env.LITRO_BASE_PATH;
+    else process.env.LITRO_BASE_PATH = originalBasePath;
+  });
+
+  it('resolves appScriptUrl to /_litro/app.ts when LITRO_DEV=true', async () => {
+    process.env.LITRO_DEV = 'true';
+    delete process.env.LITRO_BASE_PATH;
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hi' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/_litro/app.ts');
+  });
+
+  it('resolves appScriptUrl to /_litro/app.js when LITRO_DEV is unset (production)', async () => {
+    delete process.env.LITRO_DEV;
+    delete process.env.LITRO_BASE_PATH;
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hi' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/_litro/app.js');
+  });
+
+  it('resolves appScriptUrl to /_litro/app.js when LITRO_DEV=false', async () => {
+    process.env.LITRO_DEV = 'false';
+    delete process.env.LITRO_BASE_PATH;
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hi' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/_litro/app.js');
+  });
+
+  it('honors LITRO_BASE_PATH together with LITRO_DEV in dev mode', async () => {
+    process.env.LITRO_DEV = 'true';
+    process.env.LITRO_BASE_PATH = '/litro';
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hi' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/litro/_litro/app.ts');
   });
 });
 

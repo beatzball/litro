@@ -183,13 +183,15 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         }
       }
 
-      // Always reference the compiled bundle. In dev mode Vite's middleware
-      // intercepts /_litro/app.js and serves app.ts on the fly (Vite resolves
-      // .js → .ts automatically). If Vite is not intercepting, the static file
-      // handler serves the pre-built dist/client/app.js as a fallback.
+      // In dev mode, reference the unbuilt source (app.ts) directly so Vite's
+      // middleware (base: '/_litro/') unambiguously owns the request — this
+      // matches the documented contract in shell.ts and avoids the Nitro
+      // publicAssets static handler serving a stale dist/client/app.js when
+      // one exists from a prior production build (see issue 97). In
+      // production, reference the compiled bundle.
       const basePath = process.env.LITRO_BASE_PATH ?? '';
-      const appScriptUrl = `${basePath}/_litro/app.js`;
       const isDev = process.env.LITRO_DEV === 'true';
+      const appScriptUrl = `${basePath}/_litro/app.${isDev ? 'ts' : 'js'}`;
 
       // Get any framework-specific head scripts from the adapter.
       const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
@@ -258,9 +260,11 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       );
 
       // Build a minimal fallback shell (no server data — data fetch may have
-      // been the source of the error, or may not have run yet).
+      // been the source of the error, or may not have run yet). Same
+      // dev/prod app script resolution as the happy path above.
       const basePath = process.env.LITRO_BASE_PATH ?? '';
-      const appScriptUrl = `${basePath}/_litro/app.js`;
+      const isDevFallback = process.env.LITRO_DEV === 'true';
+      const appScriptUrl = `${basePath}/_litro/app.${isDevFallback ? 'ts' : 'js'}`;
       // Carry vary header through the fallback path too — the URL can still
       // be hit with Accept: application/json on retries.
       setResponseHeader(event, 'vary', 'Accept');
