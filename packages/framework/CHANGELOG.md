@@ -1,5 +1,11 @@
 # litro
 
+## 0.12.0
+
+### Minor Changes
+
+- 97e80be: Expose the NDJSON stream wire protocol (`createStreamEncoder`, `createStreamDecoder`, `serializeValue`, `deserializeValue`, `isAsyncIterable`) as a public `@beatzball/litro/stream` subpath so Server Actions and the agent layer share one protocol.
+
 ## 0.11.1
 
 ### Patch Changes

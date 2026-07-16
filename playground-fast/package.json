@@ -1,6 +1,6 @@
 {
   "name": "playground-fast",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "description": "Litro playground — FAST Element adapter test app",
   "type": "module",
