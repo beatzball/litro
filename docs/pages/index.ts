@@ -91,6 +91,12 @@ export const pageData = definePageData(async (_event) => {
         description:
           "Markdown content with 11ty-compatible frontmatter and data cascade.",
       },
+      {
+        icon: "🤖",
+        title: "AI Agents",
+        description:
+          "Filesystem-first agent endpoints whose tools return server-rendered UI — the model sees data, users see components. Durable and resumable.",
+      },
     ],
     seoHead,
   } satisfies SplashData;
