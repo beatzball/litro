@@ -17,6 +17,25 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
   // Per-session sequence counters
   const seqs = new Map<string, number>();
 
+  // The session directory only needs to exist once; `mkdir(recursive:
+  // true)` is idempotent but still a syscall, and append() used to pay it on
+  // EVERY call. Cache the in-flight/settled promise so concurrent and
+  // subsequent appends share one `mkdir`. On failure the cached promise is
+  // cleared so the next append retries (matches the prior per-call
+  // behavior, which always got a fresh attempt).
+  let dirReady: Promise<void> | undefined;
+  function ensureDir(): Promise<void> {
+    if (!dirReady) {
+      dirReady = mkdir(dir, { recursive: true })
+        .then(() => undefined)
+        .catch((err: unknown) => {
+          dirReady = undefined;
+          throw err;
+        });
+    }
+    return dirReady;
+  }
+
   async function initSeqIfNeeded(sessionId: string): Promise<void> {
     if (seqs.has(sessionId)) return;
 
@@ -62,7 +81,7 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
 
       const newChain = currentChain.catch(() => {}).then(async () => {
         // Create directory if needed
-        await mkdir(dir, { recursive: true });
+        await ensureDir();
 
         // Initialize seq on first touch
         await initSeqIfNeeded(sessionId);
@@ -91,8 +110,24 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
       chains.set(sessionId, newChain);
 
       // Wait for the chain to complete and return the event
-      await newChain;
-      return resultEvent!;
+      try {
+        await newChain;
+        return resultEvent!;
+      } finally {
+        // Registry hygiene: once this link settles (success or rejection),
+        // drop it from the map if it's still the current entry for this
+        // session -- i.e. nothing chained onto it while it was running. If a
+        // concurrent append already replaced the map entry with a newer
+        // link, leave it alone; that later link owns cleanup when IT
+        // settles. This keeps `chains` from growing forever across the
+        // lifetime of a long-running process as distinct session ids come
+        // and go, while never racing: the get/delete pair below is
+        // synchronous, so nothing can interleave between the check and the
+        // delete.
+        if (chains.get(sessionId) === newChain) {
+          chains.delete(sessionId);
+        }
+      }
     },
 
     async *read(sessionId: string, fromSeq = 0): AsyncIterable<SessionEvent> {

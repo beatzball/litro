@@ -34,7 +34,13 @@ const cliEntry = path.join(repoRoot, 'packages/framework/dist/cli/index.js');
 
 const PORT = 3052;
 const BASE = `http://localhost:${PORT}`;
-const SESSION = 'e2e-resume';
+// Unique per run, same rationale as e2e/playground/agent.spec.ts's `session`:
+// `beforeAll` wipes `.litro/` before starting the server, but that hook does
+// NOT re-run on a Playwright retry of this test -- a fixed id would let a
+// retry's POST land in the same session file as the killed first attempt,
+// replaying a longer (duplicated) event sequence and breaking the exact
+// `toEqual(['message', 'text-delta'])` assertion below.
+const SESSION = `e2e-resume-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 let proc: ChildProcess | undefined;
 let stdoutBuf = '';
