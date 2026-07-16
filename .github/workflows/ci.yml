@@ -112,13 +112,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
+      # osv-scanner is a standalone binary that scans the checked-in
+      # pnpm-lock.yaml directly — it needs neither Node nor pnpm. A setup-node
+      # step with `cache: pnpm` but no `pnpm install` leaves the pnpm store
+      # path empty and fails at post-run cache-save on the current runners, so
+      # this job deliberately has no setup-node/pnpm steps.
+      #
       # npm retired the audit endpoint `pnpm audit` calls (HTTP 410), so audit
       # via osv-scanner instead: it scans the lockfile against the OSV database
       # with no dependency on that endpoint. Baseline/ignore rules (each with a
