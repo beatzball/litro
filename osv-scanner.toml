@@ -52,13 +52,3 @@ reason = "Transitive dependency; Medium severity, below the high threshold this 
 [[IgnoredVulns]]
 id = "GHSA-vmf3-w455-68vh" # tar 7.5.11
 reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
-
-# --- Runtime dependency, below the enforced `high` bar ---
-
-[[IgnoredVulns]]
-id = "GHSA-5w89-w975-hf9q" # nitropack 2.13.1
-reason = "nitropack (a framework runtime dependency) advisory; Medium severity, below the high threshold this audit enforces (matching the prior `pnpm audit --audit-level high` posture). Fixed in nitropack 2.13.4 — tracked for a routine framework dependency bump."
-
-[[IgnoredVulns]]
-id = "GHSA-9phm-9p8f-hw5m" # nitropack 2.13.1
-reason = "nitropack (a framework runtime dependency) advisory; Medium severity, below the high threshold this audit enforces (matching the prior `pnpm audit --audit-level high` posture). Fixed in nitropack 2.13.4 — tracked for a routine framework dependency bump."
