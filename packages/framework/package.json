@@ -206,7 +206,7 @@
     "h3": "^1.15.6",
     "jiti": "^2.0.0",
     "lit": "^3.2.1",
-    "nitropack": "^2.13.1",
+    "nitropack": "^2.13.4",
     "pathe": "^1.1.2",
     "rehype-raw": "^7.0.0",
     "rehype-stringify": "^10.0.1",
