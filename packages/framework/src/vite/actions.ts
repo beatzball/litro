@@ -81,6 +81,10 @@ function assertNoDataExports(code: string, id: string): void {
 
 export function litroActionsPlugin(): Plugin {
   let root = process.cwd();
+  // Absolute path the `@beatzball/litro/actions/server` subpath resolves to in
+  // this project (resolved lazily on first transform, then cached). Used to
+  // stub the module by path — see the transform hook below.
+  let serverSubpathId: string | null | undefined;
 
   return {
     name: 'litro:actions',
@@ -98,6 +102,28 @@ export function litroActionsPlugin(): Plugin {
     },
 
     async transform(code, id) {
+      // Stub `@beatzball/litro/actions/server` when it enters the CLIENT graph.
+      // The resolveId hook above only catches the bare specifier, which Vite
+      // resolves via its own resolver (dep optimizer / `source` export
+      // condition) before this plugin is consulted — so in dev the real module
+      // (importing node:crypto via hash.ts) would otherwise be served as live
+      // source and throw in the browser. Match it here by its resolved path,
+      // where the transform pipeline reliably runs.
+      // `this.resolve` only exists when running under a real Rollup/Vite
+      // plugin context (unit tests invoke this hook directly without one);
+      // without it we cannot map the subpath to a path, so skip the check.
+      if (serverSubpathId === undefined) {
+        if (typeof this.resolve === 'function') {
+          const resolved = await this.resolve(SERVER_SUBPATH, undefined, { skipSelf: true });
+          serverSubpathId = resolved?.id ?? null;
+        } else {
+          serverSubpathId = null;
+        }
+      }
+      if (serverSubpathId && id.split('?', 1)[0] === serverSubpathId.split('?', 1)[0]) {
+        return { code: SERVER_SUBPATH_STUB, map: null };
+      }
+
       if (!SERVER_MODULE_RE.test(id)) return null;
       // Mirror the Nitro scanner's exclusion: third-party *.server.* files in
       // node_modules are never registered server-side, so stubbing them would

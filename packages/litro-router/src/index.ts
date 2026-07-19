@@ -271,6 +271,16 @@ export class LitroRouter {
       }
       el.removeAttribute('hidden');
 
+      // Mark the outlet once the swap has completed. Until this point the
+      // visible content on an initial load is the SSR'd shell, whose event
+      // handlers are not wired (this router swaps in a client-rendered element
+      // rather than hydrating events onto the SSR DOM) — so interactions can
+      // land on a dead element. The attribute is the router's observable
+      // "current page element is live" signal: it lives on the persistent
+      // outlet (not the page element), so consumers — including e2e tests —
+      // can poll for it without racing a one-shot event.
+      this.outlet.setAttribute('data-litro-settled', '');
+
       // Focus the outlet so keyboard users start at the top of the new page.
       this.outlet.focus({ preventScroll: true });
 

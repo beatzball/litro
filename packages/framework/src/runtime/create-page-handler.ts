@@ -183,13 +183,18 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         }
       }
 
-      // Always reference the compiled bundle. In dev mode Vite's middleware
-      // intercepts /_litro/app.js and serves app.ts on the fly (Vite resolves
-      // .js → .ts automatically). If Vite is not intercepting, the static file
-      // handler serves the pre-built dist/client/app.js as a fallback.
+      // Reference the client entry. In dev mode we point at the .ts SOURCE at a
+      // ROOT-relative path (`/app.ts`) so Vite's dev middleware serves it as
+      // live, transformed source — edits to app.ts reflect without a rebuild.
+      // Dev must NOT use the `/_litro/` prefix: Nitro's publicAssets handler
+      // owns `/_litro/*` and would serve the stale pre-built dist/client/app.js
+      // (issue #97). The dev Vite server runs with base '/', so it emits and
+      // serves the entry and every transitive import at root-relative paths.
+      // In production the compiled `/_litro/app.js` bundle is served by the
+      // publicAssets static handler (dist/client/app.js).
       const basePath = process.env.LITRO_BASE_PATH ?? '';
-      const appScriptUrl = `${basePath}/_litro/app.js`;
       const isDev = process.env.LITRO_DEV === 'true';
+      const appScriptUrl = isDev ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
 
       // Get any framework-specific head scripts from the adapter.
       const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
@@ -260,7 +265,8 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // Build a minimal fallback shell (no server data — data fetch may have
       // been the source of the error, or may not have run yet).
       const basePath = process.env.LITRO_BASE_PATH ?? '';
-      const appScriptUrl = `${basePath}/_litro/app.js`;
+      const isDev = process.env.LITRO_DEV === 'true';
+      const appScriptUrl = isDev ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
       // Carry vary header through the fallback path too — the URL can still
       // be hit with Accept: application/json on retries.
       setResponseHeader(event, 'vary', 'Accept');

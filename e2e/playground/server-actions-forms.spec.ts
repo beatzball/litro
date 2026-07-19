@@ -66,6 +66,9 @@ test.describe('server actions — enhanced form posts', () => {
     // litro-router's _resolve()); wait for the atomic swap to settle before
     // interacting, matching the convention in server-actions.spec.ts.
     await page.waitForSelector('page-forms:not([hidden])');
+    // Router "swap complete" marker — before it, clicks can land on the dead
+    // SSR'd shell. Same convention as server-actions.spec.ts.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
     await page.locator('#gb-submit').click();
     await expect(page.locator('#enhanced-error')).toContainText('Name is required');
     expect(page.url()).toContain('/forms');
@@ -75,6 +78,8 @@ test.describe('server actions — enhanced form posts', () => {
   test('success surfaces via litro:action-success detail', async ({ page }) => {
     await page.goto('/forms');
     await page.waitForSelector('page-forms:not([hidden])');
+    // Router "swap complete" marker (see the validation test above).
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
     await page.fill('#gb-name', 'Enhanced');
     await page.fill('#gb-message', 'enhanced hello');
     await page.locator('#gb-submit').click();

@@ -224,6 +224,28 @@ describe('LitroRouter — setRoutes and resolve', () => {
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-fresh');
   });
 
+  it('marks the outlet data-litro-settled only after the atomic swap completes', async () => {
+    // Until the swap, the visible content on an initial load is the SSR'd
+    // shell whose event handlers are not wired — the attribute is the
+    // router's observable "current page element is live" signal, polled by
+    // consumers (including e2e tests) before interacting with the page.
+    history.replaceState(null, '', '/');
+    const ssrShell = document.createElement('span');
+    outlet.appendChild(ssrShell);
+    if (!customElements.get('rr-settle')) {
+      customElements.define('rr-settle', class extends HTMLElement {});
+    }
+    expect(outlet.hasAttribute('data-litro-settled')).toBe(false);
+    router.setRoutes([{ path: '/', component: 'rr-settle' }]);
+    // Synchronously after setRoutes the swap is still pending (updateComplete
+    // + rAF have not run) — the marker must not be set yet.
+    expect(outlet.hasAttribute('data-litro-settled')).toBe(false);
+    await new Promise(r => setTimeout(r, 50));
+    expect(outlet.hasAttribute('data-litro-settled')).toBe(true);
+    // And it is set by the same pass that removed the stale SSR content.
+    expect(outlet.querySelector('span')).toBeNull();
+  });
+
   it('runs action() before mounting the component', async () => {
     history.replaceState(null, '', '/');
     const order: string[] = [];
