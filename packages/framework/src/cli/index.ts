@@ -90,12 +90,16 @@ switch (command) {
     // Nitro's dev server proxies requests to a worker thread. During
     // dev:reload the worker restarts — inflight connections emit ECONNRESET
     // which Node v24+ treats as a fatal uncaught exception, crashing the
-    // server. Write a temporary guard script and preload it via --require.
+    // server. EPIPE is the same class of benign client-disconnect error on
+    // the write side (a browser aborting an in-flight module/SSR stream —
+    // routine under live-source dev, which streams far more responses) and
+    // must not kill the server either. Write a temporary guard script and
+    // preload it via --require.
     const guardDir = join(cwd, 'node_modules', '.cache');
     const guardPath = join(guardDir, 'litro-dev-guard.cjs');
     mkdirSync(guardDir, { recursive: true });
     writeFileSync(guardPath,
-      'process.on("uncaughtException",function(e){if(e&&e.code==="ECONNRESET")return;console.error(e);process.exit(1)});\n',
+      'process.on("uncaughtException",function(e){if(e&&(e.code==="ECONNRESET"||e.code==="EPIPE"))return;console.error(e);process.exit(1)});\n',
     );
     const nodeOpts = [process.env.NODE_OPTIONS, `--require "${guardPath}"`]
       .filter(Boolean).join(' ');
