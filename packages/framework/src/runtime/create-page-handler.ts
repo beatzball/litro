@@ -192,9 +192,16 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // serves the entry and every transitive import at root-relative paths.
       // In production the compiled `/_litro/app.js` bundle is served by the
       // publicAssets static handler (dist/client/app.js).
+      //
+      // LITRO_DEV_LIVE_ENTRY gates the live entry on the app actually running
+      // the new litroViteDevConfig()-based middleware: an app upgraded to this
+      // framework version but still running its previously-scaffolded
+      // vite-dev middleware keeps the old (stale-bundle) behavior instead of a
+      // broken `/app.ts` graph — see litroViteDevConfig() in runtime/vite-dev.
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const isDev = process.env.LITRO_DEV === 'true';
-      const appScriptUrl = isDev ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
+      const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
+      const appScriptUrl = liveEntry ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
 
       // Get any framework-specific head scripts from the adapter.
       const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
@@ -266,7 +273,9 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // been the source of the error, or may not have run yet).
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const isDev = process.env.LITRO_DEV === 'true';
-      const appScriptUrl = isDev ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
+      // Same LITRO_DEV_LIVE_ENTRY gating as the happy path above.
+      const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
+      const appScriptUrl = liveEntry ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
       // Carry vary header through the fallback path too — the URL can still
       // be hit with Accept: application/json on retries.
       setResponseHeader(event, 'vary', 'Accept');

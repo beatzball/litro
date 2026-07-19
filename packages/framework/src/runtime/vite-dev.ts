@@ -64,6 +64,18 @@ export interface LitroViteDevOptions {
  * @see the module docblock for why `base` is forced to `'/'` in dev (issue #97).
  */
 export function litroViteDevConfig(options: LitroViteDevOptions): InlineConfig {
+  // Signal to the page handler (same Nitro worker process) that the live-entry
+  // dev config is in play, so it may reference `/app.ts` instead of the built
+  // `/_litro/app.js`. Apps scaffolded before this helper existed run an older
+  // `server/middleware/vite-dev.ts` whose Vite server keeps the production
+  // `base: '/_litro/'` — under that base a root-relative `/app.ts` graph does
+  // NOT resolve (imports get rewritten to `/_litro/...` URLs that the static
+  // mount swallows). Gating on this flag keeps such apps on their previous
+  // working behavior after a framework upgrade; adopting the new middleware
+  // opts them into the live entry. The vite-dev middleware intercepts every
+  // request before the page handler and builds its Vite server from this
+  // config, so the flag is always set before the first shell is rendered.
+  process.env.LITRO_DEV_LIVE_ENTRY = '1';
   return {
     // DEV base override — see module docblock. `vite.config.ts` keeps
     // `base: '/_litro/'` for the production build; this only affects the dev
