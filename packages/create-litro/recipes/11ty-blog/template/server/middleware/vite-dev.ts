@@ -24,7 +24,7 @@
  *   import('vite') call — so vite is NOT copied to the production output.
  */
 import { defineEventHandler, fromNodeMiddleware } from 'h3';
-import { litroViteDevConfig } from '@beatzball/litro/runtime/vite-dev.js';
+import { litroViteDevConfig, warmupLitroViteServer } from '@beatzball/litro/runtime/vite-dev.js';
 
 // Singleton: initialise once on the first dev request, then reuse.
 // A Promise is cached so concurrent first requests queue on the same
@@ -54,7 +54,14 @@ export default defineEventHandler(async (event) => {
         // from the app directory.
         createServer(litroViteDevConfig({ root: process.cwd(), hmrServer: httpServer })),
       )
-      .then((server) => fromNodeMiddleware(server.middlewares));
+      .then(async (server) => {
+        // Pre-warm the client entry so Vite finishes optimizing its dependency
+        // graph before the first page is served. Without this, dep discovery
+        // happens mid-load and triggers a full-page reload that can duplicate
+        // the SSR'd DOM during hydration.
+        await warmupLitroViteServer(server);
+        return fromNodeMiddleware(server.middlewares);
+      });
   }
 
   const viteHandler = await viteHandlerPromise;
