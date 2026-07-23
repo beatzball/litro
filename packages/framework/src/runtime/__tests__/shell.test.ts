@@ -230,6 +230,40 @@ describe('buildShell — foot: app bundle', () => {
 });
 
 // ---------------------------------------------------------------------------
+// foot — bodyScript (per-page synchronous end-of-body script)
+// ---------------------------------------------------------------------------
+
+describe('buildShell — foot: bodyScript', () => {
+  const BODY_SCRIPT = '<script>window.__prePaint = true;</script>';
+
+  it('emits bodyScript in the foot when provided', () => {
+    const { foot } = buildDefault('page-home', { bodyScript: BODY_SCRIPT });
+    expect(foot).toContain(BODY_SCRIPT);
+  });
+
+  it('emits bodyScript BEFORE the app-bundle script tag', () => {
+    const { foot } = buildDefault('page-home', { bodyScript: BODY_SCRIPT });
+    const bodyScriptIdx = foot.indexOf(BODY_SCRIPT);
+    const appScriptIdx = foot.indexOf('<script type="module" src="/_litro/app.js">');
+    expect(bodyScriptIdx).toBeGreaterThan(-1);
+    expect(appScriptIdx).toBeGreaterThan(-1);
+    expect(bodyScriptIdx).toBeLessThan(appScriptIdx);
+  });
+
+  it('emits bodyScript exactly once', () => {
+    const { head, foot } = buildDefault('page-home', { bodyScript: BODY_SCRIPT });
+    expect(head).not.toContain(BODY_SCRIPT);
+    expect(foot.split(BODY_SCRIPT).length - 1).toBe(1);
+  });
+
+  it('foot is byte-for-byte unchanged when bodyScript is omitted', () => {
+    const { foot: withUndefined } = buildDefault('page-home', { bodyScript: undefined });
+    const { foot: withoutOption } = buildDefault('page-home');
+    expect(withUndefined).toBe(withoutOption);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // foot — document closing
 // ---------------------------------------------------------------------------
 

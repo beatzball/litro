@@ -149,6 +149,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       let serverDataJson: string | undefined;
       let dynamicHead = '';
       let dynamicTitle: string | undefined;
+      let dynamicBodyScript = '';
       const pageDataExport = mod.pageData as PageDataFetcher<unknown> | undefined;
       if (pageDataExport?.__litroPageData === true) {
         try {
@@ -167,10 +168,14 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
           const d = data as Record<string, unknown>;
           if (typeof d.seoHead === 'string') dynamicHead = d.seoHead;
           if (typeof d.seoTitle === 'string') dynamicTitle = d.seoTitle;
-          // Strip seoHead and seoTitle before serializing to avoid the </script>
-          // injection issue described above. The client doesn't need these fields
-          // — they were only needed server-side to build the <head>.
-          const { seoHead: _h, seoTitle: _t, ...clientData } = d;
+          // Per-page synchronous end-of-body script (emitted before the app
+          // bundle) — the body-slot counterpart to seoHead.
+          if (typeof d.bodyScript === 'string') dynamicBodyScript = d.bodyScript;
+          // Strip seoHead, seoTitle and bodyScript before serializing to avoid
+          // the </script> injection issue described above. The client doesn't
+          // need these fields — they were only needed server-side to build the
+          // HTML shell.
+          const { seoHead: _h, seoTitle: _t, bodyScript: _b, ...clientData } = d;
           serverDataJson = JSON.stringify(clientData);
         } catch (dataErr) {
           // Data fetch failure is non-fatal: log a warning and render without
@@ -207,6 +212,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         contentDevPolling: isDev && process.env.LITRO_HAS_CONTENT === 'true',
         skipLinks,
         includeDSDPolyfill: adapter.needsDSDPolyfill,
+        bodyScript: dynamicBodyScript || undefined,
       });
 
       // Delegate rendering to the framework adapter. The adapter returns an
