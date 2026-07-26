@@ -1,5 +1,12 @@
 # create-litro
 
+## 0.7.1
+
+### Patch Changes
+
+- e576f80: Bump `nitropack` from `^2.13.1` to `^2.13.4` in scaffolded recipe templates, resolving Medium-severity advisories GHSA-5w89-w975-hf9q and GHSA-9phm-9p8f-hw5m.
+- 16d2705: Recipe templates' `server/middleware/vite-dev.ts` now builds its dev Vite server from `litroViteDevConfig()` (and pre-warms the client entry via `warmupLitroViteServer()`), so scaffolded apps get the live-source dev entry fix for issue 97 instead of serving a stale pre-built bundle.
+
 ## 0.7.0
 
 ### Minor Changes
