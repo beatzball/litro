@@ -1,5 +1,21 @@
 # litro
 
+## 0.13.0
+
+### Minor Changes
+
+- 141513a: Add a per-page `bodyScript` hook: pages can return an optional `bodyScript` string (raw HTML, typically a synchronous `<script>`) from `definePageData()`, and the shell emits it at end-of-body immediately before the app-bundle script. This gives pages a synchronous, pre-hydration slot — symmetric with `seoHead` for `<head>` — for filling server-unknowable values (e.g. times in the user's local timezone) on first paint. Like `seoHead`/`seoTitle`, the field is stripped from the serialized `__litro_data__` client JSON. Pages that don't use it are byte-for-byte unchanged.
+
+### Patch Changes
+
+- e576f80: Bump `nitropack` from `^2.13.1` to `^2.13.4`, resolving Medium-severity advisories GHSA-5w89-w975-hf9q and GHSA-9phm-9p8f-hw5m.
+- 16d2705: `litro dev` now serves the live client entry (`/app.ts`) through Vite instead of a stale pre-built `dist/client/app.js` — source edits reflect in the browser without a rebuild (issue 97). The new `litroViteDevConfig()`/`warmupLitroViteServer()` helpers (`@beatzball/litro/runtime/vite-dev.js`) centralise the dev Vite config: dev `base: '/'` so module URLs stay clear of the `/_litro/` static mount, dependency pre-optimization and page warmup to prevent mid-load full reloads, and watcher ignores for `.nitro/`/`.litro/` so Nitro regenerating its types no longer forces a full browser reload. The actions Vite plugin now also stubs `@beatzball/litro/actions/server` by resolved path, which live-source dev requires to keep `node:crypto` imports out of the browser graph.
+
+  Backwards compatible for existing apps: the live entry only activates when the app's `server/middleware/vite-dev.ts` builds its Vite server from `litroViteDevConfig()` (which sets `LITRO_DEV_LIVE_ENTRY`). Apps still running a previously-scaffolded middleware keep their prior dev behavior unchanged after upgrading; update the middleware to the current template to opt in to the live entry.
+
+- Updated dependencies [16d2705]
+  - @beatzball/litro-router@0.2.0
+
 ## 0.12.0
 
 ### Minor Changes
