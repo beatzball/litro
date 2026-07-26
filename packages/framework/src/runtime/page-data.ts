@@ -56,6 +56,15 @@ export interface PageDataFetcher<T> {
  *
  * On the client, read the data with `getServerData<T>()`.
  *
+ * Reserved fields — extracted server-side into the HTML shell and stripped
+ * from the serialized client JSON:
+ *   - `seoTitle` (string): document <title>.
+ *   - `seoHead` (string): raw HTML injected into <head> (meta tags, JSON-LD).
+ *   - `bodyScript` (string): raw HTML emitted at end-of-body immediately
+ *     before the app-bundle script — a synchronous pre-hydration slot for
+ *     filling server-unknowable values (e.g. the user's local time) on first
+ *     paint. Does not run on client-side (SPA) navigations.
+ *
  * @param fetcher - An async function that receives the H3 event and returns
  *                  the data object for this page. Must return a
  *                  JSON-serializable value.

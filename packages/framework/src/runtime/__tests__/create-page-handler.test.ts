@@ -258,6 +258,68 @@ describe('createPageHandler — seoTitle from pageData', () => {
 });
 
 // ---------------------------------------------------------------------------
+// bodyScript injection
+// ---------------------------------------------------------------------------
+
+describe('createPageHandler — bodyScript from pageData', () => {
+  beforeEach(() => {
+    vi.mocked(buildShell).mockClear();
+  });
+
+  const BODY_SCRIPT = '<script>window.__prePaint = true;</script>';
+
+  it('passes bodyScript string to buildShell as bodyScript option', async () => {
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ bodyScript: BODY_SCRIPT })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.bodyScript).toBe(BODY_SCRIPT);
+  });
+
+  it('strips bodyScript from the serialized client JSON, keeping other fields', async () => {
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: {
+        pageData: makePageData(async () => ({ bodyScript: BODY_SCRIPT, message: 'hello' })),
+      },
+    });
+
+    await callHandler(handler);
+
+    const json = lastBuildShellOpts()?.serverDataJson;
+    expect(json).toBeDefined();
+    expect(JSON.parse(json as string)).toEqual({ message: 'hello' });
+  });
+
+  it('ignores non-string bodyScript values (number, object, null)', async () => {
+    for (const badValue of [42, { js: 'x' }, null]) {
+      const handler = createPageHandler({
+        route: makeRoute(),
+        pageModule: { pageData: makePageData(async () => ({ bodyScript: badValue })) },
+      });
+
+      await callHandler(handler);
+
+      expect(lastBuildShellOpts()?.bodyScript).toBeUndefined();
+    }
+  });
+
+  it('omits bodyScript option when pageData does not return one', async () => {
+    const handler = createPageHandler({
+      route: makeRoute(),
+      pageModule: { pageData: makePageData(async () => ({ message: 'hello' })) },
+    });
+
+    await callHandler(handler);
+
+    expect(lastBuildShellOpts()?.bodyScript).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // pageData fetch failure
 // ---------------------------------------------------------------------------
 

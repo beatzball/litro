@@ -44,6 +44,28 @@ export class BlogSlugPage extends LitroPage {
 }
 ```
 
+## Reserved Fields
+
+Three optional string fields in the `definePageData` result are extracted server-side into the HTML shell and stripped from the serialized client JSON:
+
+- **`seoTitle`** — the document `<title>`.
+- **`seoHead`** — raw HTML injected into `<head>` (meta tags, Open Graph, JSON-LD).
+- **`bodyScript`** — raw HTML emitted at end-of-body, immediately before the app-bundle `<script>`. A synchronous classic script here runs after the page's (declarative shadow DOM) content has been parsed but before the module bundle executes — a pre-hydration slot for filling values the server can't know (for example, times in the user's local timezone) on first paint.
+
+```ts
+export const pageData = definePageData(async () => ({
+  seoTitle: 'Now - My App',
+  bodyScript: `<script>(function(){
+    var el = document.querySelector('page-now');
+    if (!el || !el.shadowRoot) return;
+    var slot = el.shadowRoot.querySelector('.local-time');
+    if (slot) slot.textContent = new Date().toLocaleTimeString();
+  })();</script>`,
+}));
+```
+
+`bodyScript` runs only on full document loads — on client-side (SPA) navigations it does not re-run, so the component's own rendering must still produce the final values (the pre-paint script only makes the first paint correct sooner). All three fields are author-controlled raw HTML: Litro applies no escaping, so never build them from untrusted input.
+
 ## Error Handling
 
 Throw an H3 error to return a 404 or other error status:

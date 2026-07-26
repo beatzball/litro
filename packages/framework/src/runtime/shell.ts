@@ -144,6 +144,20 @@ export interface ShellOptions {
    * @default true
    */
   includeDSDPolyfill?: boolean;
+  /**
+   * Raw HTML emitted at end-of-body, immediately BEFORE the app-bundle
+   * <script type="module"> tag — typically a synchronous classic
+   * `<script>…</script>`.
+   *
+   * A synchronous script here runs after the page element and its (declarative
+   * shadow DOM) content have been parsed but before the deferred module bundle
+   * executes, giving pages a pre-hydration slot to fill server-unknowable
+   * values (e.g. times in the user's local timezone) on first paint.
+   *
+   * Author-controlled raw HTML with the same trust model as `head` — no
+   * framework escaping is applied.
+   */
+  bodyScript?: string;
 }
 
 /**
@@ -217,8 +231,13 @@ export function buildShell(
 <litro-outlet id="_litro_main" tabindex="-1" style="outline:none">
 `;
 
-  const foot = `</litro-outlet>
+  // Per-page synchronous body script. Emitted BEFORE the app-bundle script so
+  // it runs pre-hydration — after the page's DSD content is parsed, before the
+  // deferred module bundle executes.
+  const bodyScript = options?.bodyScript ?? '';
 
+  const foot = `</litro-outlet>
+${bodyScript}
   <!--
     App bundle — framework adapter bootstrap + page components.
     /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
