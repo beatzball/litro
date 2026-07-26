@@ -45,10 +45,12 @@ test('app bundle script appears in the document foot', async ({ request }) => {
   const res = await request.get('/');
   const html = await res.text();
 
-  // The app bundle <script type="module"> must be present in the HTML.
+  // The app entry <script type="module"> must be present in the HTML.
   // Hydration support (lit-element-hydrate-support.js) is the first import
   // inside app.ts and is bundled into app.js — no separate script tag needed.
-  const appIdx = html.indexOf('app.js');
+  // Dev serves the live source entry (`/app.ts`, issue 97); prod/preview
+  // serves the built bundle (`/_litro/app.js`) — accept either.
+  const appIdx = html.search(/src="[^"]*app\.(js|ts)"/);
   expect(appIdx).toBeGreaterThan(-1);
   // The script should appear after the main content (in the foot)
   const outletIdx = html.indexOf('</litro-outlet>');

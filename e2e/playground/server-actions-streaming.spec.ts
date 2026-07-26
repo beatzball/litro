@@ -25,6 +25,9 @@ test.describe('server actions — streaming', () => {
     // wait for the atomic swap to settle before interacting, matching the
     // convention in server-actions.spec.ts.
     await page.waitForSelector('page-forms:not([hidden])');
+    // Router "swap complete" marker — before it, clicks can land on the dead
+    // SSR'd shell. Same convention as server-actions.spec.ts.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
     await page.locator('#stream-button').click();
     await expect(page.locator('#stream-lines li')).toHaveCount(4);
     await expect(page.locator('#stream-lines li').first()).toContainText('3 @ 20');
@@ -34,6 +37,8 @@ test.describe('server actions — streaming', () => {
   test('mid-stream error surfaces as a LitroActionError message', async ({ page }) => {
     await page.goto('/forms');
     await page.waitForSelector('page-forms:not([hidden])');
+    // Router "swap complete" marker (see the countdown test above).
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
     await page.locator('#stream-fail-button').click();
     await expect(page.locator('#stream-error')).toHaveText('stream blew up');
   });

@@ -12,8 +12,14 @@
  *   UMAMI_SRC        — script URL (default: https://cloud.umami.is/script.js)
  *   UMAMI_DOMAINS    — data-domains allowlist (optional)
  */
-const umamiScript = process.env.UMAMI_WEBSITE_ID
-  ? `<script defer src="${process.env.UMAMI_SRC ?? 'https://cloud.umami.is/script.js'}" data-website-id="${process.env.UMAMI_WEBSITE_ID}"${process.env.UMAMI_DOMAINS ? ` data-domains="${process.env.UMAMI_DOMAINS}"` : ''}></script>`
+// `globalThis.process?.` guard: this module is shared with browser-side page
+// components. In the production client bundle the unused server-only exports
+// (and with them these env reads) are tree-shaken away, but the dev server
+// serves the module as live source where the whole body executes — a bare
+// `process` reference would throw ReferenceError and kill the client graph.
+const env = globalThis.process?.env ?? {};
+const umamiScript = env.UMAMI_WEBSITE_ID
+  ? `<script defer src="${env.UMAMI_SRC ?? 'https://cloud.umami.is/script.js'}" data-website-id="${env.UMAMI_WEBSITE_ID}"${env.UMAMI_DOMAINS ? ` data-domains="${env.UMAMI_DOMAINS}"` : ''}></script>`
   : '';
 
 export const starlightHead = [

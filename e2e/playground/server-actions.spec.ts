@@ -14,6 +14,10 @@ test('SSR page contains data fetched via in-process action call', async ({ reque
 test('button click performs typed RPC and revives Date', async ({ page }) => {
   await page.goto('/actions');
   await page.waitForSelector('page-actions:not([hidden])');
+  // Wait for the router's authoritative "swap complete" marker: until the
+  // initial SSR->client swap finishes, the visible element is the SSR'd shell
+  // whose button has no live handler, so a click lands on it and is dropped.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.locator('#rpc-button').click();
   await expect(page.locator('#rpc-result')).toContainText('LITRO ACTIONS @ 20');
   await expect(page.locator('#rpc-result')).not.toContainText('NOT-A-DATE');

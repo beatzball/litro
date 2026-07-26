@@ -14,6 +14,9 @@ test('no server-module code reaches the browser on the actions page', async ({ p
   });
   await page.goto('/actions');
   await page.waitForSelector('page-actions:not([hidden])');
+  // Router "swap complete" marker — before it, clicks can land on the dead
+  // SSR'd shell. Same convention as server-actions.spec.ts.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.locator('#rpc-button').click();
   await expect(page.locator('#rpc-result')).toContainText('LITRO ACTIONS');
   // Await every captured body before asserting — pushing resolved strings

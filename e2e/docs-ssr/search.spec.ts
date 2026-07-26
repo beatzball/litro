@@ -83,6 +83,8 @@ test('search page returns 200', async ({ request }) => {
 test('header contains a search pill button', async ({ page }) => {
   await page.goto('/');
   // After hydration, spaNav property is set and the pill becomes visible.
+  // Wait for the router's post-swap marker (client entry booted) first.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   // Use first() since SSR + hydration may produce two header elements briefly.
   const pill = page.locator('starlight-header').first().locator('.search-pill');
   await expect(pill).toBeVisible({ timeout: 5000 });
@@ -96,6 +98,10 @@ test('Cmd+K opens search modal', async ({ page }) => {
   await page.goto('/');
   // Wait for the modal to be appended to body by app.ts
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   const modal = page.locator('search-modal');
   await expect(modal).toHaveAttribute('open', '');
@@ -104,6 +110,10 @@ test('Cmd+K opens search modal', async ({ page }) => {
 test('Escape closes search modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
   await page.keyboard.press('Escape');
@@ -113,6 +123,10 @@ test('Escape closes search modal', async ({ page }) => {
 test('header pill click opens search modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   const pill = page.locator('starlight-header').first().locator('.search-pill');
   await pill.click();
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
@@ -121,6 +135,10 @@ test('header pill click opens search modal', async ({ page }) => {
 test('/ shortcut opens modal when not in an input', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('/');
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
 });
@@ -132,6 +150,10 @@ test('/ shortcut opens modal when not in an input', async ({ page }) => {
 test('typing in modal shows autosuggest results', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   // Wait for the modal's shadow DOM to render and input to be available
   const input = page.locator('search-modal').locator('input[type="search"]');
@@ -145,6 +167,10 @@ test('typing in modal shows autosuggest results', async ({ page }) => {
 test('arrow keys navigate results in modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   const input = page.locator('search-modal').locator('input[type="search"]');
   await expect(input).toBeVisible({ timeout: 5000 });
@@ -160,6 +186,10 @@ test('arrow keys navigate results in modal', async ({ page }) => {
 test('Enter on result navigates away', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   const input = page.locator('search-modal').locator('input[type="search"]');
   await expect(input).toBeVisible({ timeout: 5000 });
@@ -181,6 +211,10 @@ test('Enter on result navigates away', async ({ page }) => {
 test('search modal has correct ARIA attributes', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
+  // Attached does not mean upgraded with keyboard/click listeners wired. The
+  // router's post-swap marker fires after the client entry has booted (all
+  // statically-imported components upgraded) — wait for it before interacting.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
   await page.keyboard.press('Meta+k');
   const dialog = page.locator('search-modal').locator('[role="dialog"]');
   await expect(dialog).toHaveAttribute('aria-modal', 'true');

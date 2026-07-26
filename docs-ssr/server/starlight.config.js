@@ -14,6 +14,7 @@ export const siteConfig = {
         { label: 'Introduction', slug: 'introduction' },
         { label: 'Getting Started', slug: 'getting-started' },
         { label: 'Configuration', slug: 'configuration' },
+        { label: 'Upgrading', slug: 'upgrading' },
       ],
     },
     {

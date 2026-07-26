@@ -1,4 +1,6 @@
-const siteUrl = (process.env.SITE_URL ?? 'https://litro.dev').replace(/\/$/, '');
+// `globalThis.process?.` guard: shared with browser-side page components —
+// see route-meta.ts for why a bare `process` reference breaks live-source dev.
+const siteUrl = (globalThis.process?.env?.SITE_URL ?? 'https://litro.dev').replace(/\/$/, '');
 
 export interface SeoOptions {
   title: string;

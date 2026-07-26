@@ -26,6 +26,9 @@ test.describe('agent demo — chat, data/UI separation (FAST playground, /agent)
     // router's initial resolve mounts a second (hidden) page-agent alongside
     // the SSR'd one before the atomic swap settles.
     await page.waitForSelector('page-agent:not([hidden])');
+    // Router "swap complete" marker — before it, interactions can land on the
+    // dead SSR'd shell. Same convention as the Lit playground's agent spec.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
 
     await page.fill('#chat-input', 'what is the weather in lisbon');
     await page.click('#chat-send');
@@ -52,6 +55,9 @@ test.describe('agent demo — chat, data/UI separation (FAST playground, /agent)
   }) => {
     await page.goto('/agent');
     await page.waitForSelector('page-agent:not([hidden])');
+    // Router "swap complete" marker — before it, interactions can land on the
+    // dead SSR'd shell. Same convention as the Lit playground's agent spec.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
 
     await page.fill('#chat-input', 'what is the weather in lisbon');
     await page.click('#chat-send');

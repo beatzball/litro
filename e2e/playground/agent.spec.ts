@@ -37,6 +37,13 @@ test.describe('agent demo — chat, data/UI separation (Lit playground, /agent)'
     // interacting, exactly as server-actions-forms.spec.ts and
     // server-actions-streaming.spec.ts do for page-forms.
     await page.waitForSelector('page-agent:not([hidden])');
+    // Wait for the router's authoritative "swap complete" marker before
+    // interacting. Until the initial SSR->client swap finishes, the visible
+    // element is the SSR'd shell with NO live event handlers — clicks land on
+    // it and are silently dropped. Element-count/visibility checks cannot
+    // distinguish that phase (count is 1 both before the client element mounts
+    // and after the swap), so poll the outlet attribute set post-swap.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
 
     await page.fill('#chat-input', 'what is the weather in lisbon');
     await page.click('#chat-send');
@@ -64,6 +71,13 @@ test.describe('agent demo — chat, data/UI separation (Lit playground, /agent)'
   }) => {
     await page.goto('/agent');
     await page.waitForSelector('page-agent:not([hidden])');
+    // Wait for the router's authoritative "swap complete" marker before
+    // interacting. Until the initial SSR->client swap finishes, the visible
+    // element is the SSR'd shell with NO live event handlers — clicks land on
+    // it and are silently dropped. Element-count/visibility checks cannot
+    // distinguish that phase (count is 1 both before the client element mounts
+    // and after the swap), so poll the outlet attribute set post-swap.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
 
     await page.fill('#chat-input', 'what is the weather in lisbon');
     await page.click('#chat-send');
