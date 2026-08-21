@@ -25,6 +25,7 @@ export function scriptedProvider(
 ): Provider {
   let turn = 0;
   return {
+    info: { system: 'scripted', model: 'scripted' },
     async *stream(req: ProviderRequest): AsyncGenerator<ProviderEvent, void, undefined> {
       turn += 1;
       const events = script(req, turn);

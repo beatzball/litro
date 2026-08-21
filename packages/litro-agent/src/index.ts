@@ -10,6 +10,7 @@ export const AGENT_CONFIG = Symbol.for('litro.agent.agent');
 // Re-export types from submodules
 export type * from './providers/types.js';
 export type * from './sessions/types.js';
+export type * from './telemetry/types.js';
 
 // Re-export error types
 export { AgentError };
@@ -98,6 +99,9 @@ export function defineAccess(fn: (event: H3Event) => void | Promise<void>): Acce
 // AgentRuntimeConfig and related types
 export interface AgentRuntimeConfig {
   sessions?: import('./sessions/types.js').SessionStore;
+  /** OpenTelemetry GenAI spans. Off unless a `tracer` is supplied — see
+   *  `@beatzball/litro-agent/telemetry` for the OTel adapter. */
+  telemetry?: import('./telemetry/types.js').TelemetryConfig;
 }
 
 export function defineAgentConfig(config: AgentRuntimeConfig): AgentRuntimeConfig {

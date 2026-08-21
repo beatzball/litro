@@ -35,6 +35,11 @@
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js"
     },
+    "./telemetry": {
+      "source": "./src/telemetry/otel.ts",
+      "types": "./dist/telemetry/otel.d.ts",
+      "import": "./dist/telemetry/otel.js"
+    },
     "./providers/openai-compatible": {
       "source": "./src/providers/openai-compatible.ts",
       "types": "./dist/providers/openai-compatible.d.ts",
@@ -54,6 +59,11 @@
       "source": "./src/sessions/file.ts",
       "types": "./dist/sessions/file.d.ts",
       "import": "./dist/sessions/file.js"
+    },
+    "./sessions/sqlite": {
+      "source": "./src/sessions/sqlite.ts",
+      "types": "./dist/sessions/sqlite.d.ts",
+      "import": "./dist/sessions/sqlite.js"
     },
     "./handler": {
       "source": "./src/runtime/handler.ts",
@@ -108,9 +118,9 @@
     "@lit-labs/ssr": "^3.3.0",
     "@microsoft/fast-element": "^2.10.3",
     "@microsoft/fast-ssr": "1.0.0-beta.39",
+    "jsdom": "^25.0.0",
     "lit": "^3.2.1",
     "nitropack": "^2.13.4",
-    "jsdom": "^25.0.0",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

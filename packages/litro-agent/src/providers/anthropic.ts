@@ -138,6 +138,7 @@ async function* readLines(body: ReadableStream<Uint8Array>): AsyncGenerator<stri
  *  wire format over `${baseURL}/v1/messages`. */
 export function anthropic(opts: AnthropicOptions): Provider {
   return {
+    info: { system: 'anthropic', model: opts.model },
     async *stream(req: ProviderRequest): AsyncGenerator<ProviderEvent, void, undefined> {
       const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
