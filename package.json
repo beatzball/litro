@@ -77,6 +77,8 @@
     "test:e2e:docs-ssr": "playwright test --project docs-ssr",
     "test:e2e:preview": "playwright test --config playwright.preview.config.ts",
     "lint": "tsc --noEmit -p packages/framework/tsconfig.json",
+    "check:doc-refs": "node scripts/check-doc-refs.mjs",
+    "check:doc-refs:self-test": "node scripts/check-doc-refs.mjs --self-test",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm -r --filter \"./packages/*\" build && changeset publish"

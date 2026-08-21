@@ -26,8 +26,8 @@
  *
  * ## Import note
  *
- *   This file imports from 'lit', 'lit/decorators.js', and type-only from
- *   './litro-router.js'. It is safe to include in both the client bundle and
+ *   This file imports from 'lit', 'lit/decorators.js', './page-data.js', and
+ *   type-only from '@beatzball/litro-router'. It is safe to include in both the client bundle and
  *   SSR module graph. However, it must NOT be imported in Nitro server code
  *   directly — use it only in page source files and the client runtime barrel
  *   (litro/runtime).

@@ -114,7 +114,7 @@ export interface FrameworkAdapter {
    * patching). This preamble is injected at the very top of the manifest so
    * it is evaluated first in the Rollup bundle.
    *
-   * Return an empty string if no preamble is needed (Lit, Elena).
+   * Return an empty string if no preamble is needed (Lit only).
    */
   manifestPreamble?(): string;
 

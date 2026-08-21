@@ -1,7 +1,7 @@
 # PRD: Framework-Agnostic Adapter Architecture
 
 **Priority:** P0
-**Status:** Phases 0-3 complete, Phase 4 pending
+**Status:** Phases 0-3 complete. Phase 4 shipped in PR 78 except track 4-D (adapter showcase page), which is still pending.
 
 ---
 
@@ -88,7 +88,7 @@ Validated Elena with SSG via `playground-starlight-elena`. All 10 UI components 
 
 All tracks are independent except 3-H (depends on 3-A + 3-B).
 
-## Phase 4: HackerNews clone showcase (pending)
+## Phase 4: HackerNews clone showcase (shipped in PR 78, except 4-D)
 
 **Goal:** Three identical HN clone apps — one per adapter — as both docs and proof of adapter equivalence.
 
@@ -96,11 +96,11 @@ Each clone: top stories, story detail with comments, user profile, Ask/Show HN v
 
 | Track | Work |
 |---|---|
-| **4-A: Lit HN clone** | `examples/hn-lit/` — reference implementation, establishes shared design. |
-| **4-B: FAST HN clone** | `examples/hn-fast/` — port from Lit. Straightforward base class swap (both Shadow DOM). |
-| **4-C: Elena HN clone** | `examples/hn-elena/` — port from Lit. Most interesting: `@scope` CSS, light DOM, no DSD. |
-| **4-D: Comparison page** | `/docs/adapters/showcase` — side-by-side code, bundle/SSR payload/Lighthouse comparison. |
-| **4-E: Benchmarks** | Add to `pnpm bench:cross`, publish to `latest.json`. |
+| **4-A: Lit HN clone** | Shipped as `benchmarks/apps/hn-litro/` — reference implementation, establishes shared design. Shared assets in `benchmarks/apps/hn-shared/`. |
+| **4-B: FAST HN clone** | Shipped as `benchmarks/apps/hn-litro-fast/` — port from Lit. Straightforward base class swap (both Shadow DOM). |
+| **4-C: Elena HN clone** | Shipped as `benchmarks/apps/hn-litro-elena/` — port from Lit. Most interesting: `@scope` CSS, light DOM, no DSD. |
+| **4-D: Comparison page** | PENDING — `/docs/adapters/showcase` does not exist yet. Side-by-side code, bundle/SSR payload/Lighthouse comparison. |
+| **4-E: Benchmarks** | Shipped — `pnpm bench:hn` / `pnpm bench:all`, results under the `hnBenchmark` key in `benchmarks/results/latest.json`. |
 
 4-B and 4-C parallel after 4-A. 4-D and 4-E after all clones complete.
 

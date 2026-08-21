@@ -107,6 +107,22 @@ jobs:
       - name: Verify server entry exists
         run: test -f docs-ssr/dist/server/server/index.mjs
 
+  doc-refs:
+    name: Doc References
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Pure Node, no dependencies and no install: the checker reads Markdown
+      # and TypeScript source directly. It fails the build when docs cite a
+      # repo path, a package export, or a custom element that does not exist.
+      - name: Self-test the checker
+        run: node scripts/check-doc-refs.mjs --self-test
+      - name: Check documentation references
+        run: node scripts/check-doc-refs.mjs
+
   audit:
     name: Dependency Audit
     runs-on: ubuntu-latest

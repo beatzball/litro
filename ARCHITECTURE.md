@@ -23,6 +23,7 @@ litro/                          <- Git repo root (pnpm workspace root)
   playground/                   <- fullstack recipe test app
   playground-11ty/              <- 11ty-blog recipe test app
   playground-starlight/         <- starlight recipe test app
+  playground-fast/              <- FAST adapter test app
   playground-elena/             <- Elena adapter test app
   playground-starlight-elena/   <- Elena starlight recipe test app
   playground-starlight-fast/    <- FAST starlight recipe test app
