@@ -25,6 +25,8 @@
  * worker-thread or async driver is a later knob.
  */
 import { createRequire } from 'node:module';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AgentError } from '../errors.js';
 import { validateSessionId } from './file.js';
@@ -42,6 +44,30 @@ export interface SqliteSessionStoreOptions {
   /** How long a writer waits for a competing write lock before failing.
    *  Default 5s. */
   busyTimeoutMs?: number;
+}
+
+/** SQLite opens a database file but will NOT create the directory holding
+ *  it — a missing parent surfaces as a bare `unable to open database file`
+ *  (SQLITE_CANTOPEN) at construction, which in a server means the whole
+ *  process fails to boot.
+ *
+ *  That is a live trap rather than a theoretical one: the documented path is
+ *  `.litro/sessions.db`, and `.litro/` is gitignored, so it does not exist
+ *  on a fresh clone. The JSONL store this replaces creates its own directory
+ *  (`mkdir(recursive: true)` in `file.ts`), so a project swapping stores has
+ *  every reason to expect the same.
+ *
+ *  `mkdirSync` rather than the async form because `DatabaseSync` is
+ *  synchronous and the store is constructed synchronously. `recursive: true`
+ *  is idempotent and does not throw when the directory already exists. */
+function ensureParentDir(path: string): void {
+  // In-memory databases (':memory:' and the `file::memory:` URI form) have
+  // no file on disk, and `dirname` on them would name a real directory that
+  // should not be created.
+  if (path === ':memory:' || path.startsWith('file:')) return;
+  const dir = dirname(path);
+  if (dir === '.' || dir === '') return;
+  mkdirSync(dir, { recursive: true });
 }
 
 /** Minimal structural view of the `node:sqlite` surface used here, so this
@@ -97,6 +123,7 @@ export interface SqliteSessionStore extends SessionStore {
 
 export function sqliteSessionStore(opts: SqliteSessionStoreOptions): SqliteSessionStore {
   const DatabaseSync = loadDatabaseSync();
+  ensureParentDir(opts.path);
   const db = new DatabaseSync(opts.path);
   const leaseTtlMs = opts.defaultLeaseTtlMs ?? DEFAULT_LEASE_TTL_MS;
 

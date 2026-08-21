@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'pathe';
 import { createRequire } from 'node:module';
@@ -46,6 +47,40 @@ afterEach(async () => {
     }
   }
   await rm(dir, { recursive: true, force: true });
+});
+
+d('sqliteSessionStore -- construction', () => {
+  // Regression: SQLite opens a file but never creates the directory holding
+  // it, so a missing parent used to surface as a bare `unable to open
+  // database file` at construction. In a server that means the process fails
+  // to boot -- and the documented path is `.litro/sessions.db`, inside a
+  // gitignored directory that does not exist on a fresh clone. The JSONL
+  // store creates its own directory, so a project swapping stores expects
+  // the same.
+  it('creates a missing parent directory rather than failing to open', () => {
+    const path = join(dir, 'does', 'not', 'exist', 'sessions.db');
+    expect(existsSync(join(dir, 'does'))).toBe(false);
+
+    const s = sqliteSessionStore({ path });
+    open.push(s);
+
+    expect(existsSync(path)).toBe(true);
+  });
+
+  it('is idempotent when the directory already exists', () => {
+    const path = join(dir, 'nested', 'sessions.db');
+    open.push(sqliteSessionStore({ path }));
+    // A second store over the same directory must not throw on the mkdir.
+    expect(() => open.push(sqliteSessionStore({ path: join(dir, 'nested', 'other.db') }))).not.toThrow();
+  });
+
+  // ':memory:' has no file on disk. Treating it as a path would have created
+  // a stray `.` -relative directory named after it.
+  it('does not touch the filesystem for an in-memory database', () => {
+    const s = sqliteSessionStore({ path: ':memory:' });
+    open.push(s);
+    expect(existsSync(':memory:')).toBe(false);
+  });
 });
 
 d('sqliteSessionStore -- store contract', () => {
