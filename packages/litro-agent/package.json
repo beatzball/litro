@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro-agent",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "types": "./dist/index.d.ts",
   "description": "Filesystem-first agent layer for Litro apps: tools that return server-rendered web components, durable NDJSON session streams, pluggable model providers. Deploys anywhere Nitro deploys.",
