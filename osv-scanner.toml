@@ -24,31 +24,20 @@ id = "GHSA-g7r4-m6w7-qqqr" # esbuild 0.27.3
 reason = "esbuild is a dev/build-only tool (via vite/vitest); not shipped in any published package."
 
 [[IgnoredVulns]]
+id = "GHSA-jmr9-qjv8-65gv" # extract-zip 2.0.1 (High, CVSS 8.6)
+reason = "No fixed version exists upstream as of 2026-08-21. Dev/benchmark-only: the sole path is @beatzball/litro-benchmarks (a PRIVATE workspace) -> lighthouse -> puppeteer-core -> @puppeteer/browsers -> extract-zip, so it never ships to users. Verified with `pnpm why -r extract-zip`, which reports that workspace and no other. Revisit when @puppeteer/browsers ships a patched extract-zip."
+
+[[IgnoredVulns]]
 id = "GHSA-w5hq-g745-h8pq" # uuid 8.3.2 (High)
 reason = "uuid is a dev/benchmark transitive dependency; not a production dependency of any published package, so it never ships to users."
 
 # --- Transitive, below the enforced `high` severity bar (Medium/Low) ---
+#
+# Entries here are removed once a dependency bump resolves them: osv-scanner
+# reports unused ignores, and a stale ignore can mask a genuine future
+# reintroduction of the same advisory.
 
 [[IgnoredVulns]]
 id = "GHSA-8988-4f7v-96qf" # @opentelemetry/core 1.30.1
 reason = "Transitive tooling dependency (not a direct production dependency of any published package); Medium severity, below the high threshold this audit enforces."
 
-[[IgnoredVulns]]
-id = "GHSA-f886-m6hf-6m8v" # brace-expansion
-reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
-
-[[IgnoredVulns]]
-id = "GHSA-jxxr-4gwj-5jf2" # brace-expansion
-reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
-
-[[IgnoredVulns]]
-id = "GHSA-v2v4-37r5-5v8g" # ip-address 10.1.0
-reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
-
-[[IgnoredVulns]]
-id = "GHSA-h67p-54hq-rp68" # js-yaml
-reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
-
-[[IgnoredVulns]]
-id = "GHSA-vmf3-w455-68vh" # tar 7.5.11
-reason = "Transitive dependency; Medium severity, below the high threshold this audit enforces; tracked for routine dependency updates."
