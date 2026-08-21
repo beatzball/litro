@@ -32,7 +32,8 @@ import { fileSessionStore, validateSessionId } from '../sessions/file.js';
 import { AGENT_CONFIG } from '../index.js';
 import type { AgentConfig, AgentDefinition, AgentRuntimeConfig, ToolDefinition } from '../index.js';
 import { AgentError, errorPayload } from '../errors.js';
-import type { SessionEvent, SessionStore } from '../sessions/types.js';
+import type { SessionEvent, SessionLease, SessionStore } from '../sessions/types.js';
+import { resolveTelemetry, type Telemetry } from '../telemetry/runtime.js';
 
 export interface AgentManifestEntry {
   name: string;
@@ -136,6 +137,46 @@ function checkGates(event: H3Event, method: string): void {
 // section 10). Keyed `${agentName}/${sessionId}`.
 const locks = new Set<string>();
 
+/** Turn-lease duration requested from a lease-capable store, and how often
+ *  the holder renews it. A lease only lapses if an instance stalls (or
+ *  dies) for a full TTL, at which point another instance may take the
+ *  session over -- which is exactly the desired recovery behaviour. */
+const TURN_LEASE_TTL_MS = 30_000;
+const TURN_LEASE_RENEW_MS = Math.floor(TURN_LEASE_TTL_MS / 3);
+
+/** How often a cross-instance live tail re-reads the store. Only used when
+ *  a turn is running on ANOTHER instance, where the in-process broadcast
+ *  can never reach this one. */
+const REMOTE_TAIL_POLL_MS = 100;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    // Never hold the process open just to poll.
+    (timer as { unref?: () => void }).unref?.();
+  });
+}
+
+/** Starts renewing `lease` on a heartbeat. Losing ownership stops the
+ *  heartbeat but NEVER aborts the turn: an in-flight turn always runs to
+ *  completion and keeps appending, per the durability contract. */
+function startLeaseHeartbeat(lease: SessionLease): () => void {
+  const timer = setInterval(() => {
+    void lease
+      .renew()
+      .then((held) => {
+        if (!held) clearInterval(timer);
+      })
+      .catch(() => {
+        // A transient renew failure is not fatal; the next tick retries,
+        // and the worst case is the lease lapsing and another instance
+        // taking over -- which the TTL already allows for.
+      });
+  }, TURN_LEASE_RENEW_MS);
+  (timer as { unref?: () => void }).unref?.();
+  return () => clearInterval(timer);
+}
+
 /** A live-tailing GET registers one of these per broadcast key. `onEvent`
  *  is the normal per-event forward; `onClose` is the TERMINAL close signal
  *  (Finding 1) -- invoked once, from `closeTails()`, when the POST side is
@@ -211,6 +252,7 @@ async function handlePost(
   agent: ResolvedAgent,
   sessionId: string,
   store: SessionStore,
+  telemetry: Telemetry,
 ): Promise<ReadableStream<Uint8Array>> {
   let text: string;
   try {
@@ -227,6 +269,26 @@ async function handlePost(
     throw new AgentError('A turn is already in progress for this session', { status: 409 });
   }
   locks.add(key);
+
+  // Two locks, deliberately. The in-process `locks` Set above is the cheap
+  // fast path and the ONLY lock a store without lease support has. A
+  // lease-capable store (see `sessions/sqlite`) adds the cross-instance
+  // half: without it, two app instances would each pass their own local
+  // check and run concurrent turns on the same session.
+  let lease: SessionLease | null = null;
+  if (store.acquireLease) {
+    try {
+      lease = await store.acquireLease(key, { ttlMs: TURN_LEASE_TTL_MS });
+    } catch (err) {
+      locks.delete(key);
+      throw err;
+    }
+    if (!lease) {
+      locks.delete(key);
+      throw new AgentError('A turn is already in progress for this session', { status: 409 });
+    }
+  }
+  const stopHeartbeat = lease ? startLeaseHeartbeat(lease) : undefined;
 
   setResponseHeader(event, 'content-type', 'application/x-ndjson; charset=utf-8');
   setResponseHeader(event, 'cache-control', 'no-store');
@@ -273,6 +335,7 @@ async function handlePost(
           sessionId,
           event,
           emit,
+          telemetry,
         };
         try {
           await runTurn(deps, text);
@@ -285,6 +348,17 @@ async function handlePost(
           // Release the lock on EVERY path (success, thrown error) before
           // anything else -- a leaked lock would wedge the session forever.
           locks.delete(key);
+          stopHeartbeat?.();
+          if (lease) {
+            // A failed release is survivable -- the lease expires on its
+            // own TTL -- but it must never stop `closeTails()` below from
+            // running, or live tails would hang.
+            try {
+              await lease.release();
+            } catch {
+              // fall through to closeTails
+            }
+          }
           // Finding 1: unconditionally close every live tail on this key
           // now that the turn is over, whether or not it ever produced a
           // `turn-end` event (a dead turn -- store rejection, a throwing
@@ -362,6 +436,18 @@ function handleGet(
           // this brief window still terminates the stream instead of
           // hanging in the buffered-drain/live-forward code below.
           const held = locks.has(key);
+
+          // Cross-instance tail. When the turn is running on ANOTHER
+          // instance there is no in-process broadcast to subscribe to, so
+          // the store itself becomes the channel and this stream polls it.
+          //
+          // Asked BEFORE the replay on purpose: asking afterwards has a
+          // real gap -- a remote turn that finishes and releases its lease
+          // between "replay ended without a turn-end" and "is it still
+          // leased?" would read as idle, and the client would lose the
+          // tail it reconnected for.
+          const heldRemotely = !held && store.isLeased ? await store.isLeased(key) : false;
+
           const buffered: SessionEvent[] = [];
           const bufferSub: Subscriber = {
             onEvent: (ev) => {
@@ -382,6 +468,43 @@ function handleGet(
           }
 
           if (!held) {
+            if (heldRemotely && !sawTurnEnd) {
+              // Poll until the turn ends or its lease is gone. The
+              // check-then-drain order is what makes this correct: if the
+              // lease was ALREADY gone before a drain, that drain is
+              // guaranteed to have seen everything the owner ever wrote,
+              // so one more pass is never needed.
+              for (;;) {
+                if (closed) return;
+                // DO NOT move this below the drain. Reading the lease AFTER
+                // the drain inverts the guarantee: the owner could append
+                // its last events and release between the two, and this
+                // tail would exit having never seen them. Checking first
+                // means a `false` here can only describe a state that was
+                // already true before the drain ran.
+                const stillLeased = store.isLeased ? await store.isLeased(key) : false;
+
+                for await (const ev of store.read(sessionId, lastSeq + 1)) {
+                  if (closed) return;
+                  controller.enqueue(textEncoder.encode(encoder.value(ev)));
+                  lastSeq = ev.seq;
+                  if (ev.kind === 'turn-end') {
+                    sawTurnEnd = true;
+                    break;
+                  }
+                }
+
+                if (sawTurnEnd || closed) break;
+                // The owner was already gone BEFORE the drain above, and
+                // that drain still produced no turn-end: it crashed, or its
+                // lease lapsed. Everything it ever wrote has been sent, so
+                // stop rather than poll forever -- the lease TTL is what
+                // bounds this wait.
+                if (!stillLeased) break;
+                await sleep(REMOTE_TAIL_POLL_MS);
+              }
+              if (closed) return;
+            }
             finish();
             return;
           }
@@ -465,6 +588,9 @@ export function createAgentHandler(
   const agents = new Map<string, ResolvedAgent>();
   for (const entry of entries) agents.set(entry.name, buildAgent(entry));
   const store = runtimeConfig?.sessions ?? fileSessionStore();
+  // Resolved ONCE per handler, not per request: with no tracer configured
+  // this is the shared no-op and every span hook is a boolean check.
+  const telemetry = resolveTelemetry(runtimeConfig?.telemetry);
 
   return defineEventHandler(async (event) => {
     const method = event.method;
@@ -485,7 +611,7 @@ export function createAgentHandler(
       // rethrows anything else for h3 to format itself.
       if (agent.access) await agent.access(event);
 
-      if (method === 'POST') return await handlePost(event, agent, sessionId, store);
+      if (method === 'POST') return await handlePost(event, agent, sessionId, store, telemetry);
       return handleGet(event, agent, sessionId, store);
     } catch (err) {
       if (err instanceof AgentError) return sendError(event, err);

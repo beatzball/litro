@@ -15,6 +15,11 @@ export interface OpenAICompatibleOptions {
    *  a key resolves — local runtimes (Ollama, LM Studio) need none. */
   apiKey?: string;
   headers?: Record<string, string>;
+  /** Semconv `gen_ai.provider.name` reported in telemetry. Defaults to
+   *  'openai'; set it when pointing this adapter at another vendor's
+   *  OpenAI-compatible endpoint (ollama, vLLM, ...) so spans are not
+   *  mislabelled. */
+  system?: string;
 }
 
 interface WireToolCallDelta {
@@ -109,6 +114,7 @@ async function* readLines(body: ReadableStream<Uint8Array>): AsyncGenerator<stri
  *  completions wire format over `${baseURL}/chat/completions`. */
 export function openaiCompatible(opts: OpenAICompatibleOptions): Provider {
   return {
+    info: { system: opts.system ?? 'openai', model: opts.model },
     async *stream(req: ProviderRequest): AsyncGenerator<ProviderEvent, void, undefined> {
       const apiKey = opts.apiKey ?? process.env.OPENAI_API_KEY;
       const headers: Record<string, string> = { 'content-type': 'application/json' };
