@@ -1,0 +1,6 @@
+# References that check-doc-refs should skip.
+# One exact string per line, as printed by the checker. Say why.
+
+# Illustrative filename pair explaining the slug-collision rule in
+# content-layer.md — these are content files in a reader's project, not ours.
+docs/setup.md

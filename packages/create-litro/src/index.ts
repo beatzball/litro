@@ -3,10 +3,10 @@
  * create-litro — Scaffolding CLI for Litro
  *
  * Usage:
- *   npm create litro
- *   npx create-litro
- *   npx create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast>]
- *   npx create-litro --list-recipes
+ *   npm create @beatzball/litro
+ *   npx @beatzball/create-litro
+ *   npx @beatzball/create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast|elena>]
+ *   npx @beatzball/create-litro --list-recipes
  *
  * Prompts for project name, recipe, and mode, then scaffolds a complete
  * Litro project from the selected recipe template.

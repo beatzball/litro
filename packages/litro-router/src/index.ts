@@ -1,7 +1,8 @@
 /**
  * LitroRouter — Litro's built-in client-side router.
  *
- * Replaces @vaadin/router (deprecated). Built on the native URLPattern API
+ * Replaces the @vaadin/router dependency Litro used previously. Built on the
+ * native URLPattern API
  * (Baseline Newly Available Sep 2025; polyfill available for older browsers).
  *
  * Client-only — never import this module server-side. It accesses

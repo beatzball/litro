@@ -24,9 +24,9 @@ Use `publicAssets` array in `nitro.config.ts` to serve the Vite client bundle. `
 
 ---
 
-## Nitro 2.10 hook names and plugin calling convention
+## Nitro 2.13 hook names and plugin calling convention
 
-Use `'build:before'` and `'dev:reload'` (not `'nitro:build:before'` / `'nitro:dev:reload'`). `'nitro:init'` does not fire from `createNitro()` in Nitro 2.10. Build-time plugins must be directly awaited from `hooks['build:before']` — registering a nested `build:before` sub-hook inside a plugin is too late since the event already fired.
+Use `'build:before'` and `'dev:reload'` (not `'nitro:build:before'` / `'nitro:dev:reload'`). `'nitro:init'` does not fire from `createNitro()` in Nitro 2.13. Build-time plugins must be directly awaited from `hooks['build:before']` — registering a nested `build:before` sub-hook inside a plugin is too late since the event already fired.
 
 ---
 
@@ -74,7 +74,7 @@ Remove deprecated `@vaadin/router`. Replace with a built-in router (`packages/li
 
 ## LitroRouter: hash guard, scroll-to-top, and shadow DOM scroll-to-hash
 
-The `popstate` listener skips re-rendering when only the hash changes (`_lastPathname` guard), preventing TOC links from wiping `serverData`. After SPA page swap, `scrollTo(0, 0)` resets scroll position unless a hash fragment is present, in which case `_scrollToHash()` uses `_findDeep()` to traverse shadow roots and find the target heading.
+The `popstate` listener skips re-rendering when only the hash changes (`_lastPathAndSearch` guard), preventing TOC links from wiping `serverData`. After SPA page swap, `scrollTo(0, 0)` resets scroll position unless a hash fragment is present, in which case `_scrollToHash()` uses `_findDeep()` to traverse shadow roots and find the target heading.
 
 ---
 
@@ -116,7 +116,7 @@ Both `buildShell()` calls must forward `head: routeMeta?.head`. Without it, reci
 
 ## Playwright e2e test suite
 
-Single root `e2e/` directory with per-playground subdirectories. Port assignments: playground=3030, playground-11ty=3031, playground-starlight=3032, docs=3033, docs-ssr=3034. Shadow DOM caveat: `locator.textContent()` does not include shadow root children — use `evaluate(el => el.shadowRoot?.textContent)`.
+Single root `e2e/` directory with per-playground subdirectories. Port assignments: playground=3030, playground-11ty=3031, playground-starlight=3032, docs=3033, docs-ssr=3034, playground-starlight-fast=3035, playground-elena=3036, playground-starlight-elena=3037, playground-fast=3038. The litro-agent resume e2e uses 3052. Shadow DOM caveat: `locator.textContent()` does not include shadow root children — use `evaluate(el => el.shadowRoot?.textContent)`.
 
 ---
 

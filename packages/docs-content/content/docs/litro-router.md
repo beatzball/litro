@@ -63,7 +63,7 @@ export class ProfilePage extends LitroPage {
 ```ts
 interface LitroLocation {
   pathname: string;
-  params: Record<string, string>;
+  params: Record<string, string | undefined>;
   search: string;
   hash: string;
 }
