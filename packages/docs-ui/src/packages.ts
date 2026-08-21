@@ -22,6 +22,7 @@ const PACKAGES = [
   { slug: 'litro',        dir: 'framework',    name: '@beatzball/litro' },
   { slug: 'litro-router', dir: 'litro-router', name: '@beatzball/litro-router' },
   { slug: 'create-litro', dir: 'create-litro', name: '@beatzball/create-litro' },
+  { slug: 'litro-agent',  dir: 'litro-agent',  name: '@beatzball/litro-agent' },
 ] as const;
 
 export const ALL_PACKAGE_SLUGS = PACKAGES.map(p => p.slug);

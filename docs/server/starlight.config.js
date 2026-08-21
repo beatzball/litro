@@ -69,6 +69,7 @@ export const siteConfig = {
         { label: '@beatzball/litro',        slug: 'packages/litro' },
         { label: '@beatzball/litro-router', slug: 'packages/litro-router' },
         { label: '@beatzball/create-litro', slug: 'packages/create-litro' },
+        { label: '@beatzball/litro-agent',  slug: 'packages/litro-agent' },
       ],
     },
     {

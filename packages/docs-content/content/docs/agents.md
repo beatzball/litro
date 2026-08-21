@@ -75,7 +75,7 @@ The `ui()` renderer is selected by the `LITRO_ADAPTER` environment variable — 
 
 ### agents/_config.ts (optional)
 
-Runtime config is optional. The default session store is the JSONL file store, so an app that wants the default writes no config file at all. To configure it explicitly (or swap in a custom `SessionStore`):
+Runtime config is optional and takes two keys: `sessions` (see [Sessions and durability](#sessions-and-durability)) and `telemetry` (see [Telemetry](#telemetry)). The default session store is the JSONL file store and telemetry is off, so an app that wants the defaults writes no config file at all. To configure the store explicitly (or swap in a custom `SessionStore`):
 
 ```ts
 import { defineAgentConfig } from '@beatzball/litro-agent';
@@ -285,7 +285,77 @@ A session is an append-only JSONL log at `.litro/sessions/<id>.jsonl`, one `Sess
 - **Turns survive client disconnect.** A POST client that drops mid-turn does not abort the turn — the runtime keeps appending to the store and running to completion. The persisted log stays complete.
 - **Reconnect from a seq.** A fresh GET (or the client's `resume`) replays the stored log from `?from=<seq>` and, if a turn is still in flight, live-tails it until `turn-end`.
 
-The per-session turn lock is **in-process** — one Node process. A concurrent POST for the same agent/session returns 409. This is the documented v0 limitation: multi-instance deployments need a store-level lease, which lands with the alternate session stores (see [Limitations](#limitations)).
+A concurrent POST for the same agent/session returns 409. **How far that guarantee reaches depends on the store you pick:**
+
+- **`fileSessionStore` (the default)** — the turn lock is in-process, one Node process. Two instances behind a load balancer would each pass their own local check and run concurrent turns on one session.
+- **`sqliteSessionStore`** — adds a store-level lease, so the lock holds across instances. See [Multi-instance sessions](#multi-instance-sessions).
+
+### Multi-instance sessions
+
+`sqliteSessionStore` is an alternative to the default JSONL store, built for deployments running more than one instance against shared storage.
+
+```ts
+// agents/_config.ts
+import { defineAgentConfig } from '@beatzball/litro-agent';
+import { sqliteSessionStore } from '@beatzball/litro-agent/sessions/sqlite';
+
+export default defineAgentConfig({
+  sessions: sqliteSessionStore({ path: '.litro/sessions.db' }),
+});
+```
+
+It creates its parent directory if it does not exist, so the path above works on a fresh clone even though `.litro/` is gitignored.
+
+**Requires Node 22.5+**, since `node:sqlite` does not exist before that. It lives behind its own subpath and is never in the package's default import graph, so Node 20 users are unaffected and keep the JSONL store. Node prints an `ExperimentalWarning` for `node:sqlite`; that is Node's notice, not this package's.
+
+What it gives you over the default:
+
+- **Crash-safe sequence numbers.** `seq` is computed as `MAX(seq)+1` inside the same transaction as the insert, so there is no in-memory counter to lose on restart and no way for two writers to mint the same seq.
+- **A cross-instance turn lease**, renewed on a heartbeat for the life of a turn and released in a `finally`.
+- **A live tail that still works across instances.** A GET reconnecting while the turn runs on a *different* instance cannot reach that instance's in-process broadcast, so it polls the store until the turn ends.
+
+**A lost lease does not abort the turn.** If an instance stalls past the lease TTL and another takes the lease over, the first stops renewing but runs its turn to completion. Aborting mid-turn would break the append-before-wire rule above, which is what makes the persisted log trustworthy in the first place.
+
+One deliberate trade: `node:sqlite`'s `DatabaseSync` is synchronous, so each append briefly blocks the event loop — the same call the JSONL store makes with an fsync per append. An async driver is a later addition.
+
+## Telemetry
+
+Agent turns can emit OpenTelemetry spans following the [GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/). **Telemetry is off unless you supply a tracer**, and when it is off every hook short-circuits to a shared no-op — no allocation, no attribute building.
+
+```ts
+// agents/_config.ts
+import * as otel from '@opentelemetry/api';
+import { defineAgentConfig } from '@beatzball/litro-agent';
+import { otelTracer } from '@beatzball/litro-agent/telemetry';
+
+export default defineAgentConfig({
+  telemetry: { tracer: otelTracer(otel) },
+});
+```
+
+**Your app brings OpenTelemetry; this package does not depend on it.** You pass the `@opentelemetry/api` namespace in rather than the package importing it. That guarantees the runtime uses the same api singleton your SDK registered against — a duplicated copy is the classic reason spans silently vanish — and it means no peer dependency to resolve and no dynamic import in a server bundle. Any object matching the exported `AgentTracer` interface works, so a custom tracer needs no OpenTelemetry at all.
+
+Three spans per turn:
+
+| Span | When | Notable attributes |
+|---|---|---|
+| `invoke_agent <agent>` | once per turn | `gen_ai.agent.name`, `gen_ai.conversation.id` (the session id), `litro.agent.turn.rounds`, summed token usage |
+| `chat <model>` | once per provider round | `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens` / `output_tokens`, `litro.agent.round` |
+| `execute_tool <tool>` | once per tool call | `gen_ai.tool.name`, `gen_ai.tool.call.id`, `litro.agent.tool.ui` |
+
+Tool spans are parented to the **turn**, not to the chat round that dispatched them — a tool run is a sibling of the model call, not a child of it.
+
+### Content capture
+
+Prompt and completion text is **not** recorded by default, per the semantic conventions' opt-in stance on content capture:
+
+```ts
+telemetry: { tracer: otelTracer(otel), captureContent: true, maxContentLength: 8192 }
+```
+
+**Even with capture on, a UI tool's rendered `html` is never recorded** — only its `data`. That is the same rule that keeps html out of the model's view, applied to traces: the html is stripped at the top level, when nested, and in the tool result fed back into the next round's captured messages.
+
+Errors carry the semantic-convention `error.type` and a message, never a stack.
 
 ## Client
 
@@ -325,15 +395,13 @@ Any gate failure returns 403. Beyond the gates:
 
 ## Limitations
 
-v0 is the RFC's vertical slice. The following are specified but deferred (in priority order, mirroring the design spec):
+The following are specified but deferred (in priority order, mirroring the design spec). OpenTelemetry spans and the `node:sqlite` store were on this list and shipped in 0.2.0 — see [Telemetry](#telemetry) and [Multi-instance sessions](#multi-instance-sessions).
 
-1. **OpenTelemetry** spans (GenAI semantic conventions), configured via `agents/_config.ts`.
-2. **Alternate session stores** (`node:sqlite`, Node 22.5+) — and with them the store-level lease that lifts the single-process turn-lock limitation.
-3. **Skills.** The sharing contract is fully specified (a skill is a standard Agent Skill folder; three scope levels — global `skills/`, shared `agents/_shared/skills/`, local `agents/<name>/skills/` — resolved by skill name with local-first precedence; `defineAgentPreset` bundles; npm/registry distribution; a CEM-backed design-system skillset). v0 ships only the reserved `skills`/`extends` config keys and the `_`-prefix scanner exclusion so the hierarchy lands without a breaking change.
-4. **MCP client** (`agents/<name>/mcp/`).
-5. **Standard-Schema → JSON-Schema conversion depth.** v0 hands providers a permissive object schema and leans on the tool `description` for the contract; deeper conversion is a v0.1 work item.
-6. **Elena `UIResult` renderer** (light-DOM, no hydration).
-7. **Subagents, additional surfaces, scheduled runs, and eval suites.**
-8. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
+1. **Skills.** The sharing contract is fully specified (a skill is a standard Agent Skill folder; three scope levels — global `skills/`, shared `agents/_shared/skills/`, local `agents/<name>/skills/` — resolved by skill name with local-first precedence; `defineAgentPreset` bundles; npm/registry distribution; a CEM-backed design-system skillset). v0 ships only the reserved `skills`/`extends` config keys and the `_`-prefix scanner exclusion so the hierarchy lands without a breaking change.
+2. **MCP client** (`agents/<name>/mcp/`).
+3. **Standard-Schema → JSON-Schema conversion depth.** v0 hands providers a permissive object schema and leans on the tool `description` for the contract; deeper conversion is a v0.1 work item.
+4. **Elena `UIResult` renderer** (light-DOM, no hydration).
+5. **Subagents, additional surfaces, scheduled runs, and eval suites.**
+6. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
 
 `ui()` throws for any adapter other than `lit` or `fast` in v0.
