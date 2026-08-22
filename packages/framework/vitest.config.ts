@@ -1,7 +1,10 @@
 import { defineConfig } from 'vitest/config';
+import { litroSourceAlias } from '../../scripts/litro-source-alias.mjs';
 
 export default defineConfig({
   resolve: {
+    // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).
+    alias: litroSourceAlias(),
     // Resolve the 'source' export condition in workspace packages so Vitest
     // uses TypeScript source files directly (e.g. litro-router/src/index.ts)
     // without requiring a prior build step. Mirrors playground/vite.config.ts.

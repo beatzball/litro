@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite';
+import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 export default defineConfig({
   base: '/_litro/',
   resolve: {
+    // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).
+    alias: litroSourceAlias(),
     conditions: ['source', 'browser', 'module', 'import', 'default'],
   },
   // FAST Element 2.x uses legacy TypeScript decorators (@attr, @observable).

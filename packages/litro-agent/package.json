@@ -26,57 +26,46 @@
   ],
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./ui": {
-      "source": "./src/ui/index.ts",
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js"
     },
     "./telemetry": {
-      "source": "./src/telemetry/otel.ts",
       "types": "./dist/telemetry/otel.d.ts",
       "import": "./dist/telemetry/otel.js"
     },
     "./providers/openai-compatible": {
-      "source": "./src/providers/openai-compatible.ts",
       "types": "./dist/providers/openai-compatible.d.ts",
       "import": "./dist/providers/openai-compatible.js"
     },
     "./providers/anthropic": {
-      "source": "./src/providers/anthropic.ts",
       "types": "./dist/providers/anthropic.d.ts",
       "import": "./dist/providers/anthropic.js"
     },
     "./providers/scripted": {
-      "source": "./src/providers/scripted.ts",
       "types": "./dist/providers/scripted.d.ts",
       "import": "./dist/providers/scripted.js"
     },
     "./sessions/file": {
-      "source": "./src/sessions/file.ts",
       "types": "./dist/sessions/file.d.ts",
       "import": "./dist/sessions/file.js"
     },
     "./sessions/sqlite": {
-      "source": "./src/sessions/sqlite.ts",
       "types": "./dist/sessions/sqlite.d.ts",
       "import": "./dist/sessions/sqlite.js"
     },
     "./handler": {
-      "source": "./src/runtime/handler.ts",
       "types": "./dist/runtime/handler.d.ts",
       "import": "./dist/runtime/handler.js"
     },
     "./plugin": {
-      "source": "./src/plugin.ts",
       "types": "./dist/plugin.d.ts",
       "import": "./dist/plugin.js"
     },
     "./client": {
-      "source": "./src/client.ts",
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js"
     }

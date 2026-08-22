@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { litroActionsPlugin } from '@beatzball/litro/vite';
+import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 export default defineConfig({
   plugins: [litroActionsPlugin()],
@@ -12,6 +13,8 @@ export default defineConfig({
   // comes from the browser receiving HTML for the preload request.
   base: '/_litro/',
   resolve: {
+    // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).
+    alias: litroSourceAlias(),
     // Resolve 'source' condition in workspace packages so Vite uses
     // TypeScript source files directly (no pre-compilation needed in dev)
     conditions: ['source', 'browser', 'module', 'import', 'default'],

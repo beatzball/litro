@@ -56,6 +56,38 @@ jobs:
       - name: Build litro-agent
         run: pnpm --filter litro-agent build
 
+  # Builds every recipe the way a real user gets it: packed tarballs installed
+  # into a fresh scaffold, NOT the workspace symlink every other job uses.
+  #
+  # This exists because a scaffolded app was blank for weeks while every job
+  # here stayed green. Vite 8 does not transpile TypeScript inside node_modules,
+  # so resolving the package to its src/ emitted raw decorators the browser
+  # cannot parse -- while the build still exited 0 and the prerendered HTML was
+  # still perfect. Parsing the emitted bundle is the check that catches it.
+  scaffolded-apps:
+    name: Scaffolded Apps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      - name: Build litro-agent
+        run: pnpm --filter litro-agent build
+      - name: Build create-litro
+        run: pnpm --filter create-litro build
+      - name: Scaffold every recipe from packed tarballs and parse each bundle
+        run: node scripts/verify-scaffolded-apps.mjs
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest

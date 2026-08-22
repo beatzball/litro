@@ -11,8 +11,9 @@
  *
  *   2. PACKAGE IMPORTS — a named import from one of our own published packages
  *      (`import { defineConfig } from '@beatzball/litro'`) must correspond to a
- *      real export. Export names are read from the package's `source` entry in
- *      its exports map, following `export * from './x.js'` re-exports.
+ *      real export. Export names are read from the TypeScript source behind
+ *      each exports-map entry (derived from its `import` target), following
+ *      `export * from './x.js'` re-exports.
  *
  * Anything genuinely intentional goes in scripts/doc-refs-allow.txt.
  *
@@ -23,6 +24,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { resolve, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { deriveSourceTarget } from './litro-source-alias.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -109,8 +111,11 @@ for (const pkgDir of OUR_PACKAGES) {
   const exportsMap = pkg.exports ?? {};
   for (const [subpath, cond] of Object.entries(exportsMap)) {
     if (typeof cond !== 'object' || cond === null) continue;
-    const src = cond.source;
-    if (typeof src !== 'string') continue;
+    // Derived from the "import" target, not a "source" condition: publishing
+    // a "source" condition pointed installed apps at TypeScript that Vite
+    // never transpiles, so it was removed from the packages.
+    const src = deriveSourceTarget(cond.import);
+    if (src === null) continue;
     const specifier = subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`;
     if (subpath.includes('*')) {
       // e.g. "./runtime/*.js" -> "./src/runtime/*.ts": one entry per real file

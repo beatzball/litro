@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
 import litroContentPlugin from '@beatzball/litro/vite';
+import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 // Browser stub for docs/src/packages.ts — reads CHANGELOG.md / package.json
 // at SSG build time (server-side only). In the browser, data arrives via serverData.
@@ -28,6 +29,8 @@ export default defineConfig({
   plugins: [litroContentPlugin(), packagesStubPlugin()],
   base: process.env.LITRO_BASE_PATH ? `${process.env.LITRO_BASE_PATH}/_litro/` : '/_litro/',
   resolve: {
+    // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).
+    alias: litroSourceAlias(),
     conditions: ['source', 'browser', 'module', 'import', 'default'],
   },
   build: {
