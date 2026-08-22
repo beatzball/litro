@@ -11,6 +11,9 @@
  *
  * generate: Alias for `litro build --mode static`.
  *
+ * docs:     Keeps a starlight docs site's sidebar in step with its pages.
+ *           `sync` rewrites it from frontmatter; `check` reports drift and exits 1.
+ *
  * preview:  Runs the production server entry (.output/server/index.mjs) directly.
  *           `nitro preview` was removed in Nitro 2.13.
  *
@@ -25,6 +28,7 @@ import { join, extname } from 'node:path';
 import process from 'node:process';
 import { scanAndWriteClientRoutes } from '../plugins/pages.js';
 import { parsePortArg, resolvePort } from './port.js';
+import { docsCommand } from './docs.js';
 
 const [,, command, ...args] = process.argv;
 const cwd = process.cwd();
@@ -171,6 +175,14 @@ switch (command) {
     });
     break;
 
+  case 'docs': {
+    // Operates on files only — no dev server, no build. Exits with the
+    // command's own status so `litro docs check` works as a CI step.
+    const code = await docsCommand(args, cwd);
+    process.exit(code);
+    break;
+  }
+
   case 'preview': {
     const portlessUrlPreview = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
@@ -263,6 +275,8 @@ Commands:
   litro generate         Build static site (alias for litro build --mode static)
   litro preview          Preview production build
   litro preview --host   Expose preview server to network
+  litro docs sync        Regenerate the docs sidebar from page frontmatter
+  litro docs check       Verify pages and sidebar agree (exits 1 on drift)
     `);
     process.exit(0);
 }

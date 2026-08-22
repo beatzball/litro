@@ -45,8 +45,22 @@ The `slug` must match the filename (without `.md`). The page will be available a
 |---|---|---|---|
 | `title` | `string` | Yes | Page title (shown in sidebar and `<title>`) |
 | `description` | `string` | No | Short summary for SEO |
-| `sidebar.order` | `number` | No | Controls sort order within the sidebar group |
-| `sidebar.label` | `string` | No | Override the label shown in the sidebar |
+| `sidebar.order` | `number` | No | Sort order within the sidebar group. Pages without one sort last, alphabetically |
+| `sidebar.group` | `string` | No | Sidebar group this page belongs to. Defaults to `Documentation` |
+| `sidebar.label` | `string` | No | Override the label shown in the sidebar (defaults to `title`) |
+
+The `sidebar.*` fields are read by `litro docs sync`, which rewrites the
+`sidebar` array in `server/starlight.config.js` from your pages. Run it after
+adding or renaming a page:
+
+```bash
+litro docs sync    # regenerate the sidebar from your pages
+litro docs check   # verify pages and sidebar agree; exits 1 on drift
+```
+
+`litro docs check` makes a good CI step: a page that is live but missing from
+the sidebar is reachable by URL and invisible to readers, which is easy to ship
+and hard to notice.
 
 ## Markdown Features
 

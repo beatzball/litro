@@ -108,7 +108,10 @@ mkdirSync(scaffolderDir, { recursive: true });
 execFileSync('tar', ['-xzf', scaffolderTgz, '-C', scaffolderDir], { stdio: 'pipe' });
 const CREATE_CLI = join(scaffolderDir, 'package/dist/src/index.js');
 if (!existsSync(CREATE_CLI)) {
-  throw new Error(`[verify] scaffolder tarball has no ${CREATE_CLI}`);
+  throw new Error(
+    `[verify] the packed scaffolder has no dist/src/index.js.\n` +
+      `Build it first:  pnpm --filter create-litro build`,
+  );
 }
 console.log(`[verify] packed ${SCAFFOLDER.name} and unpacked it for scaffolding`);
 console.log('');
