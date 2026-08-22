@@ -6,6 +6,17 @@
  *   npm create @beatzball/litro
  *   npx @beatzball/create-litro
  *   npx @beatzball/create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast|elena>]
+ *
+ * Documentation site for an existing repository:
+ *   npx @beatzball/create-litro site --recipe starlight --for-repo . \
+ *     --site-url https://example.dev
+ *
+ *   --for-repo <dir>   read the repo's name, description, remote and default
+ *                      branch, then write metadata, the starlight config,
+ *                      a deploy (Dockerfile + nginx.conf) and an AGENTS.md
+ *   --site-url <url>   canonical URL the site is served from
+ *   --deploy <docker|none>   deploy files to emit (default: docker)
+ *   --with-blog        keep the recipe's sample blog (default: removed)
  *   npx @beatzball/create-litro --list-recipes
  *
  * Prompts for project name, recipe, and mode, then scaffolds a complete
@@ -20,6 +31,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import { listRecipes, loadRecipe, scaffold } from './scaffold.js';
+import { applyForRepo } from './for-repo.js';
 import type { LitroRecipe } from './types.js';
 import type { ScaffoldOptions } from './scaffold.js';
 
@@ -78,6 +90,11 @@ interface ParsedArgs {
   mode: 'ssg' | 'ssr' | undefined;
   adapter: 'lit' | 'fast' | 'elena' | undefined;
   listRecipes: boolean;
+  /** Repository the docs are for; enables --for-repo post-processing. */
+  forRepo: string | undefined;
+  siteUrl: string | undefined;
+  deploy: 'docker' | 'none';
+  withBlog: boolean;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -87,6 +104,10 @@ function parseArgs(argv: string[]): ParsedArgs {
   let mode: 'ssg' | 'ssr' | undefined;
   let adapter: 'lit' | 'fast' | 'elena' | undefined;
   let listRecipesFlag = false;
+  let forRepo: string | undefined;
+  let siteUrl: string | undefined;
+  let deploy: 'docker' | 'none' = 'docker';
+  let withBlog = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -100,12 +121,28 @@ function parseArgs(argv: string[]): ParsedArgs {
     } else if (arg === '--adapter' || arg === '-a') {
       const val = argv[++i];
       if (val === 'lit' || val === 'fast' || val === 'elena') adapter = val;
+    } else if (arg === '--for-repo') {
+      forRepo = argv[++i] ?? '.';
+    } else if (arg.startsWith('--for-repo=')) {
+      forRepo = arg.slice('--for-repo='.length);
+    } else if (arg === '--site-url') {
+      siteUrl = argv[++i];
+    } else if (arg.startsWith('--site-url=')) {
+      siteUrl = arg.slice('--site-url='.length);
+    } else if (arg === '--deploy') {
+      const val = argv[++i];
+      if (val === 'docker' || val === 'none') deploy = val;
+    } else if (arg === '--with-blog') {
+      withBlog = true;
     } else if (!arg.startsWith('-') && projectName === undefined) {
       projectName = arg;
     }
   }
 
-  return { projectName, recipe, mode, adapter, listRecipes: listRecipesFlag };
+  return {
+    projectName, recipe, mode, adapter, listRecipes: listRecipesFlag,
+    forRepo, siteUrl, deploy, withBlog,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -226,8 +263,43 @@ async function main(): Promise<void> {
 
   await scaffold(chosenRecipe.name, options, projectDir);
 
+  // --for-repo turns the generic recipe output into *this project's* docs
+  // site. Only the starlight recipe produces a docs site, so refuse loudly
+  // rather than half-applying to a template with no content/docs.
+  let forRepoSummary = '';
+  if (args.forRepo !== undefined) {
+    if (chosenRecipe.name !== 'starlight') {
+      console.error(
+        `\n  --for-repo builds a documentation site, which only the ` +
+          `'starlight' recipe provides.\n  Got '${chosenRecipe.name}'. ` +
+          `Re-run with --recipe starlight.\n`,
+      );
+      process.exit(1);
+    }
+    const { relative, resolve: resolvePath } = await import('node:path');
+    const repoDir = resolvePath(args.forRepo);
+    const siteRelPath = relative(repoDir, projectDir) || projectName;
+
+    const repo = await applyForRepo({
+      repoDir,
+      siteDir: projectDir,
+      siteUrl: args.siteUrl,
+      siteRelPath,
+      deploy: args.deploy,
+      withBlog: args.withBlog,
+    });
+
+    forRepoSummary =
+      `\n  Shaped for ${repo.name}` +
+      (repo.repoUrl ? ` (${repo.repoUrl})` : ' (no git remote found)') +
+      (args.siteUrl ? `\n  Site URL: ${args.siteUrl}` : '') +
+      (repo.description ? '' : '\n  No description found — set one in _data/metadata.js.') +
+      (args.siteUrl ? '' : '\n  No --site-url given — set `url` in _data/metadata.js.') +
+      `\n  Wrote AGENTS.md — point your coding agent at it before editing pages.`;
+  }
+
   console.log(`
-  Created ${projectName}
+  Created ${projectName}${forRepoSummary}
 
   Next steps:
 
