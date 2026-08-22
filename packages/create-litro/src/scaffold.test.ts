@@ -117,8 +117,14 @@ describe('scaffold', () => {
       expect(pkg.imports['#litro/action-manifest']).toBe('./server/stubs/action-manifest.ts');
 
       const gitignore = await readFile(join(targetDir, '.gitignore'), 'utf-8');
-      expect(gitignore).toContain('server/stubs/action-manifest.ts');
-      expect(gitignore).toContain('server/stubs/action-handler.ts');
+      // The whole stubs directory is ignored rather than individually named
+      // files. The scanners also emit litro-content.js and agent-*.ts, and
+      // several stubs embed absolute paths from the machine that built them,
+      // so naming files let a newly added scanner silently start leaking one.
+      expect(gitignore).toMatch(/^server\/stubs\/$/m);
+      // ...but the committed runtime plugin lives OUTSIDE stubs and must stay
+      // tracked, so the directory rule must not have swallowed it.
+      expect(gitignore).not.toContain('server/plugins');
 
       expect(existsSync(join(targetDir, 'actions/demo.server.ts'))).toBe(true);
 
