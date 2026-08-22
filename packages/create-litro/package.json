@@ -16,7 +16,8 @@
     "create-litro": "./dist/src/index.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('recipes', 'dist/recipes', { recursive: true })\"",
+    "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true});fs.rmSync('tsconfig.tsbuildinfo',{force:true});\"",
+    "build": "pnpm run clean && tsc -p tsconfig.json && node -e \"require('fs').cpSync('recipes', 'dist/recipes', { recursive: true })\"",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "vitest run"
   },

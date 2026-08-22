@@ -6,8 +6,11 @@ dist/
 .output/
 .nitro/
 
-# Generated (overwritten on every build by the pages plugin)
-server/stubs/page-manifest.ts
+# Generated on every build. The whole stubs directory is ignored, not named
+# files: the scanners also emit litro-content.js, action-*.ts and agent-*.ts,
+# and several of them embed absolute local paths from the machine that built
+# them. A new scanner must not silently start leaking one.
+server/stubs/
 routes.generated.ts
 
 # TypeScript build info
