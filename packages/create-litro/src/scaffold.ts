@@ -87,6 +87,24 @@ function buildVars(options: ScaffoldOptions): Record<string, string> {
 }
 
 /**
+ * Template filenames that must be renamed on the way out.
+ *
+ * npm strips `.gitignore` from every published tarball — it is on npm's own
+ * exclusion list, and there is no opting out via `files`. A template that
+ * stores the file as `.gitignore` therefore ships it fine from a local build
+ * and silently loses it once installed from the registry, so a scaffolded app
+ * arrives with NO ignore rules at all and its first `git add` sweeps in
+ * `node_modules/`, `dist/` and `.env`.
+ *
+ * So the template keeps it as `gitignore` (which npm ships happily) and it is
+ * renamed here. `.gitkeep` and `.11tydata.json` are NOT affected — npm's list
+ * is specific, not "all dotfiles" — so they stay as they are.
+ */
+const RENAME_ON_COPY: Record<string, string> = {
+  gitignore: '.gitignore',
+};
+
+/**
  * Recursively copy all files from `srcDir` to `destDir`, applying
  * `{{placeholder}}` interpolation to text files.
  */
@@ -99,7 +117,7 @@ async function copyTemplate(
 
   for (const entry of entries) {
     const srcPath = join(srcDir, entry.name);
-    const destPath = join(destDir, entry.name);
+    const destPath = join(destDir, RENAME_ON_COPY[entry.name] ?? entry.name);
 
     if (entry.isDirectory()) {
       await mkdir(destPath, { recursive: true });

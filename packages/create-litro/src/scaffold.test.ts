@@ -125,6 +125,11 @@ describe('scaffold', () => {
       // ...but the committed runtime plugin lives OUTSIDE stubs and must stay
       // tracked, so the directory rule must not have swallowed it.
       expect(gitignore).not.toContain('server/plugins');
+      // npm strips `.gitignore` from published tarballs, so the template must
+      // store it under an npm-safe name and the scaffolder renames it on copy.
+      // If this ever flips back to a dotfile, the file ships from a local build
+      // and silently vanishes for anyone installing from the registry.
+      expect(gitignore).toContain('node_modules/');
 
       expect(existsSync(join(targetDir, 'actions/demo.server.ts'))).toBe(true);
 
@@ -138,6 +143,21 @@ describe('scaffold', () => {
       const runtimePlugin = await readFile(join(targetDir, 'server/plugins/litro-actions.ts'), 'utf-8');
       expect(runtimePlugin).toContain('stampActionIds');
     });
+  });
+
+  it('templates store the ignore file under an npm-safe name', async () => {
+    // npm removes `.gitignore` from every tarball it publishes, with no way to
+    // opt out. A template that stores the dotfile directly works from a local
+    // build and silently ships nothing to a real user, leaving the scaffolded
+    // app with no ignore rules at all.
+    const { existsSync } = await import('node:fs');
+    const { fileURLToPath } = await import('node:url');
+    const recipesRoot = fileURLToPath(new URL('../recipes', import.meta.url));
+    for (const recipe of ['fullstack', '11ty-blog', 'starlight']) {
+      const templateDir = join(recipesRoot, recipe, 'template');
+      expect(existsSync(join(templateDir, 'gitignore'))).toBe(true);
+      expect(existsSync(join(templateDir, '.gitignore'))).toBe(false);
+    }
   });
 
   it('11ty-blog recipe with mode=ssg writes litro.recipe.json', async () => {
