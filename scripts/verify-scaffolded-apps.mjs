@@ -30,7 +30,7 @@
  *   node scripts/verify-scaffolded-apps.mjs --only starlight:lit
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +53,16 @@ const PACKED = [
   { name: '@beatzball/litro-router', dir: 'packages/litro-router' },
   { name: '@beatzball/litro-agent', dir: 'packages/litro-agent' },
 ];
+
+/**
+ * The scaffolder is packed and unpacked too, never run from the local build.
+ *
+ * A tarball is not just "the source directory with a different name": npm
+ * strips `.gitignore` from every package it publishes. Running the local
+ * `dist/` would scaffold from files that never reach a real user, and the
+ * missing ignore file would sail straight through this check.
+ */
+const SCAFFOLDER = { name: '@beatzball/create-litro', dir: 'packages/create-litro' };
 
 const args = process.argv.slice(2);
 const keep = args.includes('--keep');
@@ -87,6 +97,20 @@ for (const { name, dir } of PACKED) {
   tarballs[name] = tgz;
   console.log(`[verify] packed ${name}`);
 }
+
+// Pack + unpack the scaffolder, then run it from the extracted tarball.
+const scaffolderTgz = execFileSync('pnpm', ['pack', '--pack-destination', work], {
+  cwd: join(REPO, SCAFFOLDER.dir),
+  encoding: 'utf-8',
+}).trim().split('\n').pop().trim();
+const scaffolderDir = join(work, 'scaffolder');
+mkdirSync(scaffolderDir, { recursive: true });
+execFileSync('tar', ['-xzf', scaffolderTgz, '-C', scaffolderDir], { stdio: 'pipe' });
+const CREATE_CLI = join(scaffolderDir, 'package/dist/src/index.js');
+if (!existsSync(CREATE_CLI)) {
+  throw new Error(`[verify] scaffolder tarball has no ${CREATE_CLI}`);
+}
+console.log(`[verify] packed ${SCAFFOLDER.name} and unpacked it for scaffolding`);
 console.log('');
 
 // ---------------------------------------------------------------------------
@@ -103,7 +127,7 @@ for (const { recipe, adapter } of VARIANTS) {
 
   let step = run(
     'node',
-    [join(REPO, 'packages/create-litro/dist/src/index.js'), name,
+    [CREATE_CLI, name,
      '--recipe', recipe, '--mode', 'ssg', '--adapter', adapter],
     work, 'scaffold',
   );
@@ -119,6 +143,36 @@ for (const { recipe, adapter } of VARIANTS) {
     if (manifest.dependencies?.[pkgName]) manifest.dependencies[pkgName] = `file:${tgz}`;
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+
+  // npm strips .gitignore from published tarballs, so a template that stores
+  // the file under its final name ships fine from a local build and silently
+  // vanishes once installed from the registry. Only this packed-tarball path
+  // can see that, which is exactly why the check lives here.
+  const ignorePath = join(dir, '.gitignore');
+  if (!existsSync(ignorePath)) {
+    results.push({
+      id,
+      status: 'NO-GITIGNORE',
+      detail:
+        'The scaffolded app has no .gitignore. Its first `git add` would sweep ' +
+        'in node_modules/, dist/ and any .env. npm strips .gitignore from the ' +
+        'tarball, so the template must ship it under another name and the ' +
+        'scaffolder must rename it (see RENAME_ON_COPY in scaffold.ts).',
+    });
+    continue;
+  }
+  const ignoreText = readFileSync(ignorePath, 'utf-8');
+  const missing = ['node_modules/', 'dist/', 'server/stubs/'].filter(
+    (rule) => !ignoreText.includes(rule),
+  );
+  if (missing.length > 0) {
+    results.push({
+      id,
+      status: 'WEAK-GITIGNORE',
+      detail: `.gitignore is missing: ${missing.join(', ')}`,
+    });
+    continue;
+  }
 
   step = run('pnpm', ['install', '--ignore-workspace'], dir, 'install');
   if (!step.ok) { results.push({ id, status: 'INSTALL-FAIL', detail: step.error }); continue; }
