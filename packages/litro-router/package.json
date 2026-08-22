@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro-router",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "types": "./dist/index.d.ts",
   "description": "Framework-agnostic client-side router for web components — works with Lit, FAST, Elena, or plain custom elements. Built on the native URLPattern API. Zero dependencies. Works standalone or as part of the Litro framework.",
