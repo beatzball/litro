@@ -1,5 +1,16 @@
 # @beatzball/litro-agent
 
+## 0.2.1
+
+### Patch Changes
+
+- 83c8d5a: Remove the `source` export condition so consumers always resolve the compiled
+  output. Publishing `source` pointed installed apps at TypeScript that Vite does
+  not transpile inside `node_modules`, which produced an unparseable client
+  bundle on Vite 8. No API change.
+- Updated dependencies [83c8d5a]
+  - @beatzball/litro@0.13.1
+
 ## 0.2.0
 
 ### Minor Changes
