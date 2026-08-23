@@ -4,6 +4,7 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts, getGlobalData } from 'litro:content';
+import '../src/components/litro-footer.js';
 
 export interface HomeData {
   recentPosts: Post[];
@@ -51,6 +52,8 @@ export class HomePage extends LitroPage {
           <p><a href="/blog">All Posts →</a></p>
         </section>
       </main>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

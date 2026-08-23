@@ -6,6 +6,7 @@ import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import type { Post } from 'litro:content';
 import { getPost, getPosts } from 'litro:content';
+import '../../src/components/litro-footer.js';
 
 export interface PostData {
   post: Post;
@@ -58,6 +59,8 @@ export class BlogPostPage extends LitroPage {
           <a href="/blog">← Back to Blog</a>
         </footer>
       </article>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

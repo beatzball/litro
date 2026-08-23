@@ -4,6 +4,7 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts } from 'litro:content';
+import '../../src/components/litro-footer.js';
 
 export interface BlogIndexData {
   posts: Post[];
@@ -36,6 +37,8 @@ export class BlogIndexPage extends LitroPage {
         </ul>
         <a href="/">← Home</a>
       </main>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

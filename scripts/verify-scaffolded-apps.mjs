@@ -30,7 +30,7 @@
  *   node scripts/verify-scaffolded-apps.mjs --only starlight:lit
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -66,6 +66,28 @@ const SCAFFOLDER = { name: '@beatzball/create-litro', dir: 'packages/create-litr
 
 const args = process.argv.slice(2);
 const keep = args.includes('--keep');
+
+/**
+ * True when any file under `dir` contains `needle`. Small recursive search
+ * rather than a shell grep, so this script keeps working the same way on any
+ * platform and stays dependency-free.
+ */
+function grepDir(dir, needle) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (grepDir(full, needle)) return true;
+    } else if (entry.isFile()) {
+      try {
+        if (readFileSync(full, 'utf-8').includes(needle)) return true;
+      } catch {
+        // Unreadable or binary — nothing to match in it.
+      }
+    }
+  }
+  return false;
+}
+
 const onlyIdx = args.indexOf('--only');
 const only = onlyIdx !== -1 ? args[onlyIdx + 1] : null;
 
@@ -202,6 +224,61 @@ for (const { recipe, adapter } of VARIANTS) {
         'the site is blank in a browser.\n' + step.error,
     });
     continue;
+  }
+
+  // The credit line must survive to rendered HTML, not merely compile. Three
+  // things can silently drop it and still exit 0: Rollup tree-shaking the
+  // component's registration, an adapter failing to expand an unregistered
+  // element during SSR, and a page that imports it but never places it.
+  //
+  // A fourth is subtler and is why this reads the OUTPUT rather than trusting
+  // the source: under fast-ssr a binding that returns a nested template is
+  // simply not rendered, so the recipe name vanished from FAST's HTML while
+  // the component looked correct.
+  //
+  // Only the starlight recipe prerenders during `pnpm build`. fullstack and
+  // 11ty-blog choose their mode from LITRO_MODE at build time and default to
+  // a server build, so for those the server bundle is the thing to inspect;
+  // that still catches tree-shaking, which is the failure that actually bites.
+  const home = join(dir, 'dist/static/index.html');
+  const wantRecipe = `${recipe} recipe`;
+  if (existsSync(home)) {
+    // Lit's SSR writes <!--lit-part--> markers between static text and a
+    // binding, which splits "starlight recipe" apart. Strip comments first so
+    // the assertion tests the rendered TEXT, not one framework's marker style.
+    const rendered = readFileSync(home, 'utf-8').replace(/<!--.*?-->/gs, '');
+    const missing = ['Created using', 'https://litro.dev', wantRecipe].filter(
+      (want) => !rendered.includes(want),
+    );
+    if (missing.length > 0) {
+      results.push({
+        id,
+        status: 'NO-CREDIT',
+        detail:
+          `The prerendered home page is missing part of the <litro-footer> ` +
+          `credit line: ${missing.map((m) => JSON.stringify(m)).join(', ')}.\n` +
+          `An empty <litro-footer> element means its registration was ` +
+          `tree-shaken and SSR could not expand it. A rendered footer that is ` +
+          `missing only the recipe name means the conditional binding did not ` +
+          `survive server rendering. No element at all means the page template ` +
+          `does not place it.`,
+      });
+      continue;
+    }
+  } else {
+    const serverDir = join(dir, 'dist/server');
+    const found = existsSync(serverDir) && grepDir(serverDir, 'Created using');
+    if (!found) {
+      results.push({
+        id,
+        status: 'NO-CREDIT',
+        detail:
+          `This variant builds a server rather than prerendering, and the ` +
+          `credit line is absent from ${serverDir}. The component was almost ` +
+          `certainly tree-shaken out of the SSR module graph.`,
+      });
+      continue;
+    }
   }
 
   results.push({ id, status: 'OK' });

@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { LitroLocation } from '@beatzball/litro-router';
+import '../../src/components/litro-footer.js';
 
 export interface PostData {
   slug: string;
@@ -47,6 +48,8 @@ export class BlogPostPage extends LitroPage {
         &nbsp;|&nbsp;
         <litro-link href="/">← Home</litro-link>
       </article>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

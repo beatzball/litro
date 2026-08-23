@@ -8,6 +8,7 @@ import { starlightHead } from '../src/route-meta.js';
 
 // Register components used in render()
 import '../src/components/starlight-header.js';
+import '../src/components/litro-footer.js';
 import '../src/components/litro-card.js';
 import '../src/components/litro-card-grid.js';
 
@@ -127,6 +128,8 @@ export class SplashPage extends LitroPage {
             </litro-card-grid>
           </section>
         </main>
+        <!-- Credit line. Delete this element if you would rather not carry it. -->
+        <litro-footer recipe="{{recipe}}"></litro-footer>
       </div>
     `;
   }

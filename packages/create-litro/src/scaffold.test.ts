@@ -145,6 +145,31 @@ describe('scaffold', () => {
     });
   });
 
+  it('{{recipe}} resolves to the recipe being scaffolded, in every recipe', async () => {
+    // The credit line in <litro-footer> is the same source file in all three
+    // recipes, so it cannot name its own recipe — the scaffolder has to supply
+    // it. A wrong or empty value here would ship a site crediting the wrong
+    // recipe, which nothing else in the suite would notice.
+    for (const recipe of ['fullstack', '11ty-blog', 'starlight'] as const) {
+      await withTmpDir(async (dir) => {
+        const targetDir = join(dir, 'app');
+        await scaffold(recipe, { projectName: 'app', mode: 'ssg' }, targetDir);
+        const footer = await readFile(
+          join(targetDir, 'src/components/litro-footer.ts'),
+          'utf-8',
+        );
+        expect(footer).toContain('https://litro.dev');
+
+        // The value lands at the USAGE site, not in the component.
+        // Exact, not just "the word appears somewhere": a recipe name can
+        // occur incidentally in a page, which would make this pass vacuously.
+        const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+        expect(home).toContain(`<litro-footer recipe="${recipe}">`);
+        expect(home).not.toContain('{{recipe}}');
+      });
+    }
+  });
+
   it('templates store the ignore file under an npm-safe name', async () => {
     // npm removes `.gitignore` from every tarball it publishes, with no way to
     // opt out. A template that stores the dotfile directly works from a local
