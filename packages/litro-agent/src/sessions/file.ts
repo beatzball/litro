@@ -9,8 +9,20 @@ export function validateSessionId(id: string): void {
   }
 }
 
+/** Where a default-constructed store keeps its session logs, relative to
+ *  `process.cwd()` unless absolute.
+ *
+ *  `LITRO_AGENT_SESSIONS_DIR` exists so that two servers sharing one project
+ *  directory can be given separate, non-overlapping session state. The e2e
+ *  suite needs exactly that: `e2e/playground/agent-resume.spec.ts` spawns a
+ *  SECOND dev server in `playground/` and wipes its session directory around
+ *  the test, while the shared `playground` dev server on port 3030 is
+ *  serving other specs out of the same default directory. Without the
+ *  override the wipe deletes the other server's live session logs. */
+const DEFAULT_DIR = '.litro/sessions';
+
 export function fileSessionStore(opts?: { dir?: string }): SessionStore {
-  const dir = resolve(process.cwd(), opts?.dir ?? '.litro/sessions');
+  const dir = resolve(process.cwd(), opts?.dir ?? process.env.LITRO_AGENT_SESSIONS_DIR ?? DEFAULT_DIR);
 
   // Per-session promise chains for serialized writes
   const chains = new Map<string, Promise<void>>();
@@ -34,6 +46,32 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
         });
     }
     return dirReady;
+  }
+
+  /** Appends, and survives the session directory disappearing underneath a
+   *  long-lived store.
+   *
+   *  `ensureDir()` caches its resolved `mkdir` promise, so after ONE
+   *  successful mkdir the store never calls mkdir again for the rest of the
+   *  process's life. If the directory is then removed — a log rotation, a
+   *  `rm -rf .litro`, a tmpfs reaper, a test wiping state — every subsequent
+   *  append fails with ENOENT forever: the store is poisoned, not merely
+   *  unlucky, and the agent endpoint 500s on every turn until the server is
+   *  restarted. (That is exactly what CI saw in issue #118.)
+   *
+   *  ENOENT here can only mean a missing directory component: the file
+   *  itself is created on demand by the append. So drop the cached mkdir,
+   *  recreate the directory and retry the append ONCE. A second ENOENT is a
+   *  real fault (a path that cannot be created) and propagates. */
+  async function appendWithDirRecovery(filePath: string, line: string): Promise<void> {
+    try {
+      await appendFile(filePath, line);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err;
+      dirReady = undefined;
+      await ensureDir();
+      await appendFile(filePath, line);
+    }
   }
 
   async function initSeqIfNeeded(sessionId: string): Promise<void> {
@@ -101,7 +139,7 @@ export function fileSessionStore(opts?: { dir?: string }): SessionStore {
 
         // Write to file
         const filePath = `${dir}/${sessionId}.jsonl`;
-        await appendFile(filePath, JSON.stringify(resultEvent) + '\n');
+        await appendWithDirRecovery(filePath, JSON.stringify(resultEvent) + '\n');
 
         // Only advance the in-memory counter once the write is durable.
         seqs.set(sessionId, seq);

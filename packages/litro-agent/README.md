@@ -120,7 +120,7 @@ API keys are read from the environment only. `openaiCompatible` takes an optiona
 
 ## Sessions
 
-A session is an append-only log. The default store writes JSONL under `.litro/sessions/`; `.litro/` holds conversation data and must be gitignored.
+A session is an append-only log. The default store writes JSONL under `.litro/sessions/`; `.litro/` holds conversation data and must be gitignored. Point the default store somewhere else with `fileSessionStore({ dir })`, or with the `LITRO_AGENT_SESSIONS_DIR` environment variable when you cannot reach the config — two servers sharing one project directory each need their own.
 
 `sqliteSessionStore` (from `@beatzball/litro-agent/sessions/sqlite`) is the alternative for deployments running more than one instance against shared storage. It adds crash-safe sequence numbers and a cross-instance turn lease. It requires **Node 22.5+**, which is why it sits behind its own subpath — Node 20 users are unaffected and keep the JSONL store.
 
