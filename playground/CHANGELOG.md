@@ -1,5 +1,13 @@
 # playground
 
+## 0.0.29
+
+### Patch Changes
+
+- Updated dependencies [15c112d]
+  - @beatzball/litro@0.14.0
+  - @beatzball/litro-agent@0.2.2
+
 ## 0.0.28
 
 ### Patch Changes
