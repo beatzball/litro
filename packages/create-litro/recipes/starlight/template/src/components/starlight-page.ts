@@ -8,6 +8,7 @@ import type { TocEntry } from '../extract-headings.js';
 import './starlight-header.js';
 import './starlight-sidebar.js';
 import './starlight-toc.js';
+import './litro-footer.js';
 
 /**
  * <starlight-page
@@ -208,6 +209,8 @@ export class StarlightPage extends LitElement {
             </aside>
           ` : ''}
         </div>
+        <!-- Credit line. Delete this element if you would rather not carry it. -->
+        <litro-footer recipe="{{recipe}}"></litro-footer>
       </div>
     `;
   }

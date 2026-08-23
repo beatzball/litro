@@ -2,6 +2,9 @@ import { html } from '@elenajs/core';
 import { LitroPage } from '@beatzball/litro/adapter/elena/page';
 import { definePageData } from '@beatzball/litro';
 import type { LitroLocation } from '@beatzball/litro-router';
+// Re-exported, not bare-imported: Rollup drops a bare side-effect import,
+// which would drop .define() and leave <litro-footer> unexpanded in SSR.
+export { LitroFooter } from '../../src/components/litro-footer.js';
 
 export interface PostData {
   slug: string;
@@ -47,6 +50,8 @@ export class BlogPostPage extends LitroPage {
         \u00a0|\u00a0
         <litro-link href="/">\u2190 Home</litro-link>
       </article>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

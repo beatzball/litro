@@ -5,6 +5,7 @@ import { definePageData } from '@beatzball/litro';
 import { actionUrl } from '@beatzball/litro/actions/client';
 import { enhanceForms } from '@beatzball/litro/actions/form-client';
 import { greet } from '../actions/demo.server.js';
+import '../src/components/litro-footer.js';
 
 export interface HomeData {
   message: string;
@@ -62,6 +63,8 @@ export class HomePage extends LitroPage {
           <litro-link href="/blog">Go to Blog →</litro-link>
         </nav>
       </main>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

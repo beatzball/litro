@@ -1,5 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '../../src/components/litro-footer.js';
 
 @customElement('page-blog')
 export class BlogPage extends LitElement {
@@ -15,6 +16,8 @@ export class BlogPage extends LitElement {
         </ul>
         <litro-link href="/">← Back Home</litro-link>
       </main>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }

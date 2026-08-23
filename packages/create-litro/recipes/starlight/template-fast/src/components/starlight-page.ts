@@ -7,6 +7,7 @@ import type { TocEntry } from '../extract-headings.js';
 import './starlight-header.js';
 import './starlight-sidebar.js';
 import './starlight-toc.js';
+import './litro-footer.js';
 
 /**
  * <starlight-page
@@ -92,6 +93,10 @@ const template = html<StarlightPage>`
         </aside>
       `)}
     </div>
+    <!-- Credit line. Delete this element if you would rather not carry it.
+         A property binding, not a plain attribute: fast-ssr does not map
+         attributes onto properties, so recipe="..." renders as empty. -->
+    <litro-footer :recipe="${() => '{{recipe}}'}"></litro-footer>
   </div>
 `;
 

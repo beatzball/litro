@@ -68,12 +68,17 @@ function interpolate(text: string, vars: Record<string, string>): string {
 
 /**
  * Build the interpolation variable map from ScaffoldOptions.
+ *
+ * `recipe` is the recipe directory name. Templates use it for the credit line
+ * in <litro-footer>, which is the same file in every recipe and so cannot
+ * hardcode which recipe it came from.
  */
-function buildVars(options: ScaffoldOptions): Record<string, string> {
+function buildVars(options: ScaffoldOptions, recipeName: string): Record<string, string> {
   const vars: Record<string, string> = {
     projectName: options.projectName,
     mode: options.mode,
     adapter: options.adapter ?? 'lit',
+    recipe: recipeName,
     recipeVersion: options.recipeVersion ?? '0.0.0',
   };
 
@@ -217,7 +222,7 @@ export async function scaffold(
   await mkdir(targetDir, { recursive: true });
 
   // Build interpolation variables and copy all files.
-  const vars = buildVars(options);
+  const vars = buildVars(options, recipeName);
   await copyTemplate(templateDir, targetDir, vars);
 
   // Per-adapter overlay: if a template-<adapter>/ directory exists alongside

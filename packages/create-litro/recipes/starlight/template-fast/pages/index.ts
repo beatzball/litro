@@ -9,7 +9,8 @@ import { starlightHead } from '../src/route-meta.js';
 import * as _starlightHeader from '../src/components/starlight-header.js';
 import * as _litroCard from '../src/components/litro-card.js';
 import * as _litroCardGrid from '../src/components/litro-card-grid.js';
-globalThis.__litro_ce__ = { ...(globalThis as any).__litro_ce__, _starlightHeader, _litroCard, _litroCardGrid };
+import * as _litroFooter from '../src/components/litro-footer.js';
+globalThis.__litro_ce__ = { ...(globalThis as any).__litro_ce__, _starlightHeader, _litroCard, _litroCardGrid, _litroFooter };
 
 export interface SplashData {
   siteTitle: string;
@@ -93,6 +94,10 @@ const template = html<SplashPage>`
             </litro-card-grid>
           </section>
         </main>
+        <!-- Credit line. Delete this element if you would rather not carry it.
+         A property binding, not a plain attribute: fast-ssr does not map
+         attributes onto properties, so recipe="..." renders as empty. -->
+        <litro-footer :recipe="${() => '{{recipe}}'}"></litro-footer>
       </div>
     `;
   }}

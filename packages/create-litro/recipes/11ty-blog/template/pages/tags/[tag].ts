@@ -4,6 +4,7 @@ import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import type { Post } from 'litro:content';
 import { getPosts, getTags } from 'litro:content';
+import '../../src/components/litro-footer.js';
 
 export interface TagData {
   tag: string;
@@ -46,6 +47,8 @@ export class TagPage extends LitroPage {
           <a href="/">← Home</a>
         </p>
       </main>
+      <!-- Credit line. Delete this element if you would rather not carry it. -->
+      <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }
 }
