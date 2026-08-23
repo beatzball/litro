@@ -30,8 +30,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* ── What we scan ─────────────────────────────────────────────────────── */
 
-// Historical PRDs (prd/, seo-prd/) are intentionally excluded: they describe
-// past or planned state and carry their own "Historical document" banners.
+// PRDs are not scanned. They now live outside the repo entirely, in the
+// gitignored .claude/prd/, because they describe past or planned state rather
+// than what the code does today — and a reference check against them reports
+// drift that is intentional.
 const SCAN_FILES = [
   'README.md',
   'ARCHITECTURE.md',
