@@ -32,6 +32,7 @@ export const siteConfig = {
         { label: 'API Routes', slug: 'api-routes' },
         { label: 'Server Actions', slug: 'server-actions' },
         { label: 'Agents', slug: 'agents' },
+        { label: 'MCP Apps', slug: 'mcp-apps' },
         { label: 'Content Layer', slug: 'content-layer' },
         { label: 'Static Generation', slug: 'ssg' },
         { label: 'OG Images', slug: 'og-images' },
