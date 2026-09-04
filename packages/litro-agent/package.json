@@ -33,6 +33,10 @@
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js"
     },
+    "./mcp-app": {
+      "types": "./dist/mcp-app/index.d.ts",
+      "import": "./dist/mcp-app/index.js"
+    },
     "./telemetry": {
       "types": "./dist/telemetry/otel.d.ts",
       "import": "./dist/telemetry/otel.js"
