@@ -48,6 +48,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3037' },
     },
     {
+      // No baseURL and no web server: the test drives a packed document inside
+      // an iframe it builds itself, so there is nothing to serve.
+      name: 'mcp-app',
+      testDir: './e2e/mcp-app',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'docs-ssr',
       testDir: './e2e/docs-ssr',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3034' },
