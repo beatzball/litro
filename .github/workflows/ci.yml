@@ -154,6 +154,11 @@ jobs:
         run: node scripts/check-doc-refs.mjs --self-test
       - name: Check documentation references
         run: node scripts/check-doc-refs.mjs
+      # Guards the e2e suite against one spec deleting state a concurrently
+      # running dev server is using -- the issue #118 failure mode. Pure Node
+      # like the checker above, so it belongs in this install-free job.
+      - name: Check e2e isolation
+        run: node scripts/check-e2e-isolation.mjs
 
   audit:
     name: Dependency Audit

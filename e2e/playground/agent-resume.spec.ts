@@ -10,7 +10,7 @@
  *
  * v0 CONTRACT being verified here (see packages/litro-agent/src/runtime/
  * handler.ts's module doc): the session store is a durable, file-backed LOG
- * (playground/.litro/sessions/<id>.jsonl). Killing the server mid-turn does
+ * (one <id>.jsonl per session). Killing the server mid-turn does
  * NOT resume the dead turn's execution -- there is no re-entrant turn
  * runner. What survives is exactly the prefix of `SessionEvent`s that were
  * `store.append()`-ed (and therefore durable) before the process died. A GET
@@ -29,17 +29,32 @@ import { serializeValue, createStreamDecoder, type StreamChunk } from '../../pac
 // is the reliable way to locate this file on disk.
 const repoRoot = path.resolve(__dirname, '../..');
 const playgroundDir = path.join(repoRoot, 'playground');
-const litroDataDir = path.join(playgroundDir, '.litro');
 const cliEntry = path.join(repoRoot, 'packages/framework/dist/cli/index.js');
+
+// This spec wipes its session state around the test, and it runs CONCURRENTLY
+// with the other playground specs (`fullyParallel: true`). Its server shares
+// `playground/` with the shared dev server on port 3030, so the default store
+// directory (`playground/.litro/sessions`) is the SAME directory that server
+// writes e2e/playground/agent.spec.ts's session logs into. Wiping it deleted
+// live logs out from under that server -- issue #118: a GET replay came back
+// empty, and once the directory was gone the shared server's store kept
+// failing with ENOENT for the rest of the run, so all three agent tests went
+// red together, including the browserless one.
+//
+// LITRO_AGENT_SESSIONS_DIR (see packages/litro-agent/src/sessions/file.ts)
+// points THIS server's store at a private directory, so the wipes below can
+// never touch the shared server's state. The directory sits outside
+// `playground/` so it is not part of any watched project tree.
+const sessionsDir = path.join(repoRoot, 'e2e/test-results/agent-resume-sessions');
 
 const PORT = 3052;
 const BASE = `http://localhost:${PORT}`;
 // Unique per run, same rationale as e2e/playground/agent.spec.ts's `session`:
-// `beforeAll` wipes `.litro/` before starting the server, but that hook does
-// NOT re-run on a Playwright retry of this test -- a fixed id would let a
-// retry's POST land in the same session file as the killed first attempt,
-// replaying a longer (duplicated) event sequence and breaking the exact
-// `toEqual(['message', 'text-delta'])` assertion below.
+// `beforeAll` wipes this spec's own sessions dir before starting the server,
+// but that hook does NOT re-run on a Playwright retry of this test -- a fixed
+// id would let a retry's POST land in the same session file as the killed
+// first attempt, replaying a longer (duplicated) event sequence and breaking
+// the exact `toEqual(['message', 'text-delta'])` assertion below.
 const SESSION = `e2e-resume-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 let proc: ChildProcess | undefined;
@@ -60,6 +75,7 @@ function startServer(): ChildProcess {
     cwd: playgroundDir,
     detached: true,
     stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, LITRO_AGENT_SESSIONS_DIR: sessionsDir },
   });
   child.stdout?.on('data', (d: Buffer) => {
     stdoutBuf += d.toString();
@@ -121,14 +137,14 @@ test.describe('agent demo — kill mid-stream, resume from the persisted log', (
   test.describe.configure({ mode: 'serial' });
 
   test.beforeAll(async () => {
-    await rm(litroDataDir, { recursive: true, force: true });
+    await rm(sessionsDir, { recursive: true, force: true });
     proc = startServer();
     await waitForServerUp();
   });
 
   test.afterAll(async () => {
     if (proc) stopServer(proc);
-    await rm(litroDataDir, { recursive: true, force: true }).catch(() => {});
+    await rm(sessionsDir, { recursive: true, force: true }).catch(() => {});
   });
 
   test('a POST killed mid-turn leaves a truncated-but-clean log; GET replay after restart does not fabricate a completed turn', async () => {
@@ -177,7 +193,7 @@ test.describe('agent demo — kill mid-stream, resume from the persisted log', (
     await waitForServerDown();
 
     // Restart the exact same server. The session log is file-backed
-    // (playground/.litro/sessions/<id>.jsonl), so the prefix that was
+    // (one <id>.jsonl per session under `sessionsDir`), so the prefix that was
     // durably appended before the kill survives the restart even though the
     // in-memory lock/broadcast state (both process-global) does not.
     proc = startServer();
