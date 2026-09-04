@@ -146,6 +146,22 @@ describe('data arriving after the handshake', () => {
     expect(el.tempC).toBe(38);
   });
 
+  it('finds the shell in FAST output, which opens with the element itself', () => {
+    // FAST emits declarative shadow DOM with no marker comment, so the element
+    // is first. Both adapters must land on the same node.
+    document.body.innerHTML =
+      '<forecast-card><template shadowrootmode="open"><p>Loading…</p></template></forecast-card>';
+
+    fromHost({
+      jsonrpc: '2.0',
+      method: 'ui/notifications/tool-result',
+      params: { structuredContent: { tempC: 38 } },
+    });
+
+    const el = document.body.firstElementChild as unknown as { tempC: number };
+    expect(el.tempC).toBe(38);
+  });
+
   it('ignores a result that carries no structuredContent', () => {
     expect(() =>
       fromHost({ jsonrpc: '2.0', method: 'ui/notifications/tool-result', params: {} }),

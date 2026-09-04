@@ -10,4 +10,4 @@ A `ui://` resource is a static, cached, data-free template — hosts prefetch it
 
 Packing fails if the document would load anything from outside itself, because the host's default CSP is `default-src 'none'` and such a fetch fails silently inside the iframe.
 
-Lit only for now; FAST follows.
+Works with the Lit and FAST renderers — the packager routes through `ui()`, so it follows `LITRO_ADAPTER`. Elena is not supported, because `ui()` does not support it yet.
