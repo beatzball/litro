@@ -29,6 +29,7 @@ import process from 'node:process';
 import { scanAndWriteClientRoutes } from '../plugins/pages.js';
 import { parsePortArg, resolvePort } from './port.js';
 import { docsCommand } from './docs.js';
+import { mcpAppCommand } from './mcp-app.js';
 
 const [,, command, ...args] = process.argv;
 const cwd = process.cwd();
@@ -183,6 +184,14 @@ switch (command) {
     break;
   }
 
+  case 'mcp-app': {
+    // Packs mcp-apps/ into self-contained ui:// documents. Files only, no
+    // server — exits with its own status so it works as a CI step.
+    const code = await mcpAppCommand(args, cwd);
+    process.exit(code);
+    break;
+  }
+
   case 'preview': {
     const portlessUrlPreview = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
@@ -277,6 +286,7 @@ Commands:
   litro preview --host   Expose preview server to network
   litro docs sync        Regenerate the docs sidebar from page frontmatter
   litro docs check       Verify pages and sidebar agree (exits 1 on drift)
+  litro mcp-app build    Pack mcp-apps/ into MCP Apps ui:// documents
     `);
     process.exit(0);
 }
