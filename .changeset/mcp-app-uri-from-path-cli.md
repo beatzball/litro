@@ -34,24 +34,31 @@ cannot be a uri host means every app in that project must set `uri` itself.
 
 **Names that cannot become an address are refused — unless the app names one.**
 For a DERIVED address, file and folder names may use letters, digits, `.`, `_`,
-`~` and `-`; a space, `?`, `#`, `%` or a non-ASCII letter is rejected, because a
-parser rewrites it and the descriptor would then name a resource under one
-address while the host caches it under another. This also closes a silent
-collision: `big card.ts` and `big%20card.ts` are two raw strings that resolve to
-one address. An app that sets its own `uri` is exempt — the filename is only a
-filename then. Only `.` and `..` are refused outright, since they would write
-outside the output directory.
+`~` and `-`; a space, `%` or a non-ASCII letter is rejected, because a parser
+rewrites it and the descriptor would then name a resource under one address
+while the host caches it under another. This also closes a silent collision:
+`big card.ts` and `big%20card.ts` are two raw strings that resolve to one
+address. An app that sets its own `uri` is exempt — the filename is only a
+filename then.
 
-**Every problem is reported at once**, before a module is loaded or a byte is
-written, instead of one failed build per mistake. `assertUniqueUris` compares
-RFC 3986 equivalence — folding host case and percent-triplet case on top of
-what `new URL()` does — and lists every clash rather than the first. An app
-packing to `manifest` at the top level is refused, because the index would
-overwrite its descriptor.
+Three refusals are NOT exemptible, because an address cannot answer them: a `.`
+or `..` segment, which would write outside the output directory; a `#`, `?` or
+control character, which the module loader reads as part of a url and then
+reports the file as missing; and an app packing to `manifest` at the top level,
+where the index would overwrite its own descriptor (matched without regard to
+case, since `Manifest.json` is the same file on macOS and Windows).
 
-Dynamic segments are rejected for a derived address. `[slug]`, `[[opt]]` and
-`[...all]` mean something in `pages/` and nothing here. `index.ts` is not the
-folder root here either.
+**Problems are reported at once** where they can be, before a module is loaded
+or a byte is written, instead of one failed build per mistake. The exception is
+a character that only breaks a DERIVED address: whether it matters depends on
+whether the app declares its own `uri`, which is not known until the file
+loads. `assertUniqueUris` compares RFC 3986 equivalence — folding host case and
+percent-triplet case on top of what `new URL()` does — and lists every clash
+rather than the first.
+
+Dynamic segments are rejected for a derived address, and exempt alongside an
+explicit one. `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and
+nothing here. `index.ts` is not the folder root here either.
 
 Also: an error thrown while loading an app file is reported with the file
 named, instead of escaping the command as a raw stack.

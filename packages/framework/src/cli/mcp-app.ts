@@ -79,13 +79,32 @@ export function appSegmentsFromFile(relPath: string): string[] {
 const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
 
 /**
- * Refuses a path that cannot safely name a file under the output directory.
+ * Characters that break the MODULE LOADER, whatever the filesystem thinks.
  *
- * DELIBERATELY NARROW. Only `.` and `..` qualify: they are resolved by the
- * filesystem, so `../x` would write OUTSIDE the out dir. Everything else — a
- * space, an accent, a `[` — is a perfectly legal filename, and refusing it here
- * would be refusing it for an app that names its own uri and never needed one
- * derived. That was exactly the failure this split exists to undo.
+ * Vite resolves a module by id, and an id is URL-shaped: `#` opens a fragment
+ * and `?` a query, so `weather#card.ts` is read as `weather` with a fragment
+ * and reported as "Does the file exist?" for a file that plainly does. Control
+ * characters break the id in their own ways.
+ *
+ * NOT exemptible by setting `uri`. Every other objection to a filename is about
+ * the ADDRESS, and an author who writes their own address has answered it —
+ * but no address makes a file loadable.
+ */
+const LOADER_HOSTILE = /[#?\u0000-\u001f]/;
+
+/**
+ * Refuses a path that cannot safely name a file, or be loaded as a module.
+ *
+ * DELIBERATELY NARROW, because everything refused here is refused even for an
+ * app that names its own uri. Two things qualify:
+ *
+ *   - `.` and `..`, which the filesystem resolves, so `../x` would write
+ *     OUTSIDE the out dir.
+ *   - `#`, `?` and control characters, which the module loader cannot address.
+ *
+ * A space, an accent, a `[` are none of those: `big card.html` is a perfectly
+ * good filename and Vite loads `big card.ts` without complaint. Refusing those
+ * here is what made an explicit `uri` unable to rescue a build.
  */
 function assertUsableOutputPath(relPath: string, segments: string[]): void {
   if (segments.length === 0) {
@@ -96,6 +115,15 @@ function assertUsableOutputPath(relPath: string, segments: string[]): void {
     throw new Error(
       `"${relPath}" contains a "${dot}" segment, which would resolve to a path outside the ` +
         'output directory.',
+    );
+  }
+  const hostile = segments.find((seg) => LOADER_HOSTILE.test(seg));
+  if (hostile) {
+    const ch = [...hostile].find((c) => LOADER_HOSTILE.test(c)) ?? hostile;
+    throw new Error(
+      `"${relPath}" contains ${JSON.stringify(ch)}, which the module loader reads as part of a url ` +
+        'rather than a name — it would report the file as missing. Rename it. Setting "uri" does not ' +
+        'help here: the file has to be loadable before its address matters.',
     );
   }
 }
@@ -185,7 +213,9 @@ export function outputPathFromFile(relPath: string): string {
  * `ui://<package>/weather/index`; collapsing it would silently merge with a
  * sibling `weather.ts`.
  *
- * EVERY THROW IS RECOVERABLE by setting `uri` on the app.
+ * EVERY THROW HERE IS RECOVERABLE by setting `uri` on the app. The refusals
+ * that are not — a dot segment, a character the module loader cannot address
+ * — live in `assertUsableOutputPath`, because they survive having an address.
  */
 export function uriFromFile(relPath: string, packageName?: string): string {
   const segments = appSegmentsFromFile(relPath);
@@ -216,6 +246,12 @@ export function packageAuthority(packageName?: string): string | undefined {
   return /^[a-z0-9][a-z0-9._-]*$/.test(bare) ? bare : undefined;
 }
 
+/** "a and b", "a, b and c" — a list a person reads, not a join. */
+function listNames(names: string[]): string {
+  if (names.length <= 2) return names.join(' and ');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
 /**
  * The form of a uri that two addresses must differ in to be different
  * resources: what RFC 3986 equivalence says the string means, not the string.
@@ -237,9 +273,9 @@ function canonicalUri(uri: string): string {
     // Not parseable, so nothing can normalise it into another entry either.
     return uri;
   }
-  // Scheme and host are case-insensitive; a percent-triplet's hex digits are
-  // too, and RFC 3986 makes uppercase the normal form.
-  parsed.protocol = parsed.protocol.toLowerCase();
+  // The host is case-insensitive and a percent-triplet's hex digits are too;
+  // RFC 3986 makes uppercase the normal form for the latter. The SCHEME needs
+  // no line of its own — the URL constructor has already lowercased it.
   parsed.host = parsed.host.toLowerCase();
   return parsed.href.replace(/%[0-9a-fA-F]{2}/g, (t) => t.toUpperCase());
 }
@@ -268,7 +304,7 @@ export function assertUniqueUris(apps: { name: string; uri: string }[]): void {
   for (const [uri, names] of byUri) {
     if (names.length < 2) continue;
     problems.push(
-      `  ${names.join(' and ')} ${names.length > 2 ? 'all ' : ''}resolve to the uri ${uri}. A host ` +
+      `  ${listNames(names)} ${names.length > 2 ? 'all ' : ''}resolve to the uri ${uri}. A host ` +
         'caches templates by uri, so one would silently serve the other’s markup. Give each its own ' +
         'address, or its own file path.',
     );
@@ -317,9 +353,15 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     return 1;
   }
 
-  // EVERY problem the file paths alone can show, gathered before a single
-  // module is loaded or a byte is written. One list beats learning the shape of
-  // the directory one failed build at a time.
+  // Every problem that is FATAL WHATEVER THE APP SAYS, gathered before a module
+  // is loaded or a byte is written. One list beats learning the shape of the
+  // directory one failed build at a time.
+  //
+  // Not every problem, and the difference matters. A character that only breaks
+  // the ADDRESS is not fatal here, because the app may name its own uri — so it
+  // is carried, and only reported after the module loads, by which time earlier
+  // apps are already on disk. Dot segments, loader-hostile characters, output
+  // clashes and the manifest stem are the ones nothing can excuse.
   //
   // A derivation failure is NOT fatal here. An app is allowed to name its own
   // uri, and `defineMcpApp()` has not run yet — so the reason it could not be
@@ -343,7 +385,10 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
       continue;
     }
 
-    if (outPath === MANIFEST_STEM) {
+    // Compared case-INSENSITIVELY: on APFS and NTFS `Manifest.json` and
+    // `manifest.json` are one file, so a capital letter reproduced the exact
+    // clobber this guard exists to stop.
+    if (outPath.toLowerCase() === MANIFEST_STEM) {
       problems.push(
         `  ${here} packs to "${MANIFEST_STEM}.json", which is the index listing every app — the ` +
           'index would overwrite its descriptor. Rename it, or move it into a folder.',

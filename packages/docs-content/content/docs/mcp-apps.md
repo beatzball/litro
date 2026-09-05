@@ -109,13 +109,20 @@ Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed i
 
 ### When the build refuses
 
-It reports **every** problem it can see from the file paths alone, in one list, before loading a module or writing a byte:
+Most problems are reported **all at once**, before a module is loaded or a byte is written. The last one below is the exception: whether it applies depends on what the app declares, so it can only surface once the file is loaded — by which time earlier apps are already on disk.
+
+Refused no matter what the app says:
 
 - **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
-- **A character a uri parser would rewrite**, in a file whose address is being derived. Names may use letters, digits, `.`, `_`, `~` and `-`. A space, `?`, `#`, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship the address `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. **An app that sets its own `uri` is exempt:** the filename is only a filename then, and `big card.ts` packs happily to `big card.html`. Dynamic segments (`[slug]`, `[[opt]]`, `[...all]`) work the same way — refused for a derived address, fine alongside an explicit one.
-- **A `.` or `..` segment**, always. That one no `uri` can excuse: it would write outside the output directory.
-- **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it.
+- **A `#`, `?` or control character in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists. Setting `uri` does not help: a file has to be loadable before its address matters.
+- **A `.` or `..` segment.** It would resolve to a path outside the output directory.
+- **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
 - **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
+
+Refused only when the address is being **derived**, and excused by setting `uri` yourself:
+
+- **A character a uri parser would rewrite.** A derived name may use letters, digits, `.`, `_`, `~` and `-`. A space, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. With an explicit `uri` the filename is only a filename, and `big card.ts` packs to `big card.html`.
+- **A dynamic segment** — `[slug]`, `[[opt]]`, `[...all]`. Same rule: refused for a derived address, fine alongside an explicit one.
 
 The output is plain files. Any MCP server can serve them; nothing assumes the serving side is a Litro one.
 

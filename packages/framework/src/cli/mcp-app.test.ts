@@ -33,6 +33,27 @@ describe('outputPathFromFile', () => {
     },
   );
 
+  it.each(['weather#card.ts', 'weather?card.ts', 'a/b#c/d.ts'])(
+    'refuses %s, which the module loader cannot address',
+    (input) => {
+      // Vite resolves a module by a URL-shaped id, so `#` opens a fragment and
+      // `?` a query: the file is looked up under a shorter name and reported
+      // as missing when it plainly exists. NOT excusable by setting `uri` —
+      // the docs used to promise it was, and it never was.
+      expect(() => outputPathFromFile(input)).toThrow(/module loader reads as part of a url/);
+    },
+  );
+
+  it('refuses a control character in the name', () => {
+    expect(() => outputPathFromFile('weather\u0001card.ts')).toThrow(/module loader/);
+  });
+
+  it('says plainly that an explicit uri does not help for a loader character', () => {
+    // Every other refusal points at "or set uri". This one must not, because
+    // that advice does nothing — the failure is before an address is consulted.
+    expect(() => outputPathFromFile('weather#card.ts')).toThrow(/Setting "uri" does not/);
+  });
+
   it('refuses a path with no name left after the extension', () => {
     // uriFromFile has the same guard; they must not disagree on emptiness, or
     // an empty stem would reach join(outDir, '.html').
@@ -144,6 +165,29 @@ describe('uriFromFile', () => {
   });
 });
 
+describe('the reserved manifest stem', () => {
+  // `manifest.json` is the index listing every app. An app packing to that stem
+  // writes its descriptor there and has the index overwrite it, leaving the
+  // manifest entry pointing `descriptor` at the array itself — exit 0, silent.
+  //
+  // The CLI does the refusing, so these pin the two derivations it compares.
+  it('is what a top-level manifest.ts packs to', () => {
+    expect(outputPathFromFile('manifest.ts')).toBe('manifest');
+  });
+
+  it('catches a capital, because the filesystem does not distinguish one', () => {
+    // On APFS and NTFS `Manifest.json` IS `manifest.json`. A case-sensitive
+    // check let one capital letter reproduce the whole bug.
+    expect(outputPathFromFile('Manifest.ts').toLowerCase()).toBe('manifest');
+    expect(outputPathFromFile('MANIFEST.ts').toLowerCase()).toBe('manifest');
+  });
+
+  it('does not reach a nested one, which collides with nothing', () => {
+    expect(outputPathFromFile('sub/manifest.ts')).toBe('sub/manifest');
+    expect(outputPathFromFile('sub/manifest.ts').toLowerCase()).not.toBe('manifest');
+  });
+});
+
 describe('appSegmentsFromFile', () => {
   it('drops empty segments from a doubled separator', () => {
     expect(appSegmentsFromFile('a//b.ts')).toEqual(['a', 'b']);
@@ -208,6 +252,16 @@ describe('assertUniqueUris', () => {
         { name: 'b', uri: 'ui://pkg/a%2fb' },
       ]),
     ).toThrow(/resolve to the uri/);
+  });
+
+  it('reads as a list at three, not a chain of "and"', () => {
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a', uri: 'ui://x/a' },
+        { name: 'b', uri: 'ui://x/a' },
+        { name: 'c', uri: 'ui://x/a' },
+      ]),
+    ).toThrow(/a, b and c all resolve/);
   });
 
   it('names both apps with "and", not "all", when there are two', () => {
