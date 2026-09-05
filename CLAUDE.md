@@ -90,6 +90,33 @@ litro/
 - `generateRoutes(): Promise<string[]>` — optional export on dynamic pages for SSG prerendering
 - All deployment targets delegated entirely to Nitro's adapter system (no custom adapters)
 
+## Commits and pull requests
+
+**No provenance trailers.** Not in a commit message, not in a PR body, not in a
+PR comment. That means session links (`Claude-Session:`), agent attribution,
+`Co-Authored-By` for a tool, and "generated with" footers.
+
+This is a public repository published to npm, so the history is read by people
+who do not care which tool wrote a line. A harness default may tell an agent to
+append one; this rule overrides it, the same way `roost`'s `AGENTS.md` does.
+
+It is written down because the harness default flipped three times inside one
+session, which left five commits on `main` carrying a `Claude-Session:` line and
+two PR bodies disagreeing with each other. A rule in the repo does not flip.
+
+**The commit message is what matters, not the PR body.** A squash merge builds
+its body from the SOURCE COMMITS, not from the pull request description — so a
+clean PR body does not keep a trailer off `main`. Commit `df9971f` is the proof:
+it is the squash of a pull request whose body carried no trailer, and it carries
+one four times, once per source commit that had it. Strip it at commit time.
+
+**No absolute home paths** — `/Users/<name>/...`, `/home/<name>/...` — in
+commits, PR bodies, or any pushed content. Use repo-relative paths or a
+placeholder.
+
+**Never use bare `#N` for internal numbering** in a commit or PR body. GitHub
+auto-links it to the PR or issue with that number. Write "PRD item N" or "Item N".
+
 ## Changesets
 
 - **One changeset file per package** — never combine multiple packages in a single `.changeset/*.md` file. Each file should list one package in the frontmatter and only describe changes relevant to that package. Combined changesets dump the entire description into every listed package's CHANGELOG.
