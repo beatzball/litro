@@ -59,19 +59,22 @@ export function appNameFromFile(relPath: string): string {
 
 /**
  * Turns a path relative to the source dir into a `ui://` address.
- * `weather/card.ts` -> `ui://weather/card`, the way `pages/blog/index.ts`
- * serves `/blog`.
  *
- * THE FLAT CASE. A `ui://` uri needs an authority and a path, so a single
- * segment is not enough on its own: `weather-card.ts` would give host
- * `weather-card` and an EMPTY path, a different shape from every nested file,
- * and a host that groups by authority treats the two differently. The package
- * name supplies the missing first segment, which is what projects were already
- * writing by hand.
+ * The PACKAGE NAME is always the authority and the FILE PATH is always the
+ * path, so `weather/card.ts` in package `playground` is
+ * `ui://playground/weather/card`. One rule with no branch in it: rename the
+ * package and every address moves together, which is the point of an authority.
+ *
+ * WHY THE PACKAGE AND NOT THE FIRST FOLDER. A `ui://` uri needs an authority
+ * AND a path. Letting the first folder be the authority reads fine until a file
+ * sits flat in `mcp-apps/`: `weather-card.ts` would give host `weather-card`
+ * and an EMPTY path, a different shape from every nested file, which a host
+ * that groups by authority treats differently. Taking the authority from the
+ * package makes the flat file ordinary instead of a special case.
  *
  * `index.ts` IS NOT SPECIAL, unlike in `pages/`. `weather/index.ts` is
- * `ui://weather/index`; collapsing it to `ui://weather` would leave a host
- * with no path, which is the shape the flat case above exists to avoid.
+ * `ui://<package>/weather/index`; collapsing it would silently merge with a
+ * sibling `weather.ts`.
  *
  * NO DYNAMIC SEGMENTS. `[slug]`, `[[opt]]` and `[...all]` mean something in
  * `pages/` and nothing here: a `ui://` resource is a static template the host
@@ -94,20 +97,16 @@ export function uriFromFile(relPath: string, packageName?: string): string {
     throw new Error(`"${relPath}" has no name to build a uri from.`);
   }
 
-  if (segments.length === 1) {
-    const authority = packageAuthority(packageName);
-    if (!authority) {
-      throw new Error(
-        `"${relPath}" sits at the top of the app directory, so its uri would have no path — only a host. ` +
-          'Give it a folder (mcp-apps/<group>/' +
-          `${segments[0]}.ts), or set "uri" in defineMcpApp(). ` +
-          'Normally the package name fills that first segment, but this package has no usable "name".',
-      );
-    }
-    return `ui://${authority}/${segments[0]}`;
+  const authority = packageAuthority(packageName);
+  if (!authority) {
+    throw new Error(
+      `cannot build a uri for "${relPath}": the package name supplies the authority ` +
+        `(ui://<package>/${segments.join('/')}), and this project has no usable "name" in its ` +
+        'package.json. Add one, or set "uri" in defineMcpApp().',
+    );
   }
 
-  return `ui://${segments.join('/')}`;
+  return `ui://${authority}/${segments.join('/')}`;
 }
 
 /**

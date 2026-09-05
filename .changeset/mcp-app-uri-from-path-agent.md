@@ -5,7 +5,8 @@
 MCP Apps: `uri` is now optional in `defineMcpApp()`
 
 `buildMcpAppDocument(app, { uri })` takes a fallback address, which is what
-lets `litro mcp-app build` derive one from the file path. An app that declares
+lets `litro mcp-app build` derive one — package name as the authority, file
+path as the path. An app that declares
 its own `uri` keeps it — the config wins over the fallback — so no existing app
 needs an edit.
 

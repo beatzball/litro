@@ -25,34 +25,40 @@ describe('appNameFromFile', () => {
 
 describe('uriFromFile', () => {
   it.each([
-    ['weather/card.ts', 'ui://weather/card'],
-    ['a/b/c.tsx', 'ui://a/b/c'],
-    ['weather\\card.ts', 'ui://weather/card'],
+    ['weather-card.ts', 'ui://playground/weather-card'],
+    ['weather/card.ts', 'ui://playground/weather/card'],
+    ['a/b/c.tsx', 'ui://playground/a/b/c'],
+    ['weather\\card.ts', 'ui://playground/weather/card'],
   ])('%s -> %s', (input, expected) => {
     expect(uriFromFile(input, 'playground')).toBe(expected);
   });
 
-  it('takes the first segment from the package name for a flat file', () => {
-    // A single segment would give host "weather-card" and an EMPTY path — a
-    // different shape from every nested file, which a host that groups by
-    // authority treats differently.
+  it('puts the package name in front of a nested path too, not only a flat file', () => {
+    // The authority is the PACKAGE, uniformly. Letting the first folder be the
+    // authority instead would give a flat file host "weather-card" and an EMPTY
+    // path — a different shape from every nested file, which a host that groups
+    // by authority treats differently.
+    expect(uriFromFile('weather/card.ts', 'playground')).toBe('ui://playground/weather/card');
     expect(uriFromFile('weather-card.ts', 'playground')).toBe('ui://playground/weather-card');
   });
 
-  it('does NOT prefix the package name when the file already has a folder', () => {
-    // The folder is the authority. Prefixing as well would bury the path the
-    // author wrote one level down and make the address unreadable from the tree.
-    expect(uriFromFile('weather/card.ts', 'playground')).toBe('ui://weather/card');
+  it('moves every address together when the package is renamed', () => {
+    // That is what an authority is for, and it is the reason this is one rule
+    // with no branch in it.
+    const files = ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx'];
+    for (const rel of files) {
+      expect(uriFromFile(rel, 'renamed')).toBe(uriFromFile(rel, 'playground').replace('playground', 'renamed'));
+    }
   });
 
   it('does not treat index.ts as the folder root, the way pages/ does', () => {
-    // Collapsing it to `ui://weather` would leave a host with no path — the
-    // one shape the package-name rule above exists to avoid.
-    expect(uriFromFile('weather/index.ts', 'playground')).toBe('ui://weather/index');
+    // Collapsing it would silently merge with a sibling `weather.ts`.
+    expect(uriFromFile('weather/index.ts', 'playground')).toBe('ui://playground/weather/index');
   });
 
-  it('says what to do when a flat file has no package name to borrow', () => {
-    expect(() => uriFromFile('weather-card.ts', undefined)).toThrow(/Give it a folder/);
+  it('says what to do when there is no package name to take an authority from', () => {
+    expect(() => uriFromFile('weather/card.ts', undefined)).toThrow(/no usable "name"/);
+    expect(() => uriFromFile('weather-card.ts', undefined)).toThrow(/set "uri" in defineMcpApp/);
   });
 
   it.each(['[slug].ts', 'blog/[slug].ts', '[...all].ts', '[[opt]]/card.ts'])(
@@ -69,9 +75,10 @@ describe('uriFromFile', () => {
   it('agrees with appNameFromFile, which names the same file on disk', () => {
     // The manifest pairs the two. Derived apart, they drift on the next edit
     // to either, and the descriptor then points at a file that is not there.
-    for (const rel of ['weather/card.ts', 'a/b/c.tsx']) {
-      const fromUri = uriFromFile(rel, 'playground').replace('ui://', '').split('/').join('-');
-      expect(fromUri).toBe(appNameFromFile(rel));
+    // The uri path BELOW the authority is exactly the output name, unflattened.
+    for (const rel of ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx']) {
+      const path = uriFromFile(rel, 'playground').replace('ui://playground/', '');
+      expect(path.split('/').join('-')).toBe(appNameFromFile(rel));
     }
   });
 });

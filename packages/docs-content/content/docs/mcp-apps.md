@@ -55,17 +55,21 @@ export default defineMcpApp({
 
 ## The uri comes from the file path
 
-There is no `uri` in that file. The packer derives one from where the file sits, the way `pages/blog/index.ts` serves `/blog`:
+There is no `uri` in that file. The packer derives one: the **package name** is the authority, and the **file path** is the path.
+
+For a project whose `package.json` says `"name": "playground"`:
 
 | File in `mcp-apps/` | Address |
 |---|---|
-| `weather/card.ts` | `ui://weather/card` |
-| `dashboard/charts/bar.ts` | `ui://dashboard/charts/bar` |
-| `weather-card.ts` | `ui://<package name>/weather-card` |
+| `weather-card.ts` | `ui://playground/weather-card` |
+| `weather/card.ts` | `ui://playground/weather/card` |
+| `dashboard/charts/bar.ts` | `ui://playground/dashboard/charts/bar` |
 
-A `ui://` address needs a host and a path, so a single segment is not enough on its own. For a file sitting flat in `mcp-apps/`, the **package name** fills the first segment — `weather-card.ts` in a package named `playground` becomes `ui://playground/weather-card`. Give the file a folder instead if you would rather see the whole address in the file tree.
+One rule, no special cases: rename the package and every address moves together, which is what an authority is for.
 
-**`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://weather/index` — collapsing it would leave `ui://weather`, a host with no path, which is the one shape this convention avoids.
+The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`.
+
+**`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://playground/weather/index` — collapsing it would silently merge with a sibling `weather.ts`.
 
 **No dynamic segments.** `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and nothing here. A `ui://` resource is a static template the host caches by address, so there is no request to fill a parameter from. The build rejects them rather than shipping a literal `[slug]` in a protocol-visible address.
 

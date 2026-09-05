@@ -23,8 +23,8 @@ import { DemoWeatherCard } from '../components/demo-weather-card.js';
 void DemoWeatherCard; // named import + void: bare side-effect imports get tree-shaken
 
 export default defineMcpApp({
-  // No `uri`: the packer derives it from this file's path. `weather-card.ts` in
-  // package `playground` packs as `ui://playground/weather-card`.
+  // No `uri`: the packer derives it. The package name is the authority and
+  // the file path is the path, so this packs as `ui://playground/weather-card`.
   title: 'Weather',
 
   // Rendered with no data: a host caches this template and reuses it for every

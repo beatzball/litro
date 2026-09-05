@@ -70,11 +70,11 @@ export interface McpAppConfig {
   /**
    * Resource address. MUST start with `ui://`.
    *
-   * OPTIONAL because `litro mcp-app build` derives one from the file path —
-   * `mcp-apps/weather/card.ts` packs as `ui://weather/card`, the way
-   * `pages/blog/index.ts` serves `/blog`. Set it to override that, or when
-   * calling `buildMcpAppDocument` standalone, where there is no file to
-   * derive from. An explicit value always wins over a derived one.
+   * OPTIONAL because `litro mcp-app build` derives one: the package name is
+   * the authority and the file path is the path, so `mcp-apps/weather/card.ts`
+   * in package `playground` packs as `ui://playground/weather/card`. Set it to
+   * override that, or when calling `buildMcpAppDocument` standalone, where
+   * there is no file to derive from. An explicit value always wins.
    */
   uri?: string;
   /**
