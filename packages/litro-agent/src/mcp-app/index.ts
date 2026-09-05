@@ -40,8 +40,12 @@ export const MCP_APP_MIME_TYPE = 'text/html;profile=mcp-app';
 
 /**
  * Origins the view may reach, by kind. The host builds its CSP from these and
- * "MAY further restrict but MUST NOT allow undeclared domains" — so an empty
- * config is the safest thing to ship, not an incomplete one.
+ * "MAY further restrict but MUST NOT allow undeclared domains".
+ *
+ * OMIT this entirely when the view needs no network. The spec has the sandbox
+ * "apply restrictive defaults if no CSP metadata is provided", which is the
+ * tightest policy available; declaring an empty object instead hands the host
+ * a policy to construct and is not equivalent.
  */
 export interface McpAppCsp {
   /** fetch / XHR / WebSocket -> `connect-src` */
@@ -65,6 +69,21 @@ export interface McpAppPermissions {
 export interface McpAppConfig {
   /** Resource address. MUST start with `ui://`. */
   uri: string;
+  /**
+   * Resource name. The base MCP `Resource` type requires it alongside `uri`,
+   * and a server forwarding our descriptor into `resources/list` emits an
+   * invalid entry without it. Defaults to the last path segment of `uri`.
+   */
+  name?: string;
+  /** App version, reported to the host in the handshake. Defaults to `0.0.0`. */
+  version?: string;
+  /**
+   * Display modes this view can handle. The spec makes declaring them a MUST:
+   * "View MUST declare all display modes it supports in
+   * `appCapabilities.availableDisplayModes` during initialization."
+   * Defaults to `['inline']`.
+   */
+  displayModes?: Array<'inline' | 'fullscreen' | 'pip'>;
   /**
    * The data-free shell, as a template for the adapter selected by
    * `LITRO_ADAPTER` — a Lit `TemplateResult`, or an HTML string for FAST.
@@ -106,6 +125,8 @@ export interface McpAppDefinition {
 /** What an MCP server publishes for this app, in `resources/*` shape. */
 export interface McpAppDescriptor {
   uri: string;
+  /** Required by the base MCP `Resource` type, not just by this extension. */
+  name: string;
   mimeType: typeof MCP_APP_MIME_TYPE;
   _meta: {
     ui: {
@@ -148,6 +169,13 @@ export function defineMcpApp(config: McpAppConfig): McpAppDefinition {
   return { [MCP_APP_CONFIG]: config };
 }
 
+/** Last path segment of a `ui://` address, used as the default resource name. */
+export function nameFromUri(uri: string): string {
+  const path = uri.replace(/^ui:\/\//, '').replace(/[?#].*$/, '');
+  const segments = path.split('/').filter(Boolean);
+  return segments[segments.length - 1] ?? path;
+}
+
 /** Neutralises a closing tag that would end the element early. */
 function inlineSafe(source: string, tag: 'script' | 'style'): string {
   return source.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
@@ -181,7 +209,16 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     config.styles ? `<style>\n${inlineSafe(config.styles, 'style')}\n</style>` : '',
   ].filter(Boolean);
 
+  // Read by the bridge for its ui/initialize handshake. A separate script so
+  // BRIDGE_SOURCE stays a constant the tests can evaluate unchanged.
+  const appMeta = {
+    name: config.name ?? nameFromUri(config.uri),
+    version: config.version ?? '0.0.0',
+    displayModes: config.displayModes ?? ['inline'],
+  };
+
   const scripts = [
+    `<script>\nwindow.__litroMcpApp = ${inlineSafe(JSON.stringify(appMeta), 'script')};\n</script>`,
     config.runtime ? `<script>\n${inlineSafe(config.runtime, 'script')}\n</script>` : '',
     config.apply
       ? `<script>\nwindow.litroMcpApply = ${inlineSafe(config.apply, 'script')};\n</script>`
@@ -213,6 +250,11 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     html,
     // Nested `_meta.ui.*` only. The flat `_meta["ui/resourceUri"]` form is
     // deprecated and the spec removes it before GA.
-    descriptor: { uri: config.uri, mimeType: MCP_APP_MIME_TYPE, _meta: { ui: meta } },
+    descriptor: {
+      uri: config.uri,
+      name: appMeta.name,
+      mimeType: MCP_APP_MIME_TYPE,
+      _meta: { ui: meta },
+    },
   };
 }

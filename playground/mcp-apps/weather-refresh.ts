@@ -74,6 +74,8 @@ export default defineMcpApp({
     });
   `,
 
-  csp: { connectDomains: [] },
+  // No `csp`: callTool travels over postMessage to the host, not over the
+  // network, so this view needs no origins declared. Omitting it leaves the
+  // sandbox on its restrictive defaults.
   prefersBorder: true,
 });

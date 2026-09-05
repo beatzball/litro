@@ -95,6 +95,25 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     return 1;
   }
 
+  // Two source paths can flatten to one output name (`weather/card.ts` and
+  // `weather-card.ts` both become `weather-card`), and the second write would
+  // silently replace the first. Caught before anything reaches disk — the
+  // uri check below cannot see it, since only one of the two survives to be
+  // compared.
+  const byName = new Map<string, string>();
+  for (const file of files) {
+    const name = appNameFromFile(relative(sourceDir, file));
+    const first = byName.get(name);
+    if (first) {
+      console.error(
+        `litro mcp-app build: ${relative(cwd, first)} and ${relative(cwd, file)} both pack to ` +
+          `"${name}.html". Rename one — the second would overwrite the first.`,
+      );
+      return 1;
+    }
+    byName.set(name, file);
+  }
+
   const packed: PackedApp[] = [];
   await mkdir(outDir, { recursive: true });
 
@@ -122,11 +141,20 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   try {
     try {
       packager = (await vite.ssrLoadModule('@beatzball/litro-agent/mcp-app')) as typeof packager;
-    } catch {
-      console.error(
-        'litro mcp-app build: @beatzball/litro-agent is not installed in this project.\n' +
-          '  pnpm add @beatzball/litro-agent',
-      );
+    } catch (err) {
+      // Only a resolution failure means "not installed". Anything else — a
+      // syntax error, a bad export map, a throwing import — was being reported
+      // as a missing package, which sends the reader to reinstall something
+      // they already have.
+      const message = (err as Error)?.message ?? String(err);
+      if (/Failed to resolve|Cannot find (module|package)|ERR_MODULE_NOT_FOUND/i.test(message)) {
+        console.error(
+          'litro mcp-app build: @beatzball/litro-agent is not installed in this project.\n' +
+            '  pnpm add @beatzball/litro-agent',
+        );
+      } else {
+        console.error(`litro mcp-app build: could not load @beatzball/litro-agent/mcp-app\n  ${message}`);
+      }
       return 1;
     }
 

@@ -58,6 +58,7 @@ describe('buildMcpAppDocument with the FAST adapter', () => {
 
     expect(descriptor).toEqual({
       uri: 'ui://weather/forecast',
+      name: 'forecast',
       mimeType: MCP_APP_MIME_TYPE,
       _meta: { ui: { prefersBorder: true } },
     });

@@ -72,7 +72,7 @@ describe('the handshake', () => {
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(document.documentElement.getAttribute('lang')).toBe('en-GB');
-    expect(sent.at(-1)?.method).toBe('ui/notifications/initialized');
+    expect(sent.map((m) => m.method)).toContain('ui/notifications/initialized');
   });
 
   it('survives a host that refuses the handshake, leaving the shell on screen', async () => {

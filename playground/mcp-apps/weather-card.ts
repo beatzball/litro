@@ -44,8 +44,8 @@ export default defineMcpApp({
     if (data.summary !== undefined) set('.summary', String(data.summary));
   }`,
 
-  // Declared empty on purpose. The host builds its CSP from this and must not
-  // allow anything undeclared, so an empty list is the safest thing to ship.
-  csp: { connectDomains: [] },
+  // No `csp` at all, on purpose. The spec has the sandbox "apply restrictive
+  // defaults if no CSP metadata is provided", which is tighter than handing it
+  // an empty object to build a policy from. This view reaches nothing.
   prefersBorder: true,
 });

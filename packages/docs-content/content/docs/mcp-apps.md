@@ -48,7 +48,6 @@ export default defineMcpApp({
 
   styles: 'body { margin: 0; padding: 8px; background: transparent; }',
 
-  csp: { connectDomains: [] },
   prefersBorder: true,
 });
 ```
@@ -73,6 +72,22 @@ For each `mcp-apps/*.ts` this writes, into `dist/mcp-apps/`:
 
 The output is plain files. Any MCP server can serve them; nothing assumes the serving side is a Litro one.
 
+## What the fill step refuses
+
+`structuredContent` is server JSON, and tool results routinely carry
+third-party text. The default fill step therefore **refuses** any key that is a
+scripting sink — anything starting with `on`, plus `innerHTML`, `outerHTML`,
+`srcdoc`, `src`, `href`, `action`, `formaction`, `style` and friends. Refused
+keys are reported to the host with `notifications/message`, not dropped
+silently.
+
+Without that, a result of `{ "innerHTML": "<img src=x onerror=…>" }` would
+execute: the host's default CSP is `script-src 'self' 'unsafe-inline'`, which
+permits inline event handlers, and the injected code would hold
+`window.litroMcp.callTool`.
+
+A custom `apply` bypasses the deny list — it is your code, so it is your call.
+
 ## Filling the shell
 
 No component runtime is inlined by default, so the rendered Declarative Shadow DOM is static markup. Assigning `.city` on the element sets a property nothing is watching. Write to the DOM instead:
@@ -88,7 +103,7 @@ apply: `function (el, data) {
 
 `apply` is browser **source as a string**, never a function. A function would have to be serialized with `Function.prototype.toString()`, which silently drops everything it closed over — and that breaks inside the iframe, where nobody is watching.
 
-Omit it and the default is `Object.assign(element, structuredContent)`, which is right when you *have* inlined a runtime through `runtime:`. That costs the runtime's bytes in every copy of every app, because self-containment means nothing can be shared between documents.
+Omit it and the default is a guarded property assignment (see [What the fill step refuses](#what-the-fill-step-refuses)), which is right when you *have* inlined a runtime through `runtime:`. That costs the runtime's bytes in every copy of every app, because self-containment means nothing can be shared between documents.
 
 ## Calling a tool back
 
@@ -109,15 +124,17 @@ runtime: `
 
 ## Self-containment is enforced
 
-Packing **fails** if the document would load anything from outside itself — an external `src`, a `<link href>`, a CSS `url()` or `@import`. Inline the CSS and JS, and embed images and fonts as `data:` URIs.
+Packing **fails** if the document would load anything from outside itself — an external `src`, a `<link href>`, a CSS `url()` or `@import`. Inline the CSS and JS, and embed images as `data:` URIs.
 
 This is an error rather than a warning because the host's default CSP is `default-src 'none'`. A blocked request inside that iframe produces no console you will see and no error the host reports. A missing stylesheet just renders as an unstyled card.
+
+Fonts are the exception worth knowing: the default policy has no `font-src`, so `default-src 'none'` blocks a `data:` webfont too. Use the host's own fonts — it offers them through `hostContext.styles`.
 
 An `<a href="https://…">` is **not** flagged. A link is a navigation, not a subresource load, and the default policy does not block it.
 
 ## Security notes
 
-- `_meta.ui.csp` declares the origins the view may reach: `connectDomains`, `resourceDomains`, `frameDomains`, `baseUriDomains`. The host builds its policy from these and must not allow anything undeclared, so an empty declaration is the safest thing to ship.
+- `_meta.ui.csp` declares the origins the view may reach: `connectDomains`, `resourceDomains`, `frameDomains`, `baseUriDomains`. **Omit it entirely when the view needs no network** — the spec has the sandbox "apply restrictive defaults if no CSP metadata is provided", which is tighter than handing it an empty object to build a policy from.
 - The bridge accepts messages only from the host frame and only JSON-RPC 2.0.
 - The default CSP allows inline script, but a host **may** restrict further. A host that does will break every inline-script MCP App, not only Litro's.
 
