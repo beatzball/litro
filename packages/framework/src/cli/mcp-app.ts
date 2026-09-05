@@ -22,6 +22,16 @@ import { patchCustomElementsIdempotent } from '../plugins/ssg.js';
 const DEFAULT_SOURCE_DIR = 'mcp-apps';
 const DEFAULT_OUT_DIR = 'dist/mcp-apps';
 
+/**
+ * The index every app is listed in. An app packing to this stem would write
+ * `manifest.json` as its descriptor and then have it overwritten by the index,
+ * leaving its manifest entry pointing `descriptor` at the array itself.
+ *
+ * The output mirrors the source tree, so only the TOP level collides:
+ * `mcp-apps/sub/manifest.ts` is fine.
+ */
+const MANIFEST_STEM = 'manifest';
+
 /** One packed app, as it lands on disk. */
 export interface PackedApp {
   /**
@@ -56,10 +66,10 @@ export function appSegmentsFromFile(relPath: string): string[] {
  * Characters a path segment may contribute to a `ui://` address.
  *
  * This is RFC 3986's `unreserved` set. Anything outside it either changes
- * meaning (`?` opens a query, `#` opens a fragment, `/` opens a segment) or is
- * rewritten by any parser that touches it (a space becomes `%20`, `é` becomes
- * `%C3%A9`) — and a rewritten address no longer matches the string in the
- * descriptor, so a host caches under a key the manifest does not contain.
+ * meaning (`?` opens a query, `#` opens a fragment) or is rewritten by any
+ * parser that touches it (a space becomes `%20`, `é` becomes `%C3%A9`) — and a
+ * rewritten address no longer matches the string in the descriptor, so a host
+ * caches under a key the manifest does not contain.
  *
  * `%` is excluded deliberately, not by omission. Allowing it would make
  * `big%20card.ts` and `big card.ts` two files with ONE effective address, and
@@ -69,13 +79,41 @@ export function appSegmentsFromFile(relPath: string): string[] {
 const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
 
 /**
+ * Refuses a path that cannot safely name a file under the output directory.
+ *
+ * DELIBERATELY NARROW. Only `.` and `..` qualify: they are resolved by the
+ * filesystem, so `../x` would write OUTSIDE the out dir. Everything else — a
+ * space, an accent, a `[` — is a perfectly legal filename, and refusing it here
+ * would be refusing it for an app that names its own uri and never needed one
+ * derived. That was exactly the failure this split exists to undo.
+ */
+function assertUsableOutputPath(relPath: string, segments: string[]): void {
+  if (segments.length === 0) {
+    throw new Error(`"${relPath}" has no name to build an output file from.`);
+  }
+  const dot = segments.find((seg) => seg === '.' || seg === '..');
+  if (dot) {
+    throw new Error(
+      `"${relPath}" contains a "${dot}" segment, which would resolve to a path outside the ` +
+        'output directory.',
+    );
+  }
+}
+
+/**
  * Refuses a path that cannot become an unambiguous `ui://` address.
  *
- * Held to the same standard as the authority, and for the same reason given on
- * `packageAuthority`: an address is protocol-visible and cached by the host, so
- * the build is the last place a bad one can be stopped cheaply.
+ * Every throw here is RECOVERABLE by the app naming its own `uri` — which is
+ * why the CLI carries the reason instead of failing on it. An address is the
+ * only thing at stake, so an author who supplies one has already answered the
+ * objection. An error that names a remedy the caller has already applied is
+ * worse than no error at all.
  */
-function assertUsableSegments(relPath: string, segments: string[]): void {
+function assertUsableUriSegments(relPath: string, segments: string[]): void {
+  if (segments.length === 0) {
+    throw new Error(`"${relPath}" has no name to build a uri from.`);
+  }
+
   const dynamic = segments.find((seg) => seg.includes('[') || seg.includes(']'));
   if (dynamic) {
     throw new Error(
@@ -86,8 +124,7 @@ function assertUsableSegments(relPath: string, segments: string[]): void {
 
   // `.` and `..` are syntactically fine but are REMOVED by RFC 3986
   // normalisation, so `a/./b` and `a/b` are one resource to a host and two
-  // entries to us. Unreachable through the CLI's own globbing today; rejected
-  // because `uriFromFile` is exported and does not know its caller.
+  // entries to us.
   const dot = segments.find((seg) => seg === '.' || seg === '..');
   if (dot) {
     throw new Error(
@@ -111,15 +148,21 @@ function assertUsableSegments(relPath: string, segments: string[]): void {
  * Turns a path relative to the source dir into an output path stem.
  * `weather/card.ts` -> `weather/card`, so `dist/mcp-apps/weather/card.html`.
  *
- * NESTED, MIRRORING THE URI. An earlier version flattened to `weather-card`,
+ * NESTED, MIRRORING THE URI. Through 0.15.0 this flattened to `weather-card`,
  * which let `weather/card.ts` and `weather-card.ts` — two files with two
  * DIFFERENT addresses — claim one output file, so the build had to detect the
- * clash and refuse. Mirroring the uri makes that clash unrepresentable: the
- * output path is the uri path, and two files cannot share one relative path.
+ * clash and refuse. Mirroring makes that clash unrepresentable: the output path
+ * is the uri path, and two files cannot share one relative path.
+ *
+ * THIS MOVES PUBLISHED OUTPUT. The recursive glob shipped in 0.15.0, so a
+ * project with `mcp-apps/weather/card.ts` already gets `weather-card.html`
+ * today and gets `weather/card.html` after this. Anything pinned to the flat
+ * path — a static mount, a COPY line, a path in a server config — has to
+ * follow. Reading `manifest.json` rather than guessing the path does not.
  */
 export function outputPathFromFile(relPath: string): string {
   const segments = appSegmentsFromFile(relPath);
-  assertUsableSegments(relPath, segments);
+  assertUsableOutputPath(relPath, segments);
   return segments.join('/');
 }
 
@@ -141,14 +184,12 @@ export function outputPathFromFile(relPath: string): string {
  * `index.ts` IS NOT SPECIAL, unlike in `pages/`. `weather/index.ts` is
  * `ui://<package>/weather/index`; collapsing it would silently merge with a
  * sibling `weather.ts`.
+ *
+ * EVERY THROW IS RECOVERABLE by setting `uri` on the app.
  */
 export function uriFromFile(relPath: string, packageName?: string): string {
   const segments = appSegmentsFromFile(relPath);
-  assertUsableSegments(relPath, segments);
-
-  if (segments.length === 0) {
-    throw new Error(`"${relPath}" has no name to build a uri from.`);
-  }
+  assertUsableUriSegments(relPath, segments);
 
   const authority = packageAuthority(packageName);
   if (!authority) {
@@ -177,18 +218,30 @@ export function packageAuthority(packageName?: string): string | undefined {
 
 /**
  * The form of a uri that two addresses must differ in to be different
- * resources: what a parser resolves the string to, not the string itself.
+ * resources: what RFC 3986 equivalence says the string means, not the string.
  *
- * `ui://p/a%2Fb` and `ui://p/a%2fb` are one address to a host and two strings
- * to us. Comparing raw strings is how two apps end up sharing a cache key.
+ * `new URL()` alone is not enough. It folds a space into `%20` and removes dot
+ * segments, but for a NON-SPECIAL scheme like `ui:` it leaves the host's case
+ * and a percent-triplet's case exactly as written — so `ui://P/a%2Fb` and
+ * `ui://p/a%2fb`, one resource by §6.2.2.1, stay two strings. Both of those
+ * remaining normalisations are applied here.
+ *
+ * Only reachable through a hand-written `uri`: a derived one is lowercase by
+ * construction and can hold no `%`.
  */
 function canonicalUri(uri: string): string {
+  let parsed: URL;
   try {
-    return new URL(uri).href;
+    parsed = new URL(uri);
   } catch {
     // Not parseable, so nothing can normalise it into another entry either.
     return uri;
   }
+  // Scheme and host are case-insensitive; a percent-triplet's hex digits are
+  // too, and RFC 3986 makes uppercase the normal form.
+  parsed.protocol = parsed.protocol.toLowerCase();
+  parsed.host = parsed.host.toLowerCase();
+  return parsed.href.replace(/%[0-9a-fA-F]{2}/g, (t) => t.toUpperCase());
 }
 
 /**
@@ -215,8 +268,9 @@ export function assertUniqueUris(apps: { name: string; uri: string }[]): void {
   for (const [uri, names] of byUri) {
     if (names.length < 2) continue;
     problems.push(
-      `  ${names.join(', ')} all resolve to the uri ${uri}. A host caches templates by uri, so one ` +
-        'would silently serve the others’ markup. Give each its own address, or its own file path.',
+      `  ${names.join(' and ')} ${names.length > 2 ? 'all ' : ''}resolve to the uri ${uri}. A host ` +
+        'caches templates by uri, so one would silently serve the other’s markup. Give each its own ' +
+        'address, or its own file path.',
     );
   }
 
@@ -286,6 +340,14 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
       // A path this broken cannot name an OUTPUT FILE either, so unlike a
       // derivation failure there is nothing an explicit uri could rescue.
       problems.push(`  ${here}: ${(err as Error).message}`);
+      continue;
+    }
+
+    if (outPath === MANIFEST_STEM) {
+      problems.push(
+        `  ${here} packs to "${MANIFEST_STEM}.json", which is the index listing every app — the ` +
+          'index would overwrite its descriptor. Rename it, or move it into a folder.',
+      );
       continue;
     }
 
@@ -462,7 +524,7 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     html: relative(outDir, a.htmlPath),
     descriptor: relative(outDir, a.descriptorPath),
   }));
-  await writeFile(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await writeFile(join(outDir, `${MANIFEST_STEM}.json`), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   for (const app of packed) {
     console.log(`  ${app.uri}  ${relative(cwd, app.htmlPath)}  ${app.bytes} bytes`);

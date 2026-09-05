@@ -23,6 +23,23 @@ describe('outputPathFromFile', () => {
     expect(outputPathFromFile('weather.v2.ts')).toBe('weather.v2');
   });
 
+  it.each(['../escape.ts', 'a/../b.ts', 'a/./b.ts'])(
+    'refuses %s, which would write outside the output directory',
+    (input) => {
+      // The ONLY thing an output path refuses: `.` and `..` are resolved by the
+      // filesystem, so `../x` escapes the out dir. No explicit uri makes that
+      // safe, which is why this one is not recoverable.
+      expect(() => outputPathFromFile(input)).toThrow(/outside the output directory/);
+    },
+  );
+
+  it('refuses a path with no name left after the extension', () => {
+    // uriFromFile has the same guard; they must not disagree on emptiness, or
+    // an empty stem would reach join(outDir, '.html').
+    expect(() => outputPathFromFile('.ts')).toThrow(/no name to build an output file/);
+    expect(() => uriFromFile('.ts', 'playground')).toThrow(/no name to build a uri/);
+  });
+
   it('mirrors the uri path, so two files can never claim one output file', () => {
     // The old scheme flattened with "-", which let `weather/card.ts` and
     // `weather-card.ts` — two DIFFERENT addresses — both claim
@@ -116,10 +133,13 @@ describe('uriFromFile', () => {
       );
     });
 
-    it('rejects the same characters for the OUTPUT PATH, not only the uri', () => {
-      // Both derivations share one validator, so a file cannot be rejected as
-      // an address yet accepted as a filename.
-      expect(() => outputPathFromFile('big card.ts')).toThrow(/rewrites or reads as syntax/);
+    it('does NOT reject them for the OUTPUT PATH, so an explicit uri can rescue', () => {
+      // "big card.html" is a perfectly legal filename. Refusing it here would
+      // refuse an app that names its own uri and never needed one derived —
+      // an error naming a remedy the author had already applied.
+      expect(outputPathFromFile('big card.ts')).toBe('big card');
+      expect(outputPathFromFile('café.ts')).toBe('café');
+      expect(outputPathFromFile('[slug].ts')).toBe('[slug]');
     });
   });
 });
@@ -166,7 +186,37 @@ describe('assertUniqueUris', () => {
         { name: 'weather-card', uri: 'ui://x/a' },
         { name: 'weather-refresh', uri: 'ui://x/a' },
       ]),
-    ).toThrow(/weather-card, weather-refresh/);
+    ).toThrow(/weather-card and weather-refresh/);
+  });
+
+  it('folds authority case, which a ui:// parser does not', () => {
+    // `ui:` is not a WHATWG "special" scheme, so `new URL()` leaves the host's
+    // case alone — but RFC 3986 makes it case-insensitive. Only reachable via a
+    // hand-written uri; a derived authority is lowercase by construction.
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a', uri: 'ui://PKG/card' },
+        { name: 'b', uri: 'ui://pkg/card' },
+      ]),
+    ).toThrow(/resolve to the uri/);
+  });
+
+  it('folds percent-triplet case, the example the old comment got wrong', () => {
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a', uri: 'ui://pkg/a%2Fb' },
+        { name: 'b', uri: 'ui://pkg/a%2fb' },
+      ]),
+    ).toThrow(/resolve to the uri/);
+  });
+
+  it('names both apps with "and", not "all", when there are two', () => {
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a', uri: 'ui://x/a' },
+        { name: 'b', uri: 'ui://x/a' },
+      ]),
+    ).toThrow(/a and b resolve to/);
   });
 
   it('compares what a parser resolves to, not the raw string', () => {

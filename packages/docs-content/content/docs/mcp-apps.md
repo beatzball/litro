@@ -112,9 +112,10 @@ Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed i
 It reports **every** problem it can see from the file paths alone, in one list, before loading a module or writing a byte:
 
 - **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
-- **A character a uri parser would rewrite.** File and folder names may use letters, digits, `.`, `_`, `~` and `-`. A space, `?`, `#`, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship the address `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. Rename the file, or set `uri` yourself.
-- **A dynamic segment**, or a `.` / `..` segment.
-- **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by what a parser resolves the address to, not by the raw text.
+- **A character a uri parser would rewrite**, in a file whose address is being derived. Names may use letters, digits, `.`, `_`, `~` and `-`. A space, `?`, `#`, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship the address `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. **An app that sets its own `uri` is exempt:** the filename is only a filename then, and `big card.ts` packs happily to `big card.html`. Dynamic segments (`[slug]`, `[[opt]]`, `[...all]`) work the same way — refused for a derived address, fine alongside an explicit one.
+- **A `.` or `..` segment**, always. That one no `uri` can excuse: it would write outside the output directory.
+- **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it.
+- **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
 
 The output is plain files. Any MCP server can serve them; nothing assumes the serving side is a Litro one.
 
