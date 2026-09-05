@@ -25,7 +25,8 @@
     "lit": "^3.2.1",
     "@lit-labs/ssr": "^3.3.0",
     "@lit-labs/ssr-client": "^1.1.7",
-    "h3": "^1.15.6"
+    "h3": "^1.15.6",
+    "@modelcontextprotocol/sdk": "^1.30.0"
   },
   "devDependencies": {
     "nitropack": "^2.13.4",
