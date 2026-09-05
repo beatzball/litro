@@ -280,6 +280,8 @@ A `{ type: 'delay', ms }` pseudo-event is script-only — the provider awaits it
 
 A session is an append-only JSONL log at `.litro/sessions/<id>.jsonl`, one `SessionEvent` per line with a monotonic `seq`. Session ids are caller-chosen opaque strings validated as `[A-Za-z0-9_-]{1,64}` — they become filenames, so path traversal is rejected at the handler.
 
+The directory is `.litro/sessions` relative to the server's working directory. Override it with `fileSessionStore({ dir })`, or — when you cannot touch the config, such as a second server started against the same project — with the `LITRO_AGENT_SESSIONS_DIR` environment variable. Two servers sharing one project directory need separate session directories: they write to the same files otherwise.
+
 **The keystone ordering rule:** every event is appended to the store *before* it is written to the HTTP stream. The log is the source of truth; the response is a tail of it. Two consequences fall out for free:
 
 - **Turns survive client disconnect.** A POST client that drops mid-turn does not abort the turn — the runtime keeps appending to the store and running to completion. The persisted log stays complete.
