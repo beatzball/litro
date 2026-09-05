@@ -145,19 +145,36 @@ describe('escaping into inline scripts', () => {
   // moves it into "script data double escaped", where `</script>` NO LONGER
   // CLOSES THE ELEMENT. Source carrying both would swallow the rest of the
   // document and the build would report success while shipping a dead file.
-  it('neutralises the <!-- plus <script pair that disarms </script>', async () => {
-    const { html: doc } = await buildMcpAppDocument(
-      defineMcpApp({
-        uri: 'ui://a/b',
-        shell,
-        runtime: 'var s = "<!-- <script> hello";',
-      }),
-    );
+  it.each(['runtime', 'apply'] as const)(
+    'REFUSES %s containing <!-- or <script rather than rewriting it',
+    async (key) => {
+      // Rewriting was the first attempt and it corrupts author code: `\\/` is the
+      // right escape for `/` in a string AND a regex, but `\\s` is not — a
+      // rewritten `/<script/` becomes `/<\\script/`, which matches "< cript".
+      // `/<\\!--/u` is a SyntaxError outright. Refusing is the honest option.
+      await expect(
+        buildMcpAppDocument(defineMcpApp({ uri: 'ui://a/b', shell, [key]: 'var s = "<!-- x";' })),
+      ).rejects.toThrow(/cannot be inlined safely/);
 
-    expect(doc).not.toContain('<!-- <script>');
-    expect(doc).toContain('<\\!--');
-    expect(doc).toContain('<\\script');
-    // The document still ends properly rather than being swallowed.
+      await expect(
+        buildMcpAppDocument(defineMcpApp({ uri: 'ui://a/b', shell, [key]: 'var re = /<script/;' })),
+      ).rejects.toThrow(/cannot be inlined safely/);
+    },
+  );
+
+  it('names the offending config key and both sequences', async () => {
+    await expect(
+      buildMcpAppDocument(
+        defineMcpApp({ uri: 'ui://a/b', shell, runtime: 'var s = "<!-- <script>";' }),
+      ),
+    ).rejects.toThrow(/"runtime" contains <!-- and <script/);
+  });
+
+  it('still rewrites </script, where the escape is correct in both contexts', async () => {
+    const { html: doc } = await buildMcpAppDocument(
+      defineMcpApp({ uri: 'ui://a/b', shell, runtime: 'var s = "</script>";' }),
+    );
+    expect(doc).toContain('<\\/script>');
     expect(doc.trimEnd().endsWith('</html>')).toBe(true);
   });
 

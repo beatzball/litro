@@ -178,19 +178,47 @@ export function nameFromUri(uri: string): string {
 
 /** Neutralises a closing tag that would end the element early. */
 function inlineSafe(source: string, tag: 'script' | 'style'): string {
-  const escaped = source.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
-  if (tag !== 'script') return escaped;
+  // `<\\/` is safe in both a string and a regex literal: `\\/` is the correct
+  // escape for `/` in each. That is what makes rewriting acceptable here.
+  return source.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
+}
 
-  // `</script` alone is not enough. Inside a script element, `<!--` moves the
-  // HTML tokenizer into "script data escaped" state, and a following `<script`
-  // moves it into "script data double escaped" — where `</script>` NO LONGER
-  // CLOSES THE ELEMENT. Source containing both would swallow the rest of the
-  // document, and the build would report success while shipping a dead file.
-  //
-  // A backslash here relies on the sequence sitting inside a string or regex
-  // literal, which is the same assumption the `</script` rule above already
-  // makes. JSON payloads do not rely on it — see jsonSafe.
-  return escaped.replace(/<!--/g, '<\\!--').replace(/<script/gi, '<\\script');
+/**
+ * Refuses source that could escape its own `<script>` element.
+ *
+ * `</script` is not the only way out. Inside a script element `<!--` moves the
+ * HTML tokenizer into "script data escaped" state, and a following `<script`
+ * moves it into "script data double escaped", where `</script>` NO LONGER
+ * CLOSES THE ELEMENT — the rest of the document is swallowed and the build
+ * reports success while shipping a dead file.
+ *
+ * This THROWS rather than rewriting, and that is the whole point. The obvious
+ * fix was to backslash them the way `</script` is backslashed, but `\\/` is the
+ * correct escape for `/` in a string AND a regex, while `\\s` is not:
+ *
+ *     author:  var re = /<script/;
+ *     rewrite: var re = /<\\script/;   // now matches "< cript", not "<script"
+ *
+ * That silently turns valid author code into different, working, wrong code.
+ * `\\!` is worse — `/<\\!--/u` is a SyntaxError. A build tool refusing input it
+ * cannot safely carry is honest; one that quietly rewrites it is not.
+ *
+ * The JSON path needs none of this: `jsonSafe` escapes `<` itself.
+ */
+function assertNoScriptEscape(source: string, key: 'runtime' | 'apply'): void {
+  const found = ['<!--', '<script'].filter((seq) =>
+    source.toLowerCase().includes(seq.toLowerCase()),
+  );
+  if (found.length === 0) return;
+
+  throw new AgentError(
+    `defineMcpApp: "${key}" contains ${found.join(' and ')}, which cannot be inlined safely.\n` +
+      'Inside a <script> element those sequences put the HTML tokenizer into a state where ' +
+      '</script> stops closing the element, and the rest of the document is swallowed — the ' +
+      'build would succeed and ship a dead file. Escaping them would corrupt a regex literal, ' +
+      "so this refuses instead. Build the string at runtime: '<' + '!--' , or '<' + 'script'.",
+    { status: 500 },
+  );
 }
 
 /**
@@ -239,6 +267,9 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     version: config.version ?? '0.0.0',
     displayModes: config.displayModes ?? ['inline'],
   };
+
+  if (config.runtime) assertNoScriptEscape(config.runtime, 'runtime');
+  if (config.apply) assertNoScriptEscape(config.apply, 'apply');
 
   const scripts = [
     `<script>\nwindow.__litroMcpApp = ${jsonSafe(appMeta)};\n</script>`,
