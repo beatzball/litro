@@ -15,7 +15,7 @@
  */
 import { createServer } from 'vite';
 import fastGlob from 'fast-glob';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'pathe';
 import { patchCustomElementsIdempotent } from '../plugins/ssg.js';
 
@@ -33,15 +33,94 @@ export interface PackedApp {
 }
 
 /**
+ * The path segments an app file contributes, source of BOTH its output name
+ * and its `ui://` address.
+ *
+ * One function on purpose. The name flattens the segments with `-` and the uri
+ * joins them with `/`, so deriving them separately would let the manifest and
+ * the address drift apart on the next edit to either.
+ */
+export function appSegmentsFromFile(relPath: string): string[] {
+  return relPath
+    .replace(/\.[cm]?tsx?$/, '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean);
+}
+
+/**
  * Turns a path relative to the source dir into an output name.
  * `weather/card.ts` -> `weather-card`, so the output directory stays flat and
  * a name can be read straight off a filename.
  */
 export function appNameFromFile(relPath: string): string {
-  return relPath
-    .replace(/\.[cm]?tsx?$/, '')
-    .replace(/\\/g, '/')
-    .replace(/\//g, '-');
+  return appSegmentsFromFile(relPath).join('-');
+}
+
+/**
+ * Turns a path relative to the source dir into a `ui://` address.
+ * `weather/card.ts` -> `ui://weather/card`, the way `pages/blog/index.ts`
+ * serves `/blog`.
+ *
+ * THE FLAT CASE. A `ui://` uri needs an authority and a path, so a single
+ * segment is not enough on its own: `weather-card.ts` would give host
+ * `weather-card` and an EMPTY path, a different shape from every nested file,
+ * and a host that groups by authority treats the two differently. The package
+ * name supplies the missing first segment, which is what projects were already
+ * writing by hand.
+ *
+ * `index.ts` IS NOT SPECIAL, unlike in `pages/`. `weather/index.ts` is
+ * `ui://weather/index`; collapsing it to `ui://weather` would leave a host
+ * with no path, which is the shape the flat case above exists to avoid.
+ *
+ * NO DYNAMIC SEGMENTS. `[slug]`, `[[opt]]` and `[...all]` mean something in
+ * `pages/` and nothing here: a `ui://` resource is a static template the host
+ * caches by address, so there is no request to take a parameter from. They are
+ * rejected rather than passed through, because a literal `[slug]` in a
+ * protocol-visible address is a typo that would otherwise ship.
+ */
+export function uriFromFile(relPath: string, packageName?: string): string {
+  const segments = appSegmentsFromFile(relPath);
+
+  const dynamic = segments.find((seg) => seg.includes('[') || seg.includes(']'));
+  if (dynamic) {
+    throw new Error(
+      `"${relPath}" uses a dynamic segment ("${dynamic}"). A ui:// app is a static template a host ` +
+        'caches by address, so there is no request to fill one from — use plain folder and file names.',
+    );
+  }
+
+  if (segments.length === 0) {
+    throw new Error(`"${relPath}" has no name to build a uri from.`);
+  }
+
+  if (segments.length === 1) {
+    const authority = packageAuthority(packageName);
+    if (!authority) {
+      throw new Error(
+        `"${relPath}" sits at the top of the app directory, so its uri would have no path — only a host. ` +
+          'Give it a folder (mcp-apps/<group>/' +
+          `${segments[0]}.ts), or set "uri" in defineMcpApp(). ` +
+          'Normally the package name fills that first segment, but this package has no usable "name".',
+      );
+    }
+    return `ui://${authority}/${segments[0]}`;
+  }
+
+  return `ui://${segments.join('/')}`;
+}
+
+/**
+ * The uri authority a package name contributes: `@beatzball/playground` ->
+ * `playground`. Returns undefined when nothing valid survives, so the caller
+ * can say what to do instead rather than emitting a broken address.
+ */
+export function packageAuthority(packageName?: string): string | undefined {
+  if (!packageName) return undefined;
+  const bare = packageName.replace(/^@[^/]+\//, '');
+  // A uri authority is not a free-form string. Anything outside this set would
+  // either be percent-encoded by a parser or rejected outright.
+  return /^[a-z0-9][a-z0-9._-]*$/.test(bare) ? bare : undefined;
 }
 
 /**
@@ -81,6 +160,11 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   const outFlag = flagValue(args, '--out') ?? DEFAULT_OUT_DIR;
   const sourceDir = resolve(cwd, dirFlag);
   const outDir = resolve(cwd, outFlag);
+
+  // Fills the first uri segment for a file that sits flat in the app directory.
+  // Read once, and read leniently: a project without a package.json still packs
+  // fine as long as every app is in a folder or names its own uri.
+  const packageName = await readPackageName(cwd);
 
   const files = await fastGlob('**/*.{ts,tsx,mts}', {
     cwd: sourceDir,
@@ -135,7 +219,10 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   // with is the copy their templates were built by. Two copies of either would
   // fail in ways that are tedious to read.
   let packager: {
-    buildMcpAppDocument(app: unknown): Promise<{ html: string; descriptor: { uri: string } }>;
+    buildMcpAppDocument(
+      app: unknown,
+      options?: { uri?: string },
+    ): Promise<{ html: string; descriptor: { uri: string } }>;
   };
 
   try {
@@ -159,14 +246,46 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     }
 
     for (const file of files.sort()) {
-      const name = appNameFromFile(relative(sourceDir, file));
+      const relPath = relative(sourceDir, file);
+      const name = appNameFromFile(relPath);
+
+      // A FALLBACK, not an override: an app that names its own uri keeps it.
+      // Derived even so, because the failure it reports (a dynamic segment, a
+      // flat file with no package name) is about the file, not about the config.
+      let derivedUri: string;
+      try {
+        derivedUri = uriFromFile(relPath, packageName);
+      } catch (err) {
+        console.error(`litro mcp-app build: ${(err as Error).message}`);
+        return 1;
+      }
 
       // Loading a component registers its custom element, and two apps may pull
       // in the same one. Lit's SSR shim throws on a duplicate define(); this
       // makes it a no-op, exactly as SSG prerendering does.
       patchCustomElementsIdempotent();
 
-      const mod = (await vite.ssrLoadModule(file)) as McpAppModule;
+      // Loading is where an app's own defineMcpApp() runs, so a throw here is
+      // the author's error and reads far better with the file named. Left
+      // unwrapped, it escaped the command as a raw Vite stack.
+      let mod: McpAppModule;
+      try {
+        mod = (await vite.ssrLoadModule(file)) as McpAppModule;
+      } catch (err) {
+        // The packager is resolved from the PROJECT's dependencies, so it can
+        // be older than this CLI. An older one ignores the derived uri and
+        // rejects the app at define time — a message that sends the reader to
+        // fix a "uri" the file is not supposed to need.
+        let message = (err as Error).message;
+        if (/defineMcpApp: "uri"/.test(message) && /undefined/.test(message)) {
+          message +=
+            '\n  This CLI derives a uri from the file path, but the installed @beatzball/litro-agent ' +
+            'is older than that. Upgrade it, or set "uri" in defineMcpApp().';
+        }
+        console.error(`litro mcp-app build: ${relative(cwd, file)}\n  ${message}`);
+        return 1;
+      }
+
       const definition = mod.default;
 
       if (!definition || typeof definition !== 'object') {
@@ -179,7 +298,7 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
 
       let built: { html: string; descriptor: { uri: string } };
       try {
-        built = await packager.buildMcpAppDocument(definition);
+        built = await packager.buildMcpAppDocument(definition, { uri: derivedUri });
       } catch (err) {
         console.error(`litro mcp-app build: ${relative(cwd, file)}\n  ${(err as Error).message}`);
         return 1;
@@ -222,6 +341,17 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   }
   console.log(`litro mcp-app build: ${packed.length} app(s) -> ${relative(cwd, outDir)}/`);
   return 0;
+}
+
+/** The project's package name, or undefined when there is nothing readable. */
+async function readPackageName(cwd: string): Promise<string | undefined> {
+  try {
+    const raw = await readFile(join(cwd, 'package.json'), 'utf8');
+    const name = (JSON.parse(raw) as { name?: unknown }).name;
+    return typeof name === 'string' ? name : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function flagValue(args: string[], flag: string): string | undefined {

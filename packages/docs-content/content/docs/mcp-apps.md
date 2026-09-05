@@ -40,7 +40,6 @@ import { DemoWeatherCard } from '../components/demo-weather-card.js';
 void DemoWeatherCard; // named import + void: bare side-effect imports get tree-shaken
 
 export default defineMcpApp({
-  uri: 'ui://playground/weather-card',
   title: 'Weather',
 
   // Rendered with no data — a host caches this and reuses it every call.
@@ -52,7 +51,40 @@ export default defineMcpApp({
 });
 ```
 
-`uri` must start with `ui://`. `shell` is a template for whichever renderer `LITRO_ADAPTER` selects — a Lit `TemplateResult`, or an HTML string for FAST. Elena is not supported, because `ui()` does not support it yet.
+`shell` is a template for whichever renderer `LITRO_ADAPTER` selects — a Lit `TemplateResult`, or an HTML string for FAST. Elena is not supported, because `ui()` does not support it yet.
+
+## The uri comes from the file path
+
+There is no `uri` in that file. The packer derives one from where the file sits, the way `pages/blog/index.ts` serves `/blog`:
+
+| File in `mcp-apps/` | Address |
+|---|---|
+| `weather/card.ts` | `ui://weather/card` |
+| `dashboard/charts/bar.ts` | `ui://dashboard/charts/bar` |
+| `weather-card.ts` | `ui://<package name>/weather-card` |
+
+A `ui://` address needs a host and a path, so a single segment is not enough on its own. For a file sitting flat in `mcp-apps/`, the **package name** fills the first segment — `weather-card.ts` in a package named `playground` becomes `ui://playground/weather-card`. Give the file a folder instead if you would rather see the whole address in the file tree.
+
+**`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://weather/index` — collapsing it would leave `ui://weather`, a host with no path, which is the one shape this convention avoids.
+
+**No dynamic segments.** `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and nothing here. A `ui://` resource is a static template the host caches by address, so there is no request to fill a parameter from. The build rejects them rather than shipping a literal `[slug]` in a protocol-visible address.
+
+### Setting one by hand
+
+`uri` is still accepted, and an explicit one always wins over the derived value:
+
+```ts
+export default defineMcpApp({
+  uri: 'ui://weather/current-conditions',
+  shell,
+});
+```
+
+Use it when the address must not follow the filename, or when you call `buildMcpAppDocument()` yourself — with no file there is nothing to derive from, and it throws unless the config carries a `uri` or you pass one:
+
+```ts
+await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
+```
 
 ## Building
 
