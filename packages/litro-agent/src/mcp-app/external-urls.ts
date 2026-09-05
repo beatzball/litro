@@ -8,152 +8,182 @@
  * renders as an unstyled card.
  *
  * That silence is why this is an assertion at pack time and not a warning, and
- * it is also why a FALSE NEGATIVE here is the worst outcome available: a
+ * it is also why a FALSE NEGATIVE is the worst outcome available here: a
  * document that should have failed the build instead ships and quietly renders
- * wrong. Review found several, and each one has a case below.
+ * wrong.
+ *
+ * WHY THIS PARSES INSTEAD OF MATCHING
+ *
+ * The first two versions scanned the raw text with regexes, and review got past
+ * them nine ways. Each fix was another alternation, and the last one — blanking
+ * `<script>` bodies so a JS variable named `src` would stop failing the build —
+ * opened a worse hole than it closed: a literal `<script>` inside an HTML
+ * comment or an attribute value began a blanking region that swallowed every
+ * real load until the next `</script>`.
+ *
+ * That was a regex being asked to do a parser's job. `parse5` implements the
+ * HTML spec's own parsing, so comments, attribute values containing `>`,
+ * entity-encoded schemes, raw-text elements and namespaces are all settled at
+ * once — and a script body is simply not an attribute, so the false positive
+ * that started the whole detour cannot occur.
  */
+import { parse } from 'parse5';
 import { AgentError } from '../errors.js';
 
 /** An external reference found in a document, with enough context to fix it. */
 export interface ExternalRef {
-  kind: 'src' | 'srcset' | 'link-href' | 'object-data' | 'poster' | 'css-url' | 'css-import';
+  kind:
+    | 'src'
+    | 'srcset'
+    | 'link-href'
+    | 'object-data'
+    | 'poster'
+    | 'base-href'
+    | 'svg-href'
+    | 'css-url'
+    | 'css-import';
   url: string;
 }
 
 /** Absolute http(s) or protocol-relative. `data:` and `blob:` are inline. */
-const EXTERNAL = /^\s*(?:https?:)?\/\//i;
+const EXTERNAL = /^(?:https?:)?\/\//i;
 
-const NAMED_ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  sol: '/',
-  colon: ':',
-  Tab: '\t',
-  NewLine: '\n',
-};
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+interface Attr {
+  name: string;
+  value: string;
+  prefix?: string;
+}
+
+interface Node {
+  nodeName: string;
+  tagName?: string;
+  namespaceURI?: string;
+  attrs?: Attr[];
+  childNodes?: Node[];
+  content?: Node;
+  value?: string;
+}
 
 /**
- * Decodes the HTML entities a browser would resolve before it fetches.
- *
- * Without this the check matches only the literal text `http://`, so
- * `src="&#104;ttps://evil.test/a.png"` reads as relative and passes — while the
- * browser decodes it and fetches. It does not take malice to hit: a templating
- * step or a copy-paste out of a CMS produces the same bytes.
+ * Browsers strip tab, newline and carriage return out of a URL before fetching,
+ * so `h&#9;ttps://…` resolves and loads while a plain prefix test reads it as
+ * relative. parse5 has already decoded the entity by the time this sees it;
+ * this removes what the entity produced.
  */
-export function decodeEntities(value: string): string {
-  return value.replace(/&(#x?[0-9a-f]+|[a-z]+);?/gi, (match, body: string) => {
-    if (body[0] === '#') {
-      const code =
-        body[1] === 'x' || body[1] === 'X'
-          ? Number.parseInt(body.slice(2), 16)
-          : Number.parseInt(body.slice(1), 10);
-      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
+function normalise(url: string): string {
+  return url.replace(/[\t\n\r]/g, '').trim();
+}
+
+function isExternal(url: string): boolean {
+  return EXTERNAL.test(normalise(url));
+}
+
+function attrOf(node: Node, name: string): string | undefined {
+  return node.attrs?.find((a) => a.name === name)?.value;
+}
+
+/** Every URL in a `srcset` / `imagesrcset` list, without its descriptor. */
+function srcsetUrls(value: string): string[] {
+  return value
+    .split(',')
+    .map((candidate) => candidate.trim().split(/\s+/)[0] ?? '')
+    .filter(Boolean);
+}
+
+/** `url(...)` and `@import` inside a CSS string. */
+function cssRefs(css: string): ExternalRef[] {
+  const found: ExternalRef[] = [];
+  const imported = new Set<string>();
+
+  for (const m of css.matchAll(/@import\s+(?:url\(\s*)?(?:"([^"]*)"|'([^']*)'|([^;\s)]+))/gi)) {
+    const url = m[1] ?? m[2] ?? m[3] ?? '';
+    if (isExternal(url)) {
+      imported.add(normalise(url));
+      found.push({ kind: 'css-import', url: normalise(url) });
     }
-    return NAMED_ENTITIES[body] ?? match;
-  });
+  }
+
+  // `image-set()` is a comma-separated list of `url()`s, so this sweep already
+  // covers its members. Named here so it does not read as an oversight.
+  for (const m of css.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi)) {
+    const url = m[1] ?? m[2] ?? m[3] ?? '';
+    if (isExternal(url) && !imported.has(normalise(url))) {
+      found.push({ kind: 'css-url', url: normalise(url) });
+    }
+  }
+
+  return found;
 }
 
-function isExternal(raw: string): boolean {
-  return EXTERNAL.test(decodeEntities(raw));
-}
+function walk(node: Node, found: ExternalRef[]): void {
+  const tag = node.tagName;
 
-/**
- * Blanks out `<script>` bodies before scanning, keeping the tags so offsets and
- * any attributes on them are still seen.
- *
- * Script bodies are the one place a URL is text rather than a load. Scanning
- * them produced a false BUILD FAILURE on
- * `<script>var src = "https://api.example.com";</script>` — a variable named
- * `src`, which is ordinary in the `runtime` and `apply` sources this packager
- * inlines. `<style>` bodies are deliberately NOT blanked: a `url()` in there is
- * a real load.
- */
-function blankScriptBodies(html: string): string {
-  return html.replace(
-    /(<script\b[^>]*>)([\s\S]*?)(<\/script\s*>)/gi,
-    (_m, open: string, body: string, close: string) => open + ' '.repeat(body.length) + close,
-  );
-}
+  if (tag) {
+    const push = (kind: ExternalRef['kind'], value: string | undefined) => {
+      if (value !== undefined && isExternal(value)) found.push({ kind, url: normalise(value) });
+    };
 
-function attr(tag: string, name: string): string | undefined {
-  const m = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i').exec(tag);
-  return m ? (m[1] ?? m[2] ?? m[3] ?? '') : undefined;
+    // `src` is not tag-specific on purpose: img, iframe, embed, video, audio,
+    // source, track and script all load through it.
+    push('src', attrOf(node, 'src'));
+    if (tag === 'object') push('object-data', attrOf(node, 'data'));
+    push('poster', attrOf(node, 'poster'));
+    if (tag === 'link') push('link-href', attrOf(node, 'href'));
+
+    // `<base href>` rewrites how every relative URL in the document resolves,
+    // so one external base quietly sends the whole page off-origin while no
+    // other attribute in the document looks wrong.
+    if (tag === 'base') push('base-href', attrOf(node, 'href'));
+
+    for (const list of ['srcset', 'imagesrcset']) {
+      const value = attrOf(node, list);
+      if (value) for (const url of srcsetUrls(value)) push('srcset', url);
+    }
+
+    // SVG loads through `href` and the legacy `xlink:href` on <image> and <use>.
+    // An <a> is a navigation there too, so it stays exempt.
+    if (node.namespaceURI === SVG_NS && tag !== 'a') {
+      push('svg-href', attrOf(node, 'href'));
+      push('svg-href', node.attrs?.find((a) => a.prefix === 'xlink' && a.name === 'href')?.value);
+    }
+
+    const styleAttr = attrOf(node, 'style');
+    if (styleAttr) found.push(...cssRefs(styleAttr));
+
+    if (tag === 'style') {
+      for (const child of node.childNodes ?? []) {
+        if (child.nodeName === '#text' && child.value) found.push(...cssRefs(child.value));
+      }
+    }
+
+    // A `<script>` body is code, not markup — its text is never fetched, so a
+    // variable holding a URL is not a load. The old text scan could not tell,
+    // and failed builds on `var src = "https://…"` in the very `runtime` and
+    // `apply` sources this packager inlines.
+    if (tag === 'script') return;
+
+    // <template> content hangs off `content`, not `childNodes`.
+    if (node.content) walk(node.content, found);
+  }
+
+  for (const child of node.childNodes ?? []) walk(child, found);
 }
 
 /**
  * Finds every reference that would leave the document.
  *
  * Deliberately NOT flagged: `href` on an anchor. A link is a navigation, not a
- * subresource load — the default CSP does not block it, and `<a href="https://...">`
- * is legitimate inside a view. Only `<link>` loads a subresource through `href`.
+ * subresource load — the default CSP does not block it, and
+ * `<a href="https://...">` is legitimate inside a view.
  */
 export function findExternalRefs(html: string): ExternalRef[] {
   const found: ExternalRef[] = [];
-  const scanned = blankScriptBodies(html);
+  walk(parse(html) as unknown as Node, found);
 
-  // `src` is not tag-specific on purpose: it covers img, iframe, embed, video,
-  // audio, source, track and script alike.
-  for (const m of scanned.matchAll(/\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
-    const url = m[1] ?? m[2] ?? m[3] ?? '';
-    if (isExternal(url)) found.push({ kind: 'src', url: url.trim() });
-  }
-
-  // srcset is a comma-separated list of "url descriptor" pairs, and every URL in
-  // it is a candidate fetch. Missing this let a responsive image reach the network.
-  for (const m of scanned.matchAll(/\ssrcset\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) {
-    const list = m[1] ?? m[2] ?? '';
-    for (const candidate of list.split(',')) {
-      const url = candidate.trim().split(/\s+/)[0] ?? '';
-      if (url && isExternal(url)) found.push({ kind: 'srcset', url });
-    }
-  }
-
-  for (const tag of scanned.matchAll(/<link\b[^>]*>/gi)) {
-    const url = attr(tag[0], 'href');
-    if (url !== undefined && isExternal(url)) found.push({ kind: 'link-href', url: url.trim() });
-  }
-
-  for (const tag of scanned.matchAll(/<object\b[^>]*>/gi)) {
-    const url = attr(tag[0], 'data');
-    if (url !== undefined && isExternal(url)) found.push({ kind: 'object-data', url: url.trim() });
-  }
-
-  for (const tag of scanned.matchAll(/<video\b[^>]*>/gi)) {
-    const url = attr(tag[0], 'poster');
-    if (url !== undefined && isExternal(url)) found.push({ kind: 'poster', url: url.trim() });
-  }
-
-  for (const m of scanned.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi)) {
-    const url = m[1] ?? m[2] ?? m[3] ?? '';
-    if (isExternal(url)) found.push({ kind: 'css-url', url: url.trim() });
-  }
-
-  // The third alternative is the unquoted form. CSS allows `@import url(x);` and
-  // bare `@import x;`, and without it such a document packed clean and then
-  // failed silently in the host.
-  for (const m of scanned.matchAll(
-    /@import\s+(?:url\(\s*)?(?:"([^"]*)"|'([^']*)'|([^;\s)]+))/gi,
-  )) {
-    const url = m[1] ?? m[2] ?? m[3] ?? '';
-    if (isExternal(url)) found.push({ kind: 'css-import', url: url.trim() });
-  }
-
-  return dedupe(found);
-}
-
-/** `@import url(x)` matches both the url() and the @import rule; report it once. */
-function dedupe(refs: ExternalRef[]): ExternalRef[] {
-  // `@import url(x)` matches the url() scan as well, and that scan runs
-  // FIRST — so arrival order cannot decide which half of the pair to drop.
-  // The set of imported URLs is therefore built up front.
-  const importedUrls = new Set(refs.filter((r) => r.kind === 'css-import').map((r) => r.url));
   const seen = new Set<string>();
-
-  return refs.filter((r) => {
-    if (r.kind === 'css-url' && importedUrls.has(r.url)) return false;
+  return found.filter((r) => {
     const key = `${r.kind} ${r.url}`;
     if (seen.has(key)) return false;
     seen.add(key);

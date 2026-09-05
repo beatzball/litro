@@ -187,8 +187,13 @@ export const BRIDGE_SOURCE = `(function () {
       return;
     }
 
+    // params IS the context here: "params: Partial<HostContext>" (spec:1225).
+    // It is NOT wrapped in a hostContext field — that nesting belongs to
+    // McpUiInitializeResult, which is a different shape. Reading the wrong one
+    // meant this handler never fired and a host toggling dark mode changed
+    // nothing. The first test for it encoded the same misreading and passed.
     if (msg.method === 'ui/notifications/host-context-changed') {
-      applyHostContext(msg.params && msg.params.hostContext);
+      applyHostContext(msg.params);
       return;
     }
 

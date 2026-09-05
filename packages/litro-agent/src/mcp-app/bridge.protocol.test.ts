@@ -185,11 +185,14 @@ describe('the rest of the lifecycle', () => {
     expect(typeof size?.params?.height).toBe('number');
   });
 
-  it('applies a later host-context-changed', () => {
+  it('applies a later host-context-changed, whose params ARE the context', () => {
+    // "params: Partial<HostContext>" (spec:1225) — flat, not wrapped. The first
+    // version of this test wrapped it in `hostContext` and passed against code
+    // that made the same mistake, so neither caught that the handler was dead.
     fromHost({
       jsonrpc: '2.0',
       method: 'ui/notifications/host-context-changed',
-      params: { hostContext: { theme: 'light', displayMode: 'fullscreen' } },
+      params: { theme: 'light', displayMode: 'fullscreen' },
     });
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');

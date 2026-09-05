@@ -6,7 +6,6 @@ import {
   MCP_APP_MIME_TYPE,
   MCP_APPS_SPEC_VERSION,
 } from './index.js';
-import { findExternalRefs } from './external-urls.js';
 
 const shell = html`<weather-card></weather-card>`;
 
@@ -124,33 +123,9 @@ describe('self-containment', () => {
     ).rejects.toThrow(/loads 1 resource\(s\) from outside/);
   });
 
-  it('refuses an external script src', () => {
-    const refs = findExternalRefs('<script src="https://cdn.example.com/lit.js"></script>');
-    expect(refs).toEqual([{ kind: 'src', url: 'https://cdn.example.com/lit.js' }]);
-  });
-
-  it('refuses a protocol-relative url', () => {
-    expect(findExternalRefs('<img src="//cdn.example.com/a.png">')).toHaveLength(1);
-  });
-
-  it('refuses an external css url() and @import', () => {
-    expect(findExternalRefs('a { background: url(https://x.test/a.png) }')).toHaveLength(1);
-    expect(findExternalRefs('@import "https://x.test/a.css";')).toHaveLength(1);
-  });
-
-  it('allows an anchor href, which is a navigation and not a subresource load', () => {
-    expect(findExternalRefs('<a href="https://example.com">docs</a>')).toEqual([]);
-  });
-
-  it('allows data: URIs, which is how images and fonts are meant to travel', () => {
-    expect(findExternalRefs('<img src="data:image/png;base64,iVBORw0KGgo=">')).toEqual([]);
-    expect(findExternalRefs('a { background: url(data:image/gif;base64,R0lGOD) }')).toEqual([]);
-  });
-
-  it('allows a relative src, which never leaves the document origin', () => {
-    expect(findExternalRefs('<img src="./local.png">')).toEqual([]);
-  });
-
+  // The unit-level rules live in external-urls.test.ts, which carries the full
+  // set of evasions review found. What is pinned HERE is that the assertion is
+  // actually wired into buildMcpAppDocument and reports every offender.
   it('names every offender in the error, not just the first', async () => {
     await expect(
       buildMcpAppDocument(
