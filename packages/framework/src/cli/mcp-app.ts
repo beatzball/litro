@@ -195,11 +195,9 @@ function assertUsableUriSegments(relPath: string, segments: string[]): void {
  * clash and refuse. Mirroring makes that clash unrepresentable: the output path
  * is the uri path, and two files cannot share one relative path.
  *
- * THIS MOVES PUBLISHED OUTPUT. The recursive glob shipped in 0.15.0, so a
- * project with `mcp-apps/weather/card.ts` already gets `weather-card.html`
- * today and gets `weather/card.html` after this. Anything pinned to the flat
- * path — a static mount, a COPY line, a path in a server config — has to
- * follow. Reading `manifest.json` rather than guessing the path does not.
+ * This moves output for a project that already had app files in subfolders:
+ * 0.15.0's recursive glob wrote `weather-card.html` for `weather/card.ts`.
+ * Reading `manifest.json` rather than guessing the path is unaffected.
  */
 export function outputPathFromFile(relPath: string): string {
   const segments = appSegmentsFromFile(relPath);

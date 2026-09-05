@@ -4,25 +4,17 @@
 
 `litro mcp-app build` derives each app's `ui://` address from its file path
 
-**BREAKING for a project with app files in subfolders.** The output now mirrors
-the source tree: `mcp-apps/weather/card.ts` writes
-`dist/mcp-apps/weather/card.html`, where 0.15.0 wrote `weather-card.html`. The
-recursive glob is already published, so this MOVES existing output. Anything
-pinned to the flat path has to follow — a static mount, a `COPY` line, a path
-written into a server config. Reading `manifest.json` and using its `html` and
-`descriptor` entries needs no change; they stay relative to the output
-directory. A project whose app files all sit flat in `mcp-apps/` is unaffected.
-
-The reason for the move is that flattening let `weather/card.ts` and
-`weather-card.ts` — two files with two DIFFERENT addresses — claim one output
-file, so the build had to detect that clash and refuse. Mirroring makes it
-unrepresentable instead of merely detected.
-
-**The address itself.** The package name is the authority and the file path is
-the path, so `mcp-apps/weather/card.ts` in a package named `playground` packs
-as `ui://playground/weather/card`. Filesystem-as-routing is the convention
+The package name is the authority and the file path is the path, so
+`mcp-apps/weather/card.ts` in a package named `playground` packs as
+`ui://playground/weather/card`. Filesystem-as-routing is the convention
 everywhere else in Litro, and an app declaring its own address was the odd one
 out. An explicit `uri` in the config still wins.
+
+The output mirrors the source tree to match, so `mcp-apps/weather/card.ts`
+writes `dist/mcp-apps/weather/card.html` — 0.15.0 flattened that to
+`weather-card.html`, which let it collide with a real `weather-card.ts`. If you
+already had app files in subfolders, their output paths move; `manifest.json`
+entries stay relative to the output directory, so reading those needs no change.
 
 One rule with no special cases: rename the package and every address moves
 together, which is what an authority is for. The authority comes from the
