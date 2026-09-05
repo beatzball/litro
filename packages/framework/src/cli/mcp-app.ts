@@ -86,11 +86,24 @@ const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
  * and reported as "Does the file exist?" for a file that plainly does. Control
  * characters break the id in their own ways.
  *
+ * U+2028 and U+2029 are ECMAScript line terminators sitting above the C0 range,
+ * so they break the module and the C0 check misses them.
+ *
+ * A BACKSLASH is knowingly ABSENT, and cannot be added here. A POSIX file
+ * literally named `a\b.ts` is handed to the loader as `a/b.ts` — a path that
+ * does not exist — because `appSegmentsFromFile` folds `\` into `/` for
+ * Windows BEFORE these segments exist, so by the time this runs there is no
+ * backslash left to see. Catching it means testing the raw relative path, which
+ * is only safe if `pathe` never hands us a backslash on Windows. That is
+ * believable and untested here, and getting it wrong refuses every file on a
+ * platform this repo has no runner for. Left alone deliberately: the failure is
+ * loud, and the character is one almost nobody puts in a filename.
+ *
  * NOT exemptible by setting `uri`. Every other objection to a filename is about
  * the ADDRESS, and an author who writes their own address has answered it —
  * but no address makes a file loadable.
  */
-const LOADER_HOSTILE = /[#?\u0000-\u001f]/;
+const LOADER_HOSTILE = /[#?\u0000-\u001f\u2028\u2029]/;
 
 /**
  * Refuses a path that cannot safely name a file, or be loaded as a module.
@@ -246,6 +259,15 @@ export function packageAuthority(packageName?: string): string | undefined {
   return /^[a-z0-9][a-z0-9._-]*$/.test(bare) ? bare : undefined;
 }
 
+/**
+ * Unicode case folding, as close as JS gets. `toLowerCase()` alone misses any
+ * character that is already lowercase but folds to something else — U+017F
+ * LONG S being the one that reaches a filesystem.
+ */
+function caseFold(value: string): string {
+  return value.toUpperCase().toLowerCase();
+}
+
 /** "a and b", "a, b and c" — a list a person reads, not a join. */
 function listNames(names: string[]): string {
   if (names.length <= 2) return names.join(' and ');
@@ -385,10 +407,14 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
       continue;
     }
 
-    // Compared case-INSENSITIVELY: on APFS and NTFS `Manifest.json` and
+    // CASE-FOLDED, not lowercased. On APFS and NTFS `Manifest.json` and
     // `manifest.json` are one file, so a capital letter reproduced the exact
-    // clobber this guard exists to stop.
-    if (outPath.toLowerCase() === MANIFEST_STEM) {
+    // clobber this guard exists to stop. `toLowerCase()` is not enough: APFS
+    // folds by the full Unicode rules, under which U+017F LONG S folds to `s`
+    // — and `manifeſt` is already lowercase, so `toLowerCase()` leaves it be
+    // while the filesystem still collides it. JS has no `toCaseFold`;
+    // upper-then-lower is the working stand-in.
+    if (caseFold(outPath) === MANIFEST_STEM) {
       problems.push(
         `  ${here} packs to "${MANIFEST_STEM}.json", which is the index listing every app — the ` +
           'index would overwrite its descriptor. Rename it, or move it into a folder.',

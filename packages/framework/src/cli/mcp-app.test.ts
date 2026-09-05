@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   appSegmentsFromFile,
   assertUniqueUris,
@@ -44,8 +47,19 @@ describe('outputPathFromFile', () => {
     },
   );
 
-  it('refuses a control character in the name', () => {
-    expect(() => outputPathFromFile('weather\u0001card.ts')).toThrow(/module loader/);
+  it.each([
+    ['weather\u0001card.ts', 'a C0 control character'],
+    ['weather\u2028card.ts', 'U+2028, a line separator above the C0 range'],
+    ['weather\u2029card.ts', 'U+2029, a paragraph separator'],
+  ])('refuses %s (%s)', (input) => {
+    expect(() => outputPathFromFile(input)).toThrow(/module loader/);
+  });
+
+  it('does NOT refuse DEL, which the loader handles fine', () => {
+    // U+007F is a control character by Unicode category but sits above the C0
+    // range, and Vite loads it without complaint. Refusing it would be a rule
+    // with no failure behind it.
+    expect(outputPathFromFile('weather\u007Fcard.ts')).toBe('weather\u007Fcard');
   });
 
   it('says plainly that an explicit uri does not help for a loader character', () => {
@@ -165,7 +179,73 @@ describe('uriFromFile', () => {
   });
 });
 
+/**
+ * Drives the REAL command against a throwaway project.
+ *
+ * Everything asserted here is refused in the pre-flight, which returns before
+ * Vite is ever created — so these need no module resolution and stay fast. That
+ * is also the point: the pre-flight is CLI code, and pure-function tests cannot
+ * reach it. The manifest guard was reverted to its broken form and 62 tests
+ * stayed green, twice over three rounds.
+ */
+function buildWith(files: Record<string, string>): Promise<{ code: number; errors: string }> {
+  const root = mkdtempSync(join(tmpdir(), 'litro-mcp-app-'));
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'fixture' }));
+  for (const [rel, body] of Object.entries(files)) {
+    const full = join(root, 'mcp-apps', rel);
+    mkdirSync(join(full, '..'), { recursive: true });
+    writeFileSync(full, body);
+  }
+  const errors: string[] = [];
+  const spy = vi.spyOn(console, 'error').mockImplementation((...a) => {
+    errors.push(a.join(' '));
+  });
+  return mcpAppCommand(['build'], root)
+    .then((code) => ({ code, errors: errors.join('\n') }))
+    .finally(() => {
+      spy.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+    });
+}
+
 describe('the reserved manifest stem', () => {
+  const APP = 'export default {};';
+
+  it('refuses a top-level manifest.ts through the real command', async () => {
+    const { code, errors } = await buildWith({ 'manifest.ts': APP });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/index listing every app/);
+  });
+
+  it('refuses Manifest.ts, because the filesystem does not distinguish one', async () => {
+    // On APFS and NTFS `Manifest.json` IS `manifest.json`, so a case-sensitive
+    // check let one capital letter reproduce the whole clobber. Shipped broken
+    // once, fixed, and the suite never noticed either time.
+    const { code, errors } = await buildWith({ 'Manifest.ts': APP });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/index listing every app/);
+  });
+
+  it('refuses manifeſt.ts, which toLowerCase() alone does not fold', async () => {
+    // U+017F LONG S folds to "s" under the full Unicode rules APFS uses, but is
+    // ALREADY lowercase — so `toLowerCase()` leaves it and the filesystem still
+    // collides it. Verified against the real filesystem: writing `manifeſt.json`
+    // overwrites `manifest.json`.
+    const { code, errors } = await buildWith({ 'manife\u017Ft.ts': APP });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/index listing every app/);
+  });
+
+  it('leaves a NESTED manifest.ts alone, which collides with nothing', async () => {
+    // Not refused by the pre-flight, so this one gets as far as loading the
+    // module — which fails for a fixture with no defineMcpApp(). Reaching that
+    // failure is the assertion: the manifest guard did not fire.
+    const { errors } = await buildWith({ 'sub/manifest.ts': APP });
+    expect(errors).not.toMatch(/index listing every app/);
+  });
+});
+
+describe('the reserved manifest stem, as a derivation', () => {
   // `manifest.json` is the index listing every app. An app packing to that stem
   // writes its descriptor there and has the index overwrite it, leaving the
   // manifest entry pointing `descriptor` at the array itself — exit 0, silent.

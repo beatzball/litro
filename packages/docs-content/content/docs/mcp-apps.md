@@ -109,12 +109,12 @@ Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed i
 
 ### When the build refuses
 
-Most problems are reported **all at once**, before a module is loaded or a byte is written. The last one below is the exception: whether it applies depends on what the app declares, so it can only surface once the file is loaded — by which time earlier apps are already on disk.
+Most problems are reported **all at once**, before a module is loaded or a byte is written. The second group below is the exception: whether those apply depends on what the app declares, so they can only surface once the file is loaded — by which time earlier apps are already on disk.
 
 Refused no matter what the app says:
 
 - **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
-- **A `#`, `?` or control character in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists. Setting `uri` does not help: a file has to be loadable before its address matters.
+- **A `#`, `?`, C0 control character or line separator in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists. Setting `uri` does not help: a file has to be loadable before its address matters. (A literal backslash in a filename is the one gap here — it is folded to `/` for Windows before the check sees it, and still fails at load.)
 - **A `.` or `..` segment.** It would resolve to a path outside the output directory.
 - **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
 - **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
