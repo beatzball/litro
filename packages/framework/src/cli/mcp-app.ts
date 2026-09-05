@@ -35,9 +35,11 @@ const MANIFEST_STEM = 'manifest';
 /** One packed app, as it lands on disk. */
 export interface PackedApp {
   /**
-   * Output path stem, relative to the out dir and mirroring the source tree:
-   * `weather/card`. Equal to the uri's path, which is what makes two apps
-   * unable to claim one output file.
+   * Output path stem, relative to the out dir and mirroring the SOURCE tree:
+   * `weather/card`. That is what makes two apps unable to claim one output
+   * file — two files cannot share one relative path — and it is why the
+   * guarantee survives an app setting its own `uri`, where this no longer
+   * matches the address at all.
    */
   name: string;
   uri: string;
@@ -50,9 +52,9 @@ export interface PackedApp {
  * The path segments an app file contributes, source of BOTH its output path
  * and its `ui://` address.
  *
- * One function on purpose. Both are the segments joined — by `/` for the uri,
- * by `/` for the file — so deriving them separately would let the manifest and
- * the address drift apart on the next edit to either.
+ * One function on purpose. Both join these segments with `/`, so deriving them
+ * separately would let the manifest and the address drift apart on the next
+ * edit to either.
  */
 export function appSegmentsFromFile(relPath: string): string[] {
   return relPath
@@ -79,31 +81,43 @@ export function appSegmentsFromFile(relPath: string): string[] {
 const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
 
 /**
- * Characters that break the MODULE LOADER, whatever the filesystem thinks.
+ * Characters refused on the OUTPUT PATH, in two groups with two different
+ * reasons — kept apart because one message covering both would be true of
+ * neither.
  *
- * Vite resolves a module by id, and an id is URL-shaped: `#` opens a fragment
- * and `?` a query, so `weather#card.ts` is read as `weather` with a fragment
- * and reported as "Does the file exist?" for a file that plainly does. Control
- * characters break the id in their own ways.
+ * URL_SYNTAX (`#`, `?`): Vite resolves a module by a URL-shaped id, so `#`
+ * opens a fragment and `?` a query. `weather#card.ts` is looked up as
+ * `weather` and reported as "Does the file exist?" for a file that plainly
+ * does. Verified against the real loader.
  *
- * U+2028 and U+2029 are ECMAScript line terminators sitting above the C0 range,
- * so they break the module and the C0 check misses them.
+ * UNPRINTABLE (C0 controls, U+2028, U+2029): these do not all break the
+ * loader — some C0 bytes load fine, and U+2028/U+2029 break it differently
+ * again, splitting the module source into a `ReferenceError` rather than a
+ * missing file. What is true of ALL of them is that they have no printable
+ * form, and this path is written verbatim into `manifest.json`, into the
+ * descriptor, and into every error message about the app. That is the reason
+ * given, because it is the one that holds.
  *
- * A BACKSLASH is knowingly ABSENT, and cannot be added here. A POSIX file
- * literally named `a\b.ts` is handed to the loader as `a/b.ts` — a path that
- * does not exist — because `appSegmentsFromFile` folds `\` into `/` for
- * Windows BEFORE these segments exist, so by the time this runs there is no
- * backslash left to see. Catching it means testing the raw relative path, which
- * is only safe if `pathe` never hands us a backslash on Windows. That is
- * believable and untested here, and getting it wrong refuses every file on a
- * platform this repo has no runner for. Left alone deliberately: the failure is
- * loud, and the character is one almost nobody puts in a filename.
+ * U+007F (DEL) is deliberately absent from both. It loads, it prints, and
+ * there is a test asserting it still packs — a rule with no failure behind it
+ * is noise.
  *
  * NOT exemptible by setting `uri`. Every other objection to a filename is about
  * the ADDRESS, and an author who writes their own address has answered it —
- * but no address makes a file loadable.
+ * but no address makes a file loadable or a manifest readable.
+ *
+ * A BACKSLASH is knowingly ABSENT and CANNOT be caught here, for a reason
+ * worth stating precisely: `fast-glob` itself returns `mcp-apps/a\b.ts` as
+ * `mcp-apps/a/b.ts`. The character is gone from the `files` array before
+ * `relative()` runs, before `appSegmentsFromFile` runs, before anything in
+ * this module sees a path — and this happens on POSIX, unconditionally,
+ * nothing to do with Windows. Catching it means not trusting the glob's output
+ * for the filename, which is a bigger change than the failure warrants: the
+ * file fails loudly at load time, and almost nobody puts a backslash in a
+ * filename.
  */
-const LOADER_HOSTILE = /[#?\u0000-\u001f\u2028\u2029]/;
+const URL_SYNTAX = /[#?]/;
+const UNPRINTABLE = /[\u0000-\u001f\u2028\u2029]/;
 
 /**
  * Refuses a path that cannot safely name a file, or be loaded as a module.
@@ -125,18 +139,34 @@ function assertUsableOutputPath(relPath: string, segments: string[]): void {
   }
   const dot = segments.find((seg) => seg === '.' || seg === '..');
   if (dot) {
+    // Two different hazards, one refusal. A `.` never escapes the out dir and a
+    // `..` only does so from the front — but NEITHER survives normalisation, so
+    // the path written into the manifest is not the path anything resolves to.
     throw new Error(
-      `"${relPath}" contains a "${dot}" segment, which would resolve to a path outside the ` +
-        'output directory.',
+      `"${relPath}" contains a "${dot}" segment. It does not survive path normalisation, so the ` +
+        'file written down would not be the file resolved — and a leading ".." lands outside the ' +
+        'output directory entirely.',
     );
   }
-  const hostile = segments.find((seg) => LOADER_HOSTILE.test(seg));
-  if (hostile) {
-    const ch = [...hostile].find((c) => LOADER_HOSTILE.test(c)) ?? hostile;
+  const urlish = segments.find((seg) => URL_SYNTAX.test(seg));
+  if (urlish) {
+    const ch = [...urlish].find((c) => URL_SYNTAX.test(c)) ?? urlish;
     throw new Error(
-      `"${relPath}" contains ${JSON.stringify(ch)}, which the module loader reads as part of a url ` +
-        'rather than a name — it would report the file as missing. Rename it. Setting "uri" does not ' +
-        'help here: the file has to be loadable before its address matters.',
+      `"${relPath}" contains ${JSON.stringify(ch)}, which the module loader reads as url syntax rather ` +
+        'than part of the name — it looks the file up under a shorter name and reports it missing. ' +
+        'Rename it. Setting "uri" does not help here: the file has to be loadable before its address ' +
+        'matters.',
+    );
+  }
+
+  const unprintable = segments.find((seg) => UNPRINTABLE.test(seg));
+  if (unprintable) {
+    const ch = [...unprintable].find((c) => UNPRINTABLE.test(c)) ?? unprintable;
+    const code = `U+${ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`;
+    throw new Error(
+      `"${relPath}" contains ${code}, which has no printable form — it would appear as itself in the ` +
+        'manifest, in the descriptor and in every error message about this app. Rename it. Setting ' +
+        '"uri" does not help here: the address is not the problem.',
     );
   }
 }
@@ -192,8 +222,10 @@ function assertUsableUriSegments(relPath: string, segments: string[]): void {
  * NESTED, MIRRORING THE URI. Through 0.15.0 this flattened to `weather-card`,
  * which let `weather/card.ts` and `weather-card.ts` — two files with two
  * DIFFERENT addresses — claim one output file, so the build had to detect the
- * clash and refuse. Mirroring makes that clash unrepresentable: the output path
- * is the uri path, and two files cannot share one relative path.
+ * clash and refuse. Mirroring makes that clash unrepresentable, because the
+ * output path is the SOURCE path and two files cannot share one relative path.
+ * It equals the uri's path only while the uri is derived; an app that names its
+ * own address still gets an output file named after its source.
  *
  * This moves output for a project that already had app files in subfolders:
  * 0.15.0's recursive glob wrote `weather-card.html` for `weather/card.ts`.

@@ -37,13 +37,13 @@ describe('outputPathFromFile', () => {
   );
 
   it.each(['weather#card.ts', 'weather?card.ts', 'a/b#c/d.ts'])(
-    'refuses %s, which the module loader cannot address',
+    'refuses %s, which the module loader reads as url syntax',
     (input) => {
       // Vite resolves a module by a URL-shaped id, so `#` opens a fragment and
       // `?` a query: the file is looked up under a shorter name and reported
       // as missing when it plainly exists. NOT excusable by setting `uri` —
       // the docs used to promise it was, and it never was.
-      expect(() => outputPathFromFile(input)).toThrow(/module loader reads as part of a url/);
+      expect(() => outputPathFromFile(input)).toThrow(/reads as url syntax/);
     },
   );
 
@@ -52,7 +52,23 @@ describe('outputPathFromFile', () => {
     ['weather\u2028card.ts', 'U+2028, a line separator above the C0 range'],
     ['weather\u2029card.ts', 'U+2029, a paragraph separator'],
   ])('refuses %s (%s)', (input) => {
-    expect(() => outputPathFromFile(input)).toThrow(/module loader/);
+    // A DIFFERENT reason from `#`/`?`, and deliberately so. These do not all
+    // break the loader — some C0 bytes load fine, and U+2028 splits the source
+    // into a ReferenceError rather than a missing file. What holds for all of
+    // them is that they have no printable form, and this path is written
+    // verbatim into the manifest, the descriptor and every error message.
+    expect(() => outputPathFromFile(input)).toThrow(/no printable form/);
+  });
+
+  it('names the offending character by code point, since it cannot be shown', () => {
+    expect(() => outputPathFromFile('weather\u2028card.ts')).toThrow(/U\+2028/);
+  });
+
+  it('does not blame the loader for a character the loader accepts', () => {
+    // The old single message claimed every one of these "would report the file
+    // as missing". Two of the three classes fail some other way, and some do
+    // not fail at all — an error must not assert a failure it cannot show.
+    expect(() => outputPathFromFile('weather\u0001card.ts')).not.toThrow(/missing/);
   });
 
   it('does NOT refuse DEL, which the loader handles fine', () => {
@@ -62,11 +78,14 @@ describe('outputPathFromFile', () => {
     expect(outputPathFromFile('weather\u007Fcard.ts')).toBe('weather\u007Fcard');
   });
 
-  it('says plainly that an explicit uri does not help for a loader character', () => {
-    // Every other refusal points at "or set uri". This one must not, because
-    // that advice does nothing — the failure is before an address is consulted.
-    expect(() => outputPathFromFile('weather#card.ts')).toThrow(/Setting "uri" does not/);
-  });
+  it.each(['weather#card.ts', 'weather\u0001card.ts'])(
+    'says plainly that an explicit uri does not help (%s)',
+    (input) => {
+      // Every other refusal points at "or set uri". These must not, because
+      // that advice does nothing — neither failure is about the address.
+      expect(() => outputPathFromFile(input)).toThrow(/Setting "uri" does not/);
+    },
+  );
 
   it('refuses a path with no name left after the extension', () => {
     // uriFromFile has the same guard; they must not disagree on emptiness, or

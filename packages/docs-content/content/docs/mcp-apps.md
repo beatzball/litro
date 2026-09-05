@@ -67,11 +67,11 @@ For a project whose `package.json` says `"name": "playground"`:
 
 One rule, no special cases: rename the package and every address moves together, which is what an authority is for.
 
-The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`. The name must be usable as a uri host — lowercase letters, digits, `.`, `_` and `-` — so a package called `@acme/MyApp` cannot supply one. Such a project still packs, but every app in it has to set `uri` itself.
+The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`. The name must be usable as a uri host — lowercase letters, digits, `.`, `_` and `-`, starting with a letter or digit — so a package called `@acme/MyApp` cannot supply one. Such a project still packs, but every app in it has to set `uri` itself.
 
 **`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://playground/weather/index` — collapsing it would silently merge with a sibling `weather.ts`.
 
-**No dynamic segments.** `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and nothing here. A `ui://` resource is a static template the host caches by address, so there is no request to fill a parameter from. The build rejects them rather than shipping a literal `[slug]` in a protocol-visible address.
+**No dynamic segments in a derived address.** `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and nothing here. A `ui://` resource is a static template the host caches by address, so there is no request to fill a parameter from. The build rejects them rather than shipping a literal `[slug]` in a protocol-visible address — unless the app sets its own `uri`, in which case the filename is just a filename.
 
 ### Setting one by hand
 
@@ -96,7 +96,7 @@ await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
 litro mcp-app build
 ```
 
-Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/`. **The output mirrors the source tree**, so the file path, the output path and the address are the same path three times:
+Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four names that are skipped without a word: `*.d.ts`, `*.test.ts`, `*.spec.ts`, and anything starting with `-`. The leading dash is the convention for a partial an app imports rather than an app itself. A file matching one of those produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
 
 | Source | Output | Address |
 |---|---|---|
@@ -114,8 +114,11 @@ Most problems are reported **all at once**, before a module is loaded or a byte 
 Refused no matter what the app says:
 
 - **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
-- **A `#`, `?`, C0 control character or line separator in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists. Setting `uri` does not help: a file has to be loadable before its address matters. (A literal backslash in a filename is the one gap here — it is folded to `/` for Windows before the check sees it, and still fails at load.)
-- **A `.` or `..` segment.** It would resolve to a path outside the output directory.
+- **A `#` or `?` in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists.
+- **A C0 control character or line separator (U+2028, U+2029) in the name.** These have no printable form, and the path is written verbatim into `manifest.json`, into the descriptor, and into every error message about the app. `U+007F` is *not* refused — it prints, it loads, and a rule with no failure behind it is noise.
+
+  Setting `uri` does not help for either of those: neither failure is about the address. A literal backslash is the one gap — `fast-glob` reports `a\b.ts` as `a/b.ts` before the build sees it, so it slips past and then fails loudly at load.
+- **A `.` or `..` segment.** Neither survives normalisation, so the path written down is not the path that gets resolved — and enough leading `..` lands outside the output directory entirely.
 - **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
 - **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
 

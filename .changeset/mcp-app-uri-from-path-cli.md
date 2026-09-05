@@ -34,11 +34,15 @@ address. An app that sets its own `uri` is exempt — the filename is only a
 filename then.
 
 Three refusals are NOT exemptible, because an address cannot answer them: a `.`
-or `..` segment, which would write outside the output directory; a `#`, `?` or
-control character, which the module loader reads as part of a url and then
-reports the file as missing; and an app packing to `manifest` at the top level,
-where the index would overwrite its own descriptor (matched without regard to
-case, since `Manifest.json` is the same file on macOS and Windows).
+or `..` segment, which does not survive path normalisation and, with a leading
+`..`, writes outside the output directory; a `#` or `?`, which the module loader
+reads as url syntax and then reports the file as missing; a C0 control
+character or Unicode line separator, which has no printable form and would
+appear as itself in the manifest, the descriptor and every error message
+(U+007F is deliberately allowed — it prints and it loads); and an app packing to
+`manifest` at the top level, where the index would overwrite its own descriptor
+(matched by Unicode case folding, since `Manifest.json` and `manifeſt.json` are
+both the same file as `manifest.json` on macOS and Windows).
 
 **Problems are reported at once** where they can be, before a module is loaded
 or a byte is written, instead of one failed build per mistake. The exception is
