@@ -33,6 +33,10 @@
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js"
     },
+    "./mcp-app": {
+      "types": "./dist/mcp-app/index.d.ts",
+      "import": "./dist/mcp-app/index.js"
+    },
     "./telemetry": {
       "types": "./dist/telemetry/otel.d.ts",
       "import": "./dist/telemetry/otel.js"
@@ -80,6 +84,7 @@
     "@beatzball/litro": "workspace:^",
     "fast-glob": "^3.3.3",
     "h3": "^1.15.6",
+    "parse5": "^7.3.0",
     "pathe": "^1.1.2"
   },
   "peerDependencies": {
