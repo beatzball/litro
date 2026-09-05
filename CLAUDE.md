@@ -104,6 +104,12 @@ It is written down because the harness default flipped three times inside one
 session, which left five commits on `main` carrying a `Claude-Session:` line and
 two PR bodies disagreeing with each other. A rule in the repo does not flip.
 
+**The commit message is what matters, not the PR body.** A squash merge builds
+its body from the SOURCE COMMITS, not from the pull request description — so a
+clean PR body does not keep a trailer off `main`. Commit `df9971f` is the proof:
+it is the squash of a pull request whose body carried no trailer, and it carries
+one four times, once per source commit that had it. Strip it at commit time.
+
 **No absolute home paths** — `/Users/<name>/...`, `/home/<name>/...` — in
 commits, PR bodies, or any pushed content. Use repo-relative paths or a
 placeholder.
