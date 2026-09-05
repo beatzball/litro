@@ -45,8 +45,13 @@ export interface ExternalRef {
   url: string;
 }
 
-/** Absolute http(s) or protocol-relative. `data:` and `blob:` are inline. */
-const EXTERNAL = /^(?:https?:)?\/\//i;
+/**
+ * A base that is itself a "special" scheme, so the WHATWG parser applies the
+ * http/https rules — backslash-as-separator among them — when resolving against
+ * it. `.invalid` is reserved by RFC 2606 and can never be a real host.
+ */
+const SELF_BASE = 'https://mcp-app.invalid/';
+const SELF_HOST = 'mcp-app.invalid';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -67,17 +72,41 @@ interface Node {
 }
 
 /**
- * Browsers strip tab, newline and carriage return out of a URL before fetching,
- * so `h&#9;ttps://…` resolves and loads while a plain prefix test reads it as
- * relative. parse5 has already decoded the entity by the time this sees it;
- * this removes what the entity produced.
+ * Resolves a URL the way a browser does, then asks whether it left the document.
+ *
+ * This does NOT pattern-match, and the reason is that every pattern tried so far
+ * has been wrong. A prefix test for `http://` or `//` misses, at minimum:
+ *
+ *   - `https:\\evil.test\a.png` — for special schemes the WHATWG parser treats
+ *     a backslash exactly as a slash, so this fetches from evil.test
+ *   - `\u0000https://evil.test/a.png` — the parser strips leading and trailing
+ *     C0 controls, not merely tab/newline/return
+ *
+ * Both were demonstrated against the previous version. `new URL()` is the same
+ * algorithm the browser runs, so it settles the whole class rather than two more
+ * members of it.
+ *
+ * Anything that is not http(s) after resolution — `data:`, `blob:`, a fragment —
+ * loads nothing from the network and is not our business.
  */
-function normalise(url: string): string {
-  return url.replace(/[\t\n\r]/g, '').trim();
+function isExternal(url: string): boolean {
+  try {
+    const resolved = new URL(url, SELF_BASE);
+    if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') return false;
+    return resolved.host !== SELF_HOST;
+  } catch {
+    // Unparseable is unfetchable.
+    return false;
+  }
 }
 
-function isExternal(url: string): boolean {
-  return EXTERNAL.test(normalise(url));
+/** What the browser will actually request, for the error message. */
+function normalise(url: string): string {
+  try {
+    return new URL(url, SELF_BASE).href;
+  } catch {
+    return url.trim();
+  }
 }
 
 function attrOf(node: Node, name: string): string | undefined {
@@ -92,26 +121,60 @@ function srcsetUrls(value: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Resolves CSS escapes, which a real tokenizer does before it fetches.
+ *
+ * `url(\68 ttps://evil.test/a.png)` reads as `url(https://evil.test/a.png)` to a
+ * browser: `\68` is the escape for U+0068 `h`, and one trailing whitespace
+ * terminates it. Confirmed against `css-tree`, which produces the decoded URL.
+ * Testing the raw text read it as relative and let it through.
+ */
+export function decodeCssEscapes(css: string): string {
+  return css.replace(
+    /\\(?:([0-9a-fA-F]{1,6})[ \t\n\r\f]?|([\s\S]))/g,
+    (match, hex: string | undefined, chr: string | undefined) => {
+      if (hex !== undefined) {
+        const code = Number.parseInt(hex, 16);
+        // Zero and lone surrogates become U+FFFD, per the CSS tokenizer.
+        if (!Number.isFinite(code) || code === 0 || (code >= 0xd800 && code <= 0xdfff) || code > 0x10ffff) {
+          return '�';
+        }
+        return String.fromCodePoint(code);
+      }
+      return chr ?? match;
+    },
+  );
+}
+
 /** `url(...)` and `@import` inside a CSS string. */
 function cssRefs(css: string): ExternalRef[] {
   const found: ExternalRef[] = [];
   const imported = new Set<string>();
 
-  for (const m of css.matchAll(/@import\s+(?:url\(\s*)?(?:"([^"]*)"|'([^']*)'|([^;\s)]+))/gi)) {
-    const url = m[1] ?? m[2] ?? m[3] ?? '';
-    if (isExternal(url)) {
-      imported.add(normalise(url));
-      found.push({ kind: 'css-import', url: normalise(url) });
-    }
+  const consider = (raw: string, kind: ExternalRef['kind']): void => {
+    const url = decodeCssEscapes(raw);
+    if (!isExternal(url)) return;
+    const href = normalise(url);
+    if (kind === 'css-url' && imported.has(href)) return;
+    if (kind === 'css-import') imported.add(href);
+    found.push({ kind, url: href });
+  };
+
+  // `\s*` before a quote, not `\s+`: a quote always begins a new token in CSS,
+  // so `@import"x";` is valid and identical to `@import "x";` — verified with
+  // css-tree. Demanding whitespace let that form through untouched. The bare
+  // unquoted form below does still need a separator.
+  for (const m of css.matchAll(/@import\s*(?:url\(\s*)?(?:"([^"]*)"|'([^']*)')/gi)) {
+    consider(m[1] ?? m[2] ?? '', 'css-import');
+  }
+  for (const m of css.matchAll(/@import\s+(?!["'])(?:url\(\s*)?([^;\s)]+)/gi)) {
+    consider(m[1] ?? '', 'css-import');
   }
 
   // `image-set()` is a comma-separated list of `url()`s, so this sweep already
   // covers its members. Named here so it does not read as an oversight.
   for (const m of css.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi)) {
-    const url = m[1] ?? m[2] ?? m[3] ?? '';
-    if (isExternal(url) && !imported.has(normalise(url))) {
-      found.push({ kind: 'css-url', url: normalise(url) });
-    }
+    consider(m[1] ?? m[2] ?? m[3] ?? '', 'css-url');
   }
 
   return found;
@@ -141,6 +204,13 @@ function walk(node: Node, found: ExternalRef[]): void {
       const value = attrOf(node, list);
       if (value) for (const url of srcsetUrls(value)) push('srcset', url);
     }
+
+    // `srcdoc` is a whole nested HTML document. The browser parses it and
+    // renders it in its own browsing context, so every load inside it is real
+    // — but it arrives here as one opaque attribute string, which is exactly
+    // why none of the attribute checks above could ever see it.
+    const srcdoc = attrOf(node, 'srcdoc');
+    if (srcdoc) walk(parse(srcdoc) as unknown as Node, found);
 
     // SVG loads through `href` and the legacy `xlink:href` on <image> and <use>.
     // An <a> is a navigation there too, so it stays exempt.

@@ -8,7 +8,7 @@
  * a reviewer actually ran and got the wrong answer from.
  */
 import { describe, it, expect } from 'vitest';
-import { findExternalRefs, assertSelfContained } from './external-urls.js';
+import { findExternalRefs, assertSelfContained, decodeCssEscapes } from './external-urls.js';
 
 describe('what must be caught', () => {
   it('an external script src', () => {
@@ -160,5 +160,109 @@ describe('assertSelfContained', () => {
 
   it('passes a document that loads nothing', () => {
     expect(() => assertSelfContained('<p>hello</p>', 'ui://a/b')).not.toThrow();
+  });
+});
+
+describe('the five bypasses an adversarial pass demonstrated', () => {
+  // Each of these returned [] against the previous version while a browser
+  // would fetch. They were confirmed by running the function and cross-checking
+  // the URL with Node's WHATWG parser or the CSS with css-tree.
+
+  it('1. a backslashed scheme, which WHATWG resolves exactly like slashes', () => {
+    // new URL('https:\\\\evil.test\\a.png').href === 'https://evil.test/a.png'
+    expect(findExternalRefs('<img src="https:\\\\evil.test\\a.png">')).toHaveLength(1);
+    expect(findExternalRefs('<img src="\\\\\\\\evil.test\\a.png">')).toHaveLength(1);
+  });
+
+  it('2. a leading C0 control other than tab, newline or return', () => {
+    // The URL parser strips ANY leading C0 control, not just those three.
+    for (const control of ['\u0001', '\u0008', '\u000b', '\u000c', '\u001f']) {
+      expect(findExternalRefs(`<img src="${control}https://evil.test/a.png">`)).toHaveLength(1);
+    }
+  });
+
+  it('2b. …but NOT U+0000, which the HTML tokenizer replaces before the URL parser sees it', () => {
+    // The report that started this led with U+0000, tested against `new URL()`
+    // in isolation. Inside a document it is not a bypass: parse5 replaces NUL in
+    // an attribute value with U+FFFD, exactly as the HTML spec requires and as a
+    // browser does, so the value really is relative and nothing is fetched.
+    expect(findExternalRefs('<img src="\u0000https://evil.test/a.png">')).toEqual([]);
+  });
+
+  it('3. a CSS hex escape standing in for the scheme', () => {
+    // \\68 is U+0068 'h'; one trailing space ends the escape.
+    expect(
+      findExternalRefs('<style>a{background:url(\\68 ttps://evil.test/a.png)}</style>'),
+    ).toHaveLength(1);
+    expect(
+      findExternalRefs('<style>a{background:url("\\68 ttps://evil.test/b.png")}</style>'),
+    ).toHaveLength(1);
+  });
+
+  it('4. @import with no whitespace before the string', () => {
+    // A quote always begins a new token in CSS, so this is valid and identical
+    // to `@import "…"`.
+    expect(findExternalRefs('<style>@import"https://evil.test/a.css";</style>')).toHaveLength(1);
+    expect(findExternalRefs("<style>@import'https://evil.test/b.css';</style>")).toHaveLength(1);
+  });
+
+  it('5. a load inside an <iframe srcdoc>, which is a whole nested document', () => {
+    expect(
+      findExternalRefs('<iframe srcdoc="&lt;img src=&quot;https://evil.test/a.png&quot;&gt;"></iframe>'),
+    ).toHaveLength(1);
+    // And nested one level deeper, since srcdoc can carry another srcdoc.
+    expect(
+      findExternalRefs(
+        '<iframe srcdoc="&lt;style&gt;@import&quot;https://evil.test/b.css&quot;;&lt;/style&gt;"></iframe>',
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe('URL resolution, now done by the same parser the browser uses', () => {
+  it.each([
+    ['./local.png', 'relative'],
+    ['/absolute/path.png', 'root-relative'],
+    ['#fragment', 'fragment only'],
+    ['data:image/png;base64,iVBORw0KGgo=', 'data'],
+    ['blob:https://mcp-app.invalid/abc', 'blob'],
+  ])('treats %s (%s) as internal', (url) => {
+    expect(findExternalRefs(`<img src="${url}">`)).toEqual([]);
+  });
+
+  it.each([
+    'https://evil.test/a.png',
+    'http://evil.test/a.png',
+    '//evil.test/a.png',
+    'HTTPS://EVIL.TEST/a.png',
+    '  https://evil.test/a.png  ',
+  ])('treats %s as external', (url) => {
+    expect(findExternalRefs(`<img src="${url}">`)).toHaveLength(1);
+  });
+
+  it('reports the resolved URL, which is what the browser would actually request', () => {
+    const [ref] = findExternalRefs('<img src="https:\\\\evil.test\\a.png">');
+    expect(ref.url).toBe('https://evil.test/a.png');
+  });
+
+  it('does not choke on an unparseable value', () => {
+    expect(() => findExternalRefs('<img src="ht~tp://[[[">')).not.toThrow();
+  });
+});
+
+describe('decodeCssEscapes', () => {
+  it.each([
+    ['\\68 ttp', 'http'],
+    ['\\000068ttp', 'http'],
+    // CSS consumes up to six hex digits; `t` is not one, so this is h + "ttp".
+    ['\\68ttp', 'http'],
+    ['plain', 'plain'],
+    ['\\\\', '\\'],
+  ])('%s -> %s', (input, expected) => {
+    expect(decodeCssEscapes(input)).toBe(expected);
+  });
+
+  it('maps a null escape to the replacement character, as the tokenizer does', () => {
+    expect(decodeCssEscapes('\\0')).toBe('\uFFFD');
   });
 });

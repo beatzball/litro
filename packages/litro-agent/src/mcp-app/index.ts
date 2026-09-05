@@ -178,7 +178,30 @@ export function nameFromUri(uri: string): string {
 
 /** Neutralises a closing tag that would end the element early. */
 function inlineSafe(source: string, tag: 'script' | 'style'): string {
-  return source.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
+  const escaped = source.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
+  if (tag !== 'script') return escaped;
+
+  // `</script` alone is not enough. Inside a script element, `<!--` moves the
+  // HTML tokenizer into "script data escaped" state, and a following `<script`
+  // moves it into "script data double escaped" — where `</script>` NO LONGER
+  // CLOSES THE ELEMENT. Source containing both would swallow the rest of the
+  // document, and the build would report success while shipping a dead file.
+  //
+  // A backslash here relies on the sequence sitting inside a string or regex
+  // literal, which is the same assumption the `</script` rule above already
+  // makes. JSON payloads do not rely on it — see jsonSafe.
+  return escaped.replace(/<!--/g, '<\\!--').replace(/<script/gi, '<\\script');
+}
+
+/**
+ * JSON for an inline `<script>`, with `<` escaped as `\u003c`.
+ *
+ * Unlike inlineSafe this needs no assumption about where the text sits: the
+ * escape is valid JSON everywhere, so no `<!--`, `<script` or `</script`
+ * sequence can survive into the tokenizer at all.
+ */
+function jsonSafe(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
 }
 
 function escapeHtml(text: string): string {
@@ -218,7 +241,7 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
   };
 
   const scripts = [
-    `<script>\nwindow.__litroMcpApp = ${inlineSafe(JSON.stringify(appMeta), 'script')};\n</script>`,
+    `<script>\nwindow.__litroMcpApp = ${jsonSafe(appMeta)};\n</script>`,
     config.runtime ? `<script>\n${inlineSafe(config.runtime, 'script')}\n</script>` : '',
     config.apply
       ? `<script>\nwindow.litroMcpApply = ${inlineSafe(config.apply, 'script')};\n</script>`

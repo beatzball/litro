@@ -138,3 +138,46 @@ describe('self-containment', () => {
     ).rejects.toThrow(/loads 2 resource\(s\) from outside/);
   });
 });
+
+describe('escaping into inline scripts', () => {
+  // `</script` alone is not enough. Inside a script element `<!--` moves the
+  // HTML tokenizer into "script data escaped" state, and a following `<script`
+  // moves it into "script data double escaped", where `</script>` NO LONGER
+  // CLOSES THE ELEMENT. Source carrying both would swallow the rest of the
+  // document and the build would report success while shipping a dead file.
+  it('neutralises the <!-- plus <script pair that disarms </script>', async () => {
+    const { html: doc } = await buildMcpAppDocument(
+      defineMcpApp({
+        uri: 'ui://a/b',
+        shell,
+        runtime: 'var s = "<!-- <script> hello";',
+      }),
+    );
+
+    expect(doc).not.toContain('<!-- <script>');
+    expect(doc).toContain('<\\!--');
+    expect(doc).toContain('<\\script');
+    // The document still ends properly rather than being swallowed.
+    expect(doc.trimEnd().endsWith('</html>')).toBe(true);
+  });
+
+  it('escapes < as \\u003c in the app metadata JSON, needing no assumption', async () => {
+    // Unlike the source case, JSON can always be escaped safely: \\u003c is
+    // valid JSON anywhere, so no <!--, <script or </script sequence can reach
+    // the tokenizer at all.
+    const { html: doc } = await buildMcpAppDocument(
+      defineMcpApp({ uri: 'ui://a/b', shell, name: '</script><!-- <script>' }),
+    );
+
+    expect(doc).toContain('\\u003c/script');
+    expect(doc).not.toContain('window.__litroMcpApp = {"name":"</script>');
+    expect(doc.trimEnd().endsWith('</html>')).toBe(true);
+  });
+
+  it('still lets ordinary source through unchanged', async () => {
+    const { html: doc } = await buildMcpAppDocument(
+      defineMcpApp({ uri: 'ui://a/b', shell, runtime: 'var a = 1 < 2;' }),
+    );
+    expect(doc).toContain('var a = 1 < 2;');
+  });
+});

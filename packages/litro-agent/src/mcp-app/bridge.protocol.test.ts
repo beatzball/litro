@@ -82,8 +82,14 @@ describe('the ui/initialize params a real host validates', () => {
     expect(params.appCapabilities.availableDisplayModes).toEqual(['inline']);
   });
 
-  it('never sends the bare "capabilities" key that was rejected', () => {
-    expect(sent[0].params).not.toHaveProperty('capabilities');
+  it('sends capabilities AS WELL, which the host never rejected', () => {
+    // The old version of this test asserted `capabilities` was absent and was
+    // named "the bare capabilities key that was rejected". It was never
+    // rejected: the -32602 named three ABSENT fields, and capabilities was the
+    // one field already correct. The spec example sends it (line 462), so
+    // dropping it recreated the same class of failure this file exists for.
+    expect(sent[0].params).toHaveProperty('capabilities');
+    expect((sent[0].params as Record<string, unknown>).capabilities).toEqual({});
   });
 
   it('takes name, version and display modes from the document', () => {

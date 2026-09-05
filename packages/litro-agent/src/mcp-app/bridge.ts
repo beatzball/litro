@@ -241,6 +241,13 @@ export const BRIDGE_SOURCE = `(function () {
 
   request('ui/initialize', {
     protocolVersion: UI_PROTOCOL_VERSION,
+    // capabilities was dropped once, on a misreading of the host's rejection.
+    // The error named appInfo, appCapabilities and protocolVersion -- three
+    // ABSENT fields. capabilities was not among them; it was the one field
+    // already correct, and the spec's own example (line 462) sends it. Removing
+    // it recreated the very failure the rest of this handshake exists to fix.
+    // (No backticks in this string, per the note at the top of the file.)
+    capabilities: {},
     appInfo: info,
     clientInfo: info,
     appCapabilities: {
