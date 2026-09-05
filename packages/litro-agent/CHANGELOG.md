@@ -1,5 +1,34 @@
 # @beatzball/litro-agent
 
+## 0.3.0
+
+### Minor Changes
+
+- df9971f: Add `@beatzball/litro-agent/mcp-app` — packages a Litro component as an MCP Apps `ui://` resource.
+
+  `defineMcpApp()` declares the app; `buildMcpAppDocument()` server-renders the shell and returns one self-contained HTML5 document plus the `resources/*` descriptor (`text/html;profile=mcp-app`, nested `_meta.ui`).
+
+  A `ui://` resource is a static, cached, data-free template — hosts prefetch it and reuse it across tool calls — so the shell is rendered with no data, and the inlined bridge fills it from `structuredContent` when `ui/notifications/tool-result` arrives after the `ui/initialize` handshake. The bridge also answers `ping` and `ui/resource-teardown`, reports its size so a flexible-height host can fit it, and exposes `window.litroMcp.callTool()`.
+
+  The default fill step refuses scripting sinks (`on*`, `innerHTML`, `outerHTML`, `srcdoc`, `src`, `href`, `style`, …) and reports what it refused. `structuredContent` is server JSON and the host's default CSP permits inline event handlers, so a plain `Object.assign` onto the element would let a tool result execute code holding `window.litroMcp.callTool`.
+
+  The descriptor carries `name` as well as `uri` — the base MCP `Resource` type requires both, and a server forwarding the descriptor into `resources/list` would otherwise emit an invalid entry.
+
+  Packing fails if the document would load anything from outside itself, because the host's default CSP is `default-src 'none'` and such a fetch fails silently inside the iframe.
+
+  Works with the Lit and FAST renderers — the packager routes through `ui()`, so it follows `LITRO_ADAPTER`. Elena is not supported, because `ui()` does not support it yet.
+
+### Patch Changes
+
+- a9345f4: `fileSessionStore` no longer breaks permanently when its session directory disappears, and can be pointed elsewhere with `LITRO_AGENT_SESSIONS_DIR`.
+
+  The store creates `.litro/sessions` once and caches that result for the life of the process. If the directory was then removed — a cleanup script, a log rotation, a tmpfs reaper — every later `append` failed with `ENOENT` forever and the agent endpoint returned a 500 error event on every turn until the server restarted. It now recreates the directory and retries the append once.
+
+  `LITRO_AGENT_SESSIONS_DIR` overrides the default directory (an explicit `fileSessionStore({ dir })` still wins). It exists for the case where two servers run against the same project directory and must not share session state.
+
+- Updated dependencies [df9971f]
+  - @beatzball/litro@0.15.0
+
 ## 0.2.2
 
 ### Patch Changes

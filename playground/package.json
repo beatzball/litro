@@ -1,8 +1,8 @@
 {
   "name": "playground",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "private": true,
-  "description": "Litro playground \u2014 test app using the framework locally",
+  "description": "Litro playground — test app using the framework locally",
   "type": "module",
   "imports": {
     "#litro/page-manifest": "./server/stubs/page-manifest.ts",
