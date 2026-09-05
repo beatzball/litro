@@ -16,7 +16,7 @@
 import { createServer } from 'vite';
 import fastGlob from 'fast-glob';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join, relative, resolve } from 'pathe';
+import { dirname, join, relative, resolve } from 'pathe';
 import { patchCustomElementsIdempotent } from '../plugins/ssg.js';
 
 const DEFAULT_SOURCE_DIR = 'mcp-apps';
@@ -24,7 +24,11 @@ const DEFAULT_OUT_DIR = 'dist/mcp-apps';
 
 /** One packed app, as it lands on disk. */
 export interface PackedApp {
-  /** Filename stem, `/` flattened to `-`. Names the output files. */
+  /**
+   * Output path stem, relative to the out dir and mirroring the source tree:
+   * `weather/card`. Equal to the uri's path, which is what makes two apps
+   * unable to claim one output file.
+   */
   name: string;
   uri: string;
   htmlPath: string;
@@ -33,11 +37,11 @@ export interface PackedApp {
 }
 
 /**
- * The path segments an app file contributes, source of BOTH its output name
+ * The path segments an app file contributes, source of BOTH its output path
  * and its `ui://` address.
  *
- * One function on purpose. The name flattens the segments with `-` and the uri
- * joins them with `/`, so deriving them separately would let the manifest and
+ * One function on purpose. Both are the segments joined — by `/` for the uri,
+ * by `/` for the file — so deriving them separately would let the manifest and
  * the address drift apart on the next edit to either.
  */
 export function appSegmentsFromFile(relPath: string): string[] {
@@ -49,12 +53,74 @@ export function appSegmentsFromFile(relPath: string): string[] {
 }
 
 /**
- * Turns a path relative to the source dir into an output name.
- * `weather/card.ts` -> `weather-card`, so the output directory stays flat and
- * a name can be read straight off a filename.
+ * Characters a path segment may contribute to a `ui://` address.
+ *
+ * This is RFC 3986's `unreserved` set. Anything outside it either changes
+ * meaning (`?` opens a query, `#` opens a fragment, `/` opens a segment) or is
+ * rewritten by any parser that touches it (a space becomes `%20`, `é` becomes
+ * `%C3%A9`) — and a rewritten address no longer matches the string in the
+ * descriptor, so a host caches under a key the manifest does not contain.
+ *
+ * `%` is excluded deliberately, not by omission. Allowing it would make
+ * `big%20card.ts` and `big card.ts` two files with ONE effective address, and
+ * neither the output-path check nor the uri check would see it: the raw strings
+ * differ, and only a parser makes them equal.
  */
-export function appNameFromFile(relPath: string): string {
-  return appSegmentsFromFile(relPath).join('-');
+const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
+
+/**
+ * Refuses a path that cannot become an unambiguous `ui://` address.
+ *
+ * Held to the same standard as the authority, and for the same reason given on
+ * `packageAuthority`: an address is protocol-visible and cached by the host, so
+ * the build is the last place a bad one can be stopped cheaply.
+ */
+function assertUsableSegments(relPath: string, segments: string[]): void {
+  const dynamic = segments.find((seg) => seg.includes('[') || seg.includes(']'));
+  if (dynamic) {
+    throw new Error(
+      `"${relPath}" uses a dynamic segment ("${dynamic}"). A ui:// app is a static template a host ` +
+        'caches by address, so there is no request to fill one from — use plain folder and file names.',
+    );
+  }
+
+  // `.` and `..` are syntactically fine but are REMOVED by RFC 3986
+  // normalisation, so `a/./b` and `a/b` are one resource to a host and two
+  // entries to us. Unreachable through the CLI's own globbing today; rejected
+  // because `uriFromFile` is exported and does not know its caller.
+  const dot = segments.find((seg) => seg === '.' || seg === '..');
+  if (dot) {
+    throw new Error(
+      `"${relPath}" contains a "${dot}" segment. A uri parser removes those, so the address it resolves ` +
+        'to would not be the address the build wrote down.',
+    );
+  }
+
+  const bad = segments.find((seg) => !URI_SAFE_SEGMENT.test(seg));
+  if (bad) {
+    const offending = [...bad].find((ch) => !URI_SAFE_SEGMENT.test(ch)) ?? bad;
+    throw new Error(
+      `"${relPath}" cannot become a ui:// address: the segment "${bad}" contains ${JSON.stringify(offending)}, ` +
+        'which a uri parser rewrites or reads as syntax. Rename the file using letters, digits, ' +
+        '"." "_" "~" or "-", or set "uri" in defineMcpApp() to choose the address yourself.',
+    );
+  }
+}
+
+/**
+ * Turns a path relative to the source dir into an output path stem.
+ * `weather/card.ts` -> `weather/card`, so `dist/mcp-apps/weather/card.html`.
+ *
+ * NESTED, MIRRORING THE URI. An earlier version flattened to `weather-card`,
+ * which let `weather/card.ts` and `weather-card.ts` — two files with two
+ * DIFFERENT addresses — claim one output file, so the build had to detect the
+ * clash and refuse. Mirroring the uri makes that clash unrepresentable: the
+ * output path is the uri path, and two files cannot share one relative path.
+ */
+export function outputPathFromFile(relPath: string): string {
+  const segments = appSegmentsFromFile(relPath);
+  assertUsableSegments(relPath, segments);
+  return segments.join('/');
 }
 
 /**
@@ -75,23 +141,10 @@ export function appNameFromFile(relPath: string): string {
  * `index.ts` IS NOT SPECIAL, unlike in `pages/`. `weather/index.ts` is
  * `ui://<package>/weather/index`; collapsing it would silently merge with a
  * sibling `weather.ts`.
- *
- * NO DYNAMIC SEGMENTS. `[slug]`, `[[opt]]` and `[...all]` mean something in
- * `pages/` and nothing here: a `ui://` resource is a static template the host
- * caches by address, so there is no request to take a parameter from. They are
- * rejected rather than passed through, because a literal `[slug]` in a
- * protocol-visible address is a typo that would otherwise ship.
  */
 export function uriFromFile(relPath: string, packageName?: string): string {
   const segments = appSegmentsFromFile(relPath);
-
-  const dynamic = segments.find((seg) => seg.includes('[') || seg.includes(']'));
-  if (dynamic) {
-    throw new Error(
-      `"${relPath}" uses a dynamic segment ("${dynamic}"). A ui:// app is a static template a host ` +
-        'caches by address, so there is no request to fill one from — use plain folder and file names.',
-    );
-  }
+  assertUsableSegments(relPath, segments);
 
   if (segments.length === 0) {
     throw new Error(`"${relPath}" has no name to build a uri from.`);
@@ -102,7 +155,7 @@ export function uriFromFile(relPath: string, packageName?: string): string {
     throw new Error(
       `cannot build a uri for "${relPath}": the package name supplies the authority ` +
         `(ui://<package>/${segments.join('/')}), and this project has no usable "name" in its ` +
-        'package.json. Add one, or set "uri" in defineMcpApp().',
+        'package.json. Add one, or set "uri" in defineMcpApp() to choose the address yourself.',
     );
   }
 
@@ -123,23 +176,54 @@ export function packageAuthority(packageName?: string): string | undefined {
 }
 
 /**
- * Throws when two apps claim the same `ui://` address.
+ * The form of a uri that two addresses must differ in to be different
+ * resources: what a parser resolves the string to, not the string itself.
+ *
+ * `ui://p/a%2Fb` and `ui://p/a%2fb` are one address to a host and two strings
+ * to us. Comparing raw strings is how two apps end up sharing a cache key.
+ */
+function canonicalUri(uri: string): string {
+  try {
+    return new URL(uri).href;
+  } catch {
+    // Not parseable, so nothing can normalise it into another entry either.
+    return uri;
+  }
+}
+
+/**
+ * Throws when two apps claim the same `ui://` address, or the same output file.
  *
  * A host keys its template cache by URI, so a collision does not merge — one
  * app silently serves the other's markup. Failing the build is the only place
  * this is visible.
+ *
+ * REPORTS EVERY CLASH, not the first. A project that renames one file only to
+ * hit the next clash on the following run learns its shape one build at a time;
+ * a list is one read.
  */
 export function assertUniqueUris(apps: { name: string; uri: string }[]): void {
-  const seen = new Map<string, string>();
+  const byUri = new Map<string, string[]>();
+
   for (const app of apps) {
-    const first = seen.get(app.uri);
-    if (first) {
-      throw new Error(
-        `Two MCP apps declare the same uri "${app.uri}": ${first} and ${app.name}. ` +
-          'A host caches templates by uri, so one would silently serve the other’s markup.',
-      );
-    }
-    seen.set(app.uri, app.name);
+    const uriKey = canonicalUri(app.uri);
+    byUri.set(uriKey, [...(byUri.get(uriKey) ?? []), app.name]);
+  }
+
+  const problems: string[] = [];
+
+  for (const [uri, names] of byUri) {
+    if (names.length < 2) continue;
+    problems.push(
+      `  ${names.join(', ')} all resolve to the uri ${uri}. A host caches templates by uri, so one ` +
+        'would silently serve the others’ markup. Give each its own address, or its own file path.',
+    );
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      `${problems.length} address clash${problems.length > 1 ? 'es' : ''}:\n${problems.join('\n')}`,
+    );
   }
 }
 
@@ -160,9 +244,10 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   const sourceDir = resolve(cwd, dirFlag);
   const outDir = resolve(cwd, outFlag);
 
-  // Fills the first uri segment for a file that sits flat in the app directory.
-  // Read once, and read leniently: a project without a package.json still packs
-  // fine as long as every app is in a folder or names its own uri.
+  // Supplies the authority for EVERY derived address, not just a flat file's.
+  // A project whose package.json has no usable "name" can still pack, but only
+  // if every app names its own uri — which is why a failure to derive is
+  // carried rather than thrown, below.
   const packageName = await readPackageName(cwd);
 
   const files = await fastGlob('**/*.{ts,tsx,mts}', {
@@ -178,23 +263,60 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     return 1;
   }
 
-  // Two source paths can flatten to one output name (`weather/card.ts` and
-  // `weather-card.ts` both become `weather-card`), and the second write would
-  // silently replace the first. Caught before anything reaches disk — the
-  // uri check below cannot see it, since only one of the two survives to be
-  // compared.
-  const byName = new Map<string, string>();
-  for (const file of files) {
-    const name = appNameFromFile(relative(sourceDir, file));
-    const first = byName.get(name);
-    if (first) {
-      console.error(
-        `litro mcp-app build: ${relative(cwd, first)} and ${relative(cwd, file)} both pack to ` +
-          `"${name}.html". Rename one — the second would overwrite the first.`,
-      );
-      return 1;
+  // EVERY problem the file paths alone can show, gathered before a single
+  // module is loaded or a byte is written. One list beats learning the shape of
+  // the directory one failed build at a time.
+  //
+  // A derivation failure is NOT fatal here. An app is allowed to name its own
+  // uri, and `defineMcpApp()` has not run yet — so the reason it could not be
+  // derived is CARRIED, and only reported if the config turns out to have no
+  // uri either. Throwing here is what made an explicit uri unable to rescue a
+  // project whose package name is unusable.
+  const plans = new Map<string, { file: string; outPath: string; uri?: string; why?: string }>();
+  const problems: string[] = [];
+
+  for (const file of files.sort()) {
+    const relPath = relative(sourceDir, file);
+    const here = relative(cwd, file);
+
+    let outPath: string;
+    try {
+      outPath = outputPathFromFile(relPath);
+    } catch (err) {
+      // A path this broken cannot name an OUTPUT FILE either, so unlike a
+      // derivation failure there is nothing an explicit uri could rescue.
+      problems.push(`  ${here}: ${(err as Error).message}`);
+      continue;
     }
-    byName.set(name, file);
+
+    // Two source extensions reduce to one output path (`a/b.ts` and `a/b.tsx`),
+    // and the second write would silently replace the first.
+    const clash = plans.get(outPath);
+    if (clash) {
+      problems.push(
+        `  ${relative(cwd, clash.file)} and ${here} both pack to "${outPath}.html". ` +
+          'Rename one — the second would overwrite the first.',
+      );
+      continue;
+    }
+
+    let uri: string | undefined;
+    let why: string | undefined;
+    try {
+      uri = uriFromFile(relPath, packageName);
+    } catch (err) {
+      why = (err as Error).message;
+    }
+
+    plans.set(outPath, { file, outPath, uri, why });
+  }
+
+  if (problems.length > 0) {
+    console.error(
+      `litro mcp-app build: ${problems.length} problem${problems.length > 1 ? 's' : ''} in ` +
+        `${relative(cwd, sourceDir) || '.'}/\n${problems.join('\n')}`,
+    );
+    return 1;
   }
 
   const packed: PackedApp[] = [];
@@ -244,20 +366,8 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
       return 1;
     }
 
-    for (const file of files.sort()) {
-      const relPath = relative(sourceDir, file);
-      const name = appNameFromFile(relPath);
-
-      // A FALLBACK, not an override: an app that names its own uri keeps it.
-      // Derived even so, because the failure it reports (a dynamic segment, a
-      // flat file with no package name) is about the file, not about the config.
-      let derivedUri: string;
-      try {
-        derivedUri = uriFromFile(relPath, packageName);
-      } catch (err) {
-        console.error(`litro mcp-app build: ${(err as Error).message}`);
-        return 1;
-      }
+    for (const plan of plans.values()) {
+      const { file, outPath, uri: derivedUri, why } = plan;
 
       // Loading a component registers its custom element, and two apps may pull
       // in the same one. Lit's SSR shim throws on a duplicate define(); this
@@ -295,21 +405,40 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
         return 1;
       }
 
+      // A FALLBACK, not an override: an app that names its own uri keeps it.
+      // `derivedUri` is undefined when the path could not produce one, and the
+      // packager then reports the app as having no address — at which point
+      // `why` is the answer to "why was none derived?", which is the half the
+      // packager cannot know.
       let built: { html: string; descriptor: { uri: string } };
       try {
         built = await packager.buildMcpAppDocument(definition, { uri: derivedUri });
       } catch (err) {
-        console.error(`litro mcp-app build: ${relative(cwd, file)}\n  ${(err as Error).message}`);
+        const message = (err as Error).message;
+        // The packager's own "no uri anywhere" text tells the reader to pack
+        // the file with this command — which is what they just did. When the
+        // derivation is the half that failed, say THAT instead: it is the only
+        // half the packager could not see.
+        if (why && /no "uri" and none was supplied/.test(message)) {
+          console.error(
+            `litro mcp-app build: ${relative(cwd, file)} declares no "uri", and one could not be ` +
+              `derived from its path.\n  ${why}`,
+          );
+          return 1;
+        }
+        console.error(`litro mcp-app build: ${relative(cwd, file)}\n  ${message}`);
         return 1;
       }
 
-      const htmlPath = join(outDir, `${name}.html`);
-      const descriptorPath = join(outDir, `${name}.json`);
+      const htmlPath = join(outDir, `${outPath}.html`);
+      const descriptorPath = join(outDir, `${outPath}.json`);
+      // The output mirrors the source tree, so a nested app needs its folder.
+      await mkdir(dirname(htmlPath), { recursive: true });
       await writeFile(htmlPath, built.html, 'utf8');
       await writeFile(descriptorPath, `${JSON.stringify(built.descriptor, null, 2)}\n`, 'utf8');
 
       packed.push({
-        name,
+        name: outPath,
         uri: built.descriptor.uri,
         htmlPath,
         descriptorPath,

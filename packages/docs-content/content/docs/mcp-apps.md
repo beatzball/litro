@@ -67,7 +67,7 @@ For a project whose `package.json` says `"name": "playground"`:
 
 One rule, no special cases: rename the package and every address moves together, which is what an authority is for.
 
-The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`.
+The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`. The name must be usable as a uri host — lowercase letters, digits, `.`, `_` and `-` — so a package called `@acme/MyApp` cannot supply one. Such a project still packs, but every app in it has to set `uri` itself.
 
 **`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://playground/weather/index` — collapsing it would silently merge with a sibling `weather.ts`.
 
@@ -96,15 +96,25 @@ await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
 litro mcp-app build
 ```
 
-For each `mcp-apps/*.ts` this writes, into `dist/mcp-apps/`:
+Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/`. **The output mirrors the source tree**, so the file path, the output path and the address are the same path three times:
 
-| File | Contents |
-|---|---|
-| `<name>.html` | the self-contained document |
-| `<name>.json` | the resource descriptor — `text/html;profile=mcp-app` plus `_meta.ui` |
-| `manifest.json` | every app, so a server can load them in one read |
+| Source | Output | Address |
+|---|---|---|
+| `mcp-apps/weather-card.ts` | `dist/mcp-apps/weather-card.html` + `.json` | `ui://playground/weather-card` |
+| `mcp-apps/weather/card.ts` | `dist/mcp-apps/weather/card.html` + `.json` | `ui://playground/weather/card` |
 
-`--dir` and `--out` override the defaults. The build **fails** if two apps declare the same `ui://` address: a host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup.
+`manifest.json` lists every app, so a server can load them in one read. Its `html` and `descriptor` entries are paths relative to the output directory, so a nested app is `weather/card.html`.
+
+`--dir` and `--out` override the defaults.
+
+### When the build refuses
+
+It reports **every** problem it can see from the file paths alone, in one list, before loading a module or writing a byte:
+
+- **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
+- **A character a uri parser would rewrite.** File and folder names may use letters, digits, `.`, `_`, `~` and `-`. A space, `?`, `#`, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship the address `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. Rename the file, or set `uri` yourself.
+- **A dynamic segment**, or a `.` / `..` segment.
+- **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by what a parser resolves the address to, not by the raw text.
 
 The output is plain files. Any MCP server can serve them; nothing assumes the serving side is a Litro one.
 

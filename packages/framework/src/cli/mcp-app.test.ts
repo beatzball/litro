@@ -1,25 +1,38 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
-  appNameFromFile,
+  appSegmentsFromFile,
   assertUniqueUris,
   mcpAppCommand,
+  outputPathFromFile,
   packageAuthority,
   uriFromFile,
 } from './mcp-app.js';
 
-describe('appNameFromFile', () => {
+describe('outputPathFromFile', () => {
   it.each([
     ['weather-card.ts', 'weather-card'],
-    ['weather/card.ts', 'weather-card'],
-    ['a/b/c.tsx', 'a-b-c'],
+    ['weather/card.ts', 'weather/card'],
+    ['a/b/c.tsx', 'a/b/c'],
     ['card.mts', 'card'],
-    ['weather\\card.ts', 'weather-card'],
+    ['weather\\card.ts', 'weather/card'],
   ])('%s -> %s', (input, expected) => {
-    expect(appNameFromFile(input)).toBe(expected);
+    expect(outputPathFromFile(input)).toBe(expected);
   });
 
   it('keeps a dot inside the stem, which is not the extension', () => {
-    expect(appNameFromFile('weather.v2.ts')).toBe('weather.v2');
+    expect(outputPathFromFile('weather.v2.ts')).toBe('weather.v2');
+  });
+
+  it('mirrors the uri path, so two files can never claim one output file', () => {
+    // The old scheme flattened with "-", which let `weather/card.ts` and
+    // `weather-card.ts` — two DIFFERENT addresses — both claim
+    // `weather-card.html`, and the build had to detect the clash. Mirroring
+    // makes the clash unrepresentable.
+    for (const rel of ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx']) {
+      const uriPath = uriFromFile(rel, 'playground').replace('ui://playground/', '');
+      expect(outputPathFromFile(rel)).toBe(uriPath);
+    }
+    expect(outputPathFromFile('weather/card.ts')).not.toBe(outputPathFromFile('weather-card.ts'));
   });
 });
 
@@ -43,16 +56,14 @@ describe('uriFromFile', () => {
   });
 
   it('moves every address together when the package is renamed', () => {
-    // That is what an authority is for, and it is the reason this is one rule
-    // with no branch in it.
-    const files = ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx'];
-    for (const rel of files) {
-      expect(uriFromFile(rel, 'renamed')).toBe(uriFromFile(rel, 'playground').replace('playground', 'renamed'));
+    for (const rel of ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx']) {
+      expect(uriFromFile(rel, 'renamed')).toBe(
+        uriFromFile(rel, 'playground').replace('playground', 'renamed'),
+      );
     }
   });
 
   it('does not treat index.ts as the folder root, the way pages/ does', () => {
-    // Collapsing it would silently merge with a sibling `weather.ts`.
     expect(uriFromFile('weather/index.ts', 'playground')).toBe('ui://playground/weather/index');
   });
 
@@ -72,14 +83,50 @@ describe('uriFromFile', () => {
     },
   );
 
-  it('agrees with appNameFromFile, which names the same file on disk', () => {
-    // The manifest pairs the two. Derived apart, they drift on the next edit
-    // to either, and the descriptor then points at a file that is not there.
-    // The uri path BELOW the authority is exactly the output name, unflattened.
-    for (const rel of ['weather-card.ts', 'weather/card.ts', 'a/b/c.tsx']) {
-      const path = uriFromFile(rel, 'playground').replace('ui://playground/', '');
-      expect(path.split('/').join('-')).toBe(appNameFromFile(rel));
-    }
+  describe('characters a uri parser would rewrite or read as syntax', () => {
+    // Each of these built successfully before, and shipped a descriptor whose
+    // uri a host resolves to a DIFFERENT string than the manifest contains.
+    it.each([
+      ['big card.ts', 'a space becomes %20'],
+      ['weird?name.ts', '? opens a query, truncating the path'],
+      ['weird#name.ts', '# opens a fragment, truncating the path'],
+      ['café.ts', 'non-ascii is percent-encoded'],
+      ['a/b c/d.ts', 'a space in a middle segment'],
+    ])('refuses %s (%s)', (input) => {
+      expect(() => uriFromFile(input, 'playground')).toThrow(/rewrites or reads as syntax/);
+    });
+
+    it('refuses a literal % , which is what makes an encoded twin possible', () => {
+      // THE COLLISION THIS CLOSES: `big card.ts` and `big%20card.ts` produced
+      // two different raw strings that a parser resolves to ONE address, and
+      // neither the output-path check nor the uri check could see it.
+      expect(() => uriFromFile('big%20card.ts', 'playground')).toThrow(/rewrites or reads as syntax/);
+      expect(() => uriFromFile('big card.ts', 'playground')).toThrow(/rewrites or reads as syntax/);
+    });
+
+    it.each(['../escape.ts', 'a/./b.ts', 'a/../b.ts'])('refuses the dot segment in %s', (input) => {
+      // RFC 3986 normalisation REMOVES these, so `a/./b` and `a/b` are one
+      // resource to a host and two entries to us.
+      expect(() => uriFromFile(input, 'playground')).toThrow(/parser removes those/);
+    });
+
+    it('still accepts the unreserved set, which ordinary filenames use', () => {
+      expect(uriFromFile('weather_card-v2.x~1.ts', 'playground')).toBe(
+        'ui://playground/weather_card-v2.x~1',
+      );
+    });
+
+    it('rejects the same characters for the OUTPUT PATH, not only the uri', () => {
+      // Both derivations share one validator, so a file cannot be rejected as
+      // an address yet accepted as a filename.
+      expect(() => outputPathFromFile('big card.ts')).toThrow(/rewrites or reads as syntax/);
+    });
+  });
+});
+
+describe('appSegmentsFromFile', () => {
+  it('drops empty segments from a doubled separator', () => {
+    expect(appSegmentsFromFile('a//b.ts')).toEqual(['a', 'b']);
   });
 });
 
@@ -119,7 +166,33 @@ describe('assertUniqueUris', () => {
         { name: 'weather-card', uri: 'ui://x/a' },
         { name: 'weather-refresh', uri: 'ui://x/a' },
       ]),
-    ).toThrow(/weather-card and weather-refresh/);
+    ).toThrow(/weather-card, weather-refresh/);
+  });
+
+  it('compares what a parser resolves to, not the raw string', () => {
+    // Two strings, one address: a parser rewrites the space to %20. Neither of
+    // these can be DERIVED any more — the segment check refuses both — but an
+    // app may still write its own uri, and comparing raw text is how two apps
+    // end up sharing a host's cache key.
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a', uri: 'ui://x/big card' },
+        { name: 'b', uri: 'ui://x/big%20card' },
+      ]),
+    ).toThrow(/resolve to the uri/);
+  });
+
+  it('reports EVERY clash, not just the first', () => {
+    // A project that fixes one clash only to meet the next on the following
+    // run learns the shape of its directory one build at a time.
+    expect(() =>
+      assertUniqueUris([
+        { name: 'a1', uri: 'ui://x/a' },
+        { name: 'a2', uri: 'ui://x/a' },
+        { name: 'b1', uri: 'ui://x/b' },
+        { name: 'b2', uri: 'ui://x/b' },
+      ]),
+    ).toThrow(/2 address clashes/);
   });
 });
 
