@@ -35,6 +35,23 @@ cannot spawn a stdio command. Both serve the same handlers from the same
 | `LITRO_MCP_TOOL_DELAY_MS` | Delays every `tools/call`. Needed to see the shell hold the screen before the result — with an instant tool the two are indistinguishable. |
 | `PORT` | HTTP port, `--http` only. Default `3111`. |
 
+## The weather is real
+
+`get-weather` calls [Open-Meteo](https://open-meteo.com) — no API key, no
+account. Two requests: a city name to coordinates, then coordinates to a
+current reading. Both are cached for five minutes, because the Refresh button
+exists to prove a round trip happened, not to hammer a free public API.
+
+**The SERVER fetches, not the view**, and that is the part worth noticing: the
+packed document still declares no CSP and still loads nothing from the network.
+Data reaches it as `structuredContent` over `postMessage`. Adding a live
+upstream changed nothing about the sandbox.
+
+Offline, or for a place the geocoder does not know, it returns a placeholder
+labelled as one — `live: false` in `structuredContent`, and "NOT a real
+reading." in the text the model sees. A demo that quietly invents weather is
+worse than one that says it could not reach the network.
+
 ## What this rig proved
 
 Against MCP Inspector V2 (`@mcp-use/inspector@20.3.7`), with

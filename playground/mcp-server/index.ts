@@ -85,30 +85,147 @@ async function loadApps(): Promise<LoadedApp[]> {
 const apps = await loadApps();
 const byUri = new Map(apps.map((a) => [a.descriptor.uri, a]));
 
-/** Counts calls so a refresh visibly changes the view even for a canned city. */
+/** Counts calls, so a refresh is visibly a NEW reading even when nothing moved. */
 let calls = 0;
 
+/** WMO weather codes, which is what Open-Meteo reports instead of prose. */
+const WMO: Record<number, string> = {
+  0: 'Clear sky',
+  1: 'Mainly clear',
+  2: 'Partly cloudy',
+  3: 'Overcast',
+  45: 'Fog',
+  48: 'Depositing rime fog',
+  51: 'Light drizzle',
+  53: 'Moderate drizzle',
+  55: 'Dense drizzle',
+  56: 'Light freezing drizzle',
+  57: 'Dense freezing drizzle',
+  61: 'Slight rain',
+  63: 'Moderate rain',
+  65: 'Heavy rain',
+  66: 'Light freezing rain',
+  67: 'Heavy freezing rain',
+  71: 'Slight snow',
+  73: 'Moderate snow',
+  75: 'Heavy snow',
+  77: 'Snow grains',
+  80: 'Slight rain showers',
+  81: 'Moderate rain showers',
+  82: 'Violent rain showers',
+  85: 'Slight snow showers',
+  86: 'Heavy snow showers',
+  95: 'Thunderstorm',
+  96: 'Thunderstorm with slight hail',
+  99: 'Thunderstorm with heavy hail',
+};
+
+/** Gives up rather than hanging a tool call on a slow network. */
+async function getJson(url: string, ms = 4000): Promise<unknown> {
+  const stop = AbortSignal.timeout(ms);
+  const res = await fetch(url, { signal: stop });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
 /**
- * CANNED, ON PURPOSE. This server tests rendering, not a weather API — three
- * fixed cities and a fallback, so a screenshot is reproducible. Nothing here
- * touches the network, and the numbers will not match a real forecast.
+ * REAL WEATHER, from Open-Meteo. No API key, no account.
+ *
+ * THE SERVER FETCHES, NOT THE VIEW, and that distinction is the point worth
+ * noticing: the packed document still declares no CSP and still loads nothing
+ * from the network. Data reaches it as `structuredContent` over postMessage.
+ * Adding a live upstream changed nothing about the sandbox.
+ *
+ * Two calls: a name to coordinates, then coordinates to a current reading.
+ * Both are cached for a few minutes, because the Refresh button is meant to
+ * prove a round trip happened, not to hammer a free public API.
  */
-function forecast(city: string) {
-  const cities: Record<string, { tempC: number; summary: string }> = {
-    london: { tempC: 12, summary: 'Overcast with light drizzle' },
-    tokyo: { tempC: 21, summary: 'Clear and mild' },
-    reykjavik: { tempC: 3, summary: 'Windy, snow showers' },
+const geoCache = new Map<string, { lat: number; lon: number; label: string } | null>();
+const wxCache = new Map<string, { at: number; tempC: number; tempF: number; summary: string }>();
+const WX_TTL_MS = 5 * 60 * 1000;
+
+async function locate(city: string) {
+  const key = city.trim().toLowerCase();
+  if (geoCache.has(key)) return geoCache.get(key)!;
+
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+  const body = (await getJson(url)) as {
+    results?: { latitude: number; longitude: number; name: string; country_code?: string }[];
   };
+  const hit = body.results?.[0];
+  const found = hit
+    ? {
+        lat: hit.latitude,
+        lon: hit.longitude,
+        label: hit.country_code ? `${hit.name}, ${hit.country_code}` : hit.name,
+      }
+    : null;
+  geoCache.set(key, found);
+  return found;
+}
+
+/**
+ * Returns a reading, and says whether it is real.
+ *
+ * A network failure must not take the demo down — this rig is run offline, on
+ * planes, and in front of people. So a failure degrades to a clearly-labelled
+ * placeholder rather than throwing, and the label is the honest part: nobody
+ * should have to guess whether the number on screen came from a weather
+ * service or from us.
+ */
+async function forecast(city: string): Promise<{
+  tempC: number;
+  tempF: number;
+  summary: string;
+  label: string;
+  live: boolean;
+}> {
   calls += 1;
-  const hit = cities[city.trim().toLowerCase()] ?? { tempC: 15, summary: 'Partly cloudy' };
-  // Both units travel. Celsius is what the table above stores, Fahrenheit is
-  // what the cards show — a view should not have to do arithmetic on a tool
-  // result to render it, and a consumer that wants the other unit has it.
-  const tempF = Math.round((hit.tempC * 9) / 5 + 32);
-  // The call number rides along in the summary. Without it a refresh of a
-  // canned city renders identically whether the round-trip happened or not,
-  // and the screenshot proves nothing.
-  return { tempC: hit.tempC, tempF, summary: `${hit.summary} (reading #${calls})` };
+  const key = city.trim().toLowerCase();
+
+  const fresh = wxCache.get(key);
+  if (fresh && Date.now() - fresh.at < WX_TTL_MS) {
+    return { ...fresh, label: city, summary: `${fresh.summary} (reading #${calls})`, live: true };
+  }
+
+  try {
+    const place = await locate(city);
+    if (!place) {
+      return {
+        tempC: 0,
+        tempF: 32,
+        summary: `No place called "${city}" (reading #${calls})`,
+        label: city,
+        live: false,
+      };
+    }
+
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}` +
+      '&current=temperature_2m,weather_code';
+    const body = (await getJson(url)) as { current?: { temperature_2m: number; weather_code: number } };
+    const now = body.current;
+    if (!now) throw new Error('no current reading in the response');
+
+    const tempC = Math.round(now.temperature_2m);
+    const tempF = Math.round((now.temperature_2m * 9) / 5 + 32);
+    const summary = WMO[now.weather_code] ?? `Weather code ${now.weather_code}`;
+
+    wxCache.set(key, { at: Date.now(), tempC, tempF, summary });
+    // The call number rides along. Without it a refresh two minutes apart
+    // renders identically whether the round trip happened or not, and the
+    // screenshot proves nothing.
+    return { tempC, tempF, summary: `${summary} (reading #${calls})`, label: place.label, live: true };
+  } catch (err) {
+    const why = err instanceof Error ? err.message : String(err);
+    return {
+      tempC: 15,
+      tempF: 59,
+      summary: `Offline placeholder — ${why} (reading #${calls})`,
+      label: city,
+      live: false,
+    };
+  }
 }
 
 /**
@@ -212,14 +329,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const name = request.params.name;
   const args = (request.params.arguments ?? {}) as { city?: string };
   const city = (args.city ?? '').trim() || 'London';
-  const { tempC, tempF, summary } = forecast(city);
+  const { tempC, tempF, summary, label, live } = await forecast(city);
 
   if (name === 'get-weather' || name === 'weather-refresh-demo') {
     return {
       // `content` is what the model reads. `structuredContent` is what the
       // view fills from. The spec keeps them separate and so does this.
-      content: [{ type: 'text', text: `${city}: ${tempF}°F, ${summary}.` }],
-      structuredContent: { city, tempC, tempF, summary },
+      //
+      // `live` travels in both, because a model that reports a placeholder as
+      // a real forecast is worse than one that reports nothing.
+      content: [
+        {
+          type: 'text',
+          text: `${label}: ${tempF}°F, ${summary}.${live ? '' : ' NOT a real reading.'}`,
+        },
+      ],
+      structuredContent: { city: label, tempC, tempF, summary, live },
     };
   }
 
