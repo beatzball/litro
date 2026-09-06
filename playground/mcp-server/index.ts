@@ -143,7 +143,15 @@ async function getJson(url: string, ms = 4000): Promise<unknown> {
 const geoCache = new Map<string, { lat: number; lon: number; label: string; country: string } | null>();
 const wxCache = new Map<
   string,
-  { at: number; tempC: number; tempF: number; summary: string; label: string; country: string }
+  {
+    at: number;
+    tempC: number;
+    tempF: number;
+    summary: string;
+    label: string;
+    country: string;
+    timezone: string;
+  }
 >();
 const WX_TTL_MS = 5 * 60 * 1000;
 
@@ -185,6 +193,7 @@ async function forecast(city: string): Promise<{
   summary: string;
   label: string;
   country: string;
+  timezone: string;
   live: boolean;
 }> {
   calls += 1;
@@ -196,6 +205,7 @@ async function forecast(city: string): Promise<{
       ...fresh,
       label: fresh.label,
       country: fresh.country,
+      timezone: fresh.timezone,
       summary: `${fresh.summary} (reading #${calls})`,
       live: true,
     };
@@ -210,22 +220,39 @@ async function forecast(city: string): Promise<{
         summary: `No place called "${city}" (reading #${calls})`,
         label: city,
         country: '',
+        timezone: '',
         live: false,
       };
     }
 
+    // `timezone=auto` makes the response carry the place's IANA zone. The NAME
+    // is what travels, not a formatted time: the view renders it with Intl, so
+    // the clock is right whenever it draws rather than whenever we fetched —
+    // and the reading is cached for five minutes, so those differ.
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}` +
-      '&current=temperature_2m,weather_code';
-    const body = (await getJson(url)) as { current?: { temperature_2m: number; weather_code: number } };
+      '&current=temperature_2m,weather_code&timezone=auto';
+    const body = (await getJson(url)) as {
+      timezone?: string;
+      current?: { temperature_2m: number; weather_code: number };
+    };
     const now = body.current;
     if (!now) throw new Error('no current reading in the response');
+    const timezone = body.timezone ?? '';
 
     const tempC = Math.round(now.temperature_2m);
     const tempF = Math.round((now.temperature_2m * 9) / 5 + 32);
     const summary = WMO[now.weather_code] ?? `Weather code ${now.weather_code}`;
 
-    wxCache.set(key, { at: Date.now(), tempC, tempF, summary, label: place.label, country: place.country });
+    wxCache.set(key, {
+      at: Date.now(),
+      tempC,
+      tempF,
+      summary,
+      label: place.label,
+      country: place.country,
+      timezone,
+    });
     // The call number rides along. Without it a refresh two minutes apart
     // renders identically whether the round trip happened or not, and the
     // screenshot proves nothing.
@@ -235,6 +262,7 @@ async function forecast(city: string): Promise<{
       summary: `${summary} (reading #${calls})`,
       label: place.label,
       country: place.country,
+      timezone,
       live: true,
     };
   } catch (err) {
@@ -245,6 +273,7 @@ async function forecast(city: string): Promise<{
       summary: `Offline placeholder — ${why} (reading #${calls})`,
       label: city,
       country: '',
+      timezone: '',
       live: false,
     };
   }
@@ -379,7 +408,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   const city = asked || 'London';
-  const { tempC, tempF, summary, label, country, live } = await forecast(city);
+  const { tempC, tempF, summary, label, country, timezone, live } = await forecast(city);
 
   if (name === 'get-weather' || name === 'weather-refresh-demo' || name === 'weather-explorer') {
     return {
@@ -394,7 +423,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: `${label}: ${tempF}°F, ${summary}.${live ? '' : ' NOT a real reading.'}`,
         },
       ],
-      structuredContent: { city: label, country, tempC, tempF, summary, live },
+      structuredContent: { city: label, country, timezone, tempC, tempF, summary, live },
     };
   }
 

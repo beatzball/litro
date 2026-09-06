@@ -147,6 +147,31 @@ export default defineMcpApp({
         state.unit = reading.country === 'US' ? 'F' : 'C';
       }
 
+      /*
+       * The clock in the CITY, not here.
+       *
+       * The server sends an IANA zone name, never a formatted time — a reading
+       * is cached for five minutes, so a time baked in at fetch would be
+       * visibly wrong by the time anyone read it. Formatting here means the
+       * clock is right whenever the card draws.
+       *
+       * Intl throws on a zone it does not recognise, so a bad or missing one
+       * costs the time and nothing else.
+       */
+      function localTime(zone) {
+        if (!zone) return '';
+        try {
+          return new Intl.DateTimeFormat(undefined, {
+            timeZone: zone,
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZoneName: 'short',
+          }).format(new Date());
+        } catch (err) {
+          return '';
+        }
+      }
+
       function render() {
         var r = state.reading;
         var unit = state.unit || 'C';
@@ -172,7 +197,9 @@ export default defineMcpApp({
 
         text('city', String(r.city == null ? '' : r.city));
         var deg = unit === 'F' ? r.tempF : r.tempC;
-        text('temp', (deg == null ? '' : deg) + (unit === 'F' ? '\\u00B0F' : '\\u00B0C'));
+        var line = (deg == null ? '' : deg) + (unit === 'F' ? '\\u00B0F' : '\\u00B0C');
+        var when = localTime(r.timezone);
+        text('temp', when ? line + ' \\u2014 ' + when : line);
         // A placeholder must never read as a forecast.
         text('summary', String(r.summary == null ? '' : r.summary) + (r.live === false ? ' — not a real reading' : ''));
       }
