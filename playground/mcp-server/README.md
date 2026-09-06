@@ -35,6 +35,40 @@ cannot spawn a stdio command. Both serve the same handlers from the same
 | `LITRO_MCP_TOOL_DELAY_MS` | Delays every `tools/call`. Needed to see the shell hold the screen before the result — with an instant tool the two are indistinguishable. |
 | `PORT` | HTTP port, `--http` only. Default `3111`. |
 
+## Three apps
+
+| Tool | View | What it shows |
+| --- | --- | --- |
+| `get-weather` | `weather-card` | A read-only card. The shell paints, then the result fills it. |
+| `weather-refresh-demo` | `weather-refresh` | One button that calls a tool back from inside the iframe. |
+| `weather-explorer` | `weather-explorer` | A form, Refresh, Reset and a °F/°C toggle — state the VIEW owns, that the model never sees. |
+
+The explorer is the one that shows the data/model split clearly: typing a city,
+switching units and refreshing all happen between the view and the server. The
+model sees only the first result.
+
+Its default unit is decided ONCE, from the first reading that carries a country:
+US gets Fahrenheit, everywhere else Celsius. After that the user owns it — a
+later lookup in another country must not flip the unit under someone who has
+just chosen one.
+
+## The weather is real
+
+`get-weather` calls [Open-Meteo](https://open-meteo.com) — no API key, no
+account. Two requests: a city name to coordinates, then coordinates to a
+current reading. Both are cached for five minutes, because the Refresh button
+exists to prove a round trip happened, not to hammer a free public API.
+
+**The SERVER fetches, not the view**, and that is the part worth noticing: the
+packed document still declares no CSP and still loads nothing from the network.
+Data reaches it as `structuredContent` over `postMessage`. Adding a live
+upstream changed nothing about the sandbox.
+
+Offline, or for a place the geocoder does not know, it returns a placeholder
+labelled as one — `live: false` in `structuredContent`, and "NOT a real
+reading." in the text the model sees. A demo that quietly invents weather is
+worse than one that says it could not reach the network.
+
 ## What this rig proved
 
 Against MCP Inspector V2 (`@mcp-use/inspector@20.3.7`), with

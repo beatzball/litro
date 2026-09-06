@@ -30,12 +30,57 @@ export default defineMcpApp({
   `,
 
   styles: `
-    body { margin: 0; padding: 8px; font: 14px system-ui, sans-serif; background: transparent; }
+    /*
+     * THEME. The bridge sets data-theme on <html> from the host's
+     * hostContext, but only once the handshake completes — and the shell is
+     * on screen before that. So: a light default, prefers-color-scheme as the
+     * pre-handshake guess, and the host's explicit answer winning over both.
+     *
+     * Custom properties, not rules, because they inherit THROUGH a shadow root
+     * — which is how the same palette reaches a Lit component's shadow DOM.
+     */
+    :root {
+      color-scheme: light dark;
+      --card-bg: #ffffff;
+      --card-fg: #1a1a1a;
+      --card-muted: #5b5b5b;
+      --card-border: #d0d0d0;
+      --card-button-bg: #f4f4f4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme='light']) {
+        --card-bg: #1f1f1f;
+        --card-fg: #ededed;
+        --card-muted: #a9a9a9;
+        --card-border: #414141;
+        --card-button-bg: #2e2e2e;
+      }
+    }
+    :root[data-theme='dark'] {
+      --card-bg: #1f1f1f;
+      --card-fg: #ededed;
+      --card-muted: #a9a9a9;
+      --card-border: #414141;
+      --card-button-bg: #2e2e2e;
+    }
+    :root[data-theme='light'] {
+      --card-bg: #ffffff;
+      --card-fg: #1a1a1a;
+      --card-muted: #5b5b5b;
+      --card-border: #d0d0d0;
+      --card-button-bg: #f4f4f4;
+    }
+
+    body { margin: 0; padding: 8px; font: 14px system-ui, sans-serif; background: transparent;
+           color: var(--card-fg); }
     #card { display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
-            padding: 12px; border: 1px solid #ccc; border-radius: 8px; max-width: 16rem; }
+            padding: 12px; border: 1px solid var(--card-border); border-radius: 8px;
+            max-width: 16rem; background: var(--card-bg); color: var(--card-fg); }
     #city { font-weight: 600; }
-    #status { font-size: 12px; opacity: .7; }
-    button { padding: 4px 10px; }
+    #status { font-size: 12px; color: var(--card-muted); }
+    button { padding: 4px 10px; font: inherit; cursor: pointer;
+             color: var(--card-fg); background: var(--card-button-bg);
+             border: 1px solid var(--card-border); border-radius: 6px; }
   `,
 
   apply: `function (el, data) {
@@ -44,7 +89,8 @@ export default defineMcpApp({
       if (node) node.textContent = text;
     };
     if (data.city !== undefined) set('city', String(data.city));
-    if (data.tempC !== undefined) set('temp', data.tempC + '\\u00B0C');
+    if (data.tempF !== undefined) set('temp', data.tempF + '\\u00B0F');
+    else if (data.tempC !== undefined) set('temp', Math.round(data.tempC * 9 / 5 + 32) + '\\u00B0F');
     if (data.summary !== undefined) set('summary', String(data.summary));
     set('status', '');
   }`,
