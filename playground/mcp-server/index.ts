@@ -140,8 +140,11 @@ async function getJson(url: string, ms = 4000): Promise<unknown> {
  * Both are cached for a few minutes, because the Refresh button is meant to
  * prove a round trip happened, not to hammer a free public API.
  */
-const geoCache = new Map<string, { lat: number; lon: number; label: string } | null>();
-const wxCache = new Map<string, { at: number; tempC: number; tempF: number; summary: string }>();
+const geoCache = new Map<string, { lat: number; lon: number; label: string; country: string } | null>();
+const wxCache = new Map<
+  string,
+  { at: number; tempC: number; tempF: number; summary: string; label: string; country: string }
+>();
 const WX_TTL_MS = 5 * 60 * 1000;
 
 async function locate(city: string) {
@@ -158,6 +161,9 @@ async function locate(city: string) {
         lat: hit.latitude,
         lon: hit.longitude,
         label: hit.country_code ? `${hit.name}, ${hit.country_code}` : hit.name,
+        // Carried so a view can pick a sensible default unit without a second
+        // lookup, and without hard-coding a list of countries in the browser.
+        country: hit.country_code ?? '',
       }
     : null;
   geoCache.set(key, found);
@@ -178,6 +184,7 @@ async function forecast(city: string): Promise<{
   tempF: number;
   summary: string;
   label: string;
+  country: string;
   live: boolean;
 }> {
   calls += 1;
@@ -185,7 +192,13 @@ async function forecast(city: string): Promise<{
 
   const fresh = wxCache.get(key);
   if (fresh && Date.now() - fresh.at < WX_TTL_MS) {
-    return { ...fresh, label: city, summary: `${fresh.summary} (reading #${calls})`, live: true };
+    return {
+      ...fresh,
+      label: fresh.label,
+      country: fresh.country,
+      summary: `${fresh.summary} (reading #${calls})`,
+      live: true,
+    };
   }
 
   try {
@@ -196,6 +209,7 @@ async function forecast(city: string): Promise<{
         tempF: 32,
         summary: `No place called "${city}" (reading #${calls})`,
         label: city,
+        country: '',
         live: false,
       };
     }
@@ -211,11 +225,18 @@ async function forecast(city: string): Promise<{
     const tempF = Math.round((now.temperature_2m * 9) / 5 + 32);
     const summary = WMO[now.weather_code] ?? `Weather code ${now.weather_code}`;
 
-    wxCache.set(key, { at: Date.now(), tempC, tempF, summary });
+    wxCache.set(key, { at: Date.now(), tempC, tempF, summary, label: place.label, country: place.country });
     // The call number rides along. Without it a refresh two minutes apart
     // renders identically whether the round trip happened or not, and the
     // screenshot proves nothing.
-    return { tempC, tempF, summary: `${summary} (reading #${calls})`, label: place.label, live: true };
+    return {
+      tempC,
+      tempF,
+      summary: `${summary} (reading #${calls})`,
+      label: place.label,
+      country: place.country,
+      live: true,
+    };
   } catch (err) {
     const why = err instanceof Error ? err.message : String(err);
     return {
@@ -223,6 +244,7 @@ async function forecast(city: string): Promise<{
       tempF: 59,
       summary: `Offline placeholder — ${why} (reading #${calls})`,
       label: city,
+      country: '',
       live: false,
     };
   }
@@ -316,6 +338,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: 'weather-explorer',
+      description:
+        'Opens an interactive weather card: type a city, refresh it, reset it, and switch between °F and °C.',
+      inputSchema: {
+        type: 'object',
+        properties: { city: { type: 'string', description: 'Optional city to open on' } },
+        additionalProperties: false,
+      },
+      _meta: {
+        ui: {
+          resourceUri: 'ui://playground/weather-explorer',
+          visibility: ['model', 'app'],
+        },
+      },
+    },
   ],
 }));
 
@@ -328,10 +366,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   const name = request.params.name;
   const args = (request.params.arguments ?? {}) as { city?: string };
-  const city = (args.city ?? '').trim() || 'London';
-  const { tempC, tempF, summary, label, live } = await forecast(city);
+  const asked = (args.city ?? '').trim();
 
-  if (name === 'get-weather' || name === 'weather-refresh-demo') {
+  // The explorer is a blank slate when opened with no city — it has an input
+  // box, so inventing London for it would put a reading on screen the user
+  // never asked for. The other two keep their default.
+  if (name === 'weather-explorer' && !asked) {
+    return {
+      content: [{ type: 'text', text: 'Weather explorer opened. No city yet.' }],
+      structuredContent: { empty: true },
+    };
+  }
+
+  const city = asked || 'London';
+  const { tempC, tempF, summary, label, country, live } = await forecast(city);
+
+  if (name === 'get-weather' || name === 'weather-refresh-demo' || name === 'weather-explorer') {
     return {
       // `content` is what the model reads. `structuredContent` is what the
       // view fills from. The spec keeps them separate and so does this.
@@ -344,7 +394,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: `${label}: ${tempF}°F, ${summary}.${live ? '' : ' NOT a real reading.'}`,
         },
       ],
-      structuredContent: { city: label, tempC, tempF, summary, live },
+      structuredContent: { city: label, country, tempC, tempF, summary, live },
     };
   }
 

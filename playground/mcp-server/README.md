@@ -35,6 +35,23 @@ cannot spawn a stdio command. Both serve the same handlers from the same
 | `LITRO_MCP_TOOL_DELAY_MS` | Delays every `tools/call`. Needed to see the shell hold the screen before the result — with an instant tool the two are indistinguishable. |
 | `PORT` | HTTP port, `--http` only. Default `3111`. |
 
+## Three apps
+
+| Tool | View | What it shows |
+| --- | --- | --- |
+| `get-weather` | `weather-card` | A read-only card. The shell paints, then the result fills it. |
+| `weather-refresh-demo` | `weather-refresh` | One button that calls a tool back from inside the iframe. |
+| `weather-explorer` | `weather-explorer` | A form, Refresh, Reset and a °F/°C toggle — state the VIEW owns, that the model never sees. |
+
+The explorer is the one that shows the data/model split clearly: typing a city,
+switching units and refreshing all happen between the view and the server. The
+model sees only the first result.
+
+Its default unit is decided ONCE, from the first reading that carries a country:
+US gets Fahrenheit, everywhere else Celsius. After that the user owns it — a
+later lookup in another country must not flip the unit under someone who has
+just chosen one.
+
 ## The weather is real
 
 `get-weather` calls [Open-Meteo](https://open-meteo.com) — no API key, no

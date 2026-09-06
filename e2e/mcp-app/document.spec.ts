@@ -155,6 +155,7 @@ test('the manifest carries the address derived from each file path', () => {
   // the files sit flat in `mcp-apps/`, so these are what the path must produce.
   expect(manifest.map((a) => a.uri).sort()).toEqual([
     'ui://playground/weather-card',
+    'ui://playground/weather-explorer',
     'ui://playground/weather-refresh',
   ]);
 
