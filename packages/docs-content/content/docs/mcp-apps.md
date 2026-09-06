@@ -96,7 +96,7 @@ await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
 litro mcp-app build
 ```
 
-Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four names that are skipped without a word: `*.d.ts`, `*.test.ts`, `*.spec.ts`, and anything starting with `-`. The leading dash is the same switch `pages/` uses — rename a file to `-card.ts` to turn it off without deleting it. A file matching any of those produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
+Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four kinds of name that are skipped without a word: a declaration file (`*.d.ts`, `*.d.mts`), a test (`*.test.*`), a spec (`*.spec.*`), and any **file** whose name starts with `-`. The leading dash is the same switch `pages/` uses — rename `card.tsx` to `-card.tsx` to turn it off without deleting it. It matches a filename, not a folder, so `-drafts/card.ts` still builds. A skipped file produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
 
 | Source | Output | Address |
 |---|---|---|

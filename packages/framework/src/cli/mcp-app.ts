@@ -32,6 +32,38 @@ const DEFAULT_OUT_DIR = 'dist/mcp-apps';
  */
 const MANIFEST_STEM = 'manifest';
 
+/**
+ * What counts as an app file. ONE definition, because the directory is walked
+ * twice — once for absolute paths to load, once for the relative form that
+ * still carries a backslash — and two copies of this list would let the guard
+ * check a different set of files than the build packs, silently.
+ */
+const APP_FILE_GLOB = '**/*.{ts,tsx,mts}';
+
+/**
+ * Names skipped without a word.
+ *
+ * EVERY EXTENSION THE GLOB ACCEPTS, which is the bug this shape exists to stop:
+ * these once named `.ts` alone, so renaming `card.tsx` to `-card.tsx` to turn
+ * it off left it building — and shipping `ui://pkg/-card`, a leading hyphen in
+ * a protocol-visible address.
+ *
+ * `-*` is the same off switch the page scanner uses (`plugins/pages.ts`:
+ * "Dash-prefixed files are disabled routes"), so an app is disabled by renaming
+ * rather than deleting. It matches a FILE name, not a folder, exactly as
+ * `pages/` does.
+ *
+ * `.d.tsx` is left out on purpose — it is not a real extension. `.d.mts` is,
+ * and without it a declaration file sitting in `mcp-apps/` is loaded as an app
+ * and fails the whole build.
+ */
+const APP_FILE_IGNORE = [
+  '**/*.d.{ts,mts}',
+  '**/*.test.{ts,tsx,mts}',
+  '**/*.spec.{ts,tsx,mts}',
+  '**/-*.{ts,tsx,mts}',
+];
+
 /** One packed app, as it lands on disk. */
 export interface PackedApp {
   /**
@@ -412,25 +444,12 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   // carried rather than thrown, below.
   const packageName = await readPackageName(cwd);
 
-  const files = await fastGlob('**/*.{ts,tsx,mts}', {
+  const files = await fastGlob(APP_FILE_GLOB, {
     cwd: sourceDir,
     absolute: true,
     onlyFiles: true,
     followSymbolicLinks: true,
-    // `-*` is the same off switch the page scanner uses (see plugins/pages.ts:
-    // "Dash-prefixed files are disabled routes"), so an app is turned off by
-    // renaming rather than deleting. All of these are skipped SILENTLY.
-    //
-    // EVERY EXTENSION, not just `.ts`. The glob above accepts `.ts`, `.tsx` and
-    // `.mts`, so an ignore that named only `.ts` meant renaming `card.tsx` to
-    // `-card.tsx` left it building — and shipping `ui://pkg/-card`, a leading
-    // hyphen in a protocol-visible address. `pages.ts` covers `.tsx` too.
-    ignore: [
-      '**/*.d.ts',
-      '**/*.test.{ts,tsx,mts}',
-      '**/*.spec.{ts,tsx,mts}',
-      '**/-*.{ts,tsx,mts}',
-    ],
+    ignore: APP_FILE_IGNORE,
   });
 
   if (files.length === 0) {
@@ -440,19 +459,14 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
 
   // The same glob, asked for the form that survives a backslash. `absolute: true`
   // above rewrites one into `/`, so this is the only place the real filename is
-  // still visible.
+  // still visible. Same constants, so the two walks cannot see different files.
   try {
     assertLoadablePaths(
-      await fastGlob('**/*.{ts,tsx,mts}', {
+      await fastGlob(APP_FILE_GLOB, {
         cwd: sourceDir,
         onlyFiles: true,
         followSymbolicLinks: true,
-        ignore: [
-          '**/*.d.ts',
-          '**/*.test.{ts,tsx,mts}',
-          '**/*.spec.{ts,tsx,mts}',
-          '**/-*.{ts,tsx,mts}',
-        ],
+        ignore: APP_FILE_IGNORE,
       }),
     );
   } catch (err) {

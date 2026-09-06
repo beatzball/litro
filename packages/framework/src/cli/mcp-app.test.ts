@@ -247,6 +247,36 @@ describe('assertLoadablePaths', () => {
   });
 });
 
+describe('what the command refuses before it loads anything', () => {
+  const APP = 'export default {};';
+
+  // THE WIRING, not the helper. `assertLoadablePaths` and the ignore list were
+  // both pinned as pure values while the code that calls them was not — the
+  // second glob could be deleted outright, and the ignore list could drift out
+  // of sync with the one the build uses, with the whole suite green. Third time
+  // this exact gap has appeared on this branch.
+  it('refuses a backslash in a filename, through the real command', async () => {
+    const { code, errors } = await buildWith({ 'a\\b.ts': APP });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/backslash/);
+  });
+
+  it('does not fire the backslash guard on an ordinary name', async () => {
+    const { errors } = await buildWith({ 'plain.ts': APP });
+    expect(errors).not.toMatch(/backslash/);
+  });
+
+  it('skips a declaration file rather than loading it as an app', async () => {
+    // `.d.ts` was skipped and `.d.mts` was not, so a declaration file was
+    // loaded, found to have no `defineMcpApp()`, and failed the WHOLE build —
+    // every other app stopped building until it was renamed.
+    const { code, errors } = await buildWith({ 'types.d.ts': APP, 'types.d.mts': APP });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/no app files found/);
+    expect(errors).not.toMatch(/d\.mts/);
+  });
+});
+
 describe('the reserved manifest stem', () => {
   const APP = 'export default {};';
 
