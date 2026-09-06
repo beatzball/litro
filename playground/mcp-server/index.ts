@@ -174,7 +174,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'weather-refresh-demo',
       description: 'Shows the refreshable weather card, whose button calls get-weather back.',
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      // `city` is optional but it MUST be declared. With an empty `properties`
+      // and `additionalProperties: false` a host cannot pass one, so the card
+      // always opened on the London default no matter what the user asked for
+      // — and then the Refresh button re-fetched London forever, because it
+      // reads the city back off the card.
+      inputSchema: {
+        type: 'object',
+        properties: { city: { type: 'string', description: 'City name' } },
+        additionalProperties: false,
+      },
       _meta: {
         ui: {
           resourceUri: 'ui://playground/weather-refresh',

@@ -31,7 +31,50 @@ export default defineMcpApp({
   // call of the tool that points at it.
   shell: html`<demo-weather-card city="—" summary="Waiting for the forecast…"></demo-weather-card>`,
 
-  styles: 'body { margin: 0; padding: 8px; background: transparent; }',
+  styles: `
+    /*
+     * THEME. The bridge sets data-theme on <html> from the host's
+     * hostContext, but only once the handshake completes — and the shell is
+     * on screen before that. So: a light default, prefers-color-scheme as the
+     * pre-handshake guess, and the host's explicit answer winning over both.
+     *
+     * Custom properties, not rules, because they inherit THROUGH a shadow root
+     * — which is how the same palette reaches a Lit component's shadow DOM.
+     */
+    :root {
+      color-scheme: light dark;
+      --card-bg: #ffffff;
+      --card-fg: #1a1a1a;
+      --card-muted: #5b5b5b;
+      --card-border: #d0d0d0;
+      --card-button-bg: #f4f4f4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme='light']) {
+        --card-bg: #1f1f1f;
+        --card-fg: #ededed;
+        --card-muted: #a9a9a9;
+        --card-border: #414141;
+        --card-button-bg: #2e2e2e;
+      }
+    }
+    :root[data-theme='dark'] {
+      --card-bg: #1f1f1f;
+      --card-fg: #ededed;
+      --card-muted: #a9a9a9;
+      --card-border: #414141;
+      --card-button-bg: #2e2e2e;
+    }
+    :root[data-theme='light'] {
+      --card-bg: #ffffff;
+      --card-fg: #1a1a1a;
+      --card-muted: #5b5b5b;
+      --card-border: #d0d0d0;
+      --card-button-bg: #f4f4f4;
+    }
+
+    body { margin: 0; padding: 8px; background: transparent; color: var(--card-fg); }
+  `,
 
   apply: `function (el, data) {
     var root = el.shadowRoot;
