@@ -40,7 +40,6 @@ import { DemoWeatherCard } from '../components/demo-weather-card.js';
 void DemoWeatherCard; // named import + void: bare side-effect imports get tree-shaken
 
 export default defineMcpApp({
-  uri: 'ui://playground/weather-card',
   title: 'Weather',
 
   // Rendered with no data — a host caches this and reuses it every call.
@@ -52,7 +51,44 @@ export default defineMcpApp({
 });
 ```
 
-`uri` must start with `ui://`. `shell` is a template for whichever renderer `LITRO_ADAPTER` selects — a Lit `TemplateResult`, or an HTML string for FAST. Elena is not supported, because `ui()` does not support it yet.
+`shell` is a template for whichever renderer `LITRO_ADAPTER` selects — a Lit `TemplateResult`, or an HTML string for FAST. Elena is not supported, because `ui()` does not support it yet.
+
+## The uri comes from the file path
+
+There is no `uri` in that file. The packer derives one: the **package name** is the authority, and the **file path** is the path.
+
+For a project whose `package.json` says `"name": "playground"`:
+
+| File in `mcp-apps/` | Address |
+|---|---|
+| `weather-card.ts` | `ui://playground/weather-card` |
+| `weather/card.ts` | `ui://playground/weather/card` |
+| `dashboard/charts/bar.ts` | `ui://playground/dashboard/charts/bar` |
+
+One rule, no special cases: rename the package and every address moves together, which is what an authority is for.
+
+The authority comes from the package rather than the first folder because a `ui://` address needs a host **and** a path. If the first folder were the authority, a file sitting flat in `mcp-apps/` would give host `weather-card` and an *empty* path — a different shape from every nested file, which a host that groups by authority treats differently. A scoped name contributes only its last part: `@beatzball/playground` gives `playground`. The name must be usable as a uri host — lowercase letters, digits, `.`, `_` and `-`, starting with a letter or digit — so a package called `@acme/MyApp` cannot supply one. Such a project still packs, but every app in it has to set `uri` itself.
+
+**`index.ts` is not special.** In `pages/`, `blog/index.ts` serves the folder root. Here `weather/index.ts` is `ui://playground/weather/index` — collapsing it would silently merge with a sibling `weather.ts`.
+
+**No dynamic segments in a derived address.** `[slug]`, `[[opt]]` and `[...all]` mean something in `pages/` and nothing here. A `ui://` resource is a static template the host caches by address, so there is no request to fill a parameter from. The build rejects them rather than shipping a literal `[slug]` in a protocol-visible address — unless the app sets its own `uri`, in which case the filename is just a filename.
+
+### Setting one by hand
+
+`uri` is still accepted, and an explicit one always wins over the derived value:
+
+```ts
+export default defineMcpApp({
+  uri: 'ui://weather/current-conditions',
+  shell,
+});
+```
+
+Use it when the address must not follow the filename, or when you call `buildMcpAppDocument()` yourself — with no file there is nothing to derive from, and it throws unless the config carries a `uri` or you pass one:
+
+```ts
+await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
+```
 
 ## Building
 
@@ -60,15 +96,38 @@ export default defineMcpApp({
 litro mcp-app build
 ```
 
-For each `mcp-apps/*.ts` this writes, into `dist/mcp-apps/`:
+Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four kinds of name that are skipped without a word: a declaration file (`*.d.ts`, `*.d.mts`), a test (`*.test.*`), a spec (`*.spec.*`), and any **file** whose name starts with `-`. The leading dash is the same switch `pages/` uses — rename `card.tsx` to `-card.tsx` to turn it off without deleting it. It matches a filename, not a folder, so `-drafts/card.ts` still builds. A skipped file produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
 
-| File | Contents |
-|---|---|
-| `<name>.html` | the self-contained document |
-| `<name>.json` | the resource descriptor — `text/html;profile=mcp-app` plus `_meta.ui` |
-| `manifest.json` | every app, so a server can load them in one read |
+| Source | Output | Address |
+|---|---|---|
+| `mcp-apps/weather-card.ts` | `dist/mcp-apps/weather-card.html` + `.json` | `ui://playground/weather-card` |
+| `mcp-apps/weather/card.ts` | `dist/mcp-apps/weather/card.html` + `.json` | `ui://playground/weather/card` |
 
-`--dir` and `--out` override the defaults. The build **fails** if two apps declare the same `ui://` address: a host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup.
+`manifest.json` lists every app, so a server can load them in one read. Its `html` and `descriptor` entries are paths relative to the output directory, so a nested app is `weather/card.html`.
+
+`--dir` and `--out` override the defaults.
+
+### When the build refuses
+
+Most problems are reported **all at once**, before a module is loaded or a byte is written. The second group below is the exception: whether those apply depends on what the app declares, so they can only surface once the file is loaded — by which time earlier apps are already on disk.
+
+Refused no matter what the app says:
+
+- **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
+- **A `#` or `?` in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists.
+- **A C0 control character or line separator (U+2028, U+2029) in the name.** These have no printable form, and the path is written verbatim into `manifest.json`, into the descriptor, and into every error message about the app. `U+007F` is *not* refused: the line is drawn at the C0 range, and DEL sits just outside it. It is invisible too, so this is a boundary rather than a principle — as are the zero-width characters above it.
+
+- **A backslash in the name.** The build resolves app files to absolute paths, and that rewrites `a\b.ts` into `a/b.ts` — so the loader would look for a file that is not there.
+
+  Setting `uri` does not help for any of those three: none of them is about the address.
+- **A `.` or `..` segment.** Neither survives normalisation, so the path written down is not the path that gets resolved — and enough leading `..` lands outside the output directory entirely.
+- **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
+- **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
+
+Refused only when the address is being **derived**, and excused by setting `uri` yourself:
+
+- **A character a uri parser would rewrite.** A derived name may use letters, digits, `.`, `_`, `~` and `-`. A space, `%` or a non-ASCII letter is refused, because a parser rewrites it — `big card.ts` would ship `ui://playground/big card` while a host caches under `ui://playground/big%20card`, and the descriptor would name a resource the host cannot find. With an explicit `uri` the filename is only a filename, and `big card.ts` packs to `big card.html`.
+- **A dynamic segment** — `[slug]`, `[[opt]]`, `[...all]`. Same rule: refused for a derived address, fine alongside an explicit one.
 
 The output is plain files. Any MCP server can serve them; nothing assumes the serving side is a Litro one.
 

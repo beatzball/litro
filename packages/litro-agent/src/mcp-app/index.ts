@@ -67,8 +67,16 @@ export interface McpAppPermissions {
 }
 
 export interface McpAppConfig {
-  /** Resource address. MUST start with `ui://`. */
-  uri: string;
+  /**
+   * Resource address. MUST start with `ui://`.
+   *
+   * OPTIONAL because `litro mcp-app build` derives one: the package name is
+   * the authority and the file path is the path, so `mcp-apps/weather/card.ts`
+   * in package `playground` packs as `ui://playground/weather/card`. Set it to
+   * override that, or when calling `buildMcpAppDocument` standalone, where
+   * there is no file to derive from. An explicit value always wins.
+   */
+  uri?: string;
   /**
    * Resource name. The base MCP `Resource` type requires it alongside `uri`,
    * and a server forwarding our descriptor into `resources/list` emits an
@@ -144,14 +152,28 @@ export interface McpAppDocument {
   descriptor: McpAppDescriptor;
 }
 
-export function defineMcpApp(config: McpAppConfig): McpAppDefinition {
-  if (typeof config.uri !== 'string' || !/^ui:\/\/.+/.test(config.uri)) {
+/**
+ * Rejects anything that is not a `ui://` address.
+ *
+ * Shared by `defineMcpApp` (when a uri is written by hand) and
+ * `buildMcpAppDocument` (for the resolved one), so a hand-written and a
+ * path-derived uri are held to exactly one standard.
+ */
+function assertUiUri(uri: unknown, caller: string): asserts uri is string {
+  if (typeof uri !== 'string' || !/^ui:\/\/.+/.test(uri)) {
     throw new AgentError(
-      `defineMcpApp: "uri" must start with "ui://" and name something after it — got ${JSON.stringify(config.uri)}. ` +
+      `${caller}: "uri" must start with "ui://" and name something after it — got ${JSON.stringify(uri)}. ` +
         'The scheme is how a host tells a UI resource from every other resource, and the spec requires it.',
       { status: 500 },
     );
   }
+}
+
+export function defineMcpApp(config: McpAppConfig): McpAppDefinition {
+  // Only checked when one is GIVEN. An absent uri is not an error here: the
+  // packager supplies a path-derived one, and it is only at build time — once
+  // we know whether an override is coming — that "no uri anywhere" is decidable.
+  if (config.uri !== undefined) assertUiUri(config.uri, 'defineMcpApp');
   if (config.shell === undefined || config.shell === null) {
     throw new AgentError(
       'defineMcpApp: "shell" is required — it is the data-free markup the host paints before any tool result arrives.',
@@ -240,8 +262,23 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** Build-time inputs that come from outside the app file. */
+export interface BuildMcpAppOptions {
+  /**
+   * Fallback address, used only when the config has none. `litro mcp-app build`
+   * passes the value it derives from the file path.
+   *
+   * A fallback and not an override: the config wins, so a file that names its
+   * own uri keeps it, and adding this to an existing project changes no address.
+   */
+  uri?: string;
+}
+
 /** Renders the shell and assembles the document. */
-export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpAppDocument> {
+export async function buildMcpAppDocument(
+  app: McpAppDefinition,
+  options: BuildMcpAppOptions = {},
+): Promise<McpAppDocument> {
   const config = app[MCP_APP_CONFIG];
   if (!config) {
     throw new AgentError(
@@ -250,20 +287,34 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     );
   }
 
+  // The one place a uri is finally decided, which is why validation lives here
+  // and not in defineMcpApp. Neither source alone can tell whether the app has
+  // an address; only both together can.
+  const uri = config.uri ?? options.uri;
+  if (uri === undefined) {
+    throw new AgentError(
+      'buildMcpAppDocument: this app has no "uri" and none was supplied. ' +
+        'Either set "uri" in defineMcpApp(), or pack the file with `litro mcp-app build`, ' +
+        'which derives one from the file path.',
+      { status: 500 },
+    );
+  }
+  assertUiUri(uri, 'buildMcpAppDocument');
+
   // Rendered with no data on purpose — see the constraint at the top of this file.
   const shell = await ui(config.shell);
 
   const head = [
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<title>${escapeHtml(config.title ?? config.uri)}</title>`,
+    `<title>${escapeHtml(config.title ?? uri)}</title>`,
     config.styles ? `<style>\n${inlineSafe(config.styles, 'style')}\n</style>` : '',
   ].filter(Boolean);
 
   // Read by the bridge for its ui/initialize handshake. A separate script so
   // BRIDGE_SOURCE stays a constant the tests can evaluate unchanged.
   const appMeta = {
-    name: config.name ?? nameFromUri(config.uri),
+    name: config.name ?? nameFromUri(uri),
     version: config.version ?? '0.0.0',
     displayModes: config.displayModes ?? ['inline'],
   };
@@ -293,7 +344,7 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     '\n</body>\n' +
     '</html>\n';
 
-  assertSelfContained(html, config.uri);
+  assertSelfContained(html, uri);
 
   const meta: McpAppDescriptor['_meta']['ui'] = {};
   if (config.csp) meta.csp = config.csp;
@@ -305,7 +356,7 @@ export async function buildMcpAppDocument(app: McpAppDefinition): Promise<McpApp
     // Nested `_meta.ui.*` only. The flat `_meta["ui/resourceUri"]` form is
     // deprecated and the spec removes it before GA.
     descriptor: {
-      uri: config.uri,
+      uri,
       name: appMeta.name,
       mimeType: MCP_APP_MIME_TYPE,
       _meta: { ui: meta },

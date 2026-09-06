@@ -22,6 +22,12 @@ describe('defineMcpApp', () => {
     expect(() => defineMcpApp({ uri, shell })).toThrow(/must start with "ui:\/\/"/);
   });
 
+  it('accepts an app with NO uri, because the packer supplies one', () => {
+    // A widening, and the reason this is decidable only at build time: an
+    // absent uri here is not yet a missing address.
+    expect(() => defineMcpApp({ shell })).not.toThrow();
+  });
+
   it('rejects a missing shell', () => {
     expect(() => defineMcpApp({ uri: 'ui://a/b', shell: undefined })).toThrow(/"shell" is required/);
   });
@@ -108,6 +114,49 @@ describe('buildMcpAppDocument', () => {
       defineMcpApp({ uri: 'ui://a/b', shell, apply: 'function (el, d) { el.value = d.value; }' }),
     );
     expect(doc).toContain('window.litroMcpApply = function (el, d)');
+  });
+});
+
+describe('where the uri comes from', () => {
+  it('uses the build-time uri when the app declares none', async () => {
+    const { descriptor } = await buildMcpAppDocument(defineMcpApp({ shell }), {
+      uri: 'ui://playground/weather-card',
+    });
+
+    expect(descriptor.uri).toBe('ui://playground/weather-card');
+    expect(descriptor.name).toBe('weather-card');
+  });
+
+  it("keeps the app's own uri when it has one", async () => {
+    // A FALLBACK, not an override — which is what makes this change cost an
+    // existing project no edits: every declared address survives untouched.
+    const { descriptor } = await buildMcpAppDocument(
+      defineMcpApp({ uri: 'ui://mine/card', shell }),
+      { uri: 'ui://derived/elsewhere' },
+    );
+
+    expect(descriptor.uri).toBe('ui://mine/card');
+  });
+
+  it('titles the document with the resolved uri when there is no title', async () => {
+    const { html: doc } = await buildMcpAppDocument(defineMcpApp({ shell }), {
+      uri: 'ui://playground/weather-card',
+    });
+
+    expect(doc).toContain('<title>ui://playground/weather-card</title>');
+  });
+
+  it('refuses to build an app with no uri from either side', async () => {
+    await expect(buildMcpAppDocument(defineMcpApp({ shell }))).rejects.toThrow(
+      /has no "uri" and none was supplied/,
+    );
+  });
+
+  it('validates a build-time uri to the same standard as a declared one', async () => {
+    // The check moved out of defineMcpApp, so it has to still be somewhere.
+    await expect(
+      buildMcpAppDocument(defineMcpApp({ shell }), { uri: 'http://weather/card' }),
+    ).rejects.toThrow(/must start with "ui:\/\//);
   });
 });
 

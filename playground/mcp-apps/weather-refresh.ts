@@ -15,7 +15,8 @@ import { defineMcpApp } from '@beatzball/litro-agent/mcp-app';
 import { html } from 'lit';
 
 export default defineMcpApp({
-  uri: 'ui://playground/weather-refresh',
+  // No `uri`: the packer derives it. The package name is the authority and
+  // the file path is the path, so this packs as `ui://playground/weather-refresh`.
   title: 'Weather, refreshable',
 
   shell: html`

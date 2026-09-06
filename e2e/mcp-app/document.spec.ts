@@ -132,3 +132,42 @@ test('the document loads nothing from the network', async ({ page }) => {
   // would fail silently there, so it must request nothing.
   expect(external).toEqual([]);
 });
+
+/**
+ * The derived address, end to end through the real CLI.
+ *
+ * The unit tests cover `uriFromFile` as a pure function, and `index.test.ts`
+ * covers the packager taking a uri. NOTHING joined the two: the line that hands
+ * the derived value to the packager could be deleted — the whole feature — and
+ * all 46 unit tests still passed. That mutation now fails here.
+ */
+test('the manifest carries the address derived from each file path', () => {
+  const outDir = join(playground, 'dist', 'mcp-apps');
+  const manifest = JSON.parse(readFileSync(join(outDir, 'manifest.json'), 'utf8')) as {
+    name: string;
+    uri: string;
+    html: string;
+    descriptor: string;
+  }[];
+
+  // Neither app file declares a `uri`. The package is named "playground" and
+  // the files sit flat in `mcp-apps/`, so these are what the path must produce.
+  expect(manifest.map((a) => a.uri).sort()).toEqual([
+    'ui://playground/weather-card',
+    'ui://playground/weather-refresh',
+  ]);
+
+  for (const app of manifest) {
+    // The output path mirrors the uri path — the invariant that makes an
+    // output-file clash unrepresentable rather than merely detected.
+    expect(app.html).toBe(`${app.uri.replace('ui://playground/', '')}.html`);
+    expect(existsSync(join(outDir, app.html))).toBe(true);
+
+    // The descriptor a host actually reads must carry the same address, not
+    // just the manifest index.
+    const descriptor = JSON.parse(readFileSync(join(outDir, app.descriptor), 'utf8')) as {
+      uri: string;
+    };
+    expect(descriptor.uri).toBe(app.uri);
+  }
+});
