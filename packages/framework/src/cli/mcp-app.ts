@@ -106,15 +106,13 @@ const URI_SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
  * the ADDRESS, and an author who writes their own address has answered it —
  * but no address makes a file loadable or a manifest readable.
  *
- * A BACKSLASH is knowingly ABSENT and CANNOT be caught here, for a reason
- * worth stating precisely: `fast-glob` itself returns `mcp-apps/a\b.ts` as
- * `mcp-apps/a/b.ts`. The character is gone from the `files` array before
- * `relative()` runs, before `appSegmentsFromFile` runs, before anything in
- * this module sees a path — and this happens on POSIX, unconditionally,
- * nothing to do with Windows. Catching it means not trusting the glob's output
- * for the filename, which is a bigger change than the failure warrants: the
- * file fails loudly at load time, and almost nobody puts a backslash in a
- * filename.
+ * A BACKSLASH is caught, but not here — it cannot reach this function. The
+ * glob runs with `absolute: true`, and THAT is what folds `a\b.ts` into
+ * `a/b.ts`; `fast-glob` hands back the name intact when asked for relative
+ * paths. So the character is gone from `files` before `relative()` or
+ * `appSegmentsFromFile` ever runs, and the build would otherwise fail at load
+ * with "Does the file exist?" for a file that plainly does. `assertLoadablePaths`
+ * asks the same glob for the form that keeps it.
  */
 const URL_SYNTAX = /[#?]/;
 const UNPRINTABLE = /[\u0000-\u001f\u2028\u2029]/;
@@ -298,6 +296,28 @@ function caseFold(value: string): string {
   return value.toUpperCase().toLowerCase();
 }
 
+/**
+ * Refuses a filename the glob's absolute form would silently rewrite.
+ *
+ * Only a backslash does this today: `absolute: true` folds `a\b.ts` into
+ * `a/b.ts`, so the CLI would hand the loader a path that does not exist and
+ * report the file missing. Detected by asking the SAME glob for its relative
+ * form, which keeps the character — cheaper and safer than distrusting the
+ * glob, and on Windows the relative form is POSIX-separated, so nothing here
+ * fires falsely.
+ */
+export function assertLoadablePaths(relPaths: string[]): void {
+  const bad = relPaths.filter((p) => p.includes('\\'));
+  if (bad.length > 0) {
+    throw new Error(
+      `${bad.map((p) => `"${p}"`).join(', ')} contain${bad.length > 1 ? '' : 's'} a backslash. ` +
+        'The module loader is handed a path with it turned into "/", so it looks for a file that ' +
+        'does not exist. Rename it. Setting "uri" does not help here: the file has to be loadable ' +
+        'before its address matters.',
+    );
+  }
+}
+
 /** "a and b", "a, b and c" — a list a person reads, not a join. */
 function listNames(names: string[]): string {
   if (names.length <= 2) return names.join(' and ');
@@ -397,11 +417,46 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     absolute: true,
     onlyFiles: true,
     followSymbolicLinks: true,
-    ignore: ['**/*.d.ts', '**/*.test.ts', '**/*.spec.ts', '**/-*.ts'],
+    // `-*` is the same off switch the page scanner uses (see plugins/pages.ts:
+    // "Dash-prefixed files are disabled routes"), so an app is turned off by
+    // renaming rather than deleting. All of these are skipped SILENTLY.
+    //
+    // EVERY EXTENSION, not just `.ts`. The glob above accepts `.ts`, `.tsx` and
+    // `.mts`, so an ignore that named only `.ts` meant renaming `card.tsx` to
+    // `-card.tsx` left it building — and shipping `ui://pkg/-card`, a leading
+    // hyphen in a protocol-visible address. `pages.ts` covers `.tsx` too.
+    ignore: [
+      '**/*.d.ts',
+      '**/*.test.{ts,tsx,mts}',
+      '**/*.spec.{ts,tsx,mts}',
+      '**/-*.{ts,tsx,mts}',
+    ],
   });
 
   if (files.length === 0) {
     console.error(`litro mcp-app build: no app files found in ${relative(cwd, sourceDir) || '.'}/`);
+    return 1;
+  }
+
+  // The same glob, asked for the form that survives a backslash. `absolute: true`
+  // above rewrites one into `/`, so this is the only place the real filename is
+  // still visible.
+  try {
+    assertLoadablePaths(
+      await fastGlob('**/*.{ts,tsx,mts}', {
+        cwd: sourceDir,
+        onlyFiles: true,
+        followSymbolicLinks: true,
+        ignore: [
+          '**/*.d.ts',
+          '**/*.test.{ts,tsx,mts}',
+          '**/*.spec.{ts,tsx,mts}',
+          '**/-*.{ts,tsx,mts}',
+        ],
+      }),
+    );
+  } catch (err) {
+    console.error(`litro mcp-app build: ${(err as Error).message}`);
     return 1;
   }
 

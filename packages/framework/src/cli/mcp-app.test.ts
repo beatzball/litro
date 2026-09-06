@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   appSegmentsFromFile,
+  assertLoadablePaths,
   assertUniqueUris,
   mcpAppCommand,
   outputPathFromFile,
@@ -227,6 +228,25 @@ function buildWith(files: Record<string, string>): Promise<{ code: number; error
     });
 }
 
+describe('assertLoadablePaths', () => {
+  it('refuses a filename whose backslash the absolute glob would rewrite', () => {
+    // `fast-glob` KEEPS the backslash in its relative form and loses it under
+    // `absolute: true`, so this guard reads the form that still has it. Without
+    // it the build hands the loader `a/b.ts` and reports a file that plainly
+    // exists as missing.
+    expect(() => assertLoadablePaths(['a\\b.ts'])).toThrow(/backslash/);
+  });
+
+  it('names every offender, and does not fire on ordinary paths', () => {
+    expect(() => assertLoadablePaths(['a\\b.ts', 'c\\d.ts'])).toThrow(/"a\\b.ts", "c\\d.ts"/);
+    expect(() => assertLoadablePaths(['weather/card.ts', 'big card.ts'])).not.toThrow();
+  });
+
+  it('says an explicit uri does not help, because the file must load first', () => {
+    expect(() => assertLoadablePaths(['a\\b.ts'])).toThrow(/Setting "uri" does not/);
+  });
+});
+
 describe('the reserved manifest stem', () => {
   const APP = 'export default {};';
 
@@ -253,6 +273,25 @@ describe('the reserved manifest stem', () => {
     const { code, errors } = await buildWith({ 'manife\u017Ft.ts': APP });
     expect(code).toBe(1);
     expect(errors).toMatch(/index listing every app/);
+  });
+
+  // These assert in the PRE-FLIGHT, which runs before the packager is loaded —
+  // the fixture project has no @beatzball/litro-agent, so anything asserted
+  // after that point passes vacuously. Two files share a stem: if the ignore
+  // works neither is seen ("no app files found"); if it does not, they collide
+  // on one output path and the pre-flight says so.
+  it.each([
+    ['the off switch', '-off'],
+    ['a test file', 'card.test'],
+    ['a spec file', 'card.spec'],
+  ])('skips %s for every extension the glob accepts', async (_label, stem) => {
+    // The ignore list named only `.ts`, so renaming `card.tsx` to `-card.tsx`
+    // left it building — and shipping `ui://pkg/-card`, a leading hyphen in a
+    // protocol-visible address.
+    const { code, errors } = await buildWith({ [`${stem}.tsx`]: APP, [`${stem}.mts`]: APP });
+    expect(errors).not.toMatch(/both pack to/);
+    expect(errors).toMatch(/no app files found/);
+    expect(code).toBe(1);
   });
 
   it('leaves a NESTED manifest.ts alone, which collides with nothing', async () => {

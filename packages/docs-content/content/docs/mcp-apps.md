@@ -96,7 +96,7 @@ await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
 litro mcp-app build
 ```
 
-Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four names that are skipped without a word: `*.d.ts`, `*.test.ts`, `*.spec.ts`, and anything starting with `-`. The leading dash is the convention for a partial an app imports rather than an app itself. A file matching one of those produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
+Every `.ts`, `.tsx` and `.mts` file under `mcp-apps/`, at any depth, is packed into `dist/mcp-apps/` — except four names that are skipped without a word: `*.d.ts`, `*.test.ts`, `*.spec.ts`, and anything starting with `-`. The leading dash is the same switch `pages/` uses — rename a file to `-card.ts` to turn it off without deleting it. A file matching any of those produces no output and no warning, so check the name first if an app seems to vanish. **The output mirrors the source tree**, so the file path and the output path are the same path — and so is the address, whenever it is derived:
 
 | Source | Output | Address |
 |---|---|---|
@@ -115,9 +115,11 @@ Refused no matter what the app says:
 
 - **Two files, one output.** `weather/card.ts` and `weather/card.tsx` both pack to `weather/card.html`. (`weather/card.ts` and `weather-card.ts` do **not** clash — mirroring the tree is what makes that impossible.)
 - **A `#` or `?` in the name.** The module loader reads an id as a url, so `weather#card.ts` is looked up as `weather` and reported as missing for a file that plainly exists.
-- **A C0 control character or line separator (U+2028, U+2029) in the name.** These have no printable form, and the path is written verbatim into `manifest.json`, into the descriptor, and into every error message about the app. `U+007F` is *not* refused — it prints, it loads, and a rule with no failure behind it is noise.
+- **A C0 control character or line separator (U+2028, U+2029) in the name.** These have no printable form, and the path is written verbatim into `manifest.json`, into the descriptor, and into every error message about the app. `U+007F` is *not* refused: the line is drawn at the C0 range, and DEL sits just outside it. It is invisible too, so this is a boundary rather than a principle — as are the zero-width characters above it.
 
-  Setting `uri` does not help for either of those: neither failure is about the address. A literal backslash is the one gap — `fast-glob` reports `a\b.ts` as `a/b.ts` before the build sees it, so it slips past and then fails loudly at load.
+- **A backslash in the name.** The build resolves app files to absolute paths, and that rewrites `a\b.ts` into `a/b.ts` — so the loader would look for a file that is not there.
+
+  Setting `uri` does not help for any of those three: none of them is about the address.
 - **A `.` or `..` segment.** Neither survives normalisation, so the path written down is not the path that gets resolved — and enough leading `..` lands outside the output directory entirely.
 - **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
 - **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.

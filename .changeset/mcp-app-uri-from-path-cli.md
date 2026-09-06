@@ -33,14 +33,16 @@ while the host caches it under another. This also closes a silent collision:
 address. An app that sets its own `uri` is exempt — the filename is only a
 filename then.
 
-Three refusals are NOT exemptible, because an address cannot answer them: a `.`
+Five refusals are NOT exemptible, because an address cannot answer them: a `.`
 or `..` segment, which does not survive path normalisation and, with a leading
-`..`, writes outside the output directory; a `#` or `?`, which the module loader
-reads as url syntax and then reports the file as missing; a C0 control
-character or Unicode line separator, which has no printable form and would
-appear as itself in the manifest, the descriptor and every error message
-(U+007F is deliberately allowed — it prints and it loads); and an app packing to
-`manifest` at the top level, where the index would overwrite its own descriptor
+`..`, writes outside the output directory; a backslash, which the glob's
+absolute form rewrites into `/` so the loader looks for a file that is not
+there; a `#` or `?`, which the module loader reads as url syntax and then
+reports the file as missing; a C0 control character or Unicode line separator,
+which has no printable form and would appear as itself in the manifest, the
+descriptor and every error message (U+007F is allowed: the line is drawn at the
+C0 range and DEL sits just outside it); and an app packing to `manifest` at the
+top level, where the index would overwrite its own descriptor
 (matched by Unicode case folding, since `Manifest.json` and `manifeſt.json` are
 both the same file as `manifest.json` on macOS and Windows).
 
