@@ -88,7 +88,11 @@ const byUri = new Map(apps.map((a) => [a.descriptor.uri, a]));
 /** Counts calls so a refresh visibly changes the view even for a canned city. */
 let calls = 0;
 
-/** Canned, on purpose: this server tests rendering, not a weather API. */
+/**
+ * CANNED, ON PURPOSE. This server tests rendering, not a weather API — three
+ * fixed cities and a fallback, so a screenshot is reproducible. Nothing here
+ * touches the network, and the numbers will not match a real forecast.
+ */
 function forecast(city: string) {
   const cities: Record<string, { tempC: number; summary: string }> = {
     london: { tempC: 12, summary: 'Overcast with light drizzle' },
@@ -97,10 +101,14 @@ function forecast(city: string) {
   };
   calls += 1;
   const hit = cities[city.trim().toLowerCase()] ?? { tempC: 15, summary: 'Partly cloudy' };
+  // Both units travel. Celsius is what the table above stores, Fahrenheit is
+  // what the cards show — a view should not have to do arithmetic on a tool
+  // result to render it, and a consumer that wants the other unit has it.
+  const tempF = Math.round((hit.tempC * 9) / 5 + 32);
   // The call number rides along in the summary. Without it a refresh of a
   // canned city renders identically whether the round-trip happened or not,
   // and the screenshot proves nothing.
-  return { tempC: hit.tempC, summary: `${hit.summary} (reading #${calls})` };
+  return { tempC: hit.tempC, tempF, summary: `${hit.summary} (reading #${calls})` };
 }
 
 /**
@@ -204,14 +212,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const name = request.params.name;
   const args = (request.params.arguments ?? {}) as { city?: string };
   const city = (args.city ?? '').trim() || 'London';
-  const { tempC, summary } = forecast(city);
+  const { tempC, tempF, summary } = forecast(city);
 
   if (name === 'get-weather' || name === 'weather-refresh-demo') {
     return {
       // `content` is what the model reads. `structuredContent` is what the
       // view fills from. The spec keeps them separate and so does this.
-      content: [{ type: 'text', text: `${city}: ${tempC}°C, ${summary}.` }],
-      structuredContent: { city, tempC, summary },
+      content: [{ type: 'text', text: `${city}: ${tempF}°F, ${summary}.` }],
+      structuredContent: { city, tempC, tempF, summary },
     };
   }
 

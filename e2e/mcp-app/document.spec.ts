@@ -97,7 +97,8 @@ test('the shell paints before any data, then the tool result fills it', async ({
   });
 
   await expect(card).toContainText('Doha');
-  await expect(card).toContainText('38°C');
+  // The card displays Fahrenheit; the notification carried Celsius. 38C -> 100F.
+  await expect(card).toContainText('100°F');
   await expect(card).toContainText('clear');
 });
 

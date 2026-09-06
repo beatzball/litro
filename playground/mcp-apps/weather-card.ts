@@ -84,7 +84,8 @@ export default defineMcpApp({
       if (node) node.textContent = text;
     };
     if (data.city !== undefined) set('.city', String(data.city));
-    if (data.tempC !== undefined) set('.temp', data.tempC + '\\u00B0C');
+    if (data.tempF !== undefined) set('.temp', data.tempF + '\\u00B0F');
+    else if (data.tempC !== undefined) set('.temp', Math.round(data.tempC * 9 / 5 + 32) + '\\u00B0F');
     if (data.summary !== undefined) set('.summary', String(data.summary));
   }`,
 

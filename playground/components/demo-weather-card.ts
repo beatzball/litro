@@ -1,5 +1,5 @@
 /**
- * <demo-weather-card city="Lisbon" .tempC=${21} summary="sunny">
+ * <demo-weather-card city="Lisbon" .tempF=${70} summary="sunny">
  *   Rendered server-side by the demo agent's get-weather tool via ui() and
  *   streamed to the client as Declarative Shadow DOM. `weather-card-root` is
  *   a stable element id inside the shadow root — a contract with the e2e
@@ -44,14 +44,27 @@ export class DemoWeatherCard extends LitElement {
   `;
 
   @property({ type: String }) city = '';
-  @property({ type: Number }) tempC = 0;
+  /**
+   * Both OPTIONAL, and neither defaults to 0. This element is packed as a
+   * data-free MCP Apps shell, and a shell that renders "32°F" before any
+   * result arrives is showing a reading it does not have.
+   */
+  @property({ type: Number }) tempC?: number;
+  /** Fahrenheit, when the caller has it — otherwise converted from `tempC`. */
+  @property({ type: Number }) tempF?: number;
   @property({ type: String }) summary = '';
+
+  /** Fahrenheit for display, or nothing at all when there is no reading yet. */
+  private displayTempF(): string {
+    const f = this.tempF ?? (this.tempC === undefined ? undefined : Math.round((this.tempC * 9) / 5 + 32));
+    return f === undefined ? '' : `${f}\u00B0F`;
+  }
 
   override render() {
     return html`
       <div id="weather-card-root">
         <span class="city">${this.city}</span>
-        <span class="temp">${this.tempC}&deg;C</span>
+        <span class="temp">${this.displayTempF()}</span>
         <span class="summary">${this.summary}</span>
       </div>
     `;
