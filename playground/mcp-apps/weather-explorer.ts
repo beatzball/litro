@@ -150,7 +150,13 @@ export default defineMcpApp({
       function render() {
         var r = state.reading;
         var unit = state.unit || 'C';
-        $('unit').textContent = unit === 'F' ? '\\u00B0F' : '\\u00B0C';
+        // THE BUTTON NAMES WHAT YOU GET, NOT WHAT YOU HAVE. Showing the
+        // current unit reads as a label for the reading right above it, which
+        // already says its own unit — so the button looked like a duplicate
+        // rather than a control.
+        var other = unit === 'F' ? 'C' : 'F';
+        $('unit').textContent = other === 'F' ? '\\u00B0F' : '\\u00B0C';
+        $('unit').setAttribute('aria-label', other === 'F' ? 'Switch to Fahrenheit' : 'Switch to Celsius');
 
         var has = !!(r && !r.empty);
         $('refresh').disabled = !has;
