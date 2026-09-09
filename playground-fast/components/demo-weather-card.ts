@@ -1,5 +1,5 @@
 /**
- * <demo-weather-card city="Lisbon" temp-c="21" summary="sunny">
+ * <demo-weather-card city="Lisbon" temp-f="70" summary="sunny">
  *   Rendered server-side by the demo agent's get-weather tool via ui() and
  *   streamed to the client as Declarative Shadow DOM. `weather-card-root` is
  *   a stable element id inside the shadow root — a contract with the e2e
@@ -57,8 +57,22 @@ import { FASTElement, attr, nullableNumberConverter, html, css } from '@microsof
 
 export class DemoWeatherCard extends FASTElement {
   @attr city = '';
-  @attr({ attribute: 'temp-c', converter: nullableNumberConverter }) tempC: number | null = 0;
+  @attr({ attribute: 'temp-c', converter: nullableNumberConverter }) tempC: number | null = null;
+  @attr({ attribute: 'temp-f', converter: nullableNumberConverter }) tempF: number | null = null;
   @attr summary = '';
+
+  /**
+   * Fahrenheit for display, or nothing at all when there is no reading yet.
+   *
+   * Mirrors the Lit card deliberately: the two are the SAME element name
+   * rendered by different adapters, so a test that reads the card must not
+   * have to know which playground it is in. That is exactly what broke — the
+   * Lit one moved to °F and this one did not.
+   */
+  get displayTemp(): string {
+    const f = this.tempF ?? (this.tempC === null ? null : Math.round((this.tempC * 9) / 5 + 32));
+    return f === null ? '' : `${f}\u00B0F`;
+  }
 }
 
 DemoWeatherCard.define({
@@ -66,7 +80,7 @@ DemoWeatherCard.define({
   template: html<DemoWeatherCard>`
     <div id="weather-card-root">
       <span class="city">${(x) => x.city}</span>
-      <span class="temp">${(x) => x.tempC}&deg;C</span>
+      <span class="temp">${(x) => x.displayTemp}</span>
       <span class="summary">${(x) => x.summary}</span>
     </div>
   `,
