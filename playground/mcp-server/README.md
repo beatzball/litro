@@ -42,6 +42,31 @@ cannot spawn a stdio command. Both serve the same handlers from the same
 | `get-weather` | `weather-card` | A read-only card. The shell paints, then the result fills it. |
 | `weather-refresh-demo` | `weather-refresh` | One button that calls a tool back from inside the iframe. |
 | `weather-explorer` | `weather-explorer` | A form, Refresh, Reset and a °F/°C toggle — state the VIEW owns, that the model never sees. |
+| `weather-live-demo` | `weather-live` | The same card as a LIVE web component: the element defines itself, so property assignment re-renders it. |
+
+### Inert vs live, which is the thing to look at
+
+`weather-card` and `weather-live` ship the SAME Lit component, server-rendered
+to the same declarative shadow DOM. Both paint before any script runs. They
+differ in one way:
+
+| | `weather-card` | `weather-live` |
+| --- | --- | --- |
+| element defined in the iframe | no | yes |
+| `Object.assign(el, data)` | does nothing | re-renders |
+| fill step | a custom `apply` writing into the shadow root by hand | the default |
+| size | 11.5 KB | 12.5 KB |
+
+SSR sends an element's rendered OUTPUT, never its class. So the default card is
+inert markup: assigning `.city` sets a property nothing is watching, which is
+why it needs a hand-written `apply`. `weather-live` inlines a `runtime` that
+calls `customElements.define()`, which upgrades the tag SSR already painted —
+first paint is still server-rendered, and from then on the component is real.
+
+The kilobyte between them is a hand-written definition. Inlining Lit and its
+hydration support instead would be tens of kilobytes, in every document that
+wanted one, because self-containment shares nothing between documents. That
+trade is the reason the other demos do not do it.
 
 The explorer is the one that shows the data/model split clearly: typing a city,
 switching units and refreshing all happen between the view and the server. The

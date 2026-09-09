@@ -368,6 +368,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'weather-live-demo',
+      description:
+        'Shows the weather card as a LIVE web component — the element defines itself in the iframe, so property assignment re-renders it.',
+      inputSchema: {
+        type: 'object',
+        properties: { city: { type: 'string', description: 'City name' } },
+        additionalProperties: false,
+      },
+      _meta: {
+        ui: {
+          resourceUri: 'ui://playground/weather-live',
+          visibility: ['model', 'app'],
+        },
+      },
+    },
+    {
       name: 'weather-explorer',
       description:
         'Opens an interactive weather card: type a city, refresh it, reset it, and switch between °F and °C.',
@@ -410,7 +426,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const city = asked || 'London';
   const { tempC, tempF, summary, label, country, timezone, live } = await forecast(city);
 
-  if (name === 'get-weather' || name === 'weather-refresh-demo' || name === 'weather-explorer') {
+  if (
+    name === 'get-weather' ||
+    name === 'weather-refresh-demo' ||
+    name === 'weather-explorer' ||
+    name === 'weather-live-demo'
+  ) {
     return {
       // `content` is what the model reads. `structuredContent` is what the
       // view fills from. The spec keeps them separate and so does this.
