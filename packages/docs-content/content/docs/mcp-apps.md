@@ -147,6 +147,33 @@ permits inline event handlers, and the injected code would hold
 
 A custom `apply` bypasses the deny list — it is your code, so it is your call.
 
+**So does `runtime`, less obviously.** It is inlined *before* the bridge, so a `runtime` that assigns `window.litroMcpApply` replaces the default fill step without ever declaring an `apply`. Every tool result then reaches your code with no check on it. The build prints a warning when it sees that assignment, so it stops being something you do by accident — but it does not stop you, because replacing the fill step is a reasonable thing to want.
+
+## `runtime` and `apply` are strings, and that has a cost
+
+Both are browser **source as a string**. Nothing type-checks them, nothing lints them, and your editor cannot help. A typo is invisible until the document is inside a host, where a `SyntaxError` kills the whole script tag and the view simply never fills — with no error you will see.
+
+The build parses both and refuses source that does not compile. That is a real check and it is the only one there is:
+
+```
+defineMcpApp: "runtime" is not valid JavaScript — Unexpected token '{'
+```
+
+It is a **parse, not an execution** — no code of yours runs at build time.
+
+Two things it cannot do, and you should not read it as doing:
+
+- It cannot tell you the code is *correct*, only that it parses.
+- It cannot tell you the code is *safe*. `runtime` and `apply` are trusted author code by design: they run as the page, they hold `window.litroMcp.callTool`, and the host's default CSP permits inline script. Treat them like any script tag you would add to a page you own.
+
+**Never build either string from data.** Interpolating a value into `runtime` is a code-injection sink, and nothing in the build can detect it:
+
+```ts
+runtime: `var city = "${input}";`   // don't
+```
+
+Send data through `structuredContent` instead, which is what the fill step is for.
+
 ## Filling the shell
 
 No component runtime is inlined by default, so the rendered Declarative Shadow DOM is static markup. Assigning `.city` on the element sets a property nothing is watching. Write to the DOM instead:

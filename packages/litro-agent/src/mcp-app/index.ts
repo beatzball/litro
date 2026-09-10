@@ -25,6 +25,7 @@
  * framework downloads. A server-rendered shell is real, styled markup in the
  * first byte the host receives.
  */
+import { Script } from 'node:vm';
 import { AgentError } from '../errors.js';
 import { ui } from '../ui/index.js';
 import { BRIDGE_SOURCE } from './bridge.js';
@@ -227,6 +228,64 @@ function inlineSafe(source: string, tag: 'script' | 'style'): string {
  *
  * The JSON path needs none of this: `jsonSafe` escapes `<` itself.
  */
+/**
+ * Refuses source that is not valid JavaScript.
+ *
+ * `runtime` and `apply` are STRINGS, so nothing type-checks them, nothing lints
+ * them, and a typo is invisible until the document is in a host's iframe —
+ * where a SyntaxError kills the whole script tag and the card simply never
+ * fills, with no error anyone sees.
+ *
+ * `new Script()` COMPILES without running. It is a parse, not an execution: no
+ * author code executes at build time, and nothing here sandboxes anything. It
+ * catches a broken string, which is the failure people actually hit.
+ *
+ * IT CANNOT TELL YOU THE CODE IS SAFE, only that it parses. `runtime` and
+ * `apply` are trusted author code by design — see the warning below.
+ */
+function assertParses(source: string, key: 'runtime' | 'apply'): void {
+  // `apply` is inlined as the right-hand side of an assignment, so it has to be
+  // an EXPRESSION. Wrapping in parentheses is what makes a bare
+  // `function (el, data) {}` parse as one rather than a declaration.
+  const candidate = key === 'apply' ? `(${source})` : source;
+  try {
+    new Script(candidate, { filename: `<mcp-app ${key}>` });
+  } catch (err) {
+    throw new AgentError(
+      `defineMcpApp: "${key}" is not valid JavaScript — ${(err as Error).message}\n` +
+        'It is a string, so nothing type-checks or lints it; this parse is the only check there is. ' +
+        'In a host it would throw at load, killing the script tag, and the view would never fill.',
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * Says so, loudly, when `runtime` takes over the fill step.
+ *
+ * The bridge's default fill refuses scripting sinks — `innerHTML`, `srcdoc`,
+ * anything starting with `on`. It only runs if nobody replaced it, and
+ * `runtime` is inlined BEFORE the bridge, so assigning `window.litroMcpApply`
+ * there silently removes that protection for every tool result the view ever
+ * receives.
+ *
+ * A custom `apply` does the same thing, but declares itself by existing. This
+ * route does not, which is the reason for the noise.
+ *
+ * A WARNING, NOT AN ERROR: it is a legitimate thing to do — the packager cannot
+ * know whether the replacement is careful — and a regex cannot prove intent
+ * either way. The point is that it stops being accidental.
+ */
+function warnIfFillStepReplaced(runtime: string): void {
+  if (!/(^|[^.\w])(window\s*\.\s*)?litroMcpApply\s*=[^=]/.test(runtime)) return;
+  console.warn(
+    'defineMcpApp: "runtime" assigns litroMcpApply, which REPLACES the bridge\'s default fill step.\n' +
+      '  That default is what refuses innerHTML, srcdoc, on* and other scripting sinks in a tool ' +
+      'result. Your version receives that server JSON with no such check.\n' +
+      '  Intended? Prefer the "apply" option, which says so by existing. Otherwise rename it.',
+  );
+}
+
 function assertNoScriptEscape(source: string, key: 'runtime' | 'apply'): void {
   const found = ['<!--', '<script'].filter((seq) =>
     source.toLowerCase().includes(seq.toLowerCase()),
@@ -319,8 +378,15 @@ export async function buildMcpAppDocument(
     displayModes: config.displayModes ?? ['inline'],
   };
 
-  if (config.runtime) assertNoScriptEscape(config.runtime, 'runtime');
-  if (config.apply) assertNoScriptEscape(config.apply, 'apply');
+  if (config.runtime) {
+    assertNoScriptEscape(config.runtime, 'runtime');
+    assertParses(config.runtime, 'runtime');
+    warnIfFillStepReplaced(config.runtime);
+  }
+  if (config.apply) {
+    assertNoScriptEscape(config.apply, 'apply');
+    assertParses(config.apply, 'apply');
+  }
 
   const scripts = [
     `<script>\nwindow.__litroMcpApp = ${jsonSafe(appMeta)};\n</script>`,
