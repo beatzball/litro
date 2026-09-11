@@ -444,7 +444,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: `${label}: ${tempF}°F, ${summary}.${live ? '' : ' NOT a real reading.'}`,
         },
       ],
-      structuredContent: { city: label, country, timezone, tempC, tempF, summary, live },
+      // `city` is the LABEL, for display. `query` is what was actually asked,
+      // and a view that wants to look the same place up again must send that
+      // back — not the label. The geocoder resolves "Nice" and returns nothing
+      // for "Nice, FR", so a refresh keyed on the label fails where the first
+      // lookup succeeded.
+      structuredContent: { city: label, query: city, country, timezone, tempC, tempF, summary, live },
     };
   }
 

@@ -88,6 +88,9 @@ export default defineMcpApp({
       var node = el.querySelector('#' + id);
       if (node) node.textContent = text;
     };
+    // Remembered for the Refresh button. The server sends what it was ASKED
+    // alongside the label it resolved; only the former can be looked up again.
+    if (data.query !== undefined) window.__wxQuery = String(data.query);
     if (data.city !== undefined) set('city', String(data.city));
     if (data.tempF !== undefined) set('temp', data.tempF + '\\u00B0F');
     else if (data.tempC !== undefined) set('temp', Math.round(data.tempC * 9 / 5 + 32) + '\\u00B0F');
@@ -105,11 +108,20 @@ export default defineMcpApp({
 
       var card = document.getElementById('card');
       var status = document.getElementById('status');
-      var city = document.getElementById('city');
+
+      // What was ASKED, not what came back. Reading the city off the card sent
+      // the geocoder its own label — "Nice, FR" — which it does not resolve, so
+      // the second lookup failed where the first succeeded and the card showed
+      // 32°F for a place it had just found.
+      var query = window.__wxQuery;
+      if (!query) {
+        if (status) status.textContent = 'Nothing to refresh yet.';
+        return;
+      }
       if (status) status.textContent = 'Refreshing…';
 
       window.litroMcp
-        .callTool('get-weather', { city: city ? city.textContent : '' })
+        .callTool('get-weather', { city: query })
         .then(function (result) {
           // A tools/call answer carries the same structuredContent shape a
           // notification does, so the same fill step handles both.

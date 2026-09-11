@@ -207,6 +207,12 @@ export default defineMcpApp({
       function receive(data) {
         if (!data || data.empty) { state.reading = null; render(); return; }
         state.reading = data;
+        // The FIRST reading arrives here, not through lookup() — the tool that
+        // opened the view already fetched it. Without this, Refresh was enabled
+        // and did nothing until you typed something, because state.query was
+        // still empty. The server sends what it was asked; never r.city, which
+        // is the geocoder's label.
+        if (data.query) state.query = String(data.query);
         chooseUnit(data);
         if (!state.unit) state.unit = 'C';
         text('status', '');
