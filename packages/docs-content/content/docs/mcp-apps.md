@@ -147,7 +147,11 @@ permits inline event handlers, and the injected code would hold
 
 A custom `apply` bypasses the deny list — it is your code, so it is your call.
 
-**So does `runtime`, less obviously.** It is inlined *before* the bridge, so a `runtime` that assigns `window.litroMcpApply` replaces the default fill step without ever declaring an `apply`. Every tool result then reaches your code with no check on it. The build prints a warning when it sees that assignment, so it stops being something you do by accident — but it does not stop you, because replacing the fill step is a reasonable thing to want.
+**So does `runtime`, less obviously.** The bridge reads `litroMcpApply` off the global when a result arrives, so a `runtime` that assigns that name replaces the default fill step without ever declaring an `apply`. Every tool result then reaches your code with no check on it.
+
+The build warns when it sees that assignment, so it stops being something you do by accident. It does not stop you — replacing the fill step is a reasonable thing to want.
+
+**That warning is a text match, not a parse**, and it is worth knowing what it does and does not catch. It finds the name in assignment position however you reach it — `window.`, `globalThis.`, `self.`, a local alias, bracket notation, `??=` — and it strips comments first. Two gaps remain: a string that merely mentions the name still warns, and `Object.assign(window, { litroMcpApply: fn })` does not. Closing either needs a real parse of your source, which is more than a warning is worth.
 
 ## `runtime` and `apply` are strings, and that has a cost
 

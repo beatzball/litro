@@ -247,7 +247,9 @@ function assertParses(source: string, key: 'runtime' | 'apply'): void {
   // `apply` is inlined as the right-hand side of an assignment, so it has to be
   // an EXPRESSION. Wrapping in parentheses is what makes a bare
   // `function (el, data) {}` parse as one rather than a declaration.
-  const candidate = key === 'apply' ? `(${source})` : source;
+  // The newline matters: a trailing `// comment` in the source would otherwise
+  // swallow the closing paren, and a perfectly valid apply would be refused.
+  const candidate = key === 'apply' ? `(${source}\n)` : source;
   try {
     new Script(candidate, { filename: `<mcp-app ${key}>` });
   } catch (err) {
@@ -264,20 +266,41 @@ function assertParses(source: string, key: 'runtime' | 'apply'): void {
  * Says so, loudly, when `runtime` takes over the fill step.
  *
  * The bridge's default fill refuses scripting sinks — `innerHTML`, `srcdoc`,
- * anything starting with `on`. It only runs if nobody replaced it, and
- * `runtime` is inlined BEFORE the bridge, so assigning `window.litroMcpApply`
- * there silently removes that protection for every tool result the view ever
- * receives.
+ * anything starting with `on`. It reads `litroMcpApply` off the global at call
+ * time, so any assignment to that name replaces it, and `runtime` gets to make
+ * one without ever declaring an `apply`.
  *
- * A custom `apply` does the same thing, but declares itself by existing. This
- * route does not, which is the reason for the noise.
+ * A HEURISTIC, AND IT SAYS SO. In a browser `window`, `globalThis` and `self`
+ * are the same object, and the property can be reached by dot, by bracket, or
+ * through a local alias — so this matches the NAME in assignment position and
+ * ignores whatever precedes it. Comments are stripped first. Two limits remain,
+ * both deliberate:
  *
- * A WARNING, NOT AN ERROR: it is a legitimate thing to do — the packager cannot
- * know whether the replacement is careful — and a regex cannot prove intent
- * either way. The point is that it stops being accidental.
+ *   - a string literal that merely mentions the name still warns, and
+ *   - `Object.assign(window, { litroMcpApply: fn })` still does not.
+ *
+ * Closing either needs a real parse of the source, which is more machinery than
+ * a warning is worth. The docs state the limit rather than implying coverage
+ * this does not have.
+ *
+ * A WARNING, NOT AN ERROR: replacing the fill step is a legitimate thing to do,
+ * and no regex can judge whether a replacement is careful. The point is only
+ * that it stops being accidental.
  */
 function warnIfFillStepReplaced(runtime: string): void {
-  if (!/(^|[^.\w])(window\s*\.\s*)?litroMcpApply\s*=[^=]/.test(runtime)) return;
+  // Comments are stripped so a note ABOUT the assignment does not read as one.
+  const code = runtime.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+  // The name in assignment position, however it was reached: `x.litroMcpApply =`,
+  // bare `litroMcpApply =`, or `x['litroMcpApply'] =`. `=[^=]` keeps `==`/`===`
+  // out; `??=`, `||=` and `&&=` are assignments and are matched on purpose.
+  // `[^\w$]` and NOT `[^.\w$]` — a dot must be ALLOWED before the name, since
+  // `window.litroMcpApply` is the commonest spelling of all. Excluding an
+  // identifier character is what keeps `myLitroMcpApply` out.
+  const dotted = /(^|[^\w$])litroMcpApply\s*(\?\?=|\|\|=|&&=|=[^=])/;
+  const bracketed = /\[\s*(['"`])litroMcpApply\1\s*\]\s*(\?\?=|\|\|=|&&=|=[^=])/;
+  if (!dotted.test(code) && !bracketed.test(code)) return;
+
   console.warn(
     'defineMcpApp: "runtime" assigns litroMcpApply, which REPLACES the bridge\'s default fill step.\n' +
       '  That default is what refuses innerHTML, srcdoc, on* and other scripting sinks in a tool ' +

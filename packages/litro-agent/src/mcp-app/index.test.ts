@@ -187,6 +187,18 @@ describe('runtime and apply are strings, so this is the only check they get', ()
     ).resolves.toBeTruthy();
   });
 
+  it('accepts an apply that ends in a line comment', async () => {
+    // The parenthesis wrap used to put its closing paren INSIDE the comment,
+    // so a perfectly valid apply was refused. The real inline form — an
+    // assignment terminated by a semicolon on the next line — never had the
+    // problem, which is how it went unnoticed.
+    await expect(
+      buildMcpAppDocument(
+        defineMcpApp({ uri: 'ui://a/b', shell, apply: '(el, d) => { el.x = d; } // set it' }),
+      ),
+    ).resolves.toBeTruthy();
+  });
+
   it('accepts an arrow function for apply too', async () => {
     await expect(
       buildMcpAppDocument(defineMcpApp({ uri: 'ui://a/b', shell, apply: '(el, d) => { el.x = d; }' })),
@@ -214,7 +226,16 @@ describe('replacing the fill step from runtime says so', () => {
     buildMcpAppDocument(defineMcpApp({ uri: 'ui://a/b', shell, runtime }));
 
   it.each([
+    // In a browser `window`, `globalThis` and `self` are the same object, and
+    // the property can be reached by dot, by bracket, or through a local alias.
+    // A review found the first version knew only the `window.` spelling, so the
+    // deny list could be replaced in silence three other ways.
     'window.litroMcpApply = function (el, d) {};',
+    'globalThis.litroMcpApply = function (el, d) {};',
+    'self.litroMcpApply = function (el, d) {};',
+    "window['litroMcpApply'] = function (el, d) {};",
+    'var w = window; w.litroMcpApply = function (el, d) {};',
+    'window.litroMcpApply ??= function (el, d) {};',
     'litroMcpApply = function (el, d) {};',
     'window.litroMcpApply=function(){}',
   ])('warns for %s', async (runtime) => {
@@ -233,8 +254,20 @@ describe('replacing the fill step from runtime says so', () => {
   it('stays quiet when the runtime only READS it, or names something else', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await build('if (window.litroMcpApply) { window.litroMcpApply(document.body, {}); }');
+    await build("if (window['litroMcpApply']) {}");
     await build('var myLitroMcpApply = 1;');
     await build('window.litroMcpApply === undefined;');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('stays quiet for a COMMENT about the assignment', async () => {
+    // A warning that fires on a note about the thing weakens the one that fires
+    // on the thing. Comments are stripped before matching; a string literal
+    // that mentions the name still warns, and the docs say so.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await build('// window.litroMcpApply = fn\nvar a = 1;');
+    await build('/* window.litroMcpApply = fn */ var a = 1;');
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
