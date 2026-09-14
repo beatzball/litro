@@ -38,6 +38,22 @@ describe('defineMcpApp', () => {
       /must be browser SOURCE as a string/,
     );
   });
+
+  it('accepts any non-empty string for domain, because its format belongs to the host', () => {
+    // No hostname rule is applied: the spec leaves format and validation to
+    // each host, so a check here would refuse values some host accepts.
+    expect(() => defineMcpApp({ uri: 'ui://a/b', shell, domain: 'a904794854a047f6.example.com' })).not.toThrow();
+  });
+
+  it.each<[unknown, string]>([
+    ['', 'empty'],
+    [42, 'a number'],
+    [null, 'null'],
+  ])('rejects %j for domain (%s)', (domain) => {
+    expect(() => defineMcpApp({ uri: 'ui://a/b', shell, domain: domain as string })).toThrow(
+      /"domain" must be a non-empty string/,
+    );
+  });
 });
 
 describe('buildMcpAppDocument', () => {
@@ -80,6 +96,18 @@ describe('buildMcpAppDocument', () => {
     expect(descriptor._meta.ui.prefersBorder).toBe(true);
     // The flat form is deprecated and removed before GA — never emit it.
     expect(JSON.stringify(descriptor)).not.toContain('ui/resourceUri');
+  });
+
+  it('writes domain to _meta.ui.domain, next to csp', async () => {
+    const { descriptor } = await buildMcpAppDocument(
+      defineMcpApp({ uri: 'ui://weather/card', shell, domain: 'weather-card.example.com' }),
+    );
+    expect(descriptor._meta.ui.domain).toBe('weather-card.example.com');
+  });
+
+  it('omits domain when it is not set, so the host keeps its default origin', async () => {
+    const { descriptor } = await buildMcpAppDocument(defineMcpApp({ uri: 'ui://a/b', shell }));
+    expect('domain' in descriptor._meta.ui).toBe(false);
   });
 
   it('leaves _meta.ui empty when nothing is declared', async () => {
