@@ -480,8 +480,8 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
   //
   // Not every problem, and the difference matters. A character that only breaks
   // the ADDRESS is not fatal here, because the app may name its own uri — so it
-  // is carried, and only reported after the module loads, by which time earlier
-  // apps are already on disk. Dot segments, loader-hostile characters, output
+  // is carried, and only reported after the module loads — which is why nothing
+  // is written until every app has loaded and packed. Dot segments, loader-hostile characters, output
   // clashes and the manifest stem are the ones nothing can excuse.
   //
   // A derivation failure is NOT fatal here. An app is allowed to name its own
@@ -551,8 +551,11 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     return 1;
   }
 
-  const packed: PackedApp[] = [];
-  await mkdir(outDir, { recursive: true });
+  // HELD, not written. Every app is packed and every check run before a byte
+  // reaches the out dir: writing inside the loop left a failed build's earlier
+  // apps on disk with no manifest — a directory of documents with no index,
+  // which anything reading it afterwards took for a finished set.
+  const packed: (PackedApp & { html: string; descriptor: string })[] = [];
 
   // App modules are project SOURCE, so the project's own Vite config is what
   // knows how to compile them. jiti is the lighter option and is what the SSG
@@ -662,19 +665,14 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
         return 1;
       }
 
-      const htmlPath = join(outDir, `${outPath}.html`);
-      const descriptorPath = join(outDir, `${outPath}.json`);
-      // The output mirrors the source tree, so a nested app needs its folder.
-      await mkdir(dirname(htmlPath), { recursive: true });
-      await writeFile(htmlPath, built.html, 'utf8');
-      await writeFile(descriptorPath, `${JSON.stringify(built.descriptor, null, 2)}\n`, 'utf8');
-
       packed.push({
         name: outPath,
         uri: built.descriptor.uri,
-        htmlPath,
-        descriptorPath,
+        htmlPath: join(outDir, `${outPath}.html`),
+        descriptorPath: join(outDir, `${outPath}.json`),
         bytes: Buffer.byteLength(built.html, 'utf8'),
+        html: built.html,
+        descriptor: `${JSON.stringify(built.descriptor, null, 2)}\n`,
       });
     }
   } finally {
@@ -694,6 +692,15 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
     html: relative(outDir, a.htmlPath),
     descriptor: relative(outDir, a.descriptorPath),
   }));
+
+  // Nothing below can fail on the apps' account, so this is the first write.
+  for (const app of packed) {
+    // The output mirrors the source tree, so a nested app needs its folder.
+    await mkdir(dirname(app.htmlPath), { recursive: true });
+    await writeFile(app.htmlPath, app.html, 'utf8');
+    await writeFile(app.descriptorPath, app.descriptor, 'utf8');
+  }
+  await mkdir(outDir, { recursive: true });
   await writeFile(join(outDir, `${MANIFEST_STEM}.json`), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   for (const app of packed) {
