@@ -137,7 +137,8 @@ async function getJson(url: string, ms = 4000): Promise<unknown> {
  * Adding a live upstream changed nothing about the sandbox.
  *
  * Two calls: a name to coordinates, then coordinates to a current reading.
- * Both are cached for a few minutes, because the Refresh button is meant to
+ * A reading is cached for five minutes and a geocode for an hour, because the
+ * Refresh button is meant to
  * prove a round trip happened, not to hammer a free public API.
  */
 const geoCache = new Map<
@@ -188,9 +189,35 @@ const MAX_ENTRIES = 200;
  */
 const MAX_CITY = 80;
 
-/** Caps what we echo, and says that it was cut rather than pretending. */
+/**
+ * String.prototype.toWellFormed(), spelled so it type-checks. That method lives
+ * in lib.es2024 and this repo targets ES2022, so calling it directly is a type
+ * error that only runtime — Node 24 — lets through.
+ *
+ * Replaces a lone surrogate, half of a pair with no partner, with U+FFFD. That
+ * is exactly what toWellFormed() does; the verification compared the two.
+ */
+function wellFormed(text: string): string {
+  return text.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '�');
+}
+
+/**
+ * Caps what we echo at MAX_CITY characters, the ellipsis INCLUDED — so the cap
+ * is the number stated, not one more.
+ *
+ * Counts CODE POINTS, not UTF-16 units. Slicing units cut an emoji in half and
+ * left a lone surrogate; encodeURIComponent threw on it, and the catch in
+ * forecast() then told the model the network was down while it was not.
+ * wellFormed() also repairs a lone surrogate already present in the input,
+ * which capping alone would pass straight through.
+ *
+ * A grapheme built from several code points — a flag, a ZWJ family — can still
+ * be cut between them. That breaks a glyph, not the request: it cannot throw.
+ */
 function capped(text: string): string {
-  return text.length <= MAX_CITY ? text : `${text.slice(0, MAX_CITY)}…`;
+  const safe = wellFormed(text);
+  const chars = Array.from(safe);
+  return chars.length <= MAX_CITY ? safe : `${chars.slice(0, MAX_CITY - 1).join('')}…`;
 }
 
 /**
@@ -200,6 +227,29 @@ function capped(text: string): string {
  * is what the old `wxCache` did. Map iterates in insertion order, so the first
  * keys are the oldest.
  */
+/**
+ * Inserts, then enforces the bound — in that order.
+ *
+ * Evicting only BEFORE an insert let the map settle at 201, and let N
+ * concurrent misses each sweep an under-cap map before any of them inserted:
+ * 50 at once on a full cache left 250. Trimming after every set holds the bound
+ * whatever is in flight.
+ *
+ * The delete-then-set matters too. Map keeps a key's ORIGINAL insertion
+ * position on update, so a refreshed entry would otherwise stay "oldest" and be
+ * the first thing evicted.
+ */
+function remember<V extends { at: number }>(
+  cache: Map<string, V>,
+  key: string,
+  value: V,
+  ttlMs: number,
+): void {
+  cache.delete(key);
+  cache.set(key, value);
+  evict(cache, ttlMs);
+}
+
 function evict(cache: Map<string, { at: number }>, ttlMs: number): void {
   const now = Date.now();
   for (const [key, value] of cache) {
@@ -233,7 +283,7 @@ async function locate(city: string) {
         country: hit.country_code ?? '',
       }
     : null;
-  geoCache.set(key, { at: Date.now(), found });
+  remember(geoCache, key, { at: Date.now(), found }, GEO_TTL_MS);
   return found;
 }
 
@@ -281,7 +331,7 @@ async function forecast(city: string): Promise<{
       return {
         tempC: 0,
         tempF: 32,
-        summary: `No place called "${capped(city)}" (reading #${reading})`,
+        summary: `No place by that name (reading #${reading})`,
         label: city,
         country: '',
         timezone: '',
@@ -308,15 +358,12 @@ async function forecast(city: string): Promise<{
     const tempF = Math.round((now.temperature_2m * 9) / 5 + 32);
     const summary = WMO[now.weather_code] ?? `Weather code ${now.weather_code}`;
 
-    wxCache.set(key, {
-      at: Date.now(),
-      tempC,
-      tempF,
-      summary,
-      label: place.label,
-      country: place.country,
-      timezone,
-    });
+    remember(
+      wxCache,
+      key,
+      { at: Date.now(), tempC, tempF, summary, label: place.label, country: place.country, timezone },
+      WX_TTL_MS,
+    );
     // The call number rides along. Without it a refresh two minutes apart
     // renders identically whether the round trip happened or not, and the
     // screenshot proves nothing.
@@ -334,7 +381,11 @@ async function forecast(city: string): Promise<{
     return {
       tempC: 15,
       tempF: 59,
-      summary: `Offline placeholder — ${why} (reading #${reading})`,
+      // Not "offline": this catch sees an HTTP error, a malformed response and a
+      // timeout as readily as a dead network, and calling them all offline told
+      // the model something false. What is true of every one is that there is
+      // no reading.
+      summary: `Could not get a reading — ${why} (reading #${reading})`,
       label: city,
       country: '',
       timezone: '',

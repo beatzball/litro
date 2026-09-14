@@ -84,7 +84,8 @@ by review rather than by design.
 
 **The caches are bounded.** `geoCache` and `wxCache` are keyed by text the
 CALLER supplies, and the explorer hands that key to anyone who can type. Each
-holds at most 200 entries, oldest evicted first, and each sweeps expired
+holds at most 200 entries — enforced after every insert, so calls in flight at
+the same time cannot push it past — oldest evicted first, and each sweeps expired
 entries rather than merely ignoring them on read — a TTL checked only at read
 time frees nothing. A geocode miss expires after an hour instead of being
 remembered for the life of the process.
@@ -95,7 +96,14 @@ whatever is typed inside the iframe travels to the server and comes back in
 context through a weather card. The city is capped at 80 characters — in the
 input, in every tool schema, and again in the server before anything echoes it,
 because a schema is a request to the host and this rig must not depend on one
-being enforced. Truncation is marked with an ellipsis rather than hidden.
+being enforced. Truncation is marked with an ellipsis, counted inside the 80
+rather than added after it.
+
+The name is echoed once: an unknown place reports that there is no match
+without repeating what was typed. Length is counted in code points, so an
+emoji is never cut in half, and a malformed string is repaired rather than
+passed on — a half-emoji used to make the lookup throw, and the server then
+told the model it was offline when it was not.
 
 **Capping is not safety.** It bounds the text; it does not make it trustworthy.
 The real defence is that a model must not treat tool output as instructions,
