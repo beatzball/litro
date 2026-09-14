@@ -1,5 +1,16 @@
 # @beatzball/litro-agent
 
+## 0.5.0
+
+### Minor Changes
+
+- 4d55cba: `defineMcpApp` accepts `domain` and writes it to `_meta.ui.domain` in the resource descriptor. It asks the host for a dedicated sandbox origin — for an OAuth callback, a CORS policy, or an API key allowlist. The MCP Apps spec leaves the format to each host, so the value is carried through unchanged; a value that is not a non-empty string fails at `defineMcpApp` with a clear message.
+- 9330114: Agent tools now reach the provider with a real JSON Schema for their input. When a tool's Standard Schema vendor implements the Standard JSON Schema converter (`~standard.jsonSchema.input`), the loop sends that schema, so the model sees field names, types and required fields. A vendor without a converter, a converter that throws, or a result that is not an object schema still sends `{ type: 'object' }`, as before.
+
+### Patch Changes
+
+- 656a061: MCP App bridge: `window.litroMcp.callTool()` and `readResource()` now reject after 30 seconds when the host does not answer, instead of staying pending forever. The error is a `TimeoutError` whose message names the method, and a late answer is ignored. Pass `{ timeoutMs }` as the last argument to change it per call; `0` waits forever. `callTool(name, args)` works as before. The `ui/initialize` handshake has no timeout.
+
 ## 0.4.0
 
 ### Minor Changes
