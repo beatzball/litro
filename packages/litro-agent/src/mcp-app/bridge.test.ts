@@ -194,6 +194,36 @@ describe('what it refuses', () => {
   });
 });
 
+describe('what it does not refuse', () => {
+  // The deny list names built-in sinks. It cannot know a component's own
+  // properties, so a setter that writes HTML is reached by its name. The docs
+  // ("What the fill step refuses") state this gap; this test pins it, so an
+  // allow-list or a change to the fill step has to update the docs as well.
+  it("sets a component's own property even when its setter writes HTML", () => {
+    if (!customElements.get('rich-card')) {
+      customElements.define(
+        'rich-card',
+        class extends HTMLElement {
+          set summary(value: string) {
+            this.innerHTML = value;
+          }
+        },
+      );
+    }
+    document.body.innerHTML = '<rich-card></rich-card>';
+
+    fromHost({
+      jsonrpc: '2.0',
+      method: 'ui/notifications/tool-result',
+      params: { structuredContent: { summary: '<img src=x onerror="BOOM">' } },
+    });
+
+    const card = document.body.firstElementChild as HTMLElement;
+    expect(card.querySelector('img[onerror]')).not.toBeNull();
+    expect(sent.some((m) => m.method === 'notifications/message')).toBe(false);
+  });
+});
+
 describe('calling back into the server', () => {
   it('exposes callTool as a tools/call request', () => {
     const api = (window as unknown as { litroMcp: { callTool(n: string, a?: unknown): Promise<unknown> } })
