@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -486,5 +486,126 @@ describe('mcpAppCommand', () => {
 
     expect(code).toBe(1);
     expect(err.mock.calls[0][0]).toMatch(/no app files found/);
+  });
+});
+
+/**
+ * A build that gets PAST the pre-flight: every app loads and packs, so these
+ * reach the code that writes. The packager is a stand-in installed into the
+ * fixture's node_modules — what is under test is what the CLI puts on disk,
+ * not the document, and a real packager would tie this suite to a built
+ * @beatzball/litro-agent.
+ */
+async function packWith(
+  files: Record<string, string>,
+  existing: Record<string, string> = {},
+): Promise<{ code: number; errors: string; out: Record<string, string> }> {
+  const root = mkdtempSync(join(tmpdir(), 'litro-mcp-app-pack-'));
+  const put = (rel: string, body: string) => {
+    const full = join(root, rel);
+    mkdirSync(join(full, '..'), { recursive: true });
+    writeFileSync(full, body);
+  };
+  put('package.json', JSON.stringify({ name: 'fixture', type: 'module' }));
+  put(
+    'node_modules/@beatzball/litro-agent/package.json',
+    JSON.stringify({ name: '@beatzball/litro-agent', type: 'module', exports: { './mcp-app': './mcp-app.js' } }),
+  );
+  put(
+    'node_modules/@beatzball/litro-agent/mcp-app.js',
+    'export async function buildMcpAppDocument(app, options = {}) {\n' +
+      '  const uri = app.uri ?? options.uri;\n' +
+      '  return { html: `<p>${uri}</p>`, descriptor: { uri } };\n' +
+      '}\n',
+  );
+  for (const [rel, body] of Object.entries(files)) put(join('mcp-apps', rel), body);
+  for (const [rel, body] of Object.entries(existing)) put(join('dist/mcp-apps', rel), body);
+
+  const errors: string[] = [];
+  const spy = vi.spyOn(console, 'error').mockImplementation((...a) => {
+    errors.push(a.join(' '));
+  });
+  const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+  try {
+    const code = await mcpAppCommand(['build'], root);
+    const outDir = join(root, 'dist/mcp-apps');
+    const out: Record<string, string> = {};
+    let entries: string[] = [];
+    try {
+      entries = readdirSync(outDir, { recursive: true, withFileTypes: true })
+        .filter((e) => e.isFile())
+        .map((e) => join(e.parentPath, e.name).slice(outDir.length + 1));
+    } catch {
+      // No out dir at all is a valid "nothing was written".
+    }
+    for (const rel of entries.sort()) out[rel] = readFileSync(join(outDir, rel), 'utf8');
+    return { code, errors: errors.join('\n'), out };
+  } finally {
+    spy.mockRestore();
+    log.mockRestore();
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+describe('a build that fails leaves nothing behind', () => {
+  // The apps sort by path and pack in that order, so `a-*` is packed — and was
+  // WRITTEN, before this fix — by the time the late `z-*` app fails.
+  const GOOD = "export default { title: 'A' };";
+
+  it('writes nothing when a late app has no default export', async () => {
+    const { code, errors, out } = await packWith({
+      'a-good.ts': GOOD,
+      'nested/b-good.ts': GOOD,
+      'z-late.ts': 'export const nothing = 1;',
+    });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/z-late\.ts has no default export/);
+    expect(out).toEqual({});
+  });
+
+  it('writes nothing when two apps claim one address, which is only known after all pack', async () => {
+    const { code, errors, out } = await packWith({
+      'a-good.ts': GOOD,
+      'z-dup.ts': "export default { uri: 'ui://fixture/a-good' };",
+    });
+    expect(code).toBe(1);
+    expect(errors).toMatch(/address clash/);
+    expect(out).toEqual({});
+  });
+
+  it('leaves the previous build exactly as it was', async () => {
+    const previous = {
+      'a-good.html': 'old html',
+      'a-good.json': 'old descriptor',
+      'manifest.json': 'old manifest',
+    };
+    const { code, out } = await packWith(
+      { 'a-good.ts': GOOD, 'z-late.ts': 'export const nothing = 1;' },
+      previous,
+    );
+    expect(code).toBe(1);
+    expect(out).toEqual(previous);
+  });
+
+  it('still writes every app and the manifest when nothing fails', async () => {
+    const { code, errors, out } = await packWith({ 'a-good.ts': GOOD, 'nested/b-good.ts': GOOD });
+    expect(errors).toBe('');
+    expect(code).toBe(0);
+    expect(Object.keys(out)).toEqual([
+      'a-good.html',
+      'a-good.json',
+      'manifest.json',
+      'nested/b-good.html',
+      'nested/b-good.json',
+    ]);
+    expect(JSON.parse(out['manifest.json'])).toEqual([
+      { name: 'a-good', uri: 'ui://fixture/a-good', html: 'a-good.html', descriptor: 'a-good.json' },
+      {
+        name: 'nested/b-good',
+        uri: 'ui://fixture/nested/b-good',
+        html: 'nested/b-good.html',
+        descriptor: 'nested/b-good.json',
+      },
+    ]);
   });
 });
