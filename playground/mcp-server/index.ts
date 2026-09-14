@@ -221,13 +221,6 @@ function capped(text: string): string {
 }
 
 /**
- * Drops what has expired, then the oldest entries until the map fits.
- *
- * A TTL checked only on READ frees nothing — the entry stays in the map, which
- * is what the old `wxCache` did. Map iterates in insertion order, so the first
- * keys are the oldest.
- */
-/**
  * Inserts, then enforces the bound — in that order.
  *
  * Evicting only BEFORE an insert let the map settle at 201, and let N
@@ -250,6 +243,13 @@ function remember<V extends { at: number }>(
   evict(cache, ttlMs);
 }
 
+/**
+ * Drops what has expired, then the oldest entries until the map fits.
+ *
+ * A TTL checked only on READ frees nothing — the entry stays in the map, which
+ * is what the old `wxCache` did. Map iterates in insertion order, so the first
+ * keys are the oldest.
+ */
 function evict(cache: Map<string, { at: number }>, ttlMs: number): void {
   const now = Date.now();
   for (const [key, value] of cache) {

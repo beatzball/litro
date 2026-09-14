@@ -100,10 +100,15 @@ being enforced. Truncation is marked with an ellipsis, counted inside the 80
 rather than added after it.
 
 The name is echoed once: an unknown place reports that there is no match
-without repeating what was typed. Length is counted in code points, so an
-emoji is never cut in half, and a malformed string is repaired rather than
+without repeating what was typed. Length is counted in code points, so the
+cut never leaves half a character behind: the string stays valid and the
+lookup cannot throw. A malformed string is repaired rather than
 passed on — a half-emoji used to make the lookup throw, and the server then
 told the model it was offline when it was not.
+
+One limit is left on purpose. A flag or a family emoji is SEVERAL code points,
+and the cut can still land between them — a UK flag becomes a lone regional
+letter. That changes a glyph, not the request; it cannot throw.
 
 **Capping is not safety.** It bounds the text; it does not make it trustworthy.
 The real defence is that a model must not treat tool output as instructions,
@@ -113,7 +118,8 @@ and that belongs to whoever writes the agent, not to this server.
 
 `get-weather` calls [Open-Meteo](https://open-meteo.com) — no API key, no
 account. Two requests: a city name to coordinates, then coordinates to a
-current reading. Both are cached for five minutes, because the Refresh button
+current reading. A reading is cached for five minutes and a geocode for an
+hour, because the Refresh button
 exists to prove a round trip happened, not to hammer a free public API.
 
 **The SERVER fetches, not the view**, and that is the part worth noticing: the
@@ -121,10 +127,11 @@ packed document still declares no CSP and still loads nothing from the network.
 Data reaches it as `structuredContent` over `postMessage`. Adding a live
 upstream changed nothing about the sandbox.
 
-Offline, or for a place the geocoder does not know, it returns a placeholder
+When there is no reading — the network is down, the API errors, the response is
+malformed — or for a place the geocoder does not know, it returns a placeholder
 labelled as one — `live: false` in `structuredContent`, and "NOT a real
 reading." in the text the model sees. A demo that quietly invents weather is
-worse than one that says it could not reach the network.
+worse than one that admits it has no reading.
 
 ## What this rig proved
 
