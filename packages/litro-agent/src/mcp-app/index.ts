@@ -25,6 +25,7 @@
  * framework downloads. A server-rendered shell is real, styled markup in the
  * first byte the host receives.
  */
+import { Script } from 'node:vm';
 import { AgentError } from '../errors.js';
 import { ui } from '../ui/index.js';
 import { BRIDGE_SOURCE } from './bridge.js';
@@ -227,6 +228,87 @@ function inlineSafe(source: string, tag: 'script' | 'style'): string {
  *
  * The JSON path needs none of this: `jsonSafe` escapes `<` itself.
  */
+/**
+ * Refuses source that is not valid JavaScript.
+ *
+ * `runtime` and `apply` are STRINGS, so nothing type-checks them, nothing lints
+ * them, and a typo is invisible until the document is in a host's iframe —
+ * where a SyntaxError kills the whole script tag and the card simply never
+ * fills, with no error anyone sees.
+ *
+ * `new Script()` COMPILES without running. It is a parse, not an execution: no
+ * author code executes at build time, and nothing here sandboxes anything. It
+ * catches a broken string, which is the failure people actually hit.
+ *
+ * IT CANNOT TELL YOU THE CODE IS SAFE, only that it parses. `runtime` and
+ * `apply` are trusted author code by design — see the warning below.
+ */
+function assertParses(source: string, key: 'runtime' | 'apply'): void {
+  // `apply` is inlined as the right-hand side of an assignment, so it has to be
+  // an EXPRESSION. Wrapping in parentheses is what makes a bare
+  // `function (el, data) {}` parse as one rather than a declaration.
+  // The newline matters: a trailing `// comment` in the source would otherwise
+  // swallow the closing paren, and a perfectly valid apply would be refused.
+  const candidate = key === 'apply' ? `(${source}\n)` : source;
+  try {
+    new Script(candidate, { filename: `<mcp-app ${key}>` });
+  } catch (err) {
+    throw new AgentError(
+      `defineMcpApp: "${key}" is not valid JavaScript — ${(err as Error).message}\n` +
+        'It is a string, so nothing type-checks or lints it; this parse is the only check there is. ' +
+        'In a host it would throw at load, killing the script tag, and the view would never fill.',
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * Says so, loudly, when `runtime` takes over the fill step.
+ *
+ * The bridge's default fill refuses scripting sinks — `innerHTML`, `srcdoc`,
+ * anything starting with `on`. It reads `litroMcpApply` off the global at call
+ * time, so any assignment to that name replaces it, and `runtime` gets to make
+ * one without ever declaring an `apply`.
+ *
+ * A HEURISTIC, AND IT SAYS SO. In a browser `window`, `globalThis` and `self`
+ * are the same object, and the property can be reached by dot, by bracket, or
+ * through a local alias — so this matches the NAME in assignment position and
+ * ignores whatever precedes it. Comments are stripped first. Two limits remain,
+ * both deliberate:
+ *
+ *   - a string literal that merely mentions the name still warns, and
+ *   - `Object.assign(window, { litroMcpApply: fn })` still does not.
+ *
+ * Closing either needs a real parse of the source, which is more machinery than
+ * a warning is worth. The docs state the limit rather than implying coverage
+ * this does not have.
+ *
+ * A WARNING, NOT AN ERROR: replacing the fill step is a legitimate thing to do,
+ * and no regex can judge whether a replacement is careful. The point is only
+ * that it stops being accidental.
+ */
+function warnIfFillStepReplaced(runtime: string): void {
+  // Comments are stripped so a note ABOUT the assignment does not read as one.
+  const code = runtime.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+  // The name in assignment position, however it was reached: `x.litroMcpApply =`,
+  // bare `litroMcpApply =`, or `x['litroMcpApply'] =`. `=[^=]` keeps `==`/`===`
+  // out; `??=`, `||=` and `&&=` are assignments and are matched on purpose.
+  // `[^\w$]` and NOT `[^.\w$]` — a dot must be ALLOWED before the name, since
+  // `window.litroMcpApply` is the commonest spelling of all. Excluding an
+  // identifier character is what keeps `myLitroMcpApply` out.
+  const dotted = /(^|[^\w$])litroMcpApply\s*(\?\?=|\|\|=|&&=|=[^=])/;
+  const bracketed = /\[\s*(['"`])litroMcpApply\1\s*\]\s*(\?\?=|\|\|=|&&=|=[^=])/;
+  if (!dotted.test(code) && !bracketed.test(code)) return;
+
+  console.warn(
+    'defineMcpApp: "runtime" assigns litroMcpApply, which REPLACES the bridge\'s default fill step.\n' +
+      '  That default is what refuses innerHTML, srcdoc, on* and other scripting sinks in a tool ' +
+      'result. Your version receives that server JSON with no such check.\n' +
+      '  Intended? Prefer the "apply" option, which says so by existing. Otherwise rename it.',
+  );
+}
+
 function assertNoScriptEscape(source: string, key: 'runtime' | 'apply'): void {
   const found = ['<!--', '<script'].filter((seq) =>
     source.toLowerCase().includes(seq.toLowerCase()),
@@ -319,8 +401,15 @@ export async function buildMcpAppDocument(
     displayModes: config.displayModes ?? ['inline'],
   };
 
-  if (config.runtime) assertNoScriptEscape(config.runtime, 'runtime');
-  if (config.apply) assertNoScriptEscape(config.apply, 'apply');
+  if (config.runtime) {
+    assertNoScriptEscape(config.runtime, 'runtime');
+    assertParses(config.runtime, 'runtime');
+    warnIfFillStepReplaced(config.runtime);
+  }
+  if (config.apply) {
+    assertNoScriptEscape(config.apply, 'apply');
+    assertParses(config.apply, 'apply');
+  }
 
   const scripts = [
     `<script>\nwindow.__litroMcpApp = ${jsonSafe(appMeta)};\n</script>`,
