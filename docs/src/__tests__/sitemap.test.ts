@@ -112,7 +112,10 @@ describe('sitemap.xml — static routes', () => {
     expect(xml).toContain('<loc>https://litro.dev/blog</loc>');
   });
 
-  it('includes /docs/introduction', async () => {
+  it('includes /docs/introduction when the content has it', async () => {
+    vi.mocked(getPosts).mockResolvedValue([
+      makePost({ url: '/content/docs/introduction' }),
+    ]);
     const xml = await getXml();
     expect(xml).toContain('<loc>https://litro.dev/docs/introduction</loc>');
   });
@@ -129,6 +132,45 @@ describe('sitemap.xml — static routes', () => {
     const xml = await getXml();
     const homepageEntry = xml.slice(xml.indexOf('<loc>https://litro.dev/</loc>'));
     expect(homepageEntry).toContain('<changefreq>weekly</changefreq>');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Docs entries (derived from content + package list)
+// ---------------------------------------------------------------------------
+
+describe('sitemap.xml — docs entries', () => {
+  function entryFor(xml: string, path: string): string {
+    const start = xml.indexOf(`<loc>https://litro.dev${path}</loc>`);
+    expect(start).toBeGreaterThan(-1);
+    return xml.slice(start, xml.indexOf('</url>', start));
+  }
+
+  it('maps /content/docs/ posts to /docs/ routes, nested paths included', async () => {
+    vi.mocked(getPosts).mockResolvedValue([
+      makePost({ url: '/content/docs/core-concepts/routing' }),
+    ]);
+    const xml = await getXml();
+    expect(xml).toContain('<loc>https://litro.dev/docs/core-concepts/routing</loc>');
+    expect(xml).not.toContain('/content/docs/');
+  });
+
+  it('lists every package page without needing a post', async () => {
+    const xml = await getXml();
+    for (const slug of ['litro', 'litro-router', 'create-litro', 'litro-agent']) {
+      expect(xml).toContain(`<loc>https://litro.dev/docs/packages/${slug}</loc>`);
+    }
+  });
+
+  it('gives docs pages priority 0.8, and packages + contributing 0.6', async () => {
+    vi.mocked(getPosts).mockResolvedValue([
+      makePost({ url: '/content/docs/server-actions' }),
+      makePost({ url: '/content/docs/contributing' }),
+    ]);
+    const xml = await getXml();
+    expect(entryFor(xml, '/docs/server-actions')).toContain('<priority>0.8</priority>');
+    expect(entryFor(xml, '/docs/contributing')).toContain('<priority>0.6</priority>');
+    expect(entryFor(xml, '/docs/packages/litro')).toContain('<priority>0.6</priority>');
   });
 });
 
@@ -198,14 +240,23 @@ describe('sitemap.xml — blog post entries', () => {
 // ---------------------------------------------------------------------------
 
 describe('sitemap.xml — non-blog post filtering', () => {
-  it('excludes posts that do not start with /content/blog/', async () => {
+  it('excludes posts outside /content/blog/ and /content/docs/', async () => {
     vi.mocked(getPosts).mockResolvedValue([
       makePost({ url: '/content/blog/real-post' }),
-      makePost({ url: '/content/docs/some-page', title: 'Doc Page' }),
+      makePost({ url: '/content/other/some-page', title: 'Other Page' }),
     ]);
     const xml = await getXml();
     expect(xml).toContain('/blog/real-post');
-    expect(xml).not.toContain('/content/docs/some-page');
+    expect(xml).not.toContain('/content/other/some-page');
     expect(xml).not.toContain('some-page');
+  });
+
+  it('does not list a docs post as a blog post', async () => {
+    vi.mocked(getPosts).mockResolvedValue([
+      makePost({ url: '/content/docs/some-page', title: 'Doc Page' }),
+    ]);
+    const xml = await getXml();
+    expect(xml).toContain('<loc>https://litro.dev/docs/some-page</loc>');
+    expect(xml).not.toContain('/blog/some-page');
   });
 });
