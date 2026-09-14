@@ -38,9 +38,11 @@ const getWeatherSchema: StandardSchemaV1<unknown, GetWeatherInput> = {
 };
 
 export default defineTool({
-  // Name the argument in the description: v0 hands the provider a permissive
-  // object schema, so the description carries the parameter contract. This
-  // makes tool-capable models (incl. smaller local ones) call it reliably.
+  // Name the argument in the description: this hand-rolled validator has no
+  // Standard JSON Schema converter, so the provider receives `{ type: 'object' }`
+  // and the description carries the parameter contract. A vendor with a
+  // converter would send its real schema instead. Naming the argument makes
+  // tool-capable models (incl. smaller local ones) call it reliably.
   description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
   input: getWeatherSchema,
   async execute({ city }) {

@@ -155,9 +155,10 @@ const getWeatherSchema: StandardSchemaV1<unknown, GetWeatherInput> = {
 };
 
 export default defineTool({
-  // Name the argument in the description: in v0 the provider receives a
-  // permissive object schema, so the description carries the parameter
-  // contract (see "Tool calling and model support" below).
+  // Name the argument in the description: this hand-rolled validator has no
+  // JSON Schema converter, so the provider receives `{ type: 'object' }` and
+  // the description carries the parameter contract (see "Tool calling and
+  // model support" below).
   description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
   input: getWeatherSchema,
   async execute({ city }, ctx) {
@@ -185,7 +186,7 @@ Return a `UIResult` **directly** from `execute` — a `UIResult` buried inside a
 Two things govern whether a tool actually gets called, and they are independent:
 
 - **The model must support tool calling.** Tools are invoked by the model, not by Litro. A provider or model without tool-calling support will stream a normal reply and never emit a `tool-call` — so you get prose and no tool result, and that is the model, not the framework. Most hosted models support it; among local runtimes only some models do (check your runtime's tool-calling support before expecting a tool to fire). A stronger description cannot make a non-tool model call a tool.
-- **In v0, the tool `description` carries the parameter contract.** The framework hands the provider a permissive object schema rather than a generated JSON Schema (deeper conversion is a [v0.1 work item](#limitations)), so the model relies on the `description` to know what arguments to pass. Name the arguments explicitly:
+- **The input schema reaches the provider only when the vendor can convert it.** If the tool's Standard Schema vendor implements the Standard JSON Schema converter (`~standard.jsonSchema`), the provider receives that JSON Schema, with field names, types and required fields. Otherwise — a hand-rolled validator, or a vendor without a converter — the provider receives `{ type: 'object' }`, and the model relies on the `description` to know what arguments to pass. A good `description` helps either way; for a vendor without a converter it is the whole contract. Name the arguments explicitly:
 
   ```ts
   // Weak — a capable model may still guess the shape, but smaller models are unreliable:
@@ -401,9 +402,8 @@ The following are specified but deferred (in priority order, mirroring the desig
 
 1. **Skills.** The sharing contract is fully specified (a skill is a standard Agent Skill folder; three scope levels — global `skills/`, shared `agents/_shared/skills/`, local `agents/<name>/skills/` — resolved by skill name with local-first precedence; `defineAgentPreset` bundles; npm/registry distribution; a CEM-backed design-system skillset). v0 ships only the reserved `skills`/`extends` config keys and the `_`-prefix scanner exclusion so the hierarchy lands without a breaking change.
 2. **MCP client** (`agents/<name>/mcp/`). Note this is the client half — consuming other servers' tools. Packaging a component for an MCP host to render has shipped separately; see [MCP Apps](/docs/mcp-apps).
-3. **Standard-Schema → JSON-Schema conversion depth.** v0 hands providers a permissive object schema and leans on the tool `description` for the contract; deeper conversion is a v0.1 work item.
-4. **Elena `UIResult` renderer** (light-DOM, no hydration).
-5. **Subagents, additional surfaces, scheduled runs, and eval suites.**
-6. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
+3. **Elena `UIResult` renderer** (light-DOM, no hydration).
+4. **Subagents, additional surfaces, scheduled runs, and eval suites.**
+5. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
 
 `ui()` throws for any adapter other than `lit` or `fast` in v0.

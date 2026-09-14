@@ -100,6 +100,43 @@ describe('openaiCompatible provider', () => {
     ]);
   });
 
+  it('sends each tool spec as a function whose parameters is the JSON Schema, unchanged', async () => {
+    vi.stubEnv('OPENAI_API_KEY', '');
+    let body = '';
+    const server = createServer((req, res) => {
+      req.on('data', (c) => (body += c));
+      req.on('end', () => {
+        res.writeHead(200, { 'content-type': 'text/event-stream' });
+        res.end('data: [DONE]\n\n');
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    cleanup = () => server.close();
+    const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/v1`;
+
+    const parameters = {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      properties: { city: { type: 'string' } },
+      required: ['city'],
+    };
+    const provider = openaiCompatible({ baseURL: url, model: 'test-model' });
+    await collect(
+      provider.stream({
+        ...baseReq,
+        tools: [
+          { name: 'get-weather', description: 'Get weather', parameters },
+          { name: 'echo', description: 'Echo', parameters: { type: 'object' } },
+        ],
+      }),
+    );
+
+    expect(JSON.parse(body).tools).toEqual([
+      { type: 'function', function: { name: 'get-weather', description: 'Get weather', parameters } },
+      { type: 'function', function: { name: 'echo', description: 'Echo', parameters: { type: 'object' } } },
+    ]);
+  });
+
   it('(b) assembles a tool call split across argument deltas into one tool-call event', async () => {
     vi.stubEnv('OPENAI_API_KEY', '');
     const { url, close } = await sseServer([
