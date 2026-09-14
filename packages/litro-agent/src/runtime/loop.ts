@@ -15,6 +15,7 @@ import { isAsyncIterable } from '@beatzball/litro/stream';
 import type { AgentConfig, ToolConfig, ToolDefinition } from '../index.js';
 import { TOOL_CONFIG } from '../index.js';
 import { isUIResult } from '../ui/index.js';
+import { toolInputJSONSchema } from './json-schema.js';
 import type { ChatMessage, ProviderRequest, ToolCallPart, ToolSpec } from '../providers/types.js';
 import type { SessionEvent, SessionEventKind, SessionStore } from '../sessions/types.js';
 import type { AgentSpan } from '../telemetry/types.js';
@@ -47,15 +48,14 @@ async function appendEmit(deps: TurnDeps, kind: SessionEventKind, payload: unkno
   return ev;
 }
 
-/** Builds the provider-facing tool list. v0 uses a permissive `{ type:
- *  'object' }` JSON schema for every tool and lets `description` carry the
- *  contract -- converting the tool's Standard Schema into a real JSON
- *  Schema (where the vendor exposes one) is explicitly deferred past v0. */
+/** Builds the provider-facing tool list. Each tool's `parameters` is the
+ *  JSON Schema its Standard Schema vendor produces, or a permissive `{ type:
+ *  'object' }` when the vendor cannot produce one (see `toolInputJSONSchema`). */
 function buildToolSpecs(tools: Map<string, ToolDefinition>): ToolSpec[] {
   const specs: ToolSpec[] = [];
   for (const [name, def] of tools) {
     const cfg = def[TOOL_CONFIG] as ToolConfig<unknown>;
-    specs.push({ name, description: cfg.description, parameters: { type: 'object' } });
+    specs.push({ name, description: cfg.description, parameters: toolInputJSONSchema(cfg.input) });
   }
   return specs;
 }

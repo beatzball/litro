@@ -401,9 +401,8 @@ The following are specified but deferred (in priority order, mirroring the desig
 
 1. **Skills.** The sharing contract is fully specified (a skill is a standard Agent Skill folder; three scope levels — global `skills/`, shared `agents/_shared/skills/`, local `agents/<name>/skills/` — resolved by skill name with local-first precedence; `defineAgentPreset` bundles; npm/registry distribution; a CEM-backed design-system skillset). v0 ships only the reserved `skills`/`extends` config keys and the `_`-prefix scanner exclusion so the hierarchy lands without a breaking change.
 2. **MCP client** (`agents/<name>/mcp/`). Note this is the client half — consuming other servers' tools. Packaging a component for an MCP host to render has shipped separately; see [MCP Apps](/docs/mcp-apps).
-3. **Standard-Schema → JSON-Schema conversion depth.** v0 hands providers a permissive object schema and leans on the tool `description` for the contract; deeper conversion is a v0.1 work item.
-4. **Elena `UIResult` renderer** (light-DOM, no hydration).
-5. **Subagents, additional surfaces, scheduled runs, and eval suites.**
-6. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
+3. **Elena `UIResult` renderer** (light-DOM, no hydration).
+4. **Subagents, additional surfaces, scheduled runs, and eval suites.**
+5. **`create-litro` template wiring** — until then, wire agents by hand per [Setup](#setup).
 
 `ui()` throws for any adapter other than `lit` or `fast` in v0.

@@ -101,6 +101,45 @@ describe('runTurn', () => {
     expect(persisted).toEqual(emitted);
   });
 
+  it('tool specs: a vendor with a JSON Schema converter sends its schema; one without sends { type: object }', async () => {
+    const citySchemaJSON = {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      properties: { city: { type: 'string' } },
+      required: ['city'],
+    };
+    const targets: unknown[] = [];
+    const converting = {
+      '~standard': {
+        ...textSchema['~standard'],
+        vendor: 'converting-vendor',
+        jsonSchema: {
+          input: (options: { target: string }) => {
+            targets.push(options.target);
+            return citySchemaJSON;
+          },
+          output: () => citySchemaJSON,
+        },
+      },
+    } as StandardSchemaV1<unknown, { text: string }>;
+    const weather = defineTool({ description: 'weather for a city', input: converting, execute: async () => null });
+
+    const requests: ProviderRequest[] = [];
+    const model = scriptedProvider((req) => {
+      requests.push(req);
+      return [{ type: 'done' }];
+    });
+    const { deps } = makeDeps({ model, tools: { weather, echo: echoTool() } });
+
+    await runTurn(deps, 'hi');
+
+    expect(requests[0]!.tools).toEqual([
+      { name: 'weather', description: 'weather for a city', parameters: citySchemaJSON },
+      { name: 'echo', description: 'echoes text back', parameters: { type: 'object' } },
+    ]);
+    expect(targets).toEqual(['draft-2020-12']);
+  });
+
   it('one tool round: tool-call -> tool-result, then a clean second-round finish', async () => {
     const requests: ProviderRequest[] = [];
     const model = scriptedProvider((req, turn) => {
