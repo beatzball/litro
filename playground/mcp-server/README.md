@@ -77,11 +77,49 @@ US gets Fahrenheit, everywhere else Celsius. After that the user owns it — a
 later lookup in another country must not flip the unit under someone who has
 just chosen one.
 
+## What this rig bounds, and what it does not
+
+Two limits exist because a demo is the thing people copy, and both were found
+by review rather than by design.
+
+**The caches are bounded.** `geoCache` and `wxCache` are keyed by text the
+CALLER supplies, and the explorer hands that key to anyone who can type. Each
+holds at most 200 entries — enforced after every insert, so calls in flight at
+the same time cannot push it past — oldest evicted first, and each sweeps expired
+entries rather than merely ignoring them on read — a TTL checked only at read
+time frees nothing. A geocode miss expires after an hour instead of being
+remembered for the life of the process.
+
+**What reaches the model is capped.** A tool result is read by the model, so
+whatever is typed inside the iframe travels to the server and comes back in
+`content[0].text`. That means a person can put arbitrary text into a model's
+context through a weather card. The city is capped at 80 characters — in the
+input, in every tool schema, and again in the server before anything echoes it,
+because a schema is a request to the host and this rig must not depend on one
+being enforced. Truncation is marked with an ellipsis, counted inside the 80
+rather than added after it.
+
+The name is echoed once: an unknown place reports that there is no match
+without repeating what was typed. Length is counted in code points, so the
+cut never leaves half a character behind: the string stays valid and the
+lookup cannot throw. A malformed string is repaired rather than
+passed on — a half-emoji used to make the lookup throw, and the server then
+told the model it was offline when it was not.
+
+One limit is left on purpose. A flag or a family emoji is SEVERAL code points,
+and the cut can still land between them — a UK flag becomes a lone regional
+letter. That changes a glyph, not the request; it cannot throw.
+
+**Capping is not safety.** It bounds the text; it does not make it trustworthy.
+The real defence is that a model must not treat tool output as instructions,
+and that belongs to whoever writes the agent, not to this server.
+
 ## The weather is real
 
 `get-weather` calls [Open-Meteo](https://open-meteo.com) — no API key, no
 account. Two requests: a city name to coordinates, then coordinates to a
-current reading. Both are cached for five minutes, because the Refresh button
+current reading. A reading is cached for five minutes and a geocode for an
+hour, because the Refresh button
 exists to prove a round trip happened, not to hammer a free public API.
 
 **The SERVER fetches, not the view**, and that is the part worth noticing: the
@@ -89,10 +127,11 @@ packed document still declares no CSP and still loads nothing from the network.
 Data reaches it as `structuredContent` over `postMessage`. Adding a live
 upstream changed nothing about the sandbox.
 
-Offline, or for a place the geocoder does not know, it returns a placeholder
+When there is no reading — the network is down, the API errors, the response is
+malformed — or for a place the geocoder does not know, it returns a placeholder
 labelled as one — `live: false` in `structuredContent`, and "NOT a real
 reading." in the text the model sees. A demo that quietly invents weather is
-worse than one that says it could not reach the network.
+worse than one that admits it has no reading.
 
 ## What this rig proved
 

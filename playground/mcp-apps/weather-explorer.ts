@@ -21,7 +21,7 @@ export default defineMcpApp({
   shell: html`
     <div id="card">
       <form id="form" autocomplete="off">
-        <input id="city-input" type="text" placeholder="City" aria-label="City" />
+        <input id="city-input" type="text" placeholder="City" aria-label="City" maxlength="80" />
         <button id="submit" type="submit">Go</button>
       </form>
 

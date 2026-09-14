@@ -137,10 +137,14 @@ async function getJson(url: string, ms = 4000): Promise<unknown> {
  * Adding a live upstream changed nothing about the sandbox.
  *
  * Two calls: a name to coordinates, then coordinates to a current reading.
- * Both are cached for a few minutes, because the Refresh button is meant to
+ * A reading is cached for five minutes and a geocode for an hour, because the
+ * Refresh button is meant to
  * prove a round trip happened, not to hammer a free public API.
  */
-const geoCache = new Map<string, { lat: number; lon: number; label: string; country: string } | null>();
+const geoCache = new Map<
+  string,
+  { at: number; found: { lat: number; lon: number; label: string; country: string } | null }
+>();
 const wxCache = new Map<
   string,
   {
@@ -155,9 +159,114 @@ const wxCache = new Map<
 >();
 const WX_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * A geocode is stable, but it is not immortal: a name that resolved to nothing
+ * once — a typo, or an upstream blip — was remembered as a miss for the life of
+ * the process, and in `--http` mode that is a long time.
+ */
+const GEO_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * Both caches are keyed by TEXT THE CALLER SUPPLIED, and the explorer hands
+ * that key to anyone who can type. Without a bound, N distinct strings means N
+ * entries held forever. The number is small on purpose: this is a demo rig, and
+ * an unbounded map keyed by user input is the pattern people copy.
+ */
+const MAX_ENTRIES = 200;
+
+/**
+ * The longest city name this rig will accept, and the longest it will echo.
+ *
+ * A tool result is read by the MODEL. The explorer gives the view an input box,
+ * so whatever is typed inside the iframe travels to the server and comes back
+ * in `content[0].text` — which means a person can put arbitrary text into a
+ * model's context through a weather card. Capping it does not make that safe;
+ * it bounds it, and a bound is the part a demo should show. The real defence
+ * is that a model must not treat tool output as instructions.
+ *
+ * 80 is longer than any real place name (the longest is 85 characters and is a
+ * hill in New Zealand, which Open-Meteo does not index).
+ */
+const MAX_CITY = 80;
+
+/**
+ * String.prototype.toWellFormed(), spelled so it type-checks. That method lives
+ * in lib.es2024 and this repo targets ES2022, so calling it directly is a type
+ * error that only runtime — Node 24 — lets through.
+ *
+ * Replaces a lone surrogate, half of a pair with no partner, with U+FFFD. That
+ * is exactly what toWellFormed() does; the verification compared the two.
+ */
+function wellFormed(text: string): string {
+  return text.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '�');
+}
+
+/**
+ * Caps what we echo at MAX_CITY characters, the ellipsis INCLUDED — so the cap
+ * is the number stated, not one more.
+ *
+ * Counts CODE POINTS, not UTF-16 units. Slicing units cut an emoji in half and
+ * left a lone surrogate; encodeURIComponent threw on it, and the catch in
+ * forecast() then told the model the network was down while it was not.
+ * wellFormed() also repairs a lone surrogate already present in the input,
+ * which capping alone would pass straight through.
+ *
+ * A grapheme built from several code points — a flag, a ZWJ family — can still
+ * be cut between them. That breaks a glyph, not the request: it cannot throw.
+ */
+function capped(text: string): string {
+  const safe = wellFormed(text);
+  const chars = Array.from(safe);
+  return chars.length <= MAX_CITY ? safe : `${chars.slice(0, MAX_CITY - 1).join('')}…`;
+}
+
+/**
+ * Inserts, then enforces the bound — in that order.
+ *
+ * Evicting only BEFORE an insert let the map settle at 201, and let N
+ * concurrent misses each sweep an under-cap map before any of them inserted:
+ * 50 at once on a full cache left 250. Trimming after every set holds the bound
+ * whatever is in flight.
+ *
+ * The delete-then-set matters too. Map keeps a key's ORIGINAL insertion
+ * position on update, so a refreshed entry would otherwise stay "oldest" and be
+ * the first thing evicted.
+ */
+function remember<V extends { at: number }>(
+  cache: Map<string, V>,
+  key: string,
+  value: V,
+  ttlMs: number,
+): void {
+  cache.delete(key);
+  cache.set(key, value);
+  evict(cache, ttlMs);
+}
+
+/**
+ * Drops what has expired, then the oldest entries until the map fits.
+ *
+ * A TTL checked only on READ frees nothing — the entry stays in the map, which
+ * is what the old `wxCache` did. Map iterates in insertion order, so the first
+ * keys are the oldest.
+ */
+function evict(cache: Map<string, { at: number }>, ttlMs: number): void {
+  const now = Date.now();
+  for (const [key, value] of cache) {
+    if (now - value.at >= ttlMs) cache.delete(key);
+  }
+  while (cache.size > MAX_ENTRIES) {
+    const oldest = cache.keys().next();
+    if (oldest.done) break;
+    cache.delete(oldest.value);
+  }
+}
+
 async function locate(city: string) {
   const key = city.trim().toLowerCase();
-  if (geoCache.has(key)) return geoCache.get(key)!;
+  evict(geoCache, GEO_TTL_MS);
+  const cached = geoCache.get(key);
+  if (cached) return cached.found;
 
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
   const body = (await getJson(url)) as {
@@ -174,7 +283,7 @@ async function locate(city: string) {
         country: hit.country_code ?? '',
       }
     : null;
-  geoCache.set(key, found);
+  remember(geoCache, key, { at: Date.now(), found }, GEO_TTL_MS);
   return found;
 }
 
@@ -196,9 +305,14 @@ async function forecast(city: string): Promise<{
   timezone: string;
   live: boolean;
 }> {
-  calls += 1;
+  // Captured, not read later. Every call increments the shared counter
+  // synchronously and then awaits, so three concurrent calls all reported the
+  // FINAL number — the counter exists to show which round trip you are looking
+  // at, and three identical numbers show nothing.
+  const reading = (calls += 1);
   const key = city.trim().toLowerCase();
 
+  evict(wxCache, WX_TTL_MS);
   const fresh = wxCache.get(key);
   if (fresh && Date.now() - fresh.at < WX_TTL_MS) {
     return {
@@ -206,7 +320,7 @@ async function forecast(city: string): Promise<{
       label: fresh.label,
       country: fresh.country,
       timezone: fresh.timezone,
-      summary: `${fresh.summary} (reading #${calls})`,
+      summary: `${fresh.summary} (reading #${reading})`,
       live: true,
     };
   }
@@ -217,7 +331,7 @@ async function forecast(city: string): Promise<{
       return {
         tempC: 0,
         tempF: 32,
-        summary: `No place called "${city}" (reading #${calls})`,
+        summary: `No place by that name (reading #${reading})`,
         label: city,
         country: '',
         timezone: '',
@@ -244,22 +358,19 @@ async function forecast(city: string): Promise<{
     const tempF = Math.round((now.temperature_2m * 9) / 5 + 32);
     const summary = WMO[now.weather_code] ?? `Weather code ${now.weather_code}`;
 
-    wxCache.set(key, {
-      at: Date.now(),
-      tempC,
-      tempF,
-      summary,
-      label: place.label,
-      country: place.country,
-      timezone,
-    });
+    remember(
+      wxCache,
+      key,
+      { at: Date.now(), tempC, tempF, summary, label: place.label, country: place.country, timezone },
+      WX_TTL_MS,
+    );
     // The call number rides along. Without it a refresh two minutes apart
     // renders identically whether the round trip happened or not, and the
     // screenshot proves nothing.
     return {
       tempC,
       tempF,
-      summary: `${summary} (reading #${calls})`,
+      summary: `${summary} (reading #${reading})`,
       label: place.label,
       country: place.country,
       timezone,
@@ -270,7 +381,11 @@ async function forecast(city: string): Promise<{
     return {
       tempC: 15,
       tempF: 59,
-      summary: `Offline placeholder — ${why} (reading #${calls})`,
+      // Not "offline": this catch sees an HTTP error, a malformed response and a
+      // timeout as readily as a dead network, and calling them all offline told
+      // the model something false. What is true of every one is that there is
+      // no reading.
+      summary: `Could not get a reading — ${why} (reading #${reading})`,
       label: city,
       country: '',
       timezone: '',
@@ -324,7 +439,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: 'Current weather for a city.',
       inputSchema: {
         type: 'object',
-        properties: { city: { type: 'string', description: 'City name' } },
+        properties: { city: { type: 'string', description: 'City name', maxLength: MAX_CITY } },
         required: ['city'],
       },
       _meta: {
@@ -357,7 +472,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       // reads the city back off the card.
       inputSchema: {
         type: 'object',
-        properties: { city: { type: 'string', description: 'City name' } },
+        properties: { city: { type: 'string', description: 'City name', maxLength: MAX_CITY } },
         additionalProperties: false,
       },
       _meta: {
@@ -373,7 +488,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         'Shows the weather card as a LIVE web component — the element defines itself in the iframe, so property assignment re-renders it.',
       inputSchema: {
         type: 'object',
-        properties: { city: { type: 'string', description: 'City name' } },
+        properties: { city: { type: 'string', description: 'City name', maxLength: MAX_CITY } },
         additionalProperties: false,
       },
       _meta: {
@@ -389,7 +504,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         'Opens an interactive weather card: type a city, refresh it, reset it, and switch between °F and °C.',
       inputSchema: {
         type: 'object',
-        properties: { city: { type: 'string', description: 'Optional city to open on' } },
+        properties: {
+          city: { type: 'string', description: 'Optional city to open on', maxLength: MAX_CITY },
+        },
         additionalProperties: false,
       },
       _meta: {
@@ -411,7 +528,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   const name = request.params.name;
   const args = (request.params.arguments ?? {}) as { city?: string };
-  const asked = (args.city ?? '').trim();
+  // Capped HERE, before anything else sees it: the schema below declares a
+  // maxLength, but a schema is a request to the host and this rig must not
+  // depend on one being enforced.
+  const asked = capped((args.city ?? '').trim());
 
   // The explorer is a blank slate when opened with no city — it has an input
   // box, so inventing London for it would put a reading on screen the user
