@@ -545,6 +545,9 @@ importers:
         specifier: ^3.2.1
         version: 3.3.2
     devDependencies:
+      '@types/node':
+        specifier: ^22.19.13
+        version: 22.19.13
       nitropack:
         specifier: ^2.13.4
         version: 2.13.4(rolldown@1.0.3)(vite@8.0.16(@types/node@22.19.13)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0))
