@@ -42,7 +42,8 @@ test.describe('agent demo — chat, data/UI separation (FAST playground, /agent)
     const card = page.locator('#ui-slot demo-weather-card');
     await expect(card).toBeVisible();
     await expect(card).toContainText('Lisbon');
-    await expect(card).toContainText('21');
+    // The tool sends tempC: 21; the card displays Fahrenheit. 21C -> 70F.
+    await expect(card).toContainText('70°F');
 
     // v0: the tool result feeds back within the SAME POST turn (no second
     // client-triggered round) -- the closing narration arrives in the same

@@ -97,7 +97,8 @@ test('the shell paints before any data, then the tool result fills it', async ({
   });
 
   await expect(card).toContainText('Doha');
-  await expect(card).toContainText('38°C');
+  // The card displays Fahrenheit; the notification carried Celsius. 38C -> 100F.
+  await expect(card).toContainText('100°F');
   await expect(card).toContainText('clear');
 });
 
@@ -141,6 +142,53 @@ test('the document loads nothing from the network', async ({ page }) => {
  * the derived value to the packager could be deleted — the whole feature — and
  * all 46 unit tests still passed. That mutation now fails here.
  */
+/**
+ * The inert card and the live one, side by side, in a real browser.
+ *
+ * They ship the SAME Lit component and the same declarative shadow DOM. SSR
+ * sends an element's rendered OUTPUT, never its class — so one is markup and
+ * the other is a component, and the only difference is an inlined `runtime`
+ * that calls customElements.define(). This is the claim the README makes, and
+ * jsdom cannot check it: DSD adoption and element upgrade are parser
+ * behaviour.
+ */
+test('a runtime turns the same SSR markup into a live component', async ({ page }) => {
+  const outDir = join(playground, 'dist', 'mcp-apps');
+  const assign = () =>
+    page.evaluate(() =>
+      Object.assign(document.querySelector('demo-weather-card') as object, {
+        city: 'Reykjavik',
+        tempF: 43,
+        summary: 'Overcast',
+      }),
+    );
+  const shadowText = () =>
+    page.evaluate(
+      () =>
+        document
+          .querySelector('demo-weather-card')!
+          .shadowRoot!.textContent!.replace(/\s+/g, ' ')
+          .split('}')
+          .pop()!
+          .trim(),
+    );
+
+  // INERT: no class, so the assignment lands on nothing.
+  await page.setContent(readFileSync(join(outDir, 'weather-card.html'), 'utf8'));
+  expect(await page.evaluate(() => !!customElements.get('demo-weather-card'))).toBe(false);
+  await assign();
+  expect(await shadowText()).toContain('Waiting for the forecast');
+
+  // LIVE: the runtime defined the element, upgrading the tag SSR painted.
+  await page.setContent(readFileSync(join(outDir, 'weather-live.html'), 'utf8'));
+  expect(await page.evaluate(() => !!customElements.get('demo-weather-card'))).toBe(true);
+  // Server-rendered first, before the assignment — the runtime does not cost
+  // the shell, which is the whole reason to SSR it.
+  expect(await shadowText()).toContain('Waiting for the forecast');
+  await assign();
+  expect(await shadowText()).toBe('Reykjavik 43°F Overcast');
+});
+
 test('the manifest carries the address derived from each file path', () => {
   const outDir = join(playground, 'dist', 'mcp-apps');
   const manifest = JSON.parse(readFileSync(join(outDir, 'manifest.json'), 'utf8')) as {
@@ -154,6 +202,8 @@ test('the manifest carries the address derived from each file path', () => {
   // the files sit flat in `mcp-apps/`, so these are what the path must produce.
   expect(manifest.map((a) => a.uri).sort()).toEqual([
     'ui://playground/weather-card',
+    'ui://playground/weather-explorer',
+    'ui://playground/weather-live',
     'ui://playground/weather-refresh',
   ]);
 
