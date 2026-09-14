@@ -123,6 +123,19 @@ export interface McpAppConfig {
   apply?: string;
   csp?: McpAppCsp;
   permissions?: McpAppPermissions;
+  /**
+   * A dedicated sandbox origin for the view, requested from the host. Useful
+   * when the view needs a stable origin: an OAuth callback, a CORS policy, or
+   * an API key allowlist. Omit it and the host uses its default sandbox origin,
+   * typically one per conversation.
+   *
+   * The HOST decides the format, and the host decides the final origin. The
+   * spec says so: "The format and validation rules for this field are
+   * determined by each host. Servers MUST consult host-specific documentation
+   * for the expected domain format." So this is carried through as written;
+   * the only check is that it is a non-empty string.
+   */
+  domain?: string;
   /** Presentation hint: the host may draw a border around the view. */
   prefersBorder?: boolean;
 }
@@ -141,6 +154,7 @@ export interface McpAppDescriptor {
     ui: {
       csp?: McpAppCsp;
       permissions?: McpAppPermissions;
+      domain?: string;
       prefersBorder?: boolean;
     };
   };
@@ -186,6 +200,16 @@ export function defineMcpApp(config: McpAppConfig): McpAppDefinition {
       'defineMcpApp: "apply" must be browser SOURCE as a string, not a function. A function would be serialized ' +
         'with Function.prototype.toString(), which silently drops its closure — and that breaks inside the ' +
         'iframe, where no one sees it.',
+      { status: 500 },
+    );
+  }
+  // Only the type is checked. The spec leaves the format to each host, so a
+  // hostname rule here would refuse a value some host accepts.
+  if (config.domain !== undefined && (typeof config.domain !== 'string' || config.domain === '')) {
+    throw new AgentError(
+      `defineMcpApp: "domain" must be a non-empty string — got ${JSON.stringify(config.domain)}. ` +
+        'Omit it to let the host use its default sandbox origin. Its format is set by the host, ' +
+        "so read the host's documentation for the value to use.",
       { status: 500 },
     );
   }
@@ -438,6 +462,7 @@ export async function buildMcpAppDocument(
   const meta: McpAppDescriptor['_meta']['ui'] = {};
   if (config.csp) meta.csp = config.csp;
   if (config.permissions) meta.permissions = config.permissions;
+  if (config.domain !== undefined) meta.domain = config.domain;
   if (config.prefersBorder !== undefined) meta.prefersBorder = config.prefersBorder;
 
   return {

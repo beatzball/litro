@@ -240,6 +240,7 @@ An `<a href="https://…">` is **not** flagged. A link is a navigation, not a su
 ## Security notes
 
 - `_meta.ui.csp` declares the origins the view may reach: `connectDomains`, `resourceDomains`, `frameDomains`, `baseUriDomains`. **Omit it entirely when the view needs no network** — the spec has the sandbox "apply restrictive defaults if no CSP metadata is provided", which is tighter than handing it an empty object to build a policy from.
+- `domain` becomes `_meta.ui.domain`: a request for a dedicated sandbox origin. Use it when the view needs the same origin every time — an OAuth callback, a CORS policy, or an API key allowlist. **Omit it otherwise**; the host then uses its default sandbox origin, typically one per conversation. The host decides the format and the final origin — the spec says "the format and validation rules for this field are determined by each host", so read your host's documentation for the value to use. Litro checks only that it is a non-empty string, and writes it through unchanged.
 - The bridge accepts messages only from the host frame and only JSON-RPC 2.0.
 - The default CSP allows inline script, but a host **may** restrict further. A host that does will break every inline-script MCP App, not only Litro's.
 
@@ -247,7 +248,7 @@ An `<a href="https://…">` is **not** flagged. A link is a navigation, not a su
 
 - **Elena is not supported** — `ui()` does not support it yet. Its light-DOM output would give the smallest document of the three.
 - **No MCP server.** This produces the artifact a server publishes; serving `resources/list` and `tools/list` is a separate piece of work.
-- `sampling/createMessage`, host-registered tools, and `_meta.ui.domain` are not implemented.
+- `sampling/createMessage` and host-registered tools are not implemented.
 
 ## Worked examples
 
