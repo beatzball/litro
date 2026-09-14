@@ -22,7 +22,16 @@ node playground/mcp-server/index.ts          # stdio (default) — for Claude De
 node playground/mcp-server/index.ts --http   # http — for MCP Inspector
 ```
 
-Node 24 strips the TypeScript types, so there is no build step.
+Node 24 strips the TypeScript types, so there is no build step. Stripping is
+not checking, so CI type-checks this directory on its own:
+
+```bash
+pnpm --filter playground test        # the limits in limits.ts, on node:test
+pnpm --filter playground typecheck   # tsc against the repo's ES2022 target
+```
+
+`limits.ts` holds the cap and the cache bound. It has no side effects, which is
+why it is split from `index.ts`: importing `index.ts` starts a server.
 
 **stdio is the default** and is the transport a host launches on its own. The
 `--http` flag exists only because MCP Inspector V2 auto-connects to a URL and

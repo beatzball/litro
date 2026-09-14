@@ -29,9 +29,15 @@ jobs:
       - name: Build framework
         run: pnpm --filter litro build
       # Runs tests in every workspace package that defines a `test` script:
-      #   litro-router, litro (framework), create-litro, litro-agent.
+      #   litro-router, litro (framework), create-litro, litro-agent, and
+      #   playground (the MCP server's limits, on node:test).
       - name: Run all package tests
         run: pnpm -r test
+      # Nothing else type-checks the playground: its MCP server runs on Node's
+      # type stripping, which ignores types, so a lib.es2024 call against the
+      # repo's ES2022 target ran fine and was caught only by a reviewer.
+      - name: Type-check playground MCP server
+        run: pnpm --filter playground typecheck
 
   build:
     name: Build

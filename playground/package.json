@@ -17,7 +17,9 @@
     "preview": "litro preview",
     "preview:portless": "portless run litro preview",
     "generate": "litro generate",
-    "mcp-app": "litro mcp-app build"
+    "mcp-app": "litro mcp-app build",
+    "test": "node --test \"mcp-server/*.test.ts\"",
+    "typecheck": "tsc -p mcp-server/tsconfig.json"
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",
@@ -29,6 +31,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0"
   },
   "devDependencies": {
+    "@types/node": "^22.19.13",
     "nitropack": "^2.13.4",
     "vite": "^8.0.16",
     "typescript": "^5.7.3"
