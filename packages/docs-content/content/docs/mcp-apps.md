@@ -90,6 +90,21 @@ Use it when the address must not follow the filename, or when you call `buildMcp
 await buildMcpAppDocument(app, { uri: 'ui://weather/card' });
 ```
 
+### Reading the address back
+
+Do not read the address off the config. `app[MCP_APP_CONFIG].uri` is typed `string | undefined`, and for an app that relies on derivation it **is** `undefined` at runtime — the config never learns the derived value, because only the packer knows the file path and the package name. Code that assigned it to a `string` before `uri` became optional now fails to type-check, and adding `!` only hides the `undefined`.
+
+Read the resolved address from what the build produces instead. Each of these is a `string`, and each is the same value the host will cache the template under:
+
+- `descriptor.uri` on the result of `buildMcpAppDocument()`;
+- `uri` in each app's `.json` descriptor under `dist/mcp-apps/`;
+- `uri` on each entry of `dist/mcp-apps/manifest.json`.
+
+```ts
+const { descriptor } = await buildMcpAppDocument(app, { uri: fallback });
+descriptor.uri; // string — the config's uri if it has one, else the fallback
+```
+
 ## Building
 
 ```bash

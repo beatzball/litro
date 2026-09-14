@@ -40,6 +40,13 @@
   its own `uri` keeps it — the config wins over the fallback — so no existing app
   needs an edit.
 
+  Code that **reads** the config may. `MCP_APP_CONFIG` is exported, and
+  `app[MCP_APP_CONFIG].uri` is now typed `string | undefined` — so assigning it
+  to a `string` no longer type-checks — and it is `undefined` at runtime for an
+  app whose address is derived. Read `descriptor.uri` from the result of
+  `buildMcpAppDocument()` instead, or `uri` from the built `.json` descriptor or
+  `manifest.json`; those always hold the resolved address.
+
   URI validation moved from `defineMcpApp()` to `buildMcpAppDocument()`. An
   absent `uri` is only an error once it is known that no fallback is coming, and
   `defineMcpApp()` cannot know that. A malformed one is still rejected, and now
