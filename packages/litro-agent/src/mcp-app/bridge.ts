@@ -29,6 +29,15 @@
 export const MCP_UI_PROTOCOL_VERSION = '2026-01-26';
 
 /**
+ * How long `window.litroMcp.callTool()` and `readResource()` wait for the host
+ * before rejecting. A host that drops a message would otherwise leave the
+ * promise pending forever, and a view that shows "Refreshing…" would show it
+ * for the life of the document. Callers override it per call with
+ * `{ timeoutMs }`; `0` waits forever.
+ */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+
+/**
  * Element properties a tool result may never set.
  *
  * `Object.assign(el, structuredContent)` was the original fill step and it is
@@ -69,6 +78,7 @@ export const BRIDGE_SOURCE = `(function () {
   var PROTOCOL = '2.0';
   var UI_PROTOCOL_VERSION = '${MCP_UI_PROTOCOL_VERSION}';
   var DENIED = ${JSON.stringify(DENIED_PROPERTIES)};
+  var DEFAULT_TIMEOUT_MS = ${DEFAULT_REQUEST_TIMEOUT_MS};
 
   var appMeta = window.__litroMcpApp || {};
   var nextId = 1;
@@ -84,11 +94,38 @@ export const BRIDGE_SOURCE = `(function () {
     window.parent.postMessage(msg, '*');
   }
 
-  function request(method, params) {
+  // timeoutMs: a positive number rejects after that many ms; 0 waits forever.
+  // Anything else (absent, negative, not a number) falls back to the default.
+  function timeoutFrom(options) {
+    var ms = options && options.timeoutMs;
+    if (ms === 0) return 0;
+    if (typeof ms === 'number' && ms > 0 && isFinite(ms)) return ms;
+    return DEFAULT_TIMEOUT_MS;
+  }
+
+  function request(method, params, timeoutMs) {
     var id = nextId++;
     post({ jsonrpc: PROTOCOL, id: id, method: method, params: params || {} });
     return new Promise(function (resolve, reject) {
-      pending[id] = { resolve: resolve, reject: reject };
+      var timer = null;
+      function settle(fn, value) {
+        if (timer) clearTimeout(timer);
+        fn(value);
+      }
+      pending[id] = {
+        resolve: function (v) { settle(resolve, v); },
+        reject: function (e) { settle(reject, e); },
+      };
+      if (timeoutMs > 0) {
+        timer = setTimeout(function () {
+          // Deleting the slot is what makes a late answer a no-op: the message
+          // handler finds no slot for this id and returns.
+          delete pending[id];
+          var err = new Error('MCP App request "' + method + '" timed out after ' + timeoutMs + 'ms');
+          err.name = 'TimeoutError';
+          reject(err);
+        }, timeoutMs);
+      }
     });
   }
 
@@ -220,11 +257,11 @@ export const BRIDGE_SOURCE = `(function () {
   }
 
   window.litroMcp = {
-    callTool: function (name, args) {
-      return request('tools/call', { name: name, arguments: args || {} });
+    callTool: function (name, args, options) {
+      return request('tools/call', { name: name, arguments: args || {} }, timeoutFrom(options));
     },
-    readResource: function (uri) {
-      return request('resources/read', { uri: uri });
+    readResource: function (uri, options) {
+      return request('resources/read', { uri: uri }, timeoutFrom(options));
     },
     reportSize: reportSize,
   };
@@ -234,6 +271,12 @@ export const BRIDGE_SOURCE = `(function () {
   // protocolVersion. clientInfo is sent alongside appInfo because the spec's own
   // example uses that name while the reference host validates for appInfo;
   // sending both satisfies either reading and costs one line.
+  //
+  // NO timeout on the handshake (timeoutMs 0), on purpose. A host can be slow to
+  // answer it, and giving up gains nothing: the catch below does nothing, the
+  // shell is on screen either way. Giving up does cost something: a slow host's
+  // late answer would then be dropped, so the view would never apply its theme,
+  // never send initialized, and never report its size.
   var info = {
     name: appMeta.name || 'litro-mcp-app',
     version: appMeta.version || '0.0.0',
@@ -253,7 +296,7 @@ export const BRIDGE_SOURCE = `(function () {
     appCapabilities: {
       availableDisplayModes: appMeta.displayModes || ['inline'],
     },
-  })
+  }, 0)
     .then(function (result) {
       applyHostContext(result && result.hostContext);
       post({ jsonrpc: PROTOCOL, method: 'ui/notifications/initialized', params: {} });

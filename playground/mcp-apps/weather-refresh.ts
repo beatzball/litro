@@ -127,8 +127,10 @@ export default defineMcpApp({
           // notification does, so the same fill step handles both.
           if (result && result.structuredContent) window.litroMcpApply(card, result.structuredContent);
         })
-        .catch(function () {
-          if (status) status.textContent = 'Could not refresh.';
+        .catch(function (err) {
+          // The host refused, or never answered: the bridge rejects after its
+          // timeout, so this replaces "Refreshing…" instead of leaving it up.
+          if (status) status.textContent = 'Could not refresh: ' + (err && err.message ? err.message : 'failed');
         });
     });
   `,
