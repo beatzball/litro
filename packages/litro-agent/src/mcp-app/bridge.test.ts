@@ -5,8 +5,8 @@
  * are what pays that back: they evaluate the EXACT string that gets inlined and
  * drive it through a fake host, so the protocol is exercised, not described.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { BRIDGE_SOURCE } from './bridge.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { BRIDGE_SOURCE, DEFAULT_REQUEST_TIMEOUT_MS } from './bridge.js';
 
 interface RpcMessage {
   jsonrpc?: string;
@@ -211,5 +211,130 @@ describe('calling back into the server', () => {
 
     fromHost({ jsonrpc: '2.0', id, result: { structuredContent: { tempC: 21 } } });
     await expect(promise).resolves.toEqual({ structuredContent: { tempC: 21 } });
+  });
+});
+
+describe('a host that never answers', () => {
+  type Api = {
+    callTool(n: string, a?: unknown, o?: { timeoutMs?: number }): Promise<unknown>;
+    readResource(u: string, o?: { timeoutMs?: number }): Promise<unknown>;
+  };
+  const api = () => (window as unknown as { litroMcp: Api }).litroMcp;
+
+  // The bridge is evaluated in beforeEach, before these fake timers exist. That
+  // is fine: request() calls setTimeout when a call is MADE, and every call
+  // below is made after useFakeTimers.
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('rejects callTool after the default timeout, naming the method', async () => {
+    const promise = api().callTool('refresh');
+    const outcome = promise.then(
+      () => 'resolved',
+      (err: Error) => err,
+    );
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS - 1);
+    let settled = false;
+    void outcome.then(() => (settled = true));
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    const err = await outcome;
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatch(/timed out/);
+    expect((err as Error).message).toContain('tools/call');
+    expect((err as Error).message).toContain(String(DEFAULT_REQUEST_TIMEOUT_MS));
+  });
+
+  it('rejects readResource the same way', async () => {
+    const outcome = api()
+      .readResource('ui://x/y')
+      .catch((err: Error) => err);
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS);
+    const err = await outcome;
+    expect((err as Error).message).toMatch(/timed out/);
+    expect((err as Error).message).toContain('resources/read');
+  });
+
+  it('ignores an answer that arrives after the timeout', async () => {
+    const outcome = api()
+      .callTool('refresh')
+      .then(
+        (r) => ({ resolved: r }),
+        (e: Error) => ({ rejected: e.message }),
+      );
+    const id = sent.at(-1)?.id;
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS);
+
+    // The slot is gone, so this is a response to an id the bridge no longer
+    // holds: no throw, and the promise keeps the rejection it already has.
+    expect(() => fromHost({ jsonrpc: '2.0', id, result: { late: true } })).not.toThrow();
+    expect(await outcome).toEqual({ rejected: expect.stringMatching(/timed out/) });
+  });
+
+  it('does not reject a call the host answered in time', async () => {
+    const promise = api().callTool('refresh');
+    const id = sent.at(-1)?.id;
+    fromHost({ jsonrpc: '2.0', id, result: { ok: true } });
+    await expect(promise).resolves.toEqual({ ok: true });
+
+    // The timer was cleared, so running past the deadline changes nothing.
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS * 2);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('takes a per-call timeoutMs for a tool that is slow on purpose', async () => {
+    const outcome = api()
+      .callTool('slow', { n: 1 }, { timeoutMs: DEFAULT_REQUEST_TIMEOUT_MS * 4 })
+      .then(
+        () => 'resolved',
+        (e: Error) => e.message,
+      );
+    expect(sent.at(-1)?.params).toEqual({ name: 'slow', arguments: { n: 1 } });
+
+    let settled = false;
+    void outcome.then(() => (settled = true));
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS * 2);
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS * 2);
+    expect(await outcome).toMatch(/timed out after 120000ms/);
+  });
+
+  it('waits forever when timeoutMs is 0', async () => {
+    const promise = api().callTool('slow', {}, { timeoutMs: 0 });
+    const id = sent.at(-1)?.id;
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS * 100);
+    fromHost({ jsonrpc: '2.0', id, result: { eventually: true } });
+    await expect(promise).resolves.toEqual({ eventually: true });
+  });
+
+  it('does not time out the handshake, so a slow host still completes it', async () => {
+    // The handshake was sent in beforeEach under real timers, so re-run the
+    // bridge under fake ones to put ITS request on the fake clock.
+    for (const fn of listeners) window.removeEventListener('message', fn);
+    sent = [];
+    const realAdd = window.addEventListener.bind(window);
+    window.addEventListener = ((type: string, fn: EventListener, opts?: unknown) => {
+      if (type === 'message') listeners.push(fn);
+      return realAdd(type, fn, opts as never);
+    }) as typeof window.addEventListener;
+    new Function(BRIDGE_SOURCE)();
+    window.addEventListener = realAdd;
+
+    const init = sent[0];
+    expect(init.method).toBe('ui/initialize');
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS * 10);
+
+    fromHost({ jsonrpc: '2.0', id: init.id, result: { hostContext: { theme: 'dark' } } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(sent.map((m) => m.method)).toContain('ui/notifications/initialized');
   });
 });

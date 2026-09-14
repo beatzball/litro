@@ -218,14 +218,34 @@ The bridge exposes `window.litroMcp.callTool(name, args)`, which the host forwar
 runtime: `
   document.addEventListener('click', function (event) {
     if (!event.target.closest('#refresh')) return;
-    window.litroMcp.callTool('get-weather', { city: 'Doha' }).then(function (result) {
-      window.litroMcpApply(document.getElementById('card'), result.structuredContent);
-    });
+    var status = document.getElementById('status');
+    status.textContent = 'Refreshing…';
+    window.litroMcp
+      .callTool('get-weather', { city: 'Doha' })
+      .then(function (result) {
+        status.textContent = '';
+        window.litroMcpApply(document.getElementById('card'), result.structuredContent);
+      })
+      .catch(function (err) {
+        // The host answered with an error, or did not answer in time.
+        status.textContent = 'Could not refresh: ' + err.message;
+      });
   });
 `,
 ```
 
 `window.litroMcp.readResource(uri)` is available on the same channel.
+
+Both calls reject if the host does not answer within **30 seconds**. The error's `name` is `TimeoutError` and its message names the method, for example `MCP App request "tools/call" timed out after 30000ms`. A late answer after that is ignored. Always handle the rejection. Without a `.catch`, a view that shows "Refreshing…" keeps showing it after the call has failed.
+
+For a tool that is slow on purpose, pass a timeout as the last argument. `0` waits forever:
+
+```js
+window.litroMcp.callTool('build-report', { year: 2026 }, { timeoutMs: 120000 });
+window.litroMcp.readResource('ui://reports/latest', { timeoutMs: 0 });
+```
+
+The `ui/initialize` handshake has no timeout. A host can be slow to answer it, and the server-rendered shell is on screen while it waits.
 
 ## Self-containment is enforced
 
