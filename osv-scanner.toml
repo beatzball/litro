@@ -4,6 +4,10 @@
 # (HTTP 410). osv-scanner scans the lockfile against the OSV database with no
 # dependency on that endpoint.
 #
+# Fixable advisories are FIXED, not listed here. js-yaml GHSA-2883-xcg3-v3hh
+# was resolved by bumping the existing pnpm overrides to ^3.15.2 / ^4.3.2 — a
+# patch on each line — rather than adding two more entries below.
+#
 # The entries below baseline the advisories present when this gate was
 # introduced. Each is either a dev/tooling dependency that is NOT shipped in
 # any published @beatzball package, or a transitive advisory below the `high`
@@ -26,6 +30,14 @@ reason = "esbuild is a dev/build-only tool (via vite/vitest); not shipped in any
 [[IgnoredVulns]]
 id = "GHSA-jmr9-qjv8-65gv" # extract-zip 2.0.1 (High, CVSS 8.6)
 reason = "No fixed version exists upstream as of 2026-08-21. Dev/benchmark-only: the sole path is @beatzball/litro-benchmarks (a PRIVATE workspace) -> lighthouse -> puppeteer-core -> @puppeteer/browsers -> extract-zip, so it never ships to users. Verified with `pnpm why -r extract-zip`, which reports that workspace and no other. Revisit when @puppeteer/browsers ships a patched extract-zip."
+
+[[IgnoredVulns]]
+id = "GHSA-82fw-gwwq-j7x9" # vitest / @vitest/mocker 2.1.9 (Medium, CVSS 5.9)
+reason = "vitest is a dev/test-only dependency; not a production dependency of any published @beatzball package, so it never ships to users. Verified: none of the four published packages (@beatzball/litro, -router, -agent, create-litro) lists vitest under `dependencies`. The fix is vitest 4.1.11, a MAJOR bump from the 2.x this repo pins — that is a test-infrastructure migration, not a security patch, and it is tracked separately rather than smuggled into an audit fix. Revisit when the repo moves to vitest 4."
+
+[[IgnoredVulns]]
+id = "GHSA-7pqw-9j4j-h8q3" # extract-zip 2.0.1 (High, CVSS 8.1)
+reason = "No fixed version exists upstream as of 2026-09-13 (the advisory lists no patched release). Same package and same sole path as GHSA-jmr9-qjv8-65gv above: @beatzball/litro-benchmarks (a PRIVATE workspace) -> lighthouse -> puppeteer-core -> @puppeteer/browsers -> extract-zip, confirmed with `pnpm why -r extract-zip`, which reports that workspace and no other. Never ships to users. Revisit when @puppeteer/browsers ships a patched extract-zip."
 
 [[IgnoredVulns]]
 id = "GHSA-w5hq-g745-h8pq" # uuid 8.3.2 (High)
