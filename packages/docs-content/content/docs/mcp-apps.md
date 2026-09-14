@@ -168,6 +168,32 @@ The build warns when it sees that assignment, so it stops being something you do
 
 **That warning is a text match, not a parse**, and it is worth knowing what it does and does not catch. It finds the name in assignment position however you reach it — `window.`, `globalThis.`, `self.`, a local alias, bracket notation, `??=` — and it strips comments first. Two gaps remain: a string that merely mentions the name still warns, and `Object.assign(window, { litroMcpApply: fn })` does not. Closing either needs a real parse of your source, which is more than a warning is worth.
 
+### What the deny list does not cover
+
+The deny list is narrow on purpose. Two things are outside it.
+
+**Your component's own setters.** The default fill step sets every key it does not refuse: `el[key] = data[key]`. The deny list knows the built-in sinks. It cannot know the properties your component defines. So if a component in your `runtime` has a setter that writes HTML, a URL or a style, a tool result reaches that sink by using the property's name:
+
+```js
+class RichCard extends HTMLElement {
+  set summary(value) { this.innerHTML = value; }
+}
+```
+
+A result of `{ "summary": "<img src=x onerror=…>" }` puts that image in the card. Nothing is refused and nothing is reported, because `summary` is an ordinary name.
+
+Do one of two things:
+
+- Keep every setter that takes tool data free of HTML, URL and style sinks. Set `textContent`, not `innerHTML`.
+- Or write an `apply` that copies only the fields you expect, as in [Filling the shell](#filling-the-shell).
+
+**Network.** The deny list is about scripting. It does not limit what the view can load or connect to. That is the CSP's job, and it depends on `_meta.ui.csp`:
+
+- **No `csp`:** the spec has the host use `default-src 'none'` and `connect-src 'none'`. The view can reach no outside origin.
+- **`connectDomains` or `resourceDomains` declared:** anything that runs in the view may reach those origins. That includes a component setter from the gap above.
+
+So declare only the origins the view really needs, and omit `csp` when it needs none.
+
 ## `runtime` and `apply` are strings, and that has a cost
 
 Both are browser **source as a string**. Nothing type-checks them, nothing lints them, and your editor cannot help. A typo is invisible until the document is inside a host, where a `SyntaxError` kills the whole script tag and the view simply never fills — with no error you will see.
