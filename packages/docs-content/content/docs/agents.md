@@ -8,7 +8,7 @@ date: 2026-07-14
 
 `@beatzball/litro-agent` is a filesystem-first agent layer for Litro apps. Agents live under `agents/<name>/` as plain files: an `agent.ts` that picks a model provider and a set of tools, an `instructions.md` inlined at build time, and a `tools/` directory. Nothing proprietary runs behind the scenes — the whole surface is a build-time scanner plus two Nitro route handlers, so an agent deploys anywhere Nitro deploys. The distinctive capability is that **a tool can return a server-rendered web component** — the same Declarative Shadow DOM elements the app's pages render, streamed over the session and hydrated in place. The model reasons over structured `data`; the human sees a component; neither channel leaks into the other.
 
-This is the v0 surface. It ships one JSONL session store, two live providers (plus a scripted one for tests), and the Lit and FAST renderers. Skills, MCP, subagents, OpenTelemetry, and alternate session stores are specified but deferred — see [Limitations](#limitations).
+This is the v0 surface. It ships two session stores (the default JSONL file store and an opt-in `node:sqlite` store), opt-in OpenTelemetry spans, two live providers (plus a scripted one for tests), and the Lit and FAST renderers. Skills, the MCP client, subagents, and the Elena renderer are specified but deferred — see [Limitations](#limitations).
 
 ## Setup
 
