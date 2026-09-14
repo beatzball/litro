@@ -1,6 +1,6 @@
 {
   "name": "playground-elena",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "private": true,
   "description": "Litro playground — Elena adapter test app",
   "type": "module",
