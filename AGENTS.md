@@ -80,6 +80,7 @@ litro/
   docs/                         ← Official docs site (@beatzball/litro-docs, SSG)
   docs-ssr/                     ← SSR docs site (@beatzball/litro-docs-ssr)
   research/                     ← Research agent findings (R-1 through R-4)
+  design/                       ← Specs, plans and ADRs (see design/README.md)
 ```
 
 ## Key Conventions
@@ -151,7 +152,8 @@ auto-links it to the PR or issue with that number. Write "PRD item N" or "Item N
 Research findings (R-1 through R-4) are archived in `research/SUMMARY.md`.
 Key decisions from implementation are in `DECISIONS.md`.
 Architecture overview is in `ARCHITECTURE.md`.
-Planning docs, specs, plans and decision records live in `design/`; `design/README.md` says what may be committed there.
+Specs, plans and ADRs (decision records) live in `design/`. `design/README.md` says what may be committed there.
+New decisions go in `design/adr/`.
 
 ## Current Status
 

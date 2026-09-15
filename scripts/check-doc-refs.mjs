@@ -54,10 +54,12 @@ const SCAN_DIRS = ['packages/docs-content/content', '.agents/rules'];
 // A code span is only treated as a repo path when its first segment is one of
 // these. Everything else is assumed to be relative to a scaffolded user app.
 // `.agents` is here so the rule index in AGENTS.md cannot point at a missing
-// rules file. `.github` is deliberately absent: the docs cite it to describe
-// the reader's own repository.
+// rules file. `design` is here so a scanned file cannot cite a missing design
+// doc; design/ itself is still not scanned (see above). `.github` is
+// deliberately absent: the docs cite it to describe the reader's own
+// repository.
 const TOP_DIRS = new Set([
-  '.agents',
+  '.agents', 'design',
   'packages', 'docs', 'docs-ssr', 'benchmarks', 'e2e', 'scripts', 'research',
   '.changeset', 'playground', 'playground-11ty', 'playground-fast',
   'playground-elena', 'playground-starlight', 'playground-starlight-fast',
