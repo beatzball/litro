@@ -30,27 +30,34 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* ── What we scan ─────────────────────────────────────────────────────── */
 
-// PRDs are not scanned. They now live outside the repo entirely, in the
-// gitignored .claude/prd/, because they describe past or planned state rather
-// than what the code does today — and a reference check against them reports
-// drift that is intentional.
+// Planning docs in design/ are not scanned, because they describe planned or
+// past state, and a reference check against them reports drift that is
+// intentional.
+//
+// AGENTS.md and the rules under .agents/rules/ ARE scanned: they describe the
+// code as it is today, so a broken reference in one is a real bug. CLAUDE.md
+// is not listed; it is a single `@AGENTS.md` import line with nothing to check.
 const SCAN_FILES = [
   'README.md',
   'ARCHITECTURE.md',
   'DECISIONS.md',
-  'CLAUDE.md',
+  'AGENTS.md',
   'packages/framework/README.md',
   'packages/litro-router/README.md',
   'packages/create-litro/README.md',
   'packages/litro-agent/README.md',
 ];
-const SCAN_DIRS = ['packages/docs-content/content'];
+const SCAN_DIRS = ['packages/docs-content/content', '.agents/rules'];
 
 /* ── Check 1: repo paths ──────────────────────────────────────────────── */
 
 // A code span is only treated as a repo path when its first segment is one of
 // these. Everything else is assumed to be relative to a scaffolded user app.
+// `.agents` is here so the rule index in AGENTS.md cannot point at a missing
+// rules file. `.github` is deliberately absent: the docs cite it to describe
+// the reader's own repository.
 const TOP_DIRS = new Set([
+  '.agents',
   'packages', 'docs', 'docs-ssr', 'benchmarks', 'e2e', 'scripts', 'research',
   '.changeset', 'playground', 'playground-11ty', 'playground-fast',
   'playground-elena', 'playground-starlight', 'playground-starlight-fast',
