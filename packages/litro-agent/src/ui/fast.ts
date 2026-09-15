@@ -2,7 +2,7 @@
  * FAST renderer for `ui()`: server-renders an HTML tag string to DSD via
  * `@microsoft/fast-ssr`'s `templateRenderer`.
  *
- * Per the Task 1 spike (docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md
+ * Per the Task 1 spike (design/specs/2026-07-07-litro-agent-v0-design.md
  * section 10, Q1): a standalone, independently-constructed `templateRenderer`
  * (via `@beatzball/litro/adapter/fast/ssr-init`) renders byte-identical DSD
  * output to the page pipeline's singleton — custom-element registration lives

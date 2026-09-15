@@ -1,6 +1,8 @@
 # Server Actions (Typed RPC) v1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+Status: Accepted — shipped
+
+> Implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Export an async function from a `*.server.ts` module and call it from anywhere — in-process during SSR, as a typed HTTP RPC (`POST /__litro/action/:id`) from the browser — with seroval serialization, Standard Schema validation via `defineAction`, default-on CSRF, and server code structurally excluded from the client bundle.
 
@@ -8,7 +10,7 @@
 
 **Tech Stack:** TypeScript, Nitro 2.13, Vite 8, h3, seroval (new dep), es-module-lexer (new dep), vitest, Playwright.
 
-**Spec:** `docs/superpowers/specs/2026-07-03-server-actions-rpc-design.md` — read it before starting. Where this plan and the spec differ on a mechanism detail (e.g. static manifest imports instead of lazy `load()`), this plan wins; it reflects post-spec design refinement.
+**Spec:** `design/specs/2026-07-03-server-actions-rpc-design.md` — read it before starting. Where this plan and the spec differ on a mechanism detail (e.g. static manifest imports instead of lazy `load()`), this plan wins; it reflects post-spec design refinement.
 
 ## Global Constraints
 
@@ -1809,12 +1811,12 @@ kill %1
 
 - [ ] **Step 9: Record spike answers**
 
-Append the empirical outcomes to the spec (`docs/superpowers/specs/2026-07-03-server-actions-rpc-design.md`) under §6 "Spike questions": which registration mechanism shipped (a or b), and whether `useEvent()` resolved a live event (add a temporary `console.log(ctx.event?.path)` in `echoUpper`'s handler, click the button, check the server log, then remove it). Update §4.2/§4.6 prose if reality differed.
+Append the empirical outcomes to the spec (`design/specs/2026-07-03-server-actions-rpc-design.md`) under §6 "Spike questions": which registration mechanism shipped (a or b), and whether `useEvent()` resolved a live event (add a temporary `console.log(ctx.event?.path)` in `echoUpper`'s handler, click the button, check the server log, then remove it). Update §4.2/§4.6 prose if reality differed.
 
 - [ ] **Step 10: Commit**
 
 ```bash
-git add playground/ docs/superpowers/specs/2026-07-03-server-actions-rpc-design.md
+git add playground/ design/specs/2026-07-03-server-actions-rpc-design.md
 git commit -m "feat(playground): wire server actions demo page and endpoint"
 ```
 
@@ -1914,7 +1916,7 @@ Implements spec §8 checkpoints (a)+(b). Dispatch a **fresh subagent that wrote 
 
 - [ ] **Step 1: Dispatch the validation subagent**
 
-> Adversarially verify the Server Actions implementation on branch `worktree-server-actions-rpc` against its spec (`docs/superpowers/specs/2026-07-03-server-actions-rpc-design.md`). Do not trust commit messages or comments — read the code and run the commands. Verify: (1) every export named in the spec exists with the stated signature and subpath (`@beatzball/litro/actions`, `/actions/client`, `/actions/handler`, `/plugins/actions`, `litroActionsPlugin` from `/vite`); (2) `packages/framework/src/actions/client.ts` imports nothing Node-only (trace its full import graph); (3) the serializer uses seroval JSON mode (`toJSON`/`fromJSON`), NOT the eval-based `serialize`/`deserialize`; (4) the CSRF gates match the spec (header, sec-fetch-site, origin/host); (5) hash inputs are identical on the Vite side and the Nitro side (extension-stripped, root-relative, posix) — construct a concrete example and compute both; (6) every unit test asserts what its name claims (read them); (7) the spec's §6 spike answers recorded in Task 8 match what the code actually does now; (8) run `pnpm --filter @beatzball/litro test` and `pnpm exec playwright test --project=playground` and report actual output. Return a numbered list: CONFIRMED / REFUTED per item with file:line evidence.
+> Adversarially verify the Server Actions implementation on branch `worktree-server-actions-rpc` against its spec (`design/specs/2026-07-03-server-actions-rpc-design.md`). Do not trust commit messages or comments — read the code and run the commands. Verify: (1) every export named in the spec exists with the stated signature and subpath (`@beatzball/litro/actions`, `/actions/client`, `/actions/handler`, `/plugins/actions`, `litroActionsPlugin` from `/vite`); (2) `packages/framework/src/actions/client.ts` imports nothing Node-only (trace its full import graph); (3) the serializer uses seroval JSON mode (`toJSON`/`fromJSON`), NOT the eval-based `serialize`/`deserialize`; (4) the CSRF gates match the spec (header, sec-fetch-site, origin/host); (5) hash inputs are identical on the Vite side and the Nitro side (extension-stripped, root-relative, posix) — construct a concrete example and compute both; (6) every unit test asserts what its name claims (read them); (7) the spec's §6 spike answers recorded in Task 8 match what the code actually does now; (8) run `pnpm --filter @beatzball/litro test` and `pnpm exec playwright test --project=playground` and report actual output. Return a numbered list: CONFIRMED / REFUTED per item with file:line evidence.
 
 - [ ] **Step 2: Fix every refuted finding, re-run affected tests, commit fixes**
 
@@ -2116,7 +2118,7 @@ git commit -m "docs: add server actions guide"
 
 Fresh subagent, brief (verbatim):
 
-> Fact-check `packages/docs-content/content/docs/server-actions.md` on branch `worktree-server-actions-rpc` against the actual code. For EVERY code sample: do the imports resolve (check `packages/framework/package.json` exports)? Do the named functions exist with those signatures (read `packages/framework/src/actions/`)? Would the sample typecheck against real Litro conventions (class pages, `pageData` named export, `nitro.config.ts`+`vite.config.ts`, `.js` import specifiers)? For every prose claim (CSRF behavior, serialization capabilities, endpoint path, status codes, limitations): find the implementing code line or refute. Also diff the doc's setup section against the actual `playground/` wiring (`git diff main -- playground/`) — they must match mechanism-for-mechanism. Also verify the spec `docs/superpowers/specs/2026-07-03-server-actions-rpc-design.md` §4/§6 now reflects shipped reality (registration mechanism, useEvent outcome). Return CONFIRMED/REFUTED per item with file:line evidence.
+> Fact-check `packages/docs-content/content/docs/server-actions.md` on branch `worktree-server-actions-rpc` against the actual code. For EVERY code sample: do the imports resolve (check `packages/framework/package.json` exports)? Do the named functions exist with those signatures (read `packages/framework/src/actions/`)? Would the sample typecheck against real Litro conventions (class pages, `pageData` named export, `nitro.config.ts`+`vite.config.ts`, `.js` import specifiers)? For every prose claim (CSRF behavior, serialization capabilities, endpoint path, status codes, limitations): find the implementing code line or refute. Also diff the doc's setup section against the actual `playground/` wiring (`git diff main -- playground/`) — they must match mechanism-for-mechanism. Also verify the spec `design/specs/2026-07-03-server-actions-rpc-design.md` §4/§6 now reflects shipped reality (registration mechanism, useEvent outcome). Return CONFIRMED/REFUTED per item with file:line evidence.
 
 - [ ] **Step 2: Fix all refuted findings in docs/spec, re-run `pnpm test:docs`, commit**
 

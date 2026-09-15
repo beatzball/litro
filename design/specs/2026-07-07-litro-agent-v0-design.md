@@ -1,8 +1,9 @@
 # `@beatzball/litro-agent` v0 — Design
 
-- **Status:** Draft — pending user review, then design review
+Status: Accepted — shipped
+
 - **Date:** 2026-07-07
-- **Source RFC:** `docs/superpowers/specs/2026-07-07-litro-agent-rfc-v0.md` (authored outside this repo). Where the RFC and this spec disagree, this spec wins — same treatment the Server Actions RFC received.
+- **Source RFC:** `design/specs/2026-07-07-litro-agent-rfc-v0.md` (authored outside this repo). Where the RFC and this spec disagree, this spec wins — same treatment the Server Actions RFC received.
 - **Scope:** the RFC's §11 vertical slice, items 1–4: one agent + one UI tool + web surface; data/UI separation; stream + resume; second component lib (FAST). OpenTelemetry moves to v0.1 (first deferral in line). Skills, MCP, presets, subagents, non-web surfaces, sqlite/postgres stores, scheduled runs, and evals are spec'd here as contracts but deferred.
 - **Builds on:** Server Actions v1 + M2 (both shipped): seroval NDJSON stream protocol, Standard Schema validation, `.server.ts` externalization discipline, the consumer wiring pattern, and every timing/prefix lesson recorded in their specs.
 
