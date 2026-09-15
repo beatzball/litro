@@ -1,8 +1,10 @@
 # @beatzball/litro-agent v0 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+Status: Accepted — shipped
 
-**Goal:** Ship `@beatzball/litro-agent` v0 per `docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md`: one agent + one UI tool + web surface, data/UI separation, stream + resume, and FAST as the second component lib.
+> Implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Ship `@beatzball/litro-agent` v0 per `design/specs/2026-07-07-litro-agent-v0-design.md`: one agent + one UI tool + web surface, data/UI separation, stream + resume, and FAST as the second component lib.
 
 **Architecture:** New workspace package wired via the actions pattern (build:before scanner → generated manifest/handler stubs → static handler entries). The turn loop appends every `SessionEvent` to a `SessionStore` BEFORE writing it to the NDJSON response (append-before-wire is the keystone). `ui()` renders design-system components server-side (Lit DSD via `@lit-labs/ssr`, FAST via the `templateRenderer` singleton) into a `UIResult` whose `data` — never its `html` — is what the model observes.
 
@@ -10,7 +12,7 @@
 
 ## Global Constraints
 
-- **Spec wins:** `docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md`. RFC file is source material only.
+- **Spec wins:** `design/specs/2026-07-07-litro-agent-v0-design.md`. RFC file is source material only.
 - **No competitor product names** in any committed content (docs, specs, comments, commit messages).
 - Endpoints live at `/__litro/agent/:agent/:session` — double underscore; `/_litro/` is serve-placeholder territory.
 - seroval JSON-data modes only, via `@beatzball/litro/stream` (`createStreamEncoder`/`createStreamDecoder`/`StreamChunk`/`isAsyncIterable`) — never seroval's code-eval APIs.
@@ -43,7 +45,7 @@
 ### Task 1: Spike — answer spec §10 empirically (no production code)
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md` (append answers to §10)
+- Modify: `design/specs/2026-07-07-litro-agent-v0-design.md` (append answers to §10)
 - Scratch files under `playground-fast/` and `playground/` created and DELETED within the task.
 
 **Interfaces:**
@@ -86,7 +88,7 @@ Run the dev server, curl it three times, record whether the counter increments a
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md
+git add design/specs/2026-07-07-litro-agent-v0-design.md
 git commit -m "docs(agent): record spike answers for spec section 10"
 ```
 
@@ -944,7 +946,7 @@ Same wiring as Task 14 (playground-fast has NO actions wiring — agents wiring 
 **Files:**
 - Create: `packages/docs-content/content/docs/agents.md`
 - Modify: `docs/server/starlight.config.js` (sidebar: `{ label: 'Agents', slug: 'agents' }` under Features, after Server Actions)
-- Modify: `docs/superpowers/specs/2026-07-07-litro-agent-v0-design.md` (record any implementation deviations discovered in Tasks 1–16 in an `## Implementation deviations` section)
+- Modify: `design/specs/2026-07-07-litro-agent-v0-design.md` (record any implementation deviations discovered in Tasks 1–16 in an `## Implementation deviations` section)
 
 Guide sections (all claims verified against shipped code; the Task 20 fact-check agent diffs them): What agents are (positioning, one paragraph, no competitor names) · Setup (wiring edits incl. handler entries/route rule/imports map, `agents/_config.ts`, `.litro/` gitignore note) · Directory convention (`agents/<name>/`, `_`-prefix exclusion) · `defineAgent`/`defineAccess` · Tools (`defineTool`, Standard Schema requirement, three return shapes) · UI tools (`ui()`, UIResult, the model-sees-data rule, per-adapter notes incl. FAST string templates, hydrate contract + `setHTMLUnsafe` note) · Providers (openai-compatible, anthropic, scripted; env keys) · Sessions (JSONL store, ids, reconnect via `resume`, v0 single-instance lock limitation) · Client (`agentSession`, `hydrateUIResult`) · Security (gates, access guard, hostile tool input, session privacy, `.litro/` sensitivity) · Limitations/deferred (mirrors spec §9 incl. skills §5.8 pointer).
 
@@ -974,4 +976,4 @@ Initial release: filesystem-first agent layer for Litro apps. `agents/<name>/` d
 - [ ] **Step 2: Whole-branch review** (strongest tier): security of the complete surface (gates, access guard ordering, session-id filename safety, hostile tool inputs, UIResult injection paths, data-channel HTML leakage), cross-task contract drift, spec-vs-code, no competitor names (`grep -rniE 'flue|vercel|eve[^n]' <changed files>` — mind false positives like "even"/"event": review hits manually), leftover debris.
 - [ ] **Step 3: Final battery** (Task 17 command set) — all green.
 - [ ] **Step 4: Personal-identifier sweep** (log + full branch diff, `<author-name-pattern>|/Users/` — must be clean).
-- [ ] **Step 5: Fix findings; commit; hand off** to superpowers:finishing-a-development-branch. PR body: no bare `#N`, standard footer.
+- [ ] **Step 5: Fix findings; commit; hand off** for merge/PR handling. PR body: no bare `#N`.
