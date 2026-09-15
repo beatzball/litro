@@ -2,7 +2,7 @@
 
 Status: Accepted — shipped
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Export an async function from a `*.server.ts` module and call it from anywhere — in-process during SSR, as a typed HTTP RPC (`POST /__litro/action/:id`) from the browser — with seroval serialization, Standard Schema validation via `defineAction`, default-on CSRF, and server code structurally excluded from the client bundle.
 

@@ -2,7 +2,6 @@
 
 Status: Accepted — shipped
 
-- **Status:** Approved design, pre-implementation
 - **Date:** 2026-07-03
 - **Scope:** Litro core (`@beatzball/litro`) — Vite plugin + Nitro plugin + runtime. RFC phases 1–2 (spike + core). Forms, streaming returns, GET actions, and the lint rule are explicitly deferred to a second milestone.
 - **Relationship to `@litro/agent`:** Server Actions ship first. The agent layer will reuse this milestone's serializer (seroval), the `/__litro/*` runtime-endpoint pattern, Standard Schema validation, and the `.server.ts` externalization boundary. Nothing in the agent spec blocks or is blocked by decisions here.

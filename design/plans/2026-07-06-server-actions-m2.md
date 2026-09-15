@@ -2,7 +2,7 @@
 
 Status: Accepted — shipped
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship Server Actions Milestone 2: progressive-enhancement forms with a no-JS path, streaming action returns, create-litro fullstack template wiring, and the v1 follow-up basket — per the approved design `design/specs/2026-07-05-server-actions-m2-design.md`.
 
@@ -2344,7 +2344,7 @@ pnpm test:e2e:preview
 
 Expected: all green. `test:e2e:preview` matters here — production builds exercise the asyncContext path (`ctx.event` defined in-process) and the generated runtime plugin in a bundled server.
 
-- [ ] **Step 2: Fix any failures via superpowers:systematic-debugging, commit fixes**
+- [ ] **Step 2: Fix any failures, commit fixes**
 
 ```bash
 git add -A && git commit -m "fix: checkpoint B regressions"
@@ -2715,4 +2715,4 @@ Expected: no output from either grep (exit code 1). If anything matches, rewrite
 git add -A && git commit -m "fix: checkpoint C findings"
 ```
 
-(Skip if no findings.) Then use superpowers:finishing-a-development-branch to decide merge/PR handling. PR body must reference "PRD item" style numbering only (no bare `#N`) and end with the standard generated-with footer.
+(Skip if no findings.) Then decide merge/PR handling. PR body must reference "PRD item" style numbering only (no bare `#N`).

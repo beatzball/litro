@@ -2,7 +2,6 @@
 
 Status: Accepted — shipped
 
-- **Status:** Approved design, pre-implementation
 - **Date:** 2026-07-05
 - **Builds on:** Server Actions v1 (PR 88, merged; spec `design/specs/2026-07-03-server-actions-rpc-design.md`). All v1 contracts are frozen: endpoint `POST /__litro/action/:id`, `hashActionId = sha256(relPath + '#' + exportName).slice(0,12)`, seroval JSON-data modes only (never code-eval), static `handlers` route entry, idempotent generated-file writes.
 - **Scope:** (1) progressive-enhancement forms with a no-JS path, (2) streaming action returns, (3) create-litro fullstack template wiring, (4) the v1 follow-up basket. Deferred again: GET actions/caching, `'use server'` directive, lint rule, type-level `Serializable<T>`.

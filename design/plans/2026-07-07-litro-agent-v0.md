@@ -2,7 +2,7 @@
 
 Status: Accepted — shipped
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship `@beatzball/litro-agent` v0 per `design/specs/2026-07-07-litro-agent-v0-design.md`: one agent + one UI tool + web surface, data/UI separation, stream + resume, and FAST as the second component lib.
 
@@ -976,4 +976,4 @@ Initial release: filesystem-first agent layer for Litro apps. `agents/<name>/` d
 - [ ] **Step 2: Whole-branch review** (strongest tier): security of the complete surface (gates, access guard ordering, session-id filename safety, hostile tool inputs, UIResult injection paths, data-channel HTML leakage), cross-task contract drift, spec-vs-code, no competitor names (`grep -rniE 'flue|vercel|eve[^n]' <changed files>` — mind false positives like "even"/"event": review hits manually), leftover debris.
 - [ ] **Step 3: Final battery** (Task 17 command set) — all green.
 - [ ] **Step 4: Personal-identifier sweep** (log + full branch diff, `<author-name-pattern>|/Users/` — must be clean).
-- [ ] **Step 5: Fix findings; commit; hand off** to superpowers:finishing-a-development-branch. PR body: no bare `#N`, standard footer.
+- [ ] **Step 5: Fix findings; commit; hand off** for merge/PR handling. PR body: no bare `#N`.
