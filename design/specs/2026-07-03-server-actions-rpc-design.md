@@ -1,5 +1,7 @@
 # Server Actions (Typed RPC) — v1 Design
 
+Status: Accepted — shipped
+
 - **Status:** Approved design, pre-implementation
 - **Date:** 2026-07-03
 - **Scope:** Litro core (`@beatzball/litro`) — Vite plugin + Nitro plugin + runtime. RFC phases 1–2 (spike + core). Forms, streaming returns, GET actions, and the lint rule are explicitly deferred to a second milestone.

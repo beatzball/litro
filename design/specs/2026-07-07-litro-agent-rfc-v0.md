@@ -1,5 +1,7 @@
 # `@litro/agent` — design spec (v0) [SOURCE RFC — authored outside this repo]
 
+Status: Superseded by 2026-07-07-litro-agent-v0-design.md
+
 > NOTE: This is the source RFC pasted verbatim on 2026-07-07. Where it disagrees
 > with the corrected design spec that follows from design review, the corrected
 > spec wins (same treatment as the Server Actions RFC; see

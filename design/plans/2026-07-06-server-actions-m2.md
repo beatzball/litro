@@ -1,8 +1,10 @@
 # Server Actions Milestone 2 — Forms, Streaming, Templates: Implementation Plan
 
+Status: Accepted — shipped
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship Server Actions Milestone 2: progressive-enhancement forms with a no-JS path, streaming action returns, create-litro fullstack template wiring, and the v1 follow-up basket — per the approved design `docs/superpowers/specs/2026-07-05-server-actions-m2-design.md`.
+**Goal:** Ship Server Actions Milestone 2: progressive-enhancement forms with a no-JS path, streaming action returns, create-litro fullstack template wiring, and the v1 follow-up basket — per the approved design `design/specs/2026-07-05-server-actions-m2-design.md`.
 
 **Architecture:** Forms reuse the existing `POST /__litro/action/:id` endpoint: the handler branches on request content-type (form-encoded → PRG flow with one-shot error cookie; everything else → v1 RPC unchanged). Streaming detects an `AsyncIterable` handler result and responds with NDJSON lines of seroval cross-JSON nodes that `callAction` revives incrementally. A generated Nitro runtime plugin stamps action ids onto server-side exports so the isomorphic `actionUrl()` works during SSR.
 
@@ -2603,7 +2605,7 @@ git commit -m "feat(create-litro): wire server actions into the fullstack templa
 
 **Files:**
 - Modify: `packages/docs-content/content/docs/server-actions.md`
-- Modify: `docs/superpowers/specs/2026-07-05-server-actions-m2-design.md`
+- Modify: `design/specs/2026-07-05-server-actions-m2-design.md`
 
 - [ ] **Step 1: Update the Server Actions guide**
 
@@ -2625,7 +2627,7 @@ Every code example must be verified against the shipped exports (subpaths, names
 
 - [ ] **Step 2: Amend the M2 spec (lockstep rule)**
 
-Append a `## Implementation deviations` section to `docs/superpowers/specs/2026-07-05-server-actions-m2-design.md` recording the seven pinned decisions from this plan's header (seroval per-value cross-JSON composition; TextDecoder line reader; `enhanceForms(root)` param + shadow-DOM rationale; Vite client stub for `@beatzball/litro/actions/server`; plain-function runtime plugin; server-side `_litro_csrf` stripping; PRG-vs-plain-error split), each with one sentence of rationale.
+Append a `## Implementation deviations` section to `design/specs/2026-07-05-server-actions-m2-design.md` recording the seven pinned decisions from this plan's header (seroval per-value cross-JSON composition; TextDecoder line reader; `enhanceForms(root)` param + shadow-DOM rationale; Vite client stub for `@beatzball/litro/actions/server`; plain-function runtime plugin; server-side `_litro_csrf` stripping; PRG-vs-plain-error split), each with one sentence of rationale.
 
 - [ ] **Step 3: Verify docs build/tests, commit**
 
@@ -2633,7 +2635,7 @@ Run: `pnpm test:docs`
 Expected: PASS.
 
 ```bash
-git add packages/docs-content/content/docs/server-actions.md docs/superpowers/specs/2026-07-05-server-actions-m2-design.md
+git add packages/docs-content/content/docs/server-actions.md design/specs/2026-07-05-server-actions-m2-design.md
 git commit -m "docs: server actions forms and streaming guide; record M2 implementation deviations"
 ```
 
@@ -2686,7 +2688,7 @@ git commit -m "chore: changesets for server actions milestone 2"
 
 - [ ] **Step 1: Dispatch an independent docs fact-check agent.** Brief: read `packages/docs-content/content/docs/server-actions.md` and verify EVERY claim against the real code — each named export exists at the stated subpath with the stated signature; each code example type-checks against real conventions (class pages, `pageData` export, `nitro.config.ts`/`vite.config.ts`); each described behavior (status codes, cookie names/attributes, event names, redirect fallback chain, content types) matches the shipped implementation and tests. Fix findings in place.
 
-- [ ] **Step 2: Dispatch an independent whole-branch reviewer.** Brief: review the full branch diff against `docs/superpowers/specs/2026-07-05-server-actions-m2-design.md` for spec-code contract violations, security regressions in the CSRF gates, and leftover debug code. Fix findings.
+- [ ] **Step 2: Dispatch an independent whole-branch reviewer.** Brief: review the full branch diff against `design/specs/2026-07-05-server-actions-m2-design.md` for spec-code contract violations, security regressions in the CSRF gates, and leftover debug code. Fix findings.
 
 - [ ] **Step 3: Final battery**
 
