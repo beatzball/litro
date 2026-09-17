@@ -135,7 +135,7 @@ Refused no matter what the app says:
 - **A backslash in the name.** The build resolves app files to absolute paths, and that rewrites `a\b.ts` into `a/b.ts` — so the loader would look for a file that is not there.
 
   Setting `uri` does not help for any of those three: none of them is about the address.
-- **A `.` or `..` segment.** Neither survives normalisation, so the path written down is not the path that gets resolved — and enough leading `..` lands outside the output directory entirely.
+- **A `.` or `..` segment.** Neither survives normalization, so the path written down is not the path that gets resolved — and enough leading `..` lands outside the output directory entirely.
 - **An app packing to `manifest` at the top level.** `manifest.json` is the index, and it would overwrite the app's own descriptor. Put it in a folder, or rename it. Matched without regard to case, because `Manifest.json` is the same file on macOS and Windows.
 - **Two apps claiming one address.** Only reachable by writing `uri` by hand. A host caches templates by URI, so a collision does not merge or warn — one app would quietly serve the other's markup. Compared by RFC 3986 equivalence, so `ui://PKG/a` and `ui://pkg/a` are one address, not two.
 

@@ -36,7 +36,7 @@ describe('the descriptor is a valid MCP Resource', () => {
     });
   });
 
-  it('honours an explicit name', async () => {
+  it('honors an explicit name', async () => {
     const { descriptor } = await buildMcpAppDocument(
       defineMcpApp({ uri: 'ui://playground/weather-card', shell, name: 'Weather forecast' }),
     );

@@ -12,7 +12,7 @@
  *
  * All of that is derivable from the repository, so it is done here instead of
  * being retyped (or half-remembered) each time. What is NOT done here is the
- * writing: turning a README into good pages is a judgement call, and this
+ * writing: turning a README into good pages is a judgment call, and this
  * module deliberately leaves it to a human or an agent, guided by the
  * AGENTS.md it drops next to the content.
  */
@@ -60,7 +60,7 @@ function tryExec(cmd: string, args: string[], cwd: string): string {
   }
 }
 
-/** Normalise any git remote form to an https URL. */
+/** Normalize any git remote form to an https URL. */
 export function normalizeRemote(remote: string): string {
   if (!remote) return '';
   // git@github.com:owner/repo.git, ssh://git@host/owner/repo, https://…/repo.git

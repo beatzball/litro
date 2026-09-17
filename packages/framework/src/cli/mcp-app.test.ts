@@ -177,7 +177,7 @@ describe('uriFromFile', () => {
     });
 
     it.each(['../escape.ts', 'a/./b.ts', 'a/../b.ts'])('refuses the dot segment in %s', (input) => {
-      // RFC 3986 normalisation REMOVES these, so `a/./b` and `a/b` are one
+      // RFC 3986 normalization REMOVES these, so `a/./b` and `a/b` are one
       // resource to a host and two entries to us.
       expect(() => uriFromFile(input, 'playground')).toThrow(/parser removes those/);
     });

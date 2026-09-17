@@ -35,7 +35,7 @@ import type { SessionEvent, SessionLease, SessionStore } from './types.js';
 export interface SqliteSessionStoreOptions {
   /** Database file path. Use `':memory:'` only for single-connection tests
    *  — an in-memory database is not shared between connections, so it can
-   *  never demonstrate the multi-instance behaviour this store exists for. */
+   *  never demonstrate the multi-instance behavior this store exists for. */
   path: string;
   /** Default lease duration. The runtime renews on a heartbeat at a third
    *  of this, so a lease only lapses if an instance stalls (or dies) for

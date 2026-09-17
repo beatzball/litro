@@ -376,7 +376,7 @@ console.error(`
 How to fix:
   - "missing path"    the file was moved or never existed. Correct the path.
   - "not exported"    the docs invent an API. Use a real export, or add the
-                      export if the docs describe intended behaviour.
+                      export if the docs describe intended behavior.
   - "unknown subpath" the package exports map has no such entry.
   - "unknown element"  no @customElement/customElements.define declares this tag.
   - "wrong package"    published packages are scoped: @beatzball/litro.

@@ -104,7 +104,7 @@ interface Post {
 }
 ```
 
-Note: after a JSON round-trip through the `__litro_data__` script tag, `Post.date` arrives on the client as an ISO string rather than a `Date`. Normalise with a small helper if you read it during `render()`:
+Note: after a JSON round-trip through the `__litro_data__` script tag, `Post.date` arrives on the client as an ISO string rather than a `Date`. Normalize with a small helper if you read it during `render()`:
 
 ```ts
 function toDate(d: Date | string): Date {

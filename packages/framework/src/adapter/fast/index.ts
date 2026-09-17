@@ -14,7 +14,7 @@ import type { FrameworkAdapter } from '../types.js';
 /**
  * Render a FAST component to an AsyncIterable<string> of HTML chunks.
  *
- * The templateRenderer is initialised by the manifestPreamble (ssr-init.ts)
+ * The templateRenderer is initialized by the manifestPreamble (ssr-init.ts)
  * at module eval time — before any page components are defined. We import it
  * here to reuse the same singleton for every render call.
  *
@@ -30,7 +30,7 @@ async function* renderFastPage(
   tag: string,
   serverData: unknown,
 ): AsyncIterable<string> {
-  // The templateRenderer was initialised by the manifest preamble (which runs
+  // The templateRenderer was initialized by the manifest preamble (which runs
   // at module eval time, before any page component is defined) and stored on
   // globalThis. Retrieve it here.
   const templateRenderer = (globalThis as any).__litro_fast_template_renderer__;
@@ -102,7 +102,7 @@ export const fastAdapter: FrameworkAdapter = {
     //    SSR template compiler). Must run before any component is defined.
     //
     // The templateRenderer is stored on globalThis so renderFastPage() can
-    // retrieve it without re-initialising.
+    // retrieve it without re-initializing.
     //
     // IMPORTANT: The DOM shim import uses `import * as` (not bare `import`)
     // because Rollup tree-shakes bare side-effect-only imports of external

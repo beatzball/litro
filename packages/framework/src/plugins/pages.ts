@@ -87,7 +87,7 @@ function toRelativeImportSpecifier(fromFile: string, toFile: string): string {
  *   - `'stub'` → string written to `<rootDir>/server/stubs/page-manifest.ts`.
  *     This file IS picked up by the consumer's `tsc --noEmit`, so it uses
  *     relative `.js` specifiers (no absolute paths, no `.ts` extensions) and
- *     leads with `// @ts-nocheck` so any remaining generator artefacts don't
+ *     leads with `// @ts-nocheck` so any remaining generator artifacts don't
  *     break strict typechecking.
  */
 function generateManifestModule(
@@ -120,7 +120,7 @@ function generateManifestModule(
   // NOTE: Both variants must be valid JavaScript (no TypeScript syntax) — the
   // virtual variant is fed directly to Rollup, and the stub lives in the
   // consumer's project where TS syntax would be surprising in generated code.
-  // Adapter preamble: some frameworks (e.g. FAST, Elena) need initialisation
+  // Adapter preamble: some frameworks (e.g. FAST, Elena) need initialization
   // imports to run before any component code is evaluated.
   const preambleBlock = preamble ? `${preamble}\n` : '';
 

@@ -57,7 +57,7 @@ describe('patchCustomElementsIdempotent', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Patching behaviour
+  // Patching behavior
   // ---------------------------------------------------------------------------
 
   it('sets __litroIdempotent to true after patching', () => {

@@ -31,7 +31,7 @@ export interface TurnDeps {
   /** Runaway guard: max number of PROVIDER CALLS in a single turn. Default 8. */
   maxToolRounds?: number;
   /** Span emitter. Omitted (or unconfigured) means the shared no-op — the
-   *  loop's behaviour is identical either way; telemetry never changes what
+   *  loop's behavior is identical either way; telemetry never changes what
    *  is appended to the store or written to the wire. */
   telemetry?: Telemetry;
 }

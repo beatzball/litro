@@ -133,7 +133,7 @@ d('sqliteSessionStore -- store contract', () => {
     await expect(drain(s, 'has spaces')).rejects.toThrow(/Invalid session id/);
   });
 
-  it('serialises concurrent appends into unique contiguous seqs', async () => {
+  it('serializes concurrent appends into unique contiguous seqs', async () => {
     const s = store();
     const results = await Promise.all(
       Array.from({ length: 25 }, (_, i) => s.append('s1', { ts: i, kind: 'text-delta', payload: { i } })),

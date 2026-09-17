@@ -81,7 +81,7 @@ export default async function viteDevPlugin(nitro: Nitro): Promise<void> {
     const viteHandler = fromNodeMiddleware(viteServer.middlewares);
 
     // Push the Vite handler as a devHandler at the root route ('/**').
-    // Vite will process requests it recognises (JS/TS modules, HMR WebSocket,
+    // Vite will process requests it recognizes (JS/TS modules, HMR WebSocket,
     // virtual modules via /@id/...) and call next() for everything else,
     // allowing Nitro's own router to handle API routes and the HTML catch-all.
     nitro.options.devHandlers.push({

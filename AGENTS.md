@@ -104,6 +104,18 @@ and a check. Read the file before you work in its area.
 - `.agents/rules/release-deps.md` — before you add or bump a dependency, change the dependency audit, pack a package, or edit the release workflow.
 - `.agents/rules/agent-mcp.md` — before you touch `packages/litro-agent/`, its session stores, or the MCP Apps packager.
 
+## Writing
+
+**American English, everywhere.** Docs, code comments, test names, error
+messages, commit messages, PR and issue bodies, and briefs you hand to another
+agent: color, behavior, initialize, normalize, labeled, canceled, judgment,
+license. Agents copy the spelling of whatever they read, so a British brief
+spreads.
+
+`scripts/check-spelling.mjs` fails CI on common British forms. When you quote
+third-party text exactly, put `spelling-ignore` on that line. CHANGELOG files
+are release history and are not checked.
+
 ## Commits and pull requests
 
 **No provenance trailers.** Not in a commit message, not in a PR body, not in a

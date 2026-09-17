@@ -170,10 +170,10 @@ function assertUsableOutputPath(relPath: string, segments: string[]): void {
   const dot = segments.find((seg) => seg === '.' || seg === '..');
   if (dot) {
     // Two different hazards, one refusal. A `.` never escapes the out dir and a
-    // `..` only does so from the front — but NEITHER survives normalisation, so
+    // `..` only does so from the front — but NEITHER survives normalization, so
     // the path written into the manifest is not the path anything resolves to.
     throw new Error(
-      `"${relPath}" contains a "${dot}" segment. It does not survive path normalisation, so the ` +
+      `"${relPath}" contains a "${dot}" segment. It does not survive path normalization, so the ` +
         'file written down would not be the file resolved — and a leading ".." lands outside the ' +
         'output directory entirely.',
     );
@@ -224,7 +224,7 @@ function assertUsableUriSegments(relPath: string, segments: string[]): void {
   }
 
   // `.` and `..` are syntactically fine but are REMOVED by RFC 3986
-  // normalisation, so `a/./b` and `a/b` are one resource to a host and two
+  // normalization, so `a/./b` and `a/b` are one resource to a host and two
   // entries to us.
   const dot = segments.find((seg) => seg === '.' || seg === '..');
   if (dot) {
@@ -364,7 +364,7 @@ function listNames(names: string[]): string {
  * segments, but for a NON-SPECIAL scheme like `ui:` it leaves the host's case
  * and a percent-triplet's case exactly as written — so `ui://P/a%2Fb` and
  * `ui://p/a%2fb`, one resource by §6.2.2.1, stay two strings. Both of those
- * remaining normalisations are applied here.
+ * remaining normalizations are applied here.
  *
  * Only reachable through a hand-written `uri`: a derived one is lowercase by
  * construction and can hold no `%`.
@@ -374,7 +374,7 @@ function canonicalUri(uri: string): string {
   try {
     parsed = new URL(uri);
   } catch {
-    // Not parseable, so nothing can normalise it into another entry either.
+    // Not parseable, so nothing can normalize it into another entry either.
     return uri;
   }
   // The host is case-insensitive and a percent-triplet's hex digits are too;

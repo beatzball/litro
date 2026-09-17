@@ -15,7 +15,7 @@ export class DemoWeatherCard extends LitElement {
       display: block;
     }
     /*
-     * Colours come from custom properties, which inherit THROUGH the shadow
+     * Colors come from custom properties, which inherit THROUGH the shadow
      * boundary — the only way the document's theme reaches in here. The
      * fallbacks are the light palette, so the card is still readable wherever
      * nothing defines them (the agent demo, a plain page).
