@@ -12,7 +12,7 @@
  *     AFTER that microtask, so firstUpdated() runs with routes=[] and the
  *     router is never given the real routes.
  *   - The fix: LitroOutlet.routes uses a property setter that calls
- *     setRoutes() directly when the router is already initialised. This avoids
+ *     setRoutes() directly when the router is already initialized. This avoids
  *     triggering Lit's update/render cycle (which would crash because
  *     firstUpdated() does not drive any Lit render in LitroOutlet's light-DOM mode).
  *
@@ -141,7 +141,7 @@ describe('LitroOutlet — routes set synchronously before first update', () => {
 // ---------------------------------------------------------------------------
 
 describe('LitroOutlet — routes set after first update (timing-race fix)', () => {
-  it('calls setRoutes() when routes are assigned after the router is initialised', async () => {
+  it('calls setRoutes() when routes are assigned after the router is initialized', async () => {
     // Append without routes — simulates the DOMContentLoaded timing race where
     // firstUpdated() fires before the routes are assigned.
     const el = await makeOutlet();
@@ -155,7 +155,7 @@ describe('LitroOutlet — routes set after first update (timing-race fix)', () =
     expect(setRoutesSpy).toHaveBeenCalledWith(ROUTES);
   });
 
-  it('does NOT call setRoutes() before the router is initialised (setter guard)', () => {
+  it('does NOT call setRoutes() before the router is initialized (setter guard)', () => {
     // Element created but NOT appended → firstUpdated() never fires → router = undefined.
     const el = document.createElement('litro-outlet') as InstanceType<typeof LitroOutlet>;
     el.routes = ROUTES as never; // setter runs but router is undefined
@@ -183,11 +183,11 @@ describe('LitroOutlet — routes set after first update (timing-race fix)', () =
 });
 
 // ---------------------------------------------------------------------------
-// SSR child-preservation behaviour (FOUC prevention)
+// SSR child-preservation behavior (FOUC prevention)
 // ---------------------------------------------------------------------------
 
 describe('LitroOutlet — preserves SSR children in firstUpdated() to prevent FOUC', () => {
-  it('does NOT remove children present before the router initialises', async () => {
+  it('does NOT remove children present before the router initializes', async () => {
     const el = document.createElement('litro-outlet') as InstanceType<typeof LitroOutlet>;
     // Simulate SSR-streamed content inside the outlet.
     const ssrNode = document.createElement('div');

@@ -155,7 +155,7 @@ export default defineMcpApp({
        * visibly wrong by the time anyone read it. Formatting here means the
        * clock is right whenever the card draws.
        *
-       * Intl throws on a zone it does not recognise, so a bad or missing one
+       * Intl throws on a zone it does not recognize, so a bad or missing one
        * costs the time and nothing else.
        */
       function localTime(zone) {

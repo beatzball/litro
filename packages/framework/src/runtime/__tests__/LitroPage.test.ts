@@ -251,7 +251,7 @@ describe('LitroPage convenience base class', () => {
 });
 
 // ---------------------------------------------------------------------------
-// LitroPage — default fetchData() content-negotiation behaviour
+// LitroPage — default fetchData() content-negotiation behavior
 // ---------------------------------------------------------------------------
 
 describe('LitroPage default fetchData() — content negotiation', () => {

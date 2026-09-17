@@ -17,7 +17,7 @@ export default defineNitroConfig({
   // Explicit routes are required for non-HTML responses that crawlLinks
   // cannot discover (XML files have no anchor tags to follow).
   // '/' is included so crawlLinks has a starting point regardless of
-  // whether the default behaviour holds across Nitro versions.
+  // whether the default behavior holds across Nitro versions.
   prerender: {
     ...ssg.prerender,
     // '/' seeds crawlLinks to discover all HTML pages linked from the site.

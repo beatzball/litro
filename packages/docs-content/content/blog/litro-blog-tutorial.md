@@ -73,7 +73,7 @@ import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
 
 // Post.date is a Date on the server, but after the JSON round-trip into
-// __litro_data__ it becomes a string on the client. Normalise before use.
+// __litro_data__ it becomes a string on the client. Normalize before use.
 function toDate(d: Date | string): Date {
   return d instanceof Date ? d : new Date(d as string);
 }
@@ -131,7 +131,7 @@ import { getPosts } from 'litro:content';
 import type { Post } from 'litro:content';
 
 // Post.date is a Date on the server, but after the JSON round-trip into
-// __litro_data__ it becomes a string on the client. Normalise before use.
+// __litro_data__ it becomes a string on the client. Normalize before use.
 function toDate(d: Date | string): Date {
   return d instanceof Date ? d : new Date(d as string);
 }

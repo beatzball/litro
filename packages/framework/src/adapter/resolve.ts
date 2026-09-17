@@ -21,7 +21,7 @@ import type { FrameworkAdapter, AdapterName } from './types.js';
  *
  * @param name - Adapter name. Defaults to 'lit'.
  * @returns The resolved FrameworkAdapter instance.
- * @throws If the adapter name is not recognised.
+ * @throws If the adapter name is not recognized.
  */
 export async function resolveAdapter(
   name?: AdapterName | string,

@@ -1,5 +1,5 @@
 /**
- * Multi-instance behaviour: the cross-instance turn lease, and the
+ * Multi-instance behavior: the cross-instance turn lease, and the
  * store-poll live tail that makes a reconnecting client work when the turn
  * is running somewhere else.
  *

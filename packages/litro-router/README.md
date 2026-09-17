@@ -173,7 +173,7 @@ class BlogPostPage extends LitElement {
 
 ## SPA navigation
 
-`LitroRouter` does **not** intercept plain `<a>` clicks. Plain anchors always perform full page reloads — this is the correct browser default and the right behaviour for SSG sites, where each page load fetches a fresh pre-rendered HTML file with the correct `__litro_data__` script tag injected by the server.
+`LitroRouter` does **not** intercept plain `<a>` clicks. Plain anchors always perform full page reloads — this is the correct browser default and the right behavior for SSG sites, where each page load fetches a fresh pre-rendered HTML file with the correct `__litro_data__` script tag injected by the server.
 
 For explicit SPA navigation use one of the following:
 

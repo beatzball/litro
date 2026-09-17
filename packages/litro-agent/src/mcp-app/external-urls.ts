@@ -101,7 +101,7 @@ function isExternal(url: string): boolean {
 }
 
 /** What the browser will actually request, for the error message. */
-function normalise(url: string): string {
+function normalize(url: string): string {
   try {
     return new URL(url, SELF_BASE).href;
   } catch {
@@ -154,7 +154,7 @@ function cssRefs(css: string): ExternalRef[] {
   const consider = (raw: string, kind: ExternalRef['kind']): void => {
     const url = decodeCssEscapes(raw);
     if (!isExternal(url)) return;
-    const href = normalise(url);
+    const href = normalize(url);
     if (kind === 'css-url' && imported.has(href)) return;
     if (kind === 'css-import') imported.add(href);
     found.push({ kind, url: href });
@@ -185,7 +185,7 @@ function walk(node: Node, found: ExternalRef[]): void {
 
   if (tag) {
     const push = (kind: ExternalRef['kind'], value: string | undefined) => {
-      if (value !== undefined && isExternal(value)) found.push({ kind, url: normalise(value) });
+      if (value !== undefined && isExternal(value)) found.push({ kind, url: normalize(value) });
     };
 
     // `src` is not tag-specific on purpose: img, iframe, embed, video, audio,

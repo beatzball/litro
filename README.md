@@ -228,7 +228,7 @@ pnpm add -D portless
 portless run litro dev   # -> https://myapp.localhost
 ```
 
-The CLI honours the `PORT` env var injected by Portless and logs the named URL when `PORTLESS_URL` is detected. All playground and recipe templates include a `dev:portless` script for convenience.
+The CLI honors the `PORT` env var injected by Portless and logs the named URL when `PORTLESS_URL` is detected. All playground and recipe templates include a `dev:portless` script for convenience.
 
 ---
 

@@ -8,7 +8,7 @@
  * The adapter is selected per-project via the `adapter` field in
  * LitroConfig. Each adapter provides:
  *   - SSR rendering: turn a custom element tag + server data into an HTML stream
- *   - Shell customisation: hydration scripts, DSD polyfill toggle
+ *   - Shell customization: hydration scripts, DSD polyfill toggle
  *   - Build config: Vite plugins, Nitro externals / esbuild options
  *   - Component registration: how page modules are registered on the server
  *
@@ -109,7 +109,7 @@ export interface FrameworkAdapter {
    * `#litro/page-manifest` virtual module.
    *
    * The manifest statically imports all page modules, which in turn import
-   * the framework library. Some frameworks (e.g. FAST) require initialisation
+   * the framework library. Some frameworks (e.g. FAST) require initialization
    * code to run BEFORE the framework is first imported (DOM shims, SSR
    * patching). This preamble is injected at the very top of the manifest so
    * it is evaluated first in the Rollup bundle.

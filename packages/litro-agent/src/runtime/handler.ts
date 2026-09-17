@@ -140,7 +140,7 @@ const locks = new Set<string>();
 /** Turn-lease duration requested from a lease-capable store, and how often
  *  the holder renews it. A lease only lapses if an instance stalls (or
  *  dies) for a full TTL, at which point another instance may take the
- *  session over -- which is exactly the desired recovery behaviour. */
+ *  session over -- which is exactly the desired recovery behavior. */
 const TURN_LEASE_TTL_MS = 30_000;
 const TURN_LEASE_RENEW_MS = Math.floor(TURN_LEASE_TTL_MS / 3);
 

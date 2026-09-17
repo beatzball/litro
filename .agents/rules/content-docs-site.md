@@ -36,7 +36,7 @@ HTML carries `class="language-<lang>"`.
 **Why:** a CommonMark HTML block ends at the first blank line, so remark splits
 multi-line raw HTML into broken pieces. `rehype-raw` parses it back into a tree.
 `applyHighlighting()` only matches `<code class="language-*">`, so a block
-without the class gets a dark background and no token colours.
+without the class gets a dark background and no token colors.
 
 **Check:** `packages/framework/src/content/parser.ts` and the regex in
 `packages/docs-ui/src/highlight.ts`.
@@ -75,7 +75,7 @@ with a global stylesheet needs it too.
 ### CONTENT-006 — The docs' `sl-*` components do not render on the server
 
 In `packages/docs-ui`, navigation links and calls to action are plain `<a>`
-elements. `sl-*` elements that only add behaviour are hidden with
+elements. `sl-*` elements that only add behavior are hidden with
 `@media (scripting: none)`.
 
 **Why:** the `sl-*` component library needs browser APIs and is never registered

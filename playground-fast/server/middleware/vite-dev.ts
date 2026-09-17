@@ -26,9 +26,9 @@
 import { defineEventHandler, fromNodeMiddleware } from 'h3';
 import { litroViteDevConfig, warmupLitroViteServer } from '@beatzball/litro/runtime/vite-dev.js';
 
-// Singleton: initialise once on the first dev request, then reuse.
+// Singleton: initialize once on the first dev request, then reuse.
 // A Promise is cached so concurrent first requests queue on the same
-// initialisation rather than racing to create multiple Vite servers.
+// initialization rather than racing to create multiple Vite servers.
 let viteHandlerPromise: Promise<ReturnType<typeof fromNodeMiddleware>> | null = null;
 
 export default defineEventHandler(async (event) => {

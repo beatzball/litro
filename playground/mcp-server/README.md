@@ -120,7 +120,7 @@ and the cut can still land between them — a UK flag becomes a lone regional
 letter. That changes a glyph, not the request; it cannot throw.
 
 **Capping is not safety.** It bounds the text; it does not make it trustworthy.
-The real defence is that a model must not treat tool output as instructions,
+The real defense is that a model must not treat tool output as instructions,
 and that belongs to whoever writes the agent, not to this server.
 
 ## The weather is real
@@ -138,7 +138,7 @@ upstream changed nothing about the sandbox.
 
 When there is no reading — the network is down, the API errors, the response is
 malformed — or for a place the geocoder does not know, it returns a placeholder
-labelled as one — `live: false` in `structuredContent`, and "NOT a real
+labeled as one — `live: false` in `structuredContent`, and "NOT a real
 reading." in the text the model sees. A demo that quietly invents weather is
 worse than one that admits it has no reading.
 
@@ -187,7 +187,7 @@ missing params, and the demo only rendered because Inspector injects a
 compatibility shim that completed the handshake for us. Fifteen green unit tests
 had no idea.
 
-Two host behaviours are not bugs but will be rediscovered the hard way:
+Two host behaviors are not bugs but will be rediscovered the hard way:
 
 - **`_meta.ui` is read from the `resources/read` contents, not from the
   `resources/list` entry.** Omitting it from `list` changed nothing. Serving it

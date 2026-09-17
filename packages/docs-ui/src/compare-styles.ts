@@ -5,7 +5,7 @@
  * via `static override styles`. They provide:
  *   - Typography for headings, paragraphs, lists, tables
  *   - Two-column code comparison layout (.code-compare)
- *   - Feature comparison table with ✓ / — cell colouring
+ *   - Feature comparison table with ✓ / — cell coloring
  *   - CTA section styling
  *   - Dark pre/code blocks (fire theme, no hljs — static content)
  */

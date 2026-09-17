@@ -22,7 +22,7 @@ export const MAX_ENTRIES = 200;
  * so whatever is typed inside the iframe travels to the server and comes back
  * in `content[0].text` — which means a person can put arbitrary text into a
  * model's context through a weather card. Capping it does not make that safe;
- * it bounds it, and a bound is the part a demo should show. The real defence
+ * it bounds it, and a bound is the part a demo should show. The real defense
  * is that a model must not treat tool output as instructions.
  *
  * 80 is longer than any real place name (the longest is 85 characters and is a

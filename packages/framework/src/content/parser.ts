@@ -55,7 +55,7 @@ export async function parseMarkdownFile(
     date = fileStat.mtime;
   }
 
-  // 4c. tags — normalise to string[]
+  // 4c. tags — normalize to string[]
   let tags: string[];
   if (Array.isArray(merged['tags'])) {
     tags = (merged['tags'] as unknown[]).map(String);

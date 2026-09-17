@@ -89,7 +89,7 @@ describe('fileSessionStore default directory', () => {
     else process.env.LITRO_AGENT_SESSIONS_DIR = saved;
   });
 
-  it('honours LITRO_AGENT_SESSIONS_DIR when no explicit dir is given', async () => {
+  it('honors LITRO_AGENT_SESSIONS_DIR when no explicit dir is given', async () => {
     process.env.LITRO_AGENT_SESSIONS_DIR = dir;
     const store = fileSessionStore();
     await store.append('s1', { ts: 1, kind: 'message', payload: 'a' });

@@ -1,5 +1,5 @@
 /**
- * Telemetry behaviour of the turn loop.
+ * Telemetry behavior of the turn loop.
  *
  * The load-bearing assertions here are the two that protect contracts, not
  * the attribute spot-checks: (1) telemetry NEVER changes what is appended
@@ -361,7 +361,7 @@ describe('runTurn telemetry -- the html rule', () => {
   });
 });
 
-describe('runTurn telemetry -- behaviour is unchanged either way', () => {
+describe('runTurn telemetry -- behavior is unchanged either way', () => {
   const script = (_req: unknown, turn: number) =>
     turn === 1
       ? [

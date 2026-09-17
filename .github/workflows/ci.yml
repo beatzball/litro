@@ -160,6 +160,12 @@ jobs:
         run: node scripts/check-doc-refs.mjs --self-test
       - name: Check documentation references
         run: node scripts/check-doc-refs.mjs
+      # Same shape: pure Node, no install. Fails on common British spellings,
+      # because the repo is written in American English.
+      - name: Self-test the spelling check
+        run: node scripts/check-spelling.mjs --self-test
+      - name: Check spelling
+        run: node scripts/check-spelling.mjs
       # Guards the e2e suite against one spec deleting state a concurrently
       # running dev server is using -- the issue #118 failure mode. Pure Node
       # like the checker above, so it belongs in this install-free job.

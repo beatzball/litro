@@ -39,7 +39,7 @@ export interface SessionStore {
   /**
    * OPTIONAL cross-instance turn lock. A store that implements it upgrades
    * the runtime's per-process lock to a real distributed one; a store that
-   * does not (the default JSONL store) keeps the single-process behaviour.
+   * does not (the default JSONL store) keeps the single-process behavior.
    *
    * `key` is an OPAQUE lock key, not a session id — the runtime passes
    * `<agent>/<session>` so two agents can share a session id without
