@@ -1,4 +1,4 @@
-# Design: a `landing` recipe
+# Design: a `supernova` recipe
 
 Status: Draft
 
@@ -20,6 +20,8 @@ It is modeled on the landing page of roost (https://github.com/beatzball/roost, 
 - **Shape:** landing page plus docs, in one recipe. Not a landing page on its own.
 - **Adapters:** Lit first. FAST and Elena come later, as their own work.
 - **Content:** neutral product copy and a placeholder brand. The terminal-style parts ship as optional components that a user can keep or delete.
+- **Name:** `supernova`. It builds on `starlight`, the calm docs recipe, so the name reads as the same sky turned up: the same docs, with a front page that has more to show.
+- **Blog:** asked at scaffold time, default yes. See section 6.
 
 ## 3. What the roost page is made of
 
@@ -63,8 +65,8 @@ The same idea removes the biggest maintenance risk. Add an optional `extends` fi
 
 ```ts
 const recipe: LitroRecipe = {
-  name: 'landing',
-  displayName: 'Landing page + docs',
+  name: 'supernova',
+  displayName: 'Supernova (landing page + docs + blog)',
   description: 'A product landing page and a docs site, built from web components',
   mode: 'ssg',
   contentLayer: 'content',
@@ -79,17 +81,39 @@ Scaffold order for a recipe that extends another:
 3. this recipe's `template/`,
 4. this recipe's `template-<adapter>/`, if any.
 
-So `recipes/landing/template/` holds only what differs: the landing page, its components, its styles and its placeholder assets. The docs half is never copied into the repo twice, so it cannot drift.
+So `recipes/supernova/template/` holds only what differs: the landing page, its components, its styles and its placeholder assets. The docs half is never copied into the repo twice, so it cannot drift.
 
 Knock-on changes:
 
-- **`litro.recipe.json`** in the scaffolded app names the recipe the user chose (`landing`), not the base.
+- **`litro.recipe.json`** in the scaffolded app names the recipe the user chose (`supernova`), not the base.
 - **`--for-repo`** today refuses any recipe but `starlight`. It should accept any recipe that is, or extends, `starlight`. `--with-blog` keeps working the same way.
 - **One level only.** A recipe may extend a recipe that does not itself extend another. The scaffolder rejects deeper chains with a clear message.
 
-Rejected alternative: a full copy of the starlight template in `recipes/landing/`, kept in step by a CI check. It works, but every starlight fix then needs a second edit, and the check only reports drift after the fact.
+Rejected alternative: a full copy of the starlight template in `recipes/supernova/`, kept in step by a CI check. It works, but every starlight fix then needs a second edit, and the check only reports drift after the fact.
 
-## 6. Components
+## 6. The blog is a choice
+
+Extending starlight brings its blog: `pages/blog/`, the tag pages, and two sample posts in `content/blog/`. Today starlight always ships them. There is no way to say no, except by deleting files by hand.
+
+Supernova asks:
+
+```
+? Include a blog? (Y/n)
+```
+
+- The recipe config declares it as a `confirm` option with key `blog` and default `true`. The prompt code for `confirm` options already exists in create-litro; no recipe uses it yet.
+- A `--blog` / `--no-blog` flag answers it without a prompt, for scripts and CI.
+- `litro.recipe.json` records the answer in its `options`.
+
+**No means no trace of a blog:** no blog pages, no posts, no Blog link in the navigation or on the landing page, and no e2e assertion that blog routes return 200.
+
+**One way to remove the blog, not two.** `--for-repo` already removes the blog when `--with-blog` is not given: it deletes `content/blog/` and `pages/blog/`, then fixes the landing page link and the generated e2e spec that pointed at them. That code moves into one shared function in create-litro. Both paths call it: the `blog` option, and `--for-repo` without `--with-blog`.
+
+To make that function safe for any recipe, pages must not hard-code a `/blog` link. The supernova landing page reads its links from the site's navigation config, so dropping the blog entry from the config removes every Blog link at once.
+
+Out of scope here: offering the same prompt in the starlight recipe. Once the shared function exists, that is a small follow-up.
+
+## 7. Components
 
 All tags use the `litro-` prefix, like the starlight recipe's components. All live in the scaffolded app's `src/components/`, so a user owns and edits them.
 
@@ -119,7 +143,7 @@ These are used by the landing page as shipped, but nothing else depends on them.
 
 The star field and the footer wordmark stay as plain CSS in the page. They are decoration with no behavior.
 
-## 7. Theming
+## 8. Theming
 
 One token block, on the page's host, with fallbacks:
 
@@ -133,7 +157,7 @@ Components read the tokens with `var(--token, fallback)`. They never define colo
 
 The roost page forces `color-scheme: dark`, while its docs keep a light/dark toggle. The recipe keeps that split: the landing page is dark by default, and a comment next to the token block shows how to change it.
 
-## 8. Content
+## 9. Content
 
 Placeholder copy that reads like a real product page, not lorem ipsum. Each section says what it is for, in a sentence the user replaces. For example, the hero heading reads "Say what your product does, in one line."
 
@@ -141,11 +165,11 @@ Data-driven sections keep their data at the top of the page file, as the roost p
 
 Placeholder brand: a simple generated logo and wordmark with no trademark. Placeholder media: a short, small clip and poster, or no clip at all with the section commented out. See open questions.
 
-## 9. Phases
+## 10. Phases
 
 Each phase ships on its own and leaves every recipe working.
 
-1. **`extends`, and a bare `landing` recipe.** Add `extends` to the recipe type and the scaffolder, with unit tests for the copy order and the one-level limit. Add `recipes/landing/` whose template holds a neutral landing page built only from components that already exist. Update `--for-repo`. Add `landing` to the scaffold tests and to the scaffolded-apps CI check.
+1. **`extends`, the blog choice, and a bare `supernova` recipe.** Add `extends` to the recipe type and the scaffolder, with unit tests for the copy order and the one-level limit. Move the blog removal out of `--for-repo` into one shared function, and add the `blog` option and `--blog` / `--no-blog`. Add `recipes/supernova/` whose template holds a neutral landing page built only from components that already exist. Update `--for-repo`. Add `supernova` to the scaffold tests, and to the scaffolded-apps CI check twice: once with the blog and once without.
 2. **Generic components and theming.** `litro-install-command`, `litro-feature-row`, `litro-steps`, `litro-key-hints`, the token block, and card rows through `litro-card-grid`.
 3. **Terminal parts.** `litro-status-bar`, `litro-state-badge`, `litro-term-window`.
 4. **Video.** `litro-hero-video` and the placeholder media decision.
@@ -154,12 +178,13 @@ Each phase ships on its own and leaves every recipe working.
 
 Every phase that changes create-litro carries a create-litro changeset.
 
-## 10. What must be checked
+## 11. What must be checked
 
 Per phase, in CI:
 
 - **Scaffold unit tests:** the new recipe scaffolds, the file list is right, and `extends` copies in the documented order.
-- **Scaffolded apps:** `landing:lit` is built from the packed tarballs, the same way users get it.
+- **Scaffolded apps:** `supernova:lit` is built from the packed tarballs, the same way users get it, once with the blog and once without.
+- **Blog removal:** with `--no-blog`, no file under `pages/blog/` or `content/blog/` exists, the built HTML has no link to `/blog`, and the e2e spec has no blog assertions. `--for-repo` without `--with-blog` still gives the same result as before the refactor.
 - **E2E, in the recipe template's `e2e/`:**
   - `/` renders its page component, and every prerendered route returns 200;
   - with reduced motion, the video stays paused and the status bar renders already settled;
@@ -173,17 +198,16 @@ By hand, once per phase:
 - a screen reader reads each terminal picture as one sentence;
 - narrow screen: no sideways scroll.
 
-## 11. Open questions
+## 12. Open questions
 
-1. **Recipe name.** `landing` is plain. Other candidates: `product`, `launch`.
-2. **Blog.** Extending starlight brings its blog pages. Keep them, as starlight does, or remove them in the landing template? Recommendation: keep them, and let `--for-repo --with-blog` decide as it does today.
-3. **Placeholder media.** Ship a tiny clip and poster, or ship the video section commented out with no media? Recommendation: no media, section commented out, because a placeholder video is weight nobody keeps.
-4. **Dev playground.** Add a `playground-landing/` like `playground-starlight/`, or test only through the recipe template's e2e and the scaffolded-apps check? Recommendation: add the playground, since the other recipes have one and it makes component work faster.
-5. **Upstream back to roost.** Once the components exist, roost's landing page could be rebuilt on them. That is roost's decision and is out of scope here.
+1. **Placeholder media.** Ship a tiny clip and poster, or ship the video section commented out with no media? Recommendation: no media, section commented out, because a placeholder video is weight nobody keeps.
+2. **Dev playground.** Add a `playground-supernova/` like `playground-starlight/`, or test only through the recipe template's e2e and the scaffolded-apps check? Recommendation: add the playground, since the other recipes have one and it makes component work faster.
+3. **Upstream back to roost.** Once the components exist, roost's landing page could be rebuilt on them. That is roost's decision and is out of scope here.
 
-## 12. Risks
+## 13. Risks
 
 - **`extends` touches the scaffolder every recipe uses.** The copy order must be tested for all existing recipes, not only the new one.
-- **Overlay order bugs.** A landing adapter overlay copied before the starlight one would be silently overwritten. The unit test must assert the final content of a file that both layers provide.
+- **The blog refactor touches `--for-repo`.** Its current output must not change. A test pins what `--for-repo` without `--with-blog` produces before the move, and the same test must pass after it.
+- **Overlay order bugs.** A supernova adapter overlay copied before the starlight one would be silently overwritten. The unit test must assert the final content of a file that both layers provide.
 - **Shadow DOM styles do not reach slotted content.** A picture passed into `litro-feature-row`'s `figure` slot is styled by the page, not the component. The component docs must say so.
 - **Two looks in one site.** The landing page has its own dark header (the status bar); the docs keep the starlight header and a light/dark toggle. A visitor moving between them must still recognize one site, so the logo, name and main links must match in both headers.
