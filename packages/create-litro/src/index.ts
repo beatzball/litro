@@ -17,6 +17,11 @@
  *   --site-url <url>   canonical URL the site is served from
  *   --deploy <docker|none>   deploy files to emit (default: docker)
  *   --with-blog        keep the recipe's sample blog (default: removed)
+ *
+ * Recipe options:
+ *   --blog, --no-blog  answer a recipe's "Include a blog?" question without
+ *                      being asked. Only for a recipe that offers it.
+ *
  *   npx @beatzball/create-litro --list-recipes
  *
  * Prompts for project name, recipe, and mode, then scaffolds a complete
@@ -30,8 +35,15 @@ import { stdin as input, stdout as output } from 'node:process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
-import { listRecipes, loadRecipe, scaffold } from './scaffold.js';
+import { listRecipes, loadRecipe, resolveRecipeLineage, scaffold } from './scaffold.js';
 import { applyForRepo } from './for-repo.js';
+import { parseArgs } from './args.js';
+import {
+  applyRecipeOptions,
+  assertFlagsApply,
+  declaresOption,
+  resolveRecipeOptions,
+} from './recipe-options.js';
 import type { LitroRecipe } from './types.js';
 import type { ScaffoldOptions } from './scaffold.js';
 
@@ -78,71 +90,6 @@ async function promptSelect(question: string, choices: string[], defaultVal?: st
     }
     process.stdout.write(`  Please enter a number between 1 and ${choices.length}.\n`);
   }
-}
-
-// ---------------------------------------------------------------------------
-// CLI argument parsing
-// ---------------------------------------------------------------------------
-
-interface ParsedArgs {
-  projectName: string | undefined;
-  recipe: string | undefined;
-  mode: 'ssg' | 'ssr' | undefined;
-  adapter: 'lit' | 'fast' | 'elena' | undefined;
-  listRecipes: boolean;
-  /** Repository the docs are for; enables --for-repo post-processing. */
-  forRepo: string | undefined;
-  siteUrl: string | undefined;
-  deploy: 'docker' | 'none';
-  withBlog: boolean;
-}
-
-function parseArgs(argv: string[]): ParsedArgs {
-  // argv = process.argv.slice(2)
-  let projectName: string | undefined;
-  let recipe: string | undefined;
-  let mode: 'ssg' | 'ssr' | undefined;
-  let adapter: 'lit' | 'fast' | 'elena' | undefined;
-  let listRecipesFlag = false;
-  let forRepo: string | undefined;
-  let siteUrl: string | undefined;
-  let deploy: 'docker' | 'none' = 'docker';
-  let withBlog = false;
-
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === '--list-recipes') {
-      listRecipesFlag = true;
-    } else if (arg === '--recipe' || arg === '-r') {
-      recipe = argv[++i];
-    } else if (arg === '--mode' || arg === '-m') {
-      const val = argv[++i];
-      if (val === 'ssg' || val === 'ssr') mode = val;
-    } else if (arg === '--adapter' || arg === '-a') {
-      const val = argv[++i];
-      if (val === 'lit' || val === 'fast' || val === 'elena') adapter = val;
-    } else if (arg === '--for-repo') {
-      forRepo = argv[++i] ?? '.';
-    } else if (arg.startsWith('--for-repo=')) {
-      forRepo = arg.slice('--for-repo='.length);
-    } else if (arg === '--site-url') {
-      siteUrl = argv[++i];
-    } else if (arg.startsWith('--site-url=')) {
-      siteUrl = arg.slice('--site-url='.length);
-    } else if (arg === '--deploy') {
-      const val = argv[++i];
-      if (val === 'docker' || val === 'none') deploy = val;
-    } else if (arg === '--with-blog') {
-      withBlog = true;
-    } else if (!arg.startsWith('-') && projectName === undefined) {
-      projectName = arg;
-    }
-  }
-
-  return {
-    projectName, recipe, mode, adapter, listRecipes: listRecipesFlag,
-    forRepo, siteUrl, deploy, withBlog,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -226,23 +173,26 @@ async function main(): Promise<void> {
     adapter = selected.startsWith('elena') ? 'elena' : selected.startsWith('fast') ? 'fast' : 'lit';
   }
 
-  // 5. Recipe-specific options (prompt for any that are defined on the recipe)
-  const recipeOptions: Record<string, unknown> = {};
-  if (chosenRecipe.options && chosenRecipe.options.length > 0) {
-    for (const opt of chosenRecipe.options) {
-      if (opt.type === 'select' && opt.choices) {
-        const selected = await promptSelect(opt.prompt, opt.choices, opt.default as string | undefined);
-        recipeOptions[opt.key] = selected;
-      } else if (opt.type === 'confirm') {
-        const answer = await prompt(`${opt.prompt} (y/n)`, opt.default ? 'y' : 'n');
-        recipeOptions[opt.key] = answer.toLowerCase().startsWith('y');
-      } else {
-        // text
-        const answer = await prompt(opt.prompt, String(opt.default ?? ''));
-        recipeOptions[opt.key] = answer;
-      }
-    }
+  // 5. Recipe-specific options.
+  //
+  // --for-repo owns the blog when it is in play: it removes the blog itself,
+  // with a repository URL to repoint the Blog button at, so --with-blog is the
+  // answer and the question is not asked twice.
+  const forRepoOwnsBlog = args.forRepo !== undefined && declaresOption(chosenRecipe, 'blog');
+  const optionFlags = { ...args.recipeOptionFlags };
+  if (forRepoOwnsBlog) optionFlags.blog = args.withBlog;
+
+  try {
+    assertFlagsApply(chosenRecipe, args.recipeOptionFlags);
+  } catch (err: unknown) {
+    console.error(`\n  ${(err as Error).message}\n`);
+    process.exit(1);
   }
+
+  const recipeOptions = await resolveRecipeOptions(chosenRecipe, optionFlags, {
+    text: prompt,
+    select: promptSelect,
+  });
 
   // 6. Validate target directory
   const projectDir = join(process.cwd(), projectName);
@@ -263,16 +213,28 @@ async function main(): Promise<void> {
 
   await scaffold(chosenRecipe.name, options, projectDir);
 
+  // Some answers change what is on disk. This runs after every template layer
+  // is copied, so a base recipe's blog is removed along with the recipe's own.
+  await applyRecipeOptions(
+    chosenRecipe,
+    recipeOptions,
+    projectDir,
+    forRepoOwnsBlog ? ['blog'] : [],
+  );
+
   // --for-repo turns the generic recipe output into *this project's* docs
-  // site. Only the starlight recipe produces a docs site, so refuse loudly
-  // rather than half-applying to a template with no content/docs.
+  // site. Only starlight, and recipes built on it, produce a docs site, so
+  // refuse loudly rather than half-applying to a template with no content/docs.
   let forRepoSummary = '';
   if (args.forRepo !== undefined) {
-    if (chosenRecipe.name !== 'starlight') {
+    // A recipe that extends starlight has starlight's docs site in it, so it
+    // can be shaped the same way. Anything else has no content/docs to shape.
+    const lineage = await resolveRecipeLineage(chosenRecipe.name);
+    if (!lineage.includes('starlight')) {
       console.error(
         `\n  --for-repo builds a documentation site, which only the ` +
-          `'starlight' recipe provides.\n  Got '${chosenRecipe.name}'. ` +
-          `Re-run with --recipe starlight.\n`,
+          `'starlight' recipe and recipes built on it provide.\n  Got ` +
+          `'${chosenRecipe.name}'. Re-run with --recipe starlight.\n`,
       );
       process.exit(1);
     }

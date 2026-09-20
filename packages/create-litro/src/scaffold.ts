@@ -23,6 +23,13 @@ export interface ScaffoldOptions {
   adapter?: 'lit' | 'fast' | 'elena';
   recipeOptions?: Record<string, unknown>;
   recipeVersion?: string;
+  /**
+   * Directory the recipes are read from. Defaults to the package's own
+   * `dist/recipes/`. Tests point it at a fixture tree so the mechanics of
+   * `extends` and of recipe options can be exercised without adding a recipe
+   * that real users would then see in `--list-recipes`.
+   */
+  recipesRoot?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,9 +76,10 @@ function interpolate(text: string, vars: Record<string, string>): string {
 /**
  * Build the interpolation variable map from ScaffoldOptions.
  *
- * `recipe` is the recipe directory name. Templates use it for the credit line
- * in <litro-footer>, which is the same file in every recipe and so cannot
- * hardcode which recipe it came from.
+ * `recipe` is the name of the recipe the USER chose, not the layer being
+ * copied. With `extends` those differ: the base recipe's files are copied in
+ * too, and a file such as litro.recipe.json or the <litro-footer> credit line
+ * must still name the recipe that was asked for, not the one it came from.
  */
 function buildVars(options: ScaffoldOptions, recipeName: string): Record<string, string> {
   const vars: Record<string, string> = {
@@ -87,6 +95,17 @@ function buildVars(options: ScaffoldOptions, recipeName: string): Record<string,
       vars[k] = String(v);
     }
   }
+
+  // The whole answer set, as JSON, for the `options` field of
+  // litro.recipe.json. Set last so a recipe option keyed `recipeOptions`
+  // cannot overwrite the manifest with its own stringified value.
+  //
+  // Re-indented by one level, because the placeholder sits two spaces in and
+  // the file is read by people. An empty answer set is `{}` on one line, which
+  // is what the templates said before they were interpolated.
+  vars.recipeOptions = JSON.stringify(options.recipeOptions ?? {}, null, 2)
+    .split('\n')
+    .join('\n  ');
 
   return vars;
 }
@@ -139,6 +158,24 @@ async function copyTemplate(
   }
 }
 
+/** True when `path` exists and is a directory. Any other error propagates. */
+async function isDirectory(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw err;
+  }
+}
+
+/** Resolve a layer's template directory, failing with the recipe's own name. */
+async function requireTemplateDir(dir: string, recipeName: string): Promise<string> {
+  if (!(await isDirectory(dir))) {
+    throw new Error(`Recipe "${recipeName}" not found (looked for ${dir})`);
+  }
+  return dir;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -148,8 +185,8 @@ async function copyTemplate(
  * dist/recipes/. Each recipe must have a `recipe.config.js` file that
  * exports a default `LitroRecipe`.
  */
-export async function listRecipes(): Promise<LitroRecipe[]> {
-  const dir = recipesDir();
+export async function listRecipes(recipesRoot?: string): Promise<LitroRecipe[]> {
+  const dir = recipesRoot ?? recipesDir();
   let entries: { name: string; isDirectory(): boolean }[];
 
   try {
@@ -180,14 +217,62 @@ export async function listRecipes(): Promise<LitroRecipe[]> {
 /**
  * Load a single recipe by name. Returns null if not found.
  */
-export async function loadRecipe(name: string): Promise<LitroRecipe | null> {
-  const configPath = join(recipesDir(), name, 'recipe.config.js');
+export async function loadRecipe(name: string, recipesRoot?: string): Promise<LitroRecipe | null> {
+  const configPath = join(recipesRoot ?? recipesDir(), name, 'recipe.config.js');
   try {
     const mod = await import(configPath) as { default: LitroRecipe };
     return mod.default;
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve a recipe's `extends` chain into the layer order its templates are
+ * copied in: the base recipe first, then the recipe itself.
+ *
+ * Returns `[recipeName]` for a recipe that extends nothing, and also for a
+ * recipe directory with no readable config — a directory of templates alone
+ * has always been enough to scaffold from, and that stays true.
+ *
+ * ONE LEVEL ONLY, and both failure modes throw rather than degrade: an unknown
+ * base would otherwise scaffold a half-built app whose missing half is blamed
+ * on the template, and a deeper chain would give four or more silent override
+ * layers.
+ */
+export async function resolveRecipeLineage(
+  recipeName: string,
+  recipesRoot?: string,
+): Promise<string[]> {
+  const root = recipesRoot ?? recipesDir();
+  const recipe = await loadRecipe(recipeName, root);
+  const baseName = recipe?.extends;
+  if (!baseName) return [recipeName];
+
+  if (baseName === recipeName) {
+    throw new Error(
+      `Recipe "${recipeName}" extends itself. Remove the \`extends\` field, or ` +
+        `point it at a different recipe.`,
+    );
+  }
+
+  const base = await loadRecipe(baseName, root);
+  if (!base) {
+    throw new Error(
+      `Recipe "${recipeName}" extends "${baseName}", which does not exist. ` +
+        `Check the \`extends\` field in recipes/${recipeName}/recipe.config.ts.`,
+    );
+  }
+
+  if (base.extends) {
+    throw new Error(
+      `Recipe "${recipeName}" extends "${baseName}", which itself extends ` +
+        `"${base.extends}". A recipe may extend one level only. Give ` +
+        `"${recipeName}" a base that extends nothing.`,
+    );
+  }
+
+  return [baseName, recipeName];
 }
 
 /**
@@ -202,44 +287,35 @@ export async function scaffold(
   options: ScaffoldOptions,
   targetDir: string,
 ): Promise<void> {
-  const templateDir = join(recipesDir(), recipeName, 'template');
+  const root = options.recipesRoot ?? recipesDir();
+  const lineage = await resolveRecipeLineage(recipeName, root);
+  const adapter = options.adapter ?? 'lit';
 
-  // Verify the template directory exists.
-  try {
-    const s = await stat(templateDir);
-    if (!s.isDirectory()) {
-      throw new Error(`Recipe template path is not a directory: ${templateDir}`);
+  // Copy order, for `extends`: the base recipe's template/, the base's
+  // template-<adapter>/, this recipe's template/, this recipe's
+  // template-<adapter>/. Later layers overwrite earlier ones, so a recipe's
+  // own adapter overlay has the last word — which it must, or a supernova
+  // overlay would be silently undone by the starlight one it sits under.
+  //
+  // A per-adapter overlay is optional. A layer's base template/ is not: a
+  // recipe named in `extends` with no template/ is a broken recipe, and
+  // scaffolding half an app is worse than refusing.
+  const layers: string[] = [];
+  for (const name of lineage) {
+    layers.push(await requireTemplateDir(join(root, name, 'template'), name));
+    if (adapter !== 'lit') {
+      const overlay = join(root, name, `template-${adapter}`);
+      if (await isDirectory(overlay)) layers.push(overlay);
     }
-  } catch (err: unknown) {
-    const nodeErr = err as NodeJS.ErrnoException;
-    if (nodeErr.code === 'ENOENT') {
-      throw new Error(`Recipe "${recipeName}" not found (looked for ${templateDir})`);
-    }
-    throw err;
   }
 
-  // Create the target directory.
   await mkdir(targetDir, { recursive: true });
 
-  // Build interpolation variables and copy all files.
+  // One variable map for every layer, built from the recipe the USER chose:
+  // a base layer's files must name the chosen recipe, not the base.
   const vars = buildVars(options, recipeName);
-  await copyTemplate(templateDir, targetDir, vars);
 
-  // Per-adapter overlay: if a template-<adapter>/ directory exists alongside
-  // the base template/, copy its files on top — overwriting matching paths.
-  // This allows recipes to provide adapter-specific variants of files that
-  // differ structurally (page components, app.ts, config files) while sharing
-  // framework-agnostic files (content, CSS, utilities) from the base template.
-  const adapter = options.adapter ?? 'lit';
-  if (adapter !== 'lit') {
-    const overlayDir = join(recipesDir(), recipeName, `template-${adapter}`);
-    try {
-      const s = await stat(overlayDir);
-      if (s.isDirectory()) {
-        await copyTemplate(overlayDir, targetDir, vars);
-      }
-    } catch {
-      // No overlay directory for this adapter — that's fine, base template is used as-is.
-    }
+  for (const layer of layers) {
+    await copyTemplate(layer, targetDir, vars);
   }
 }

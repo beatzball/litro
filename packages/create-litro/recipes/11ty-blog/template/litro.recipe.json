@@ -1,7 +1,7 @@
 {
-  "recipe": "11ty-blog",
+  "recipe": "{{recipe}}",
   "version": "{{recipeVersion}}",
   "mode": "{{mode}}",
   "contentDir": "content/blog",
-  "options": {}
+  "options": {{recipeOptions}}
 }

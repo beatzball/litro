@@ -6,6 +6,22 @@ export interface LitroRecipe {
   mode: 'ssg' | 'ssr' | 'both';       // "both" = user is prompted to choose
   options?: RecipeOption[];
   contentLayer?: string;               // Relative path to content-layer entry, if any
+
+  /**
+   * Name of another recipe whose templates are copied in first.
+   *
+   * A recipe that extends another owns only what differs from its base, so a
+   * shared half (the starlight docs site, say) is never committed twice and
+   * cannot drift. Copy order is base `template/`, base `template-<adapter>/`,
+   * own `template/`, own `template-<adapter>/` — later layers overwrite
+   * earlier ones.
+   *
+   * ONE LEVEL ONLY. The base must not itself extend a recipe; the scaffolder
+   * refuses a deeper chain rather than resolving it, because a three-deep
+   * override order is a thing nobody can hold in their head while editing a
+   * template.
+   */
+  extends?: string;
 }
 
 export interface RecipeOption {
