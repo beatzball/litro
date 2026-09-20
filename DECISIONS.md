@@ -116,7 +116,7 @@ Both `buildShell()` calls must forward `head: routeMeta?.head`. Without it, reci
 
 ## Playwright e2e test suite
 
-Single root `e2e/` directory with per-playground subdirectories. Port assignments: playground=3030, playground-11ty=3031, playground-starlight=3032, docs=3033, docs-ssr=3034, playground-starlight-fast=3035, playground-elena=3036, playground-starlight-elena=3037, playground-fast=3038. The litro-agent resume e2e uses 3052. Shadow DOM caveat: `locator.textContent()` does not include shadow root children — use `evaluate(el => el.shadowRoot?.textContent)`.
+Single root `e2e/` directory with per-playground subdirectories. Port assignments: playground=3030, playground-11ty=3031, playground-starlight=3032, docs=3033, docs-ssr=3034, playground-starlight-fast=3035, playground-elena=3036, playground-starlight-elena=3037, playground-fast=3038, playground-supernova=3039. The litro-agent resume e2e uses 3052. Shadow DOM caveat: `locator.textContent()` does not include shadow root children — use `evaluate(el => el.shadowRoot?.textContent)`.
 
 ---
 

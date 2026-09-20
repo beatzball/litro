@@ -1,0 +1,9 @@
+{
+  "recipe": "supernova",
+  "version": "0.0.1",
+  "mode": "ssg",
+  "contentDir": "content",
+  "options": {
+    "blog": true
+  }
+}

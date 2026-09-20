@@ -37,7 +37,8 @@ export interface BlogLinkReplacement {
  *
  * Deletes `content/blog/` and `pages/blog/`, then unpicks what the rest of the
  * site assumes about them: the landing page's Blog button and Blog feature
- * card, and the blog routes in the generated e2e spec.
+ * card, the Blog entry in the site navigation, and the blog routes in the
+ * generated e2e spec.
  *
  * @param siteDir      The scaffolded site's root directory.
  * @param replacement  Optional. Given, the Blog button is repointed at this
@@ -51,7 +52,41 @@ export async function removeBlog(
   await rm(join(siteDir, 'pages/blog'), { recursive: true, force: true });
 
   await unlinkLandingPage(siteDir, replacement);
+  await dropBlogNavEntry(siteDir);
   await dropBlogRoutesFromSpec(siteDir);
+}
+
+/**
+ * Take the Blog entry out of the site navigation.
+ *
+ * The landing page is not the only thing that links to the blog: the header
+ * on EVERY page renders `siteConfig.nav`, and starlight's ships a Blog entry.
+ * Removing the pages without this leaves a dead link on every page of the
+ * site, in the server HTML, where a reader meets it first.
+ *
+ * Unlike the landing-page edits this one is tolerant of a missing entry.
+ * `--for-repo` writes its own config, which never had one, and calls this
+ * afterwards; a recipe may also ship a nav with no blog in it. Neither is a
+ * mistake, so neither is an error.
+ */
+async function dropBlogNavEntry(siteDir: string): Promise<void> {
+  const configPath = join(siteDir, 'server/starlight.config.js');
+  if (!existsSync(configPath)) return;
+
+  const config = await readFile(configPath, 'utf-8');
+  const match = /nav: \[([\s\S]*?)\],/.exec(config);
+  if (!match) return;
+
+  const kept = match[1]
+    .split('\n')
+    .filter((line) => !/href: '\/blog(\/|')/.test(line));
+  if (kept.length === match[1].split('\n').length) return;
+
+  await writeFile(
+    configPath,
+    config.replace(match[0], `nav: [${kept.join('\n')}],`),
+    'utf-8',
+  );
 }
 
 /** Rewrite the landing page so nothing on it points at the blog. */

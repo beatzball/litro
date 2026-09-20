@@ -37,6 +37,11 @@ export default defineConfig({
       testDir: './e2e/playground-starlight-elena',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3037' },
     },
+    {
+      name: 'playground-supernova',
+      testDir: './e2e/playground-supernova',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3039' },
+    },
   ],
   webServer: [
     {
@@ -78,6 +83,13 @@ export default defineConfig({
       name: 'playground-starlight-elena',
       command: 'cd playground-starlight-elena && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3037',
       url: 'http://localhost:3037',
+      reuseExistingServer: false,
+      timeout: 180000,
+    },
+    {
+      name: 'playground-supernova',
+      command: 'cd playground-supernova && node ../packages/framework/dist/cli/index.js build && node ../packages/framework/dist/cli/index.js preview --port 3039',
+      url: 'http://localhost:3039',
       reuseExistingServer: false,
       timeout: 180000,
     },

@@ -37,7 +37,18 @@ import { fileURLToPath } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Recipe + adapter pairs create-litro can produce. */
+/**
+ * Recipe + adapter pairs create-litro can produce.
+ *
+ * `flags` are extra command-line arguments handed to the scaffolder, for a
+ * recipe that asks its own questions. A recipe option changes what is ON DISK
+ * after the copy — supernova's `--no-blog` deletes pages, unpicks links and
+ * rewrites the generated e2e spec — so each answer is a different app and
+ * needs its own build.
+ *
+ * `id` names a variant when recipe and adapter alone no longer tell two apart.
+ * It is what `--only` matches and what the report prints.
+ */
 const VARIANTS = [
   { recipe: 'fullstack', adapter: 'lit' },
   { recipe: 'fullstack', adapter: 'elena' },
@@ -45,6 +56,8 @@ const VARIANTS = [
   { recipe: 'starlight', adapter: 'lit' },
   { recipe: 'starlight', adapter: 'fast' },
   { recipe: 'starlight', adapter: 'elena' },
+  { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:blog', flags: ['--blog'] },
+  { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:no-blog', flags: ['--no-blog'] },
 ];
 
 /** Workspace packages an app installs from the registry. */
@@ -143,17 +156,17 @@ console.log('');
 // ---------------------------------------------------------------------------
 const results = [];
 
-for (const { recipe, adapter } of VARIANTS) {
-  const id = `${recipe}:${adapter}`;
+for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
+  const id = variantId ?? `${recipe}:${adapter}`;
   if (only && only !== id) continue;
 
-  const name = `app-${recipe}-${adapter}`;
+  const name = `app-${id.replace(/:/g, '-')}`;
   const dir = join(work, name);
 
   let step = run(
     'node',
     [CREATE_CLI, name,
-     '--recipe', recipe, '--mode', 'ssg', '--adapter', adapter],
+     '--recipe', recipe, '--mode', 'ssg', '--adapter', adapter, ...flags],
     work, 'scaffold',
   );
   if (!step.ok) { results.push({ id, status: 'SCAFFOLD-FAIL', detail: step.error }); continue; }
@@ -278,6 +291,51 @@ for (const { recipe, adapter } of VARIANTS) {
           `certainly tree-shaken out of the SSR module graph.`,
       });
       continue;
+    }
+  }
+
+  // A recipe option answered on the command line has to reach the BUILT site,
+  // not merely the files on disk. `--no-blog` deletes pages, unpicks the
+  // landing page's button and card and drops the Blog entry from the site
+  // navigation; a link left behind anywhere renders into every prerendered
+  // page and is a 404 the moment a reader clicks it.
+  if (flags.includes('--no-blog') || flags.includes('--blog')) {
+    const wantBlog = flags.includes('--blog');
+    const blogIndex = join(dir, 'dist/static/blog/index.html');
+    const rendered = existsSync(home)
+      ? readFileSync(home, 'utf-8').replace(/<!--.*?-->/gs, '')
+      : '';
+
+    if (wantBlog && !existsSync(blogIndex)) {
+      results.push({
+        id,
+        status: 'NO-BLOG-BUILT',
+        detail: `--blog was given but ${blogIndex} was not prerendered.`,
+      });
+      continue;
+    }
+
+    if (!wantBlog) {
+      if (existsSync(blogIndex)) {
+        results.push({
+          id,
+          status: 'BLOG-NOT-REMOVED',
+          detail: `--no-blog was given but the blog still prerendered to ${blogIndex}.`,
+        });
+        continue;
+      }
+      if (rendered.includes('/blog')) {
+        results.push({
+          id,
+          status: 'DEAD-BLOG-LINK',
+          detail:
+            'The prerendered home page still links to /blog after --no-blog. ' +
+            'Check removeBlog() in packages/create-litro/src/blog.ts: the ' +
+            'landing page button, the feature card and the site navigation ' +
+            'entry all have to go.',
+        });
+        continue;
+      }
     }
   }
 

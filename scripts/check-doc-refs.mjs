@@ -63,7 +63,7 @@ const TOP_DIRS = new Set([
   'packages', 'docs', 'docs-ssr', 'benchmarks', 'e2e', 'scripts', 'research',
   '.changeset', 'playground', 'playground-11ty', 'playground-fast',
   'playground-elena', 'playground-starlight', 'playground-starlight-fast',
-  'playground-starlight-elena',
+  'playground-starlight-elena', 'playground-supernova',
 ]);
 
 const PATH_EXTS = /\.(ts|tsx|js|mjs|cjs|json|md|css|html|yml|yaml|png|svg|xml|txt)$/;

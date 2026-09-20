@@ -27,6 +27,7 @@ litro/                          <- Git repo root (pnpm workspace root)
   playground-elena/             <- Elena adapter test app
   playground-starlight-elena/   <- Elena starlight recipe test app
   playground-starlight-fast/    <- FAST starlight recipe test app
+  playground-supernova/         <- supernova recipe test app
   docs/                         <- Official docs site (@beatzball/litro-docs, SSG)
   docs-ssr/                     <- SSR replica of docs site (@beatzball/litro-docs-ssr)
   .github/workflows/
