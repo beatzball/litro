@@ -22,6 +22,10 @@ It is modeled on the landing page of roost (https://github.com/beatzball/roost, 
 - **Content:** neutral product copy and a placeholder brand. The terminal-style parts ship as optional components that a user can keep or delete.
 - **Name:** `supernova`. It builds on `starlight`, the calm docs recipe, so the name reads as the same sky turned up: the same docs, with a front page that has more to show.
 - **Blog:** asked at scaffold time, default yes. See section 6.
+- **Hero art:** a supernova, drawn in CSS, plus a slot for the project's own mark. It plays the part roost's owl plays. See section 9.
+- **No placeholder video.** The video component ships, and the recipe's page keeps that section commented out with a note. A placeholder clip is weight nobody keeps.
+- **A dev app, `playground-supernova/`,** like the other recipes have. Component work is much faster with one.
+- **Litro's own docs sites adopt it** once the components exist, with litro's flame as the mark. Both sites: the static one and the server-rendered one. See phase 6.
 
 ## 3. What the roost page is made of
 
@@ -55,7 +59,7 @@ What already works well, and must carry over:
 2. **Feature row pictures are functions.** Each feature row stores its picture as a function that returns a template. That works in Lit, but it cannot be shared with FAST or Elena. It becomes a named slot.
 3. **The copy is roost's.** Headings, claims, glyphs, the logo, the wordmark and the video are all roost's. They become neutral placeholders.
 4. **One file does everything.** The page becomes a thin layout of components.
-5. **The media is heavy.** The roost clip is about 880 KB across two formats and a poster. The recipe needs a much smaller placeholder, or none.
+5. **The media is heavy.** The roost clip is about 880 KB across two formats and a poster. The recipe ships none: the video section is there, commented out.
 
 ## 5. Build on the starlight recipe, do not copy it
 
@@ -126,6 +130,7 @@ All tags use the `litro-` prefix, like the starlight recipe's components. All li
 | `litro-steps` | A numbered list with a connector line between steps. | The install steps |
 | `litro-key-hints` | Key and meaning pairs, as a definition list with `<kbd>`. | The key bindings list |
 | `litro-hero-video` | A poster, sources, a play/pause button, and a caption slot. Loads nothing up front; plays only when motion is allowed. | The recording section |
+| `litro-hero-nova` | The hero backdrop: an exploding star and a star field, in CSS, with a `mark` slot for the project's logo. Colors come from the tokens. | The faded owl, the star field and the owl gradient |
 
 Card rows reuse the starlight recipe's existing `litro-card-grid` and `litro-card`. If they need a column count, that becomes a property on `litro-card-grid`, not a new component.
 
@@ -163,7 +168,22 @@ Placeholder copy that reads like a real product page, not lorem ipsum. Each sect
 
 Data-driven sections keep their data at the top of the page file, as the roost page does, so the copy is edited in one place.
 
-Placeholder brand: a simple generated logo and wordmark with no trademark. Placeholder media: a short, small clip and poster, or no clip at all with the section commented out. See open questions.
+Placeholder brand: a simple generated logo and wordmark with no trademark. No placeholder video: the recipe's page keeps that section commented out, with a note saying what to drop in.
+
+### Hero art
+
+Roost's hero has three layers: a faded copy of its owl logo, a star field made of stacked radial gradients, and a gradient taken from the owl's own colors. It is the thing that makes the page feel like the product, and it costs one small image plus some CSS.
+
+Supernova's hero is the same idea, drawn for the name:
+
+- **A star, exploding.** A bright core, a hot inner glow, a shockwave ring spreading out, and light falling off into the dark. All of it is CSS: radial gradients and one slow, optional pulse.
+- **A star field behind it,** as roost has, with a few colored stars.
+- **No image file.** The art ships as CSS in the page, so the recipe stays light and any project can retint it.
+- **Colors come from the token block** (section 8). Changing the accent tokens changes the explosion.
+- **One slot for the project's mark.** `litro-hero-nova` takes a `mark` slot, drawn faded and centered, where roost draws its owl. Leave it empty and the star still works.
+- **Motion is optional and respectful.** The pulse is a CSS animation, and `prefers-reduced-motion` stops it, like every other moving part on the page.
+
+The same art is reused small, as the badge in the status bar, so the page has one symbol and not two.
 
 ## 10. Phases
 
@@ -172,9 +192,10 @@ Each phase ships on its own and leaves every recipe working.
 1. **`extends`, the blog choice, and a bare `supernova` recipe.** Add `extends` to the recipe type and the scaffolder, with unit tests for the copy order and the one-level limit. Move the blog removal out of `--for-repo` into one shared function, and add the `blog` option and `--blog` / `--no-blog`. Add `recipes/supernova/` whose template holds a neutral landing page built only from components that already exist. Update `--for-repo`. Add `supernova` to the scaffold tests, and to the scaffolded-apps CI check twice: once with the blog and once without.
 2. **Generic components and theming.** `litro-install-command`, `litro-feature-row`, `litro-steps`, `litro-key-hints`, the token block, and card rows through `litro-card-grid`.
 3. **Terminal parts.** `litro-status-bar`, `litro-state-badge`, `litro-term-window`.
-4. **Video.** `litro-hero-video` and the placeholder media decision.
+4. **Video.** `litro-hero-video`, plus the commented-out section in the recipe's page and a note on what to drop in. No media ships.
 5. **Docs.** A recipe page in the docs site, and the recipe in the recipe list and the create-litro README.
-6. **Later: FAST and Elena.** `template-fast/` and `template-elena/` overlays for the landing page and its components only; the docs half comes from the starlight overlays. Elena renders light DOM with no hydration, so its components need a separate design for styling and for the copy button.
+6. **Litro's own sites adopt it.** Rebuild the home page of `docs/` (static) and `docs-ssr/` (server-rendered) on the supernova components, with litro's flame in the `mark` slot and in the status bar. The two home pages are near-identical today and differ only in the server-rendered extras, so the port keeps that split: one page, the same components, and only the intentional differences kept (see `.agents/rules/content-docs-site.md`). The hero tokens take litro's own colors, which the flame already carries: blue and cyan on one side, orange and red on the other. This is also the real test of the recipe — the first project to use it is ours.
+7. **Later: FAST and Elena.** `template-fast/` and `template-elena/` overlays for the landing page and its components only; the docs half comes from the starlight overlays. Elena renders light DOM with no hydration, so its components need a separate design for styling and for the copy button.
 
 Every phase that changes create-litro carries a create-litro changeset.
 
@@ -192,6 +213,12 @@ Per phase, in CI:
   - the copy button says "Copied" when the clipboard is allowed and "Selected" when it is refused;
   - the page is readable with JavaScript off: all copy and commands are in the server HTML.
 
+For phase 6, on litro's own sites:
+
+- both sites build, and the static one prerenders every route it does today;
+- the existing docs e2e suites pass unchanged, including search on the server-rendered site;
+- the home pages of the two sites differ only where they differ today.
+
 By hand, once per phase:
 
 - keyboard only: every link and button is reachable, with a visible focus ring;
@@ -200,9 +227,7 @@ By hand, once per phase:
 
 ## 12. Open questions
 
-1. **Placeholder media.** Ship a tiny clip and poster, or ship the video section commented out with no media? Recommendation: no media, section commented out, because a placeholder video is weight nobody keeps.
-2. **Dev playground.** Add a `playground-supernova/` like `playground-starlight/`, or test only through the recipe template's e2e and the scaffolded-apps check? Recommendation: add the playground, since the other recipes have one and it makes component work faster.
-3. **Upstream back to roost.** Once the components exist, roost's landing page could be rebuilt on them. That is roost's decision and is out of scope here.
+1. **Upstream back to roost.** Once the components exist, roost's landing page could be rebuilt on them. That is roost's decision and is out of scope here.
 
 ## 13. Risks
 
@@ -210,4 +235,5 @@ By hand, once per phase:
 - **The blog refactor touches `--for-repo`.** Its current output must not change. A test pins what `--for-repo` without `--with-blog` produces before the move, and the same test must pass after it.
 - **Overlay order bugs.** A supernova adapter overlay copied before the starlight one would be silently overwritten. The unit test must assert the final content of a file that both layers provide.
 - **Shadow DOM styles do not reach slotted content.** A picture passed into `litro-feature-row`'s `figure` slot is styled by the page, not the component. The component docs must say so.
+- **Litro's docs sites are live.** Phase 6 replaces the home page of a site people use, twice over. Both sites must keep their current search, navigation and server-rendered extras, and the static build must still prerender every route it does today.
 - **Two looks in one site.** The landing page has its own dark header (the status bar); the docs keep the starlight header and a light/dark toggle. A visitor moving between them must still recognize one site, so the logo, name and main links must match in both headers.
