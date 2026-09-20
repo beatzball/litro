@@ -20,6 +20,7 @@ import { readFile, writeFile, rm, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, basename, resolve } from 'node:path';
+import { removeBlog } from './blog.js';
 
 export interface RepoInfo {
   /** Short project name, e.g. "roost". */
@@ -383,56 +384,29 @@ confirm your page is there.
 
 
 /**
- * Remove what the recipe's landing page and e2e spec assume about the blog.
+ * Pin the generated e2e spec to exactly the routes this site still has.
  *
- * Each edit asserts its target exists. If the recipe template is reshaped and
- * one of these no longer matches, scaffolding fails loudly here rather than
- * emitting a site with a dead link nobody notices until a reader clicks it.
+ * `--for-repo` throws away the recipe's sample documentation and writes one
+ * starter page, so the recipe's route list is wrong in a way no generic blog
+ * removal can know about.
  */
-async function unlinkBlogReferences(siteDir: string, repo: RepoInfo): Promise<void> {
-  const indexPath = join(siteDir, 'pages/index.ts');
-  let index = await readFile(indexPath, 'utf-8');
+async function setPrerenderedRoutes(siteDir: string, routes: string[]): Promise<void> {
+  const specPath = join(siteDir, 'e2e/index.spec.ts');
+  if (!existsSync(specPath)) return;
 
-  const blogCta = '<a href="/blog"';
-  if (!index.includes(blogCta)) {
+  const spec = await readFile(specPath, 'utf-8');
+  const list = [
+    'const PRERENDERED_ROUTES = [',
+    ...routes.map((r) => `  '${r}',`),
+    '];',
+  ].join('\n');
+  const replaced = spec.replace(/const PRERENDERED_ROUTES = \[[\s\S]*?\];/, list);
+  if (replaced === spec) {
     throw new Error(
-      `[create-litro] Expected a /blog link in pages/index.ts to rewrite. The ` +
-        `starlight template changed shape; update unlinkBlogReferences().`,
+      `[create-litro] Expected PRERENDERED_ROUTES in e2e/index.spec.ts to rewrite.`,
     );
   }
-  if (repo.repoUrl) {
-    index = index.replace(blogCta, `<a href="${repo.repoUrl}"`).replace('">Blog</a>', '">GitHub</a>');
-  } else {
-    // No remote to point at, so drop the second call to action entirely
-    // rather than leaving a button that goes nowhere.
-    index = index.replace(/\s*<a href="\/blog"[\s\S]*?">Blog<\/a>/, '');
-  }
-
-  // The "Blog" feature card advertises a section that no longer exists.
-  index = index.replace(
-    /\s*\{\s*icon: '[^']*',\s*title: 'Blog',[\s\S]*?\},/,
-    '',
-  );
-  await writeFile(indexPath, index, 'utf-8');
-
-  // Point the generated e2e spec at the routes that actually exist.
-  const specPath = join(siteDir, 'e2e/index.spec.ts');
-  if (existsSync(specPath)) {
-    const spec = await readFile(specPath, 'utf-8');
-    const routes = [
-      "const PRERENDERED_ROUTES = [",
-      "  '/',",
-      "  '/docs/getting-started',",
-      "];",
-    ].join('\n');
-    const replaced = spec.replace(/const PRERENDERED_ROUTES = \[[\s\S]*?\];/, routes);
-    if (replaced === spec) {
-      throw new Error(
-        `[create-litro] Expected PRERENDERED_ROUTES in e2e/index.spec.ts to rewrite.`,
-      );
-    }
-    await writeFile(specPath, replaced, 'utf-8');
-  }
+  await writeFile(specPath, replaced, 'utf-8');
 }
 
 /** Apply everything derivable from the repo to a freshly scaffolded site. */
@@ -456,12 +430,19 @@ export async function applyForRepo(options: ForRepoOptions): Promise<RepoInfo> {
   await writeFile(join(docsDir, '.11tydata.json'), '{ "section": "docs" }\n', 'utf-8');
 
   if (!options.withBlog) {
-    await rm(join(siteDir, 'content/blog'), { recursive: true, force: true });
-    await rm(join(siteDir, 'pages/blog'), { recursive: true, force: true });
     // Deleting the pages is not enough: the landing page links to /blog and
     // the generated e2e spec asserts the blog routes return 200. Left alone,
     // a brand-new site ships a dead link and a failing test suite.
-    await unlinkBlogReferences(siteDir, repo);
+    //
+    // There is a repository here, so the Blog button becomes a link to it
+    // rather than disappearing — the one thing this path does differently
+    // from a user who simply answered no to the blog.
+    await removeBlog(siteDir, repo.repoUrl ? { href: repo.repoUrl, label: 'GitHub' } : undefined);
+
+    // The sample docs pages went too, a few lines above, so the route list the
+    // blog removal pruned still names pages that no longer exist. This is the
+    // shape of the site --for-repo leaves behind, so --for-repo states it.
+    await setPrerenderedRoutes(siteDir, ['/', '/docs/getting-started']);
   }
 
   const pkgPath = join(siteDir, 'package.json');

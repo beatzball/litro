@@ -52,6 +52,20 @@ Choose the web component framework for your project:
 
 Omitting `--adapter` defaults to `lit`. The interactive wizard also prompts for adapter selection.
 
+### Recipe options
+
+A recipe may ask its own questions after the adapter is chosen. The answers are
+recorded in the scaffolded app's `litro.recipe.json` under `options`.
+
+A flag answers a question without being asked, for scripts and CI:
+
+| Flag | Answers |
+|---|---|
+| `--blog` / `--no-blog` | `Include a blog?` |
+
+A flag for a question the chosen recipe does not ask is an error, not a
+silently ignored argument.
+
 ## Recipes
 
 ### `fullstack` (default)
