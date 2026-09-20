@@ -11,7 +11,7 @@ Issue: https://github.com/beatzball/litro/issues/172
 A new create-litro recipe. It gives a product site in one scaffold:
 
 - a landing page at `/`, built from web components,
-- the starlight recipe's docs site under `/docs`.
+- the starlight recipe's docs site under `/docs`, and its blog unless you say no.
 
 It is modeled on the landing page of roost (https://github.com/beatzball/roost, live at https://roosting.dev). That site was scaffolded from the starlight recipe, and then a custom landing page replaced the recipe's home page.
 
