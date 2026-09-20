@@ -78,7 +78,7 @@ export class LitroOutlet extends LitElement {
 
   set routes(value: Route[]) {
     this._routes = value;
-    // If the router is already initialised (i.e. routes arrived after
+    // If the router is already initialized (i.e. routes arrived after
     // firstUpdated()), forward them immediately. This handles the timing race
     // where app.ts sets outlet.routes inside a DOMContentLoaded callback that
     // fires after Lit's first-update microtask.

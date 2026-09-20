@@ -197,7 +197,7 @@ async function locate(city: string) {
  * Returns a reading, and says whether it is real.
  *
  * A network failure must not take the demo down — this rig is run offline, on
- * planes, and in front of people. So a failure degrades to a clearly-labelled
+ * planes, and in front of people. So a failure degrades to a clearly-labeled
  * placeholder rather than throwing, and the label is the honest part: nobody
  * should have to guess whether the number on screen came from a weather
  * service or from us.

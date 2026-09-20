@@ -3,7 +3,7 @@
  *
  * Implements FrameworkAdapter for Lit (Google). This is the default adapter
  * and represents the extraction of Litro's original Lit-coupled code into
- * the adapter interface — no new behaviour, just a structural refactor.
+ * the adapter interface — no new behavior, just a structural refactor.
  *
  * SSR: @lit-labs/ssr renders components as Declarative Shadow DOM (DSD)
  * Hydration: @lit-labs/ssr-client patches LitElement before component evaluation

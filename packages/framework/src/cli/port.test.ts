@@ -68,7 +68,7 @@ describe('parsePortArg', () => {
     expect(parsePortArg([], 4321)).toEqual({ port: 4321, explicit: false });
   });
 
-  it('honours PORT env var when no CLI flag is given', () => {
+  it('honors PORT env var when no CLI flag is given', () => {
     process.env.PORT = '4567';
     expect(parsePortArg([])).toEqual({ port: 4567, explicit: true });
   });

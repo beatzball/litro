@@ -67,7 +67,7 @@ Write one when the decision:
 - trades something off that a future reader will question, or
 - sets a pattern that others must follow.
 
-Do not write one for a bug fix, a refactor that does not change behaviour, or a routine dependency bump.
+Do not write one for a bug fix, a refactor that does not change behavior, or a routine dependency bump.
 
 The test: will someone six months from now wonder why we did this?
 

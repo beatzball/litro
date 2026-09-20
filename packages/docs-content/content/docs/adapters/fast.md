@@ -73,7 +73,7 @@ export default HomePage;
 
 ## SSR
 
-FAST SSR uses `@microsoft/fast-ssr` to render components as Declarative Shadow DOM, similar to Lit. The adapter's manifest preamble installs a DOM shim and initialises the SSR template renderer before any page modules load.
+FAST SSR uses `@microsoft/fast-ssr` to render components as Declarative Shadow DOM, similar to Lit. The adapter's manifest preamble installs a DOM shim and initializes the SSR template renderer before any page modules load.
 
 The HTML output includes a DSD polyfill inline script, same as the Lit adapter.
 

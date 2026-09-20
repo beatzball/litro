@@ -29,7 +29,7 @@ describe('parseMarkdownFile', () => {
     expect(post.date.getUTCDate()).toBe(15);
   });
 
-  it('normalises tags from array', async () => {
+  it('normalizes tags from array', async () => {
     const post = await parseMarkdownFile(join(FIXTURES, 'hello-world.md'), FIXTURES);
     expect(post.tags).toEqual(['posts', 'welcome']);
   });

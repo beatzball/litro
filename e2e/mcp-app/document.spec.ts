@@ -150,7 +150,7 @@ test('the document loads nothing from the network', async ({ page }) => {
  * the other is a component, and the only difference is an inlined `runtime`
  * that calls customElements.define(). This is the claim the README makes, and
  * jsdom cannot check it: DSD adoption and element upgrade are parser
- * behaviour.
+ * behavior.
  */
 test('a runtime turns the same SSR markup into a live component', async ({ page }) => {
   const outDir = join(playground, 'dist', 'mcp-apps');

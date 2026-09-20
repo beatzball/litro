@@ -164,7 +164,7 @@ export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: a
      * server-injected script tag instead. It IS called on every subsequent
      * client navigation to this page.
      *
-     * ## Default behaviour
+     * ## Default behavior
      *
      * The default implementation re-fetches the current page URL with
      * `Accept: application/json`. The SSR handler detects this header and

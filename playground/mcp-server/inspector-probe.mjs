@@ -32,7 +32,7 @@ page.on('console', async (m) => {
     const args = await Promise.all(m.args().map((a) => a.jsonValue().catch(() => '<?>')));
     wire.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
   } catch {
-    /* a console arg that will not serialise is not worth failing the probe over */
+    /* a console arg that will not serialize is not worth failing the probe over */
   }
 });
 

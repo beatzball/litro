@@ -47,7 +47,7 @@ export function parsePortArg(
     return { port: Number(args[flagIdx + 1]), explicit: true };
   }
   // Portless (and other tools) inject PORT into child processes.
-  // Honour it so the app binds to the port the proxy expects.
+  // Honor it so the app binds to the port the proxy expects.
   const envPort = process.env.PORT;
   if (envPort && !Number.isNaN(Number(envPort))) {
     return { port: Number(envPort), explicit: true };

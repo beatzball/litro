@@ -19,7 +19,7 @@
  *
  * 3. INTERCEPT ONLY SAME-ORIGIN, LEFT-CLICK, NO MODIFIER
  *    Modifier keys (Cmd/Ctrl, Shift, Alt) signal the user wants a new tab,
- *    window, or browser-specific behavior. We honour those and fall through
+ *    window, or browser-specific behavior. We honor those and fall through
  *    to the default browser handling. Only internal paths (starting with '/')
  *    are intercepted; external URLs are left to the browser.
  *

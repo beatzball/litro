@@ -135,7 +135,7 @@ describe('callAction streaming', () => {
   it('cancels the underlying reader when the consumer breaks early (infinite log tail)', async () => {
     const enc = createStreamEncoder();
     const encoder = new TextEncoder();
-    let cancelled = false;
+    let canceled = false;
     // Only the first line is enqueued and the stream is deliberately left open
     // (no controller.close()) to model an infinite tail — if `break` didn't
     // cancel the reader, this stream would hang forever.
@@ -145,7 +145,7 @@ describe('callAction streaming', () => {
         controller.enqueue(encoder.encode(enc.value({ i: 2 })));
       },
       cancel() {
-        cancelled = true;
+        canceled = true;
       },
     });
     fetchMock.mockResolvedValue(
@@ -161,7 +161,7 @@ describe('callAction streaming', () => {
     }
 
     await vi.waitFor(() => {
-      expect(cancelled).toBe(true);
+      expect(canceled).toBe(true);
     });
   });
 });

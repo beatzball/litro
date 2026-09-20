@@ -346,7 +346,7 @@ export async function docsSync(rootDir: string, force = false): Promise<number> 
 
   const untitled = pages.filter((p) => !p.title);
   if (untitled.length > 0) {
-    // Refuse rather than write a sidebar labelled with raw slugs: a wrong nav
+    // Refuse rather than write a sidebar labeled with raw slugs: a wrong nav
     // is harder to notice than a missing one.
     console.error('[litro docs] Cannot sync — these pages have no frontmatter `title`:');
     for (const p of untitled) console.error(`  ${p.relPath}`);
