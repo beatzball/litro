@@ -1,4 +1,4 @@
-import { html, css, type TemplateResult } from 'lit';
+import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
@@ -6,11 +6,21 @@ import { getGlobalData } from 'litro:content';
 import { siteConfig } from '../server/starlight.config.js';
 import { starlightHead } from '../src/route-meta.js';
 
-// Register components used in render()
+// Register the components used in render(). The landing page's own first...
+import '../src/components/litro-hero-nova.js';
+import '../src/components/litro-install-command.js';
+import '../src/components/litro-feature-row.js';
+import '../src/components/litro-steps.js';
+import '../src/components/litro-key-hints.js';
+
+// ...then the ones shared with the docs half of this site.
 import '../src/components/starlight-header.js';
-import '../src/components/litro-footer.js';
 import '../src/components/litro-card.js';
 import '../src/components/litro-card-grid.js';
+import '../src/components/litro-footer.js';
+
+import type { StepItem } from '../src/components/litro-steps.js';
+import type { KeyHint } from '../src/components/litro-key-hints.js';
 
 /**
  * The landing page.
@@ -19,11 +29,9 @@ import '../src/components/litro-card-grid.js';
  * words — the headings tell you what each one is for. The page renders fully
  * on the server, so all of this copy is readable with JavaScript turned off.
  *
- * This is the first phase of the supernova recipe: it is built only from the
- * components the starlight recipe already ships. The dedicated landing-page
- * components (an install command with a copy button, feature rows, numbered
- * steps, key hints and the hero art) arrive in a later release, and this page
- * is rewritten on top of them then.
+ * The page itself is a thin layout. The parts that do something live in
+ * `src/components/`, and they are yours: edit them, restyle them, or delete
+ * the ones you do not want.
  */
 
 /** The command a reader copies to install your project. */
@@ -59,6 +67,30 @@ const HIGHLIGHTS: Array<{
       'Link it to the page in the docs that answers the question in full.',
     commands: ['playground-supernova deploy --help'],
   },
+];
+
+/** What a reader does, in order, to get from nothing to running. */
+const STEPS: StepItem[] = [
+  {
+    title: 'Install it',
+    description: 'One command. Say here what it needs first, if it needs anything.',
+  },
+  {
+    title: 'Point it at your work',
+    description: 'The smallest useful thing a reader can do on their own project.',
+  },
+  {
+    title: 'Run it',
+    description: 'What they should see when it works, so they know it worked.',
+  },
+];
+
+/** The keys worth knowing on day one. Delete this list if yours has none. */
+const KEY_HINTS: KeyHint[] = [
+  { keys: '?', meaning: 'Show every key, without leaving what you are doing' },
+  { keys: ['Ctrl', 'C'], meaning: 'Stop the current run' },
+  { keys: 'Tab', meaning: 'Move to the next pane' },
+  { keys: 'Enter', meaning: 'Accept what is selected' },
 ];
 
 export interface SupernovaData {
@@ -112,8 +144,116 @@ export const routeMeta = {
 @customElement('page-home')
 export class SupernovaPage extends LitroPage {
   static override styles = css`
+    /* ── The token block ───────────────────────────────────────────────
+     *
+     * EDIT THIS BLOCK TO RETHEME THE WHOLE LANDING PAGE. The page and all of
+     * its components read these tokens and define no colors of their own, so
+     * nothing else has to change.
+     *
+     * Every value is var(--brand-…, fallback). Set a --brand-… property
+     * anywhere above this element — :root in public/styles/starlight.css
+     * is the usual place — and the page follows it. Leave it unset and the
+     * fallback here applies.
+     *
+     * THE DOCS HALF OF THIS SITE HAS ITS OWN TOKENS, and they are not these.
+     * They are named --sl-* and they are defined in
+     * public/styles/starlight.css: --sl-color-bg, --sl-color-text,
+     * --sl-color-accent, --sl-color-border, --sl-color-gray-1 to
+     * --sl-color-gray-6, --sl-color-note, --sl-color-tip,
+     * --sl-color-caution, --sl-color-danger, --sl-font-sans,
+     * --sl-font-mono, --sl-text-xs to --sl-text-4xl, --sl-nav-height,
+     * --sl-sidebar-width, --sl-toc-width, --sl-content-width,
+     * --sl-shadow-sm, --sl-shadow-md, --sl-border-radius and
+     * --sl-border-radius-sm. Do not redefine any of those here — the docs
+     * pages read them too, and the header on this page is a docs component.
+     *
+     * The landing page is dark whatever the reader's light or dark choice is,
+     * the way a product page usually is, while the docs follow that choice. To
+     * make the landing page follow it too, delete the color-scheme line
+     * below and point the surface and text tokens at the --sl-* names.
+     */
+    :host {
+      color-scheme: dark;
+
+      /* surfaces */
+      --nova-bg: var(--brand-bg, #08090f);
+      --nova-surface: var(--brand-surface, #12141f);
+      --nova-border: var(--brand-border, #262a3d);
+
+      /* text */
+      --nova-text: var(--brand-text, #e9ecfa);
+      --nova-text-dim: var(--brand-text-dim, #979db8);
+
+      /* accent */
+      --nova-accent: var(--brand-accent, #7c3aed);
+      --nova-accent-2: var(--brand-accent-2, #22d3ee);
+
+      /* states */
+      --nova-error: var(--brand-error, #f87171);
+      --nova-blocked: var(--brand-blocked, #fbbf24);
+      --nova-working: var(--brand-working, #38bdf8);
+      --nova-done: var(--brand-done, #4ade80);
+      --nova-idle: var(--brand-idle, #64748b);
+
+      /* layout */
+      --nova-measure: var(--brand-measure, 64rem);
+      --nova-gutter: var(--brand-gutter, 1.5rem);
+      --nova-radius: var(--brand-radius, 0.375rem);
+      --nova-font-mono: var(
+        --brand-font-mono,
+        ui-monospace,
+        'Cascadia Code',
+        'Fira Code',
+        monospace
+      );
+    }
+
+    /* ── Dressing the docs components for a dark page ──────────────────
+     *
+     * The header, the cards and the credit line are the DOCS site's
+     * components. They read the --sl-* tokens, and those follow the reader's
+     * light or dark choice, while this page is dark either way. Left alone,
+     * the cards are white boxes on a black page.
+     *
+     * So the --sl-* tokens are set HERE, ON THOSE ELEMENTS. That dresses them
+     * for this page only: the docs pages are untouched, the tokens keep their
+     * global meaning, and none of the three components' own files change.
+     *
+     * The landing page gets a header of its own in a later release, and the
+     * header half of this goes with it.
+     */
+    starlight-header,
+    litro-footer {
+      --sl-color-bg: var(--nova-bg);
+      --sl-color-bg-nav: var(--nova-bg);
+      --sl-color-text: var(--nova-text);
+      --sl-color-gray-2: var(--nova-border);
+      --sl-color-gray-4: var(--nova-text-dim);
+      --sl-color-gray-5: var(--nova-text-dim);
+      --sl-color-border: var(--nova-border);
+      --sl-color-accent: var(--nova-accent);
+      --sl-color-accent-low: var(--nova-surface);
+    }
+
+    /* A card is a raised pane, so it takes the surface token, not the page
+       background. Its four rotating top borders take the state colors. */
+    litro-card {
+      --sl-color-bg: var(--nova-surface);
+      --sl-color-text: var(--nova-text);
+      --sl-color-gray-4: var(--nova-text-dim);
+      --sl-color-border: var(--nova-border);
+      --sl-color-accent: var(--nova-accent);
+      --sl-color-note: var(--nova-working);
+      --sl-color-tip: var(--nova-done);
+      --sl-color-caution: var(--nova-blocked);
+    }
+
+    /* ── Page frame ────────────────────────────────────────────────────── */
+
     :host {
       display: block;
+      background: var(--nova-bg);
+      color: var(--nova-text);
     }
 
     .page {
@@ -128,9 +268,9 @@ export class SupernovaPage extends LitroPage {
     }
 
     .shell {
-      max-width: 64rem;
+      max-width: var(--nova-measure);
       margin: 0 auto;
-      padding: 0 1.5rem;
+      padding: 0 var(--nova-gutter);
       width: 100%;
     }
 
@@ -138,51 +278,28 @@ export class SupernovaPage extends LitroPage {
 
     .hero {
       text-align: center;
-      padding: 5rem 0 4rem;
+      padding: 5rem 0 4.5rem;
     }
 
     .hero h1 {
       font-size: clamp(2rem, 5vw, 3.5rem);
       font-weight: 800;
       line-height: 1.1;
-      color: var(--sl-color-text);
       margin: 0 0 1rem;
     }
 
     .lede {
-      font-size: var(--sl-text-xl, 1.25rem);
-      color: var(--sl-color-gray-4, #6b7280);
+      font-size: 1.15rem;
+      color: var(--nova-text-dim);
       max-width: 38rem;
       margin: 0 auto 2rem;
       line-height: 1.6;
     }
 
-    /* ── Install command ───────────────────────────────────────────────── */
-
-    .install {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      max-width: 100%;
-      overflow-x: auto;
-      padding: 0.7rem 1.1rem;
+    .hero litro-install-command {
+      display: flex;
+      justify-content: center;
       margin: 0 0 2rem;
-      border: 1px solid var(--sl-color-border, #e8e8e8);
-      border-radius: var(--sl-border-radius, 0.375rem);
-      background: var(--sl-color-bg-nav, #f6f6f7);
-      font-family: var(--sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-      font-size: var(--sl-text-sm, 0.875rem);
-      text-align: left;
-    }
-
-    .install .prompt {
-      color: var(--sl-color-accent, #7c3aed);
-      user-select: none;
-    }
-
-    .install code {
-      white-space: nowrap;
-      color: var(--sl-color-text);
     }
 
     /* ── Buttons ───────────────────────────────────────────────────────── */
@@ -197,25 +314,24 @@ export class SupernovaPage extends LitroPage {
     .button {
       display: inline-block;
       padding: 0.6rem 1.5rem;
-      border-radius: var(--sl-border-radius, 0.375rem);
+      border-radius: var(--nova-radius);
       font-weight: 600;
-      font-size: var(--sl-text-base, 1rem);
       text-decoration: none;
       border: 1px solid transparent;
     }
 
     .button.primary {
-      background: var(--sl-color-accent, #7c3aed);
-      color: var(--sl-color-text-invert, #fff);
+      background: var(--nova-accent);
+      color: var(--nova-text);
     }
 
     .button.ghost {
-      border-color: var(--sl-color-border, #e8e8e8);
-      color: var(--sl-color-text);
+      border-color: var(--nova-border);
+      color: var(--nova-text);
     }
 
     .button:focus-visible {
-      outline: 2px solid var(--sl-color-accent, #7c3aed);
+      outline: 2px solid var(--nova-accent);
       outline-offset: 2px;
     }
 
@@ -224,75 +340,64 @@ export class SupernovaPage extends LitroPage {
     .rows {
       display: flex;
       flex-direction: column;
+      gap: 3.5rem;
+      padding: 4rem 0;
+    }
+
+    /* Shadow DOM styles stop at a slot, so the paragraph handed to a row is
+       styled here, by the page, and not inside litro-feature-row. */
+    .rows p {
+      color: var(--nova-text-dim);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    /* ── Get running ───────────────────────────────────────────────────── */
+
+    .start {
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 2.5rem;
       padding: 1rem 0 4rem;
     }
 
-    .row h2 {
-      font-size: var(--sl-text-2xl, 1.5rem);
-      font-weight: 700;
-      color: var(--sl-color-text);
-      margin: 0 0 0.5rem;
-    }
-
-    .row p {
-      color: var(--sl-color-gray-4, #6b7280);
-      line-height: 1.7;
-      margin: 0 0 0.9rem;
-      max-width: 44rem;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .chips li {
-      padding: 0.25rem 0.6rem;
-      border: 1px solid var(--sl-color-border, #e8e8e8);
-      border-radius: var(--sl-border-radius, 0.375rem);
-      background: var(--sl-color-bg-nav, #f6f6f7);
-      font-family: var(--sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-      font-size: var(--sl-text-sm, 0.875rem);
-      color: var(--sl-color-text);
+    @media (min-width: 48rem) {
+      .start {
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+      }
     }
 
     /* ── Section headings and closing ──────────────────────────────────── */
 
     .section-title {
-      font-size: var(--sl-text-2xl, 1.5rem);
+      font-size: 1.5rem;
       font-weight: 700;
-      color: var(--sl-color-text);
       margin: 0 0 1.25rem;
+    }
+
+    .cards {
+      padding: 0 0 4rem;
     }
 
     .closing {
       text-align: center;
       padding: 4rem 0 5rem;
-      border-top: 1px solid var(--sl-color-border, #e8e8e8);
-      margin-top: 4rem;
+      border-top: 1px solid var(--nova-border);
     }
 
     .closing h2 {
       font-size: clamp(1.6rem, 4vw, 2.5rem);
       font-weight: 800;
-      color: var(--sl-color-text);
       margin: 0 0 1.5rem;
     }
-  `;
 
-  private installCommand(): TemplateResult {
-    return html`
-      <p class="install">
-        <span class="prompt" aria-hidden="true">$</span>
-        <code>${INSTALL_COMMAND}</code>
-      </p>
-    `;
-  }
+    .closing litro-install-command {
+      display: flex;
+      justify-content: center;
+      margin: 0 0 2rem;
+    }
+  `;
 
   override render() {
     const data = this.serverData as SupernovaData | null;
@@ -314,7 +419,7 @@ export class SupernovaPage extends LitroPage {
     //
     // Reading the page's links from the site navigation config instead — so
     // that dropping one entry removes every Blog link at once — arrives with
-    // the landing-page components in a later release.
+    // the terminal components in a later release.
     const blogButton = html`<a href="/blog" class="button ghost">Blog</a>`;
 
     return html`
@@ -326,35 +431,59 @@ export class SupernovaPage extends LitroPage {
         ></starlight-header>
 
         <main>
-          <section class="hero shell">
-            <h1>Say what your product does, in one line.</h1>
-            <p class="lede">
-              ${description ||
-              'Two sentences on who it is for and why it is worth their time. ' +
-                'Keep it concrete: this is the only paragraph most readers finish.'}
-            </p>
-            ${this.installCommand()}
-            <div class="actions">
-              <a href="/docs/getting-started" class="button primary">Get Started</a>
-              ${blogButton}
-            </div>
-          </section>
+          <litro-hero-nova>
+            <!-- Your mark goes here. It is drawn faded and centered behind
+                 the words. Drop in your own SVG, or delete the element. -->
+            <svg slot="mark" viewBox="0 0 64 64" role="img" aria-label="">
+              <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="3" />
+              <circle cx="32" cy="32" r="5" fill="currentColor" />
+            </svg>
+
+            <section class="hero shell">
+              <h1>Say what your product does, in one line.</h1>
+              <p class="lede">
+                ${description ||
+                'Two sentences on who it is for and why it is worth their time. ' +
+                  'Keep it concrete: this is the only paragraph most readers finish.'}
+              </p>
+              <litro-install-command
+                command="${INSTALL_COMMAND}"
+              ></litro-install-command>
+              <div class="actions">
+                <a href="/docs/getting-started" class="button primary">Get Started</a>
+                ${blogButton}
+              </div>
+            </section>
+          </litro-hero-nova>
 
           <section class="rows shell" aria-label="What it does">
             ${HIGHLIGHTS.map(
               (row) => html`
-                <article class="row">
-                  <h2>${row.title}</h2>
+                <litro-feature-row
+                  class="row"
+                  heading="${row.title}"
+                  .commands="${row.commands}"
+                >
                   <p>${row.description}</p>
-                  <ul class="chips">
-                    ${row.commands.map((command) => html`<li>${command}</li>`)}
-                  </ul>
-                </article>
+                  <!-- A picture belongs in the "figure" slot. The terminal
+                       components that draw one arrive in a later release. -->
+                </litro-feature-row>
               `,
             )}
           </section>
 
-          <section class="shell" aria-label="What you get">
+          <section class="start shell" aria-label="Get running">
+            <div>
+              <h2 class="section-title">Get running</h2>
+              <litro-steps .steps="${STEPS}"></litro-steps>
+            </div>
+            <div>
+              <h2 class="section-title">Keys worth knowing</h2>
+              <litro-key-hints .hints="${KEY_HINTS}"></litro-key-hints>
+            </div>
+          </section>
+
+          <section class="cards shell" aria-label="What you get">
             <h2 class="section-title">What ${siteTitle} ships with</h2>
             <litro-card-grid>
               ${features.map(
@@ -371,7 +500,9 @@ export class SupernovaPage extends LitroPage {
 
           <section class="closing shell">
             <h2>One line that asks the reader to start.</h2>
-            ${this.installCommand()}
+            <litro-install-command
+              command="${INSTALL_COMMAND}"
+            ></litro-install-command>
             <div class="actions">
               <a href="/docs/getting-started" class="button primary">Read the docs</a>
             </div>

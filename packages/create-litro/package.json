@@ -38,7 +38,9 @@
     "typescript"
   ],
   "devDependencies": {
+    "@lit-labs/ssr": "^3.3.0",
     "@types/node": "^22.0.0",
+    "lit": "^3.2.1",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }
