@@ -513,13 +513,17 @@ describe('supernova recipe', () => {
       // on the way out — which the base layer's copy must still go through.
       expect(existsSync(join(targetDir, '.gitignore'))).toBe(true);
 
-      // ...and none of it is committed in supernova's own template.
+      // ...and none of it is committed in supernova's own template. The one
+      // directory the two layers share is src/components/: supernova adds the
+      // landing page's own components there, on top of starlight's, so this
+      // names the starlight files rather than the directory.
       const ownTemplate = fileURLToPath(
         new URL('../recipes/supernova/template', import.meta.url),
       );
       expect(existsSync(join(ownTemplate, 'pages/docs'))).toBe(false);
       expect(existsSync(join(ownTemplate, 'content'))).toBe(false);
-      expect(existsSync(join(ownTemplate, 'src'))).toBe(false);
+      expect(existsSync(join(ownTemplate, 'src/components/starlight-header.ts'))).toBe(false);
+      expect(existsSync(join(ownTemplate, 'src/components/litro-card.ts'))).toBe(false);
     });
   });
 
@@ -530,6 +534,14 @@ describe('supernova recipe', () => {
       const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
       expect(home).toContain('Say what your product does, in one line.');
       expect(home).toContain('SupernovaPage');
+      // The landing page is built from supernova's own components, and they
+      // are copied in alongside starlight's.
+      expect(home).toContain('<litro-hero-nova>');
+      expect(existsSync(join(targetDir, 'src/components/litro-hero-nova.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-install-command.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-feature-row.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-steps.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-key-hints.ts'))).toBe(true);
       // starlight's home page exports SplashData. If the copy order ever
       // reversed, the file would still be a valid home page — this is the
       // assertion that notices.

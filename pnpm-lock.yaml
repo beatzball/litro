@@ -314,9 +314,15 @@ importers:
 
   packages/create-litro:
     devDependencies:
+      '@lit-labs/ssr':
+        specifier: ^3.3.0
+        version: 3.3.1
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.13
+      lit:
+        specifier: ^3.2.1
+        version: 3.3.2
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
