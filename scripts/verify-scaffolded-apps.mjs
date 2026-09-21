@@ -294,6 +294,36 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
     }
   }
 
+  // The card grid is the second thing a tree-shaken registration empties, and
+  // it fails more quietly than the credit line: every feature title is written
+  // as an ATTRIBUTE on <litro-card>, so the words are in the file whether or
+  // not the element rendered. Searching the raw HTML would pass on a page that
+  // draws nothing. So the subtree between <litro-card-grid> and its closing tag
+  // is stripped of tags — attributes go with them — and the feature title has
+  // to survive as visible text.
+  if (existsSync(home)) {
+    const raw = readFileSync(home, 'utf-8').replace(/<!--.*?-->/gs, '');
+    const start = raw.indexOf('<litro-card-grid');
+    const end = raw.indexOf('</litro-card-grid>', start);
+    if (start !== -1 && end !== -1) {
+      const visible = raw.slice(start, end).replace(/<[^>]*>/g, ' ');
+      if (!visible.includes('Structured documentation with sidebar')) {
+        results.push({
+          id,
+          status: 'EMPTY-CARDS',
+          detail:
+            'The prerendered home page places <litro-card-grid> but the cards ' +
+            'inside it rendered no text. The feature titles are present only as ' +
+            'attributes on unexpanded <litro-card> tags, so the block is blank ' +
+            'with JavaScript off. The usual cause is the page\u2019s bare ' +
+            'side-effect import of the component being tree-shaken out of the ' +
+            'server bundle, which leaves the element unregistered during SSR.',
+        });
+        continue;
+      }
+    }
+  }
+
   // A recipe option answered on the command line has to reach the BUILT site,
   // not merely the files on disk. `--no-blog` deletes pages, unpicks the
   // landing page's button and card and drops the Blog entry from the site
