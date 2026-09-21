@@ -83,11 +83,15 @@ test('landing page copy is in the server HTML', async ({ request }) => {
   expect(body).toContain('npm install');
   expect(body).toContain('/docs/getting-started');
   // Every component expanded on the server, rather than reaching the reader
-  // as an empty tag: the steps, the key hints and the hero art.
-  expect(body).toContain('Install it');
-  expect(body).toContain('<kbd>');
-  expect(body).toContain('class="layer core"');
-  expect(body).toContain('radial-gradient');
+  // as an empty tag. Each line below names content that ONLY that component
+  // renders, so a bare tag cannot satisfy it.
+  expect(body).toContain('Install it');               // litro-steps
+  expect(body).toContain('Point it at your work');    // litro-steps
+  expect(body).toContain('<kbd>');                    // litro-key-hints
+  expect(body).toContain('Stop the current run');     // litro-key-hints
+  expect(body).toContain('class="layer core"');       // litro-hero-nova
+  expect(body).toContain('radial-gradient');          // litro-hero-nova
+  expect(body).toContain('Structured documentation with sidebar'); // litro-card
 });
 
 /**
@@ -102,6 +106,9 @@ test('the landing page asks for no image', async ({ request }) => {
 
   expect(body).not.toContain('<img');
   expect(body).not.toContain('url(');
+  // ...and the art really is there, so two absences are not passing against
+  // a page that rendered nothing at all.
+  expect(body).toContain('radial-gradient');
 });
 
 test('all prerendered routes return 200', async ({ request }) => {

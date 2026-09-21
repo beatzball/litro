@@ -110,15 +110,6 @@ test('client navigation from the landing page to the blog works', async ({ page 
  * each assertion below names content that only that component renders.
  */
 test('every component put its content in the server HTML', async ({ request }) => {
-  // FIXME: re-enable when PR 179 is on this branch. Nitro tells Rollup that
-  // every module is free of side effects, so a page's bare side-effect import
-  // of a component is deleted from the server build and customElements.define
-  // never runs. The element then reaches the reader as a bare tag with no
-  // shadow root. It is a framework bug (issue 178), not a component one, and
-  // the import form here is the correct one. Delete this line once the fix
-  // lands — the assertions below already pass in a browser today.
-  test.fixme();
-
   const response = await request.get('/');
   expect(response.status()).toBe(200);
   const body = await response.text();
@@ -146,9 +137,6 @@ test('every component put its content in the server HTML', async ({ request }) =
  * The hero art is drawn in CSS, and the page as shipped carries no media at
  * all. An image creeping in would still look right and would simply cost a
  * request on every visit, so this asserts on the HTML rather than on the eye.
- *
- * That the gradients really are there is asserted with the rest of the
- * server-rendered art, in the test above.
  */
 test('the landing page asks for no image', async ({ request }) => {
   const response = await request.get('/');
@@ -156,6 +144,9 @@ test('the landing page asks for no image', async ({ request }) => {
 
   expect(body).not.toContain('<img');
   expect(body).not.toContain('url(');
+  // ...and the art really is there, so two absences are not passing against
+  // a page that rendered nothing at all.
+  expect(body).toContain('radial-gradient');
 });
 
 test('all prerendered routes return 200', async ({ request }) => {
