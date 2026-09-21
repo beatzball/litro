@@ -99,3 +99,37 @@ module graph.
 
 **Check:** `packages/docs-ui/src/route-meta.ts` and `packages/docs-ui/src/seo.ts`
 show the guard. Test such a change in `litro dev`, not only in a build.
+
+### BUILD-007 — A page's element imports survive only because the pages plugin runs
+
+`pagesPlugin` marks the app's own modules as side-effectful for the Nitro
+server bundle. An app whose `nitro.config.ts` skips `pagesPlugin`, or a build
+path that composes the page manifest by hand, loses that and renders bare tags.
+
+**Why:** Nitro sets Rollup's `treeshake.moduleSideEffects` to a function that
+answers `false` for every module outside its own runtime. A page's
+`import './components/litro-card.js'` binds no names, so Rollup deletes it, the
+element is never registered on the server, and SSR prints `<litro-card>` with
+no shadow root. The build exits 0. `litro dev` does not show it — dev serves
+live source and never runs Rollup. An SSG build can also hide it by accident:
+the SSG plugin loads every DYNAMIC page through jiti to call
+`generateRoutes()`, which registers that page's elements in the same process
+the prerenderer uses. Elements reachable only from a STATIC page get no such
+rescue, which is why two components from one page file behaved differently.
+
+A dependency is not covered — it keeps its own `"sideEffects"` field
+(BUILD-001), which is how `packages/docs-ui` has always worked.
+
+**Check:** `packages/framework/src/plugins/side-effects.ts` and the call to it
+at the top of `pagesPlugin`. To test a built site without the jiti rescue,
+render from the bundle alone:
+
+```sh
+node --input-type=module -e "
+const m = await import('./<app>/.nitro/prerender/index.mjs');
+console.log(await (await m.localFetch('/')).text());
+"
+```
+
+A tag with no `<template shadowrootmode>` there is an unregistered element.
+`scripts/verify-scaffolded-apps.mjs` pins the rendered result.
