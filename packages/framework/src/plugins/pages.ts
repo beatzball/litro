@@ -29,6 +29,7 @@ import { resolve, join, relative } from 'pathe';
 import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { fileToRoute, compareRoutes } from './path-to-route.js';
 import { resolveAdapter } from '../adapter/resolve.js';
+import sideEffectsPlugin from './side-effects.js';
 import type { LitroRoute } from '../types/route.js';
 
 // ---------------------------------------------------------------------------
@@ -297,6 +298,13 @@ async function writeServerManifest(rootDir: string, content: string): Promise<vo
  *   hooks['build:before'] rather than registering nested hooks.
  */
 export default async function pagesPlugin(nitro: Nitro): Promise<void> {
+  // Bare side-effect imports inside a page file — the lines that register the
+  // custom elements the page renders — are dropped from the Nitro server
+  // bundle unless the project's own modules are marked side-effectful. Without
+  // this the page manifest still reaches the bundle, but the components it
+  // pulls in do not, and SSR prints unexpanded tags. See side-effects.ts.
+  sideEffectsPlugin(nitro);
+
   // ---------------------------------------------------------------------------
   // Core scan function — called both at build time and on dev reload
   // ---------------------------------------------------------------------------
