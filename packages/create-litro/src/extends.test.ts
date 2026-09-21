@@ -244,16 +244,23 @@ describe('extends — refusals', () => {
   });
 });
 
-describe('the shipped recipes are untouched by extends', () => {
-  it('each resolves to itself alone', async () => {
+describe('the shipped recipes', () => {
+  it('every recipe but supernova resolves to itself alone', async () => {
     for (const name of ['fullstack', '11ty-blog', 'starlight']) {
       expect(await resolveRecipeLineage(name)).toEqual([name]);
     }
   });
 
-  it('--list-recipes still lists all three', async () => {
+  it('supernova resolves to starlight first, then itself', async () => {
+    // The copy order, from the real recipe configs rather than a fixture. A
+    // reversed lineage would silently put starlight's home page on top of
+    // supernova's, and every other file would still look right.
+    expect(await resolveRecipeLineage('supernova')).toEqual(['starlight', 'supernova']);
+  });
+
+  it('--list-recipes lists all four', async () => {
     const names = (await listRecipes()).map((r) => r.name).sort();
-    expect(names).toEqual(['11ty-blog', 'fullstack', 'starlight']);
+    expect(names).toEqual(['11ty-blog', 'fullstack', 'starlight', 'supernova']);
   });
 });
 

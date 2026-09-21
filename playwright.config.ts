@@ -48,6 +48,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3037' },
     },
     {
+      name: 'playground-supernova',
+      testDir: './e2e/playground-supernova',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3039' },
+    },
+    {
       // No baseURL and no web server: the test drives a packed document inside
       // an iframe it builds itself, so there is nothing to serve.
       name: 'mcp-app',
@@ -114,6 +119,13 @@ export default defineConfig({
       name: 'playground-starlight-elena',
       command: 'cd playground-starlight-elena && node ../packages/framework/dist/cli/index.js dev --port 3037',
       url: 'http://localhost:3037',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+    {
+      name: 'playground-supernova',
+      command: 'cd playground-supernova && node ../packages/framework/dist/cli/index.js dev --port 3039',
+      url: 'http://localhost:3039',
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
     },

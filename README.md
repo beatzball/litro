@@ -63,6 +63,7 @@ litro/
   playground-starlight/ ← starlight recipe test app (Lit)
   playground-starlight-fast/ ← starlight test app (FAST Element)
   playground-starlight-elena/ ← starlight test app (Elena)
+  playground-supernova/ ← supernova recipe test app (Lit)
   docs/               ← official documentation site (@beatzball/litro-docs, SSG)
   docs-ssr/           ← SSR replica of docs site (@beatzball/litro-docs-ssr, fullstack)
   benchmarks/         ← benchmark suite: SSG vs SSR + cross-framework (Litro/Nuxt/Next.js)

@@ -51,6 +51,7 @@ litro/
   playground/           ← fullstack recipe dev environment
   playground-11ty/      ← 11ty-blog recipe dev environment
   playground-starlight/ ← starlight recipe dev environment
+  playground-supernova/ ← supernova recipe dev environment
   docs/                 ← documentation site (SSG)
   docs-ssr/             ← documentation site (SSR, fullstack)
   e2e/                  ← Playwright e2e tests

@@ -1,9 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { scaffold } from './scaffold.js';
+import { loadRecipe, resolveRecipeLineage, scaffold } from './scaffold.js';
+import { applyRecipeOptions } from './recipe-options.js';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 async function withTmpDir(fn: (dir: string) => Promise<void>): Promise<void> {
   const dir = await mkdtemp(join(tmpdir(), 'litro-scaffold-test-'));
@@ -150,7 +152,7 @@ describe('scaffold', () => {
     // recipes, so it cannot name its own recipe — the scaffolder has to supply
     // it. A wrong or empty value here would ship a site crediting the wrong
     // recipe, which nothing else in the suite would notice.
-    for (const recipe of ['fullstack', '11ty-blog', 'starlight'] as const) {
+    for (const recipe of ['fullstack', '11ty-blog', 'starlight', 'supernova'] as const) {
       await withTmpDir(async (dir) => {
         const targetDir = join(dir, 'app');
         await scaffold(recipe, { projectName: 'app', mode: 'ssg' }, targetDir);
@@ -178,10 +180,19 @@ describe('scaffold', () => {
     const { existsSync } = await import('node:fs');
     const { fileURLToPath } = await import('node:url');
     const recipesRoot = fileURLToPath(new URL('../recipes', import.meta.url));
-    for (const recipe of ['fullstack', '11ty-blog', 'starlight']) {
-      const templateDir = join(recipesRoot, recipe, 'template');
-      expect(existsSync(join(templateDir, 'gitignore'))).toBe(true);
-      expect(existsSync(join(templateDir, '.gitignore'))).toBe(false);
+    for (const recipe of ['fullstack', '11ty-blog', 'starlight', 'supernova']) {
+      // A recipe that extends another inherits the base's ignore file and must
+      // not commit a second copy, so only the base of the lineage is required
+      // to carry one. What every recipe must never do is store the dotfile.
+      const lineage = await resolveRecipeLineage(recipe, recipesRoot);
+      const carriers = lineage.filter((name) =>
+        existsSync(join(recipesRoot, name, 'template', 'gitignore')),
+      );
+      expect(carriers.length, `${recipe} lineage has no gitignore`).toBeGreaterThan(0);
+      for (const name of lineage) {
+        const templateDir = join(recipesRoot, name, 'template');
+        expect(existsSync(join(templateDir, '.gitignore'))).toBe(false);
+      }
     }
   });
 
@@ -458,6 +469,204 @@ describe('scaffold', () => {
         const content = await readFile(file, 'utf-8');
         expect(content, `${file} should not contain <litro-link>`).not.toContain('litro-link');
       }
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// supernova recipe — starlight, with a landing page on top
+//
+// supernova is the first recipe to use `extends`. Its own template holds one
+// file. Everything else a scaffolded site has comes from starlight, copied in
+// first, so these tests are about the SEAM: that the base layer really lands,
+// that the one file supernova owns really wins, and that the site still names
+// supernova as the recipe it was built from.
+// ---------------------------------------------------------------------------
+
+describe('supernova recipe', () => {
+  async function scaffoldSupernova(
+    dir: string,
+    recipeOptions?: Record<string, unknown>,
+  ): Promise<string> {
+    const targetDir = join(dir, 'my-product');
+    await scaffold(
+      'supernova',
+      { projectName: 'my-product', mode: 'ssg', recipeOptions },
+      targetDir,
+    );
+    return targetDir;
+  }
+
+  it('scaffolds starlight’s docs half, not a second copy of it', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir);
+
+      // Pages and content that only starlight's template provides.
+      expect(existsSync(join(targetDir, 'pages/docs/[slug].ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'content/docs/getting-started.md'))).toBe(true);
+      expect(existsSync(join(targetDir, 'content/docs/installation.md'))).toBe(true);
+      expect(existsSync(join(targetDir, 'server/starlight.config.js'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/starlight-header.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'src/components/litro-card.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'public/styles/starlight.css'))).toBe(true);
+      // The ignore file is inherited, and npm strips it unless it is renamed
+      // on the way out — which the base layer's copy must still go through.
+      expect(existsSync(join(targetDir, '.gitignore'))).toBe(true);
+
+      // ...and none of it is committed in supernova's own template.
+      const ownTemplate = fileURLToPath(
+        new URL('../recipes/supernova/template', import.meta.url),
+      );
+      expect(existsSync(join(ownTemplate, 'pages/docs'))).toBe(false);
+      expect(existsSync(join(ownTemplate, 'content'))).toBe(false);
+      expect(existsSync(join(ownTemplate, 'src'))).toBe(false);
+    });
+  });
+
+  it('overwrites starlight’s home page with its own', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir);
+
+      const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+      expect(home).toContain('Say what your product does, in one line.');
+      expect(home).toContain('SupernovaPage');
+      // starlight's home page exports SplashData. If the copy order ever
+      // reversed, the file would still be a valid home page — this is the
+      // assertion that notices.
+      expect(home).not.toContain('SplashData');
+      // The footer credit names the recipe the user asked for, not the base.
+      expect(home).toContain('<litro-footer recipe="supernova">');
+    });
+  });
+
+  it('records supernova in litro.recipe.json, inherited from starlight', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir, { blog: true });
+
+      const manifest = JSON.parse(
+        await readFile(join(targetDir, 'litro.recipe.json'), 'utf-8'),
+      ) as Record<string, unknown>;
+      expect(manifest.recipe).toBe('supernova');
+      expect(manifest.mode).toBe('ssg');
+      expect(manifest.contentDir).toBe('content');
+      expect(manifest.options).toEqual({ blog: true });
+    });
+  });
+
+  it('has no un-interpolated {{ }} in any output file', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir, { blog: true });
+
+      const binaryExts = new Set(['.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.svg',
+        '.woff', '.woff2', '.ttf', '.eot', '.otf', '.pdf', '.zip', '.gz', '.tar', '.gitkeep']);
+
+      async function collectFiles(d: string): Promise<string[]> {
+        const { readdir: rd } = await import('node:fs/promises');
+        const entries = await rd(d, { withFileTypes: true });
+        const results: string[] = [];
+        for (const e of entries) {
+          const p = join(d, e.name);
+          if (e.isDirectory()) results.push(...(await collectFiles(p)));
+          else results.push(p);
+        }
+        return results;
+      }
+
+      for (const file of await collectFiles(targetDir)) {
+        const extPart = file.includes('.') ? `.${file.split('.').pop()}` : '';
+        if (binaryExts.has(extPart.toLowerCase())) continue;
+        const content = await readFile(file, 'utf-8');
+        const matches = content.match(/\{\{[^}]+\}\}/g);
+        if (matches) {
+          throw new Error(`Un-interpolated placeholder in ${file}: ${matches.join(', ')}`);
+        }
+      }
+    });
+  });
+
+  it('page files use plain <a> tags, not <litro-link>', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir);
+      const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+      expect(home).not.toContain('litro-link');
+    });
+  });
+
+  it('keeps the blog by default', async () => {
+    await withTmpDir(async (dir) => {
+      const targetDir = await scaffoldSupernova(dir, { blog: true });
+      const recipe = await loadRecipe('supernova');
+      await applyRecipeOptions(recipe!, { blog: true }, targetDir);
+
+      expect(existsSync(join(targetDir, 'pages/blog/index.ts'))).toBe(true);
+      expect(existsSync(join(targetDir, 'content/blog/welcome.md'))).toBe(true);
+      const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+      expect(home).toContain('<a href="/blog"');
+    });
+  });
+
+  describe('--no-blog', () => {
+    it('leaves no trace of a blog anywhere in the site', async () => {
+      await withTmpDir(async (dir) => {
+        const targetDir = await scaffoldSupernova(dir, { blog: false });
+        const recipe = await loadRecipe('supernova');
+        await applyRecipeOptions(recipe!, { blog: false }, targetDir);
+
+        expect(existsSync(join(targetDir, 'pages/blog'))).toBe(false);
+        expect(existsSync(join(targetDir, 'content/blog'))).toBe(false);
+
+        const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+        expect(home).not.toContain('/blog');
+        expect(home).not.toContain("title: 'Blog'");
+        expect(home).not.toContain('>Blog<');
+
+        // The header renders siteConfig.nav on EVERY page, so a Blog entry
+        // left there is a dead link across the whole site, not just the
+        // landing page.
+        const config = await readFile(join(targetDir, 'server/starlight.config.js'), 'utf-8');
+        expect(config).not.toContain("'/blog'");
+        expect(config).toContain("'/docs/getting-started'");
+      });
+    });
+
+    it('drops only the blog routes from the e2e spec', async () => {
+      await withTmpDir(async (dir) => {
+        const targetDir = await scaffoldSupernova(dir, { blog: false });
+        const recipe = await loadRecipe('supernova');
+        await applyRecipeOptions(recipe!, { blog: false }, targetDir);
+
+        const spec = await readFile(join(targetDir, 'e2e/index.spec.ts'), 'utf-8');
+        expect(spec).not.toContain("'/blog'");
+        expect(spec).not.toContain("'/blog/welcome'");
+        // Every docs route survives. `--for-repo` replaces the route list
+        // wholesale for its own reasons; the blog option must not.
+        for (const route of [
+          '/docs/getting-started',
+          '/docs/installation',
+          '/docs/configuration',
+          '/docs/guides-first-page',
+          '/docs/guides-deploying',
+        ]) {
+          expect(spec).toContain(`'${route}'`);
+        }
+      });
+    });
+
+    it('leaves the landing page valid TypeScript with the button gone', async () => {
+      await withTmpDir(async (dir) => {
+        const targetDir = await scaffoldSupernova(dir, { blog: false });
+        const recipe = await loadRecipe('supernova');
+        await applyRecipeOptions(recipe!, { blog: false }, targetDir);
+
+        const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
+        // The button is held in its own binding so that deleting the anchor
+        // leaves an empty template rather than a syntax error, and the three
+        // remaining feature cards keep their order.
+        expect(home).toContain('const blogButton = html``;');
+        expect(home).toContain("title: 'Docs'");
+        expect(home).toContain("title: 'Theming'");
+        expect(home).toContain("title: 'Static'");
+      });
     });
   });
 });

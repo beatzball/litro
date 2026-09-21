@@ -77,6 +77,7 @@ litro/
   playground-elena/             ← Elena adapter test app
   playground-starlight-elena/   ← Elena starlight recipe test app
   playground-starlight-fast/    ← FAST starlight recipe test app
+  playground-supernova/         ← supernova recipe test app
   docs/                         ← Official docs site (@beatzball/litro-docs, SSG)
   docs-ssr/                     ← SSR docs site (@beatzball/litro-docs-ssr)
   research/                     ← Research agent findings (R-1 through R-4)
@@ -170,7 +171,7 @@ New decisions go in `design/adr/`.
 ## Current Status
 
 All core features complete. Three framework adapters: Lit (default), FAST Element, Elena.
-Three recipes: fullstack, 11ty-blog, starlight.
+Four recipes: fullstack, 11ty-blog, starlight, and supernova (starlight plus a landing page).
 Run `pnpm test` for unit tests — note it covers `@beatzball/litro` and `@beatzball/litro-agent` only; `@beatzball/litro-router` and `@beatzball/create-litro` are run per package (`pnpm --filter <pkg> test`) and the docs suites via `pnpm test:docs`. Run `pnpm test:e2e` for Playwright e2e tests.
 `pnpm test:e2e:preview` for production-mode e2e. `pnpm bench` for benchmarks.
 Results in `benchmarks/results/latest.json`.
