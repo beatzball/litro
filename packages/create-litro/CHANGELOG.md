@@ -1,5 +1,43 @@
 # create-litro
 
+## 0.10.0
+
+### Minor Changes
+
+- a829c55: A recipe can now build on another recipe, and can ask its own questions.
+
+  - `extends` on a recipe config copies a base recipe's templates in first:
+    base `template/`, base `template-<adapter>/`, then the recipe's own
+    `template/` and `template-<adapter>/`. Later layers overwrite earlier ones.
+    One level only — a deeper chain, an unknown base, or a recipe that extends
+    itself is refused with a message naming both recipes.
+  - The scaffolded `litro.recipe.json` now names the recipe the user chose rather
+    than the template the file came from, and records the resolved recipe options
+    under `options`.
+  - Blog removal moved into one shared function. `--for-repo` without
+    `--with-blog` behaves exactly as before; a recipe that offers a `blog` option
+    gets the same removal, minus the repository link there is nothing to point at.
+  - `--blog` and `--no-blog` answer a recipe's blog question without a prompt,
+    for scripts and CI. A flag for a question the chosen recipe does not ask is
+    an error rather than a silently ignored argument.
+  - `--for-repo` now accepts any recipe that is, or extends, `starlight`.
+
+- 9e1be1e: supernova: the landing page is now built from five components of its own, and themed from one token block.
+
+  `litro-install-command`, `litro-feature-row`, `litro-steps`, `litro-key-hints` and `litro-hero-nova` are scaffolded into the new site's `src/components/`, where the user owns and edits them. They bring no dependency, no image, no font and no video, and they all render on the server, so the page still reads with JavaScript turned off. The copy button is the one part that needs it: when a browser refuses the clipboard it selects the command instead and says "Selected" rather than "Copied", and announces which of the two happened.
+
+  The hero art is drawn in CSS — an exploding star over a star field, with a `mark` slot for the project's own logo and a pulse that stops under `prefers-reduced-motion`.
+
+  Every color now comes from one token block on the landing page's host, grouped into surfaces, text, accent, states and layout. The components define no colors of their own, so editing that block rethemes the whole page. A comment there lists the `--sl-*` tokens the docs half owns, so neither set is redefined by accident.
+
+- 06c5bc7: Add the `supernova` recipe: the starlight docs site with a product landing page in front of it.
+
+  `supernova` extends `starlight`, so its own template holds one file — the landing page. The docs half, the blog and the shared components are copied in from starlight and are never committed twice. Scaffold it with `--recipe supernova`, and answer its `blog` question with `--blog` or `--no-blog`.
+
+  The landing page is built only from components the starlight template already ships (`starlight-header`, `litro-card-grid`, `litro-card`, `litro-footer`). Every string on it is a placeholder a user replaces, and the whole page renders on the server, so it reads with JavaScript off.
+
+  Declining the blog now also drops the Blog entry from `server/starlight.config.js`. The header renders that navigation on every page, so leaving the entry behind put a dead link across the whole site, not only on the landing page.
+
 ## 0.9.0
 
 ### Minor Changes
