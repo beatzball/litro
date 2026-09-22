@@ -12,15 +12,19 @@ import '../src/components/litro-install-command.js';
 import '../src/components/litro-feature-row.js';
 import '../src/components/litro-steps.js';
 import '../src/components/litro-key-hints.js';
+import '../src/components/litro-state-badge.js';
+import '../src/components/litro-status-bar.js';
+import '../src/components/litro-term-window.js';
 
 // ...then the ones shared with the docs half of this site.
-import '../src/components/starlight-header.js';
 import '../src/components/litro-card.js';
 import '../src/components/litro-card-grid.js';
 import '../src/components/litro-footer.js';
 
 import type { StepItem } from '../src/components/litro-steps.js';
 import type { KeyHint } from '../src/components/litro-key-hints.js';
+import type { StatusTab } from '../src/components/litro-status-bar.js';
+import type { TermRow } from '../src/components/litro-term-window.js';
 
 /**
  * The landing page.
@@ -38,13 +42,42 @@ import type { KeyHint } from '../src/components/litro-key-hints.js';
 const INSTALL_COMMAND = 'npm install {{projectName}}';
 
 /**
+ * The tabs in the status bar, left to right.
+ *
+ * They are a picture of your project at work, not live data: every badge
+ * settles from `from` to `state` after `delay` seconds, with a CSS animation
+ * and no script, and `prefers-reduced-motion` shows them settled from the
+ * first frame. Say what the row shows in TABS_LABEL — that sentence is the
+ * only thing a screen reader gets.
+ *
+ * Delete both and the bar renders with no tab row at all.
+ */
+const TABS: StatusTab[] = [
+  { name: 'build', state: 'done', from: 'working', delay: 1.6, current: true },
+  { name: 'test', state: 'working' },
+  { name: 'deploy', state: 'blocked', from: 'working', delay: 1.0 },
+  { name: 'docs', state: 'idle', from: 'working', delay: 2.6 },
+];
+
+/** What the tab row shows, in one sentence, for a reader who cannot see it. */
+const TABS_LABEL =
+  'Four tasks: build is done, test is working, deploy is blocked, docs is idle.';
+
+/**
  * The "what it does" rows. Keep the copy here, at the top of the file, so a
  * writer edits one list instead of hunting through the markup below.
+ *
+ * `figure` is optional, and it fills the row's `figure` slot with a small
+ * terminal picture. Give it `rows` for a list of state, age and name, or
+ * `shell` for a transcript. `label` is the sentence a screen reader gets
+ * instead of the picture, so write a real one. A row with no `figure` is
+ * text across the full width.
  */
 const HIGHLIGHTS: Array<{
   title: string;
   description: string;
   commands: string[];
+  figure?: { label: string; rows?: TermRow[]; shell?: string };
 }> = [
   {
     title: 'Name the first thing it does',
@@ -52,6 +85,16 @@ const HIGHLIGHTS: Array<{
       'One short paragraph on the problem this solves and what a reader gets ' +
       'out of it. Write it for somebody who has never heard of the project.',
     commands: ['{{projectName}} init', '{{projectName}} run'],
+    figure: {
+      label:
+        'Three tasks listed by state. deploy is blocked and highlighted, ' +
+        'test is working, build is done.',
+      rows: [
+        { state: 'blocked', age: '4m', name: 'deploy', hot: true },
+        { state: 'working', age: '5m', name: 'test' },
+        { state: 'done', age: '1m', name: 'build' },
+      ],
+    },
   },
   {
     title: 'Name the second thing it does',
@@ -59,6 +102,13 @@ const HIGHLIGHTS: Array<{
       'A second capability, described the same way. Three or four rows is ' +
       'usually enough for a landing page; delete the ones you do not need.',
     commands: ['{{projectName}} build'],
+    figure: {
+      label: 'A shell session: the build runs, prints two lines, and passes.',
+      shell: `$ {{projectName}} build
+reading  12 files
+writing  dist/
+done in 1.4s`,
+    },
   },
   {
     title: 'Name the third thing it does',
@@ -210,29 +260,25 @@ export class SupernovaPage extends LitroPage {
 
     /* ── Dressing the docs components for a dark page ──────────────────
      *
-     * The header, the cards and the credit line are the DOCS site's
-     * components. They read the --sl-* tokens, and those follow the reader's
-     * light or dark choice, while this page is dark either way. Left alone,
-     * the cards are white boxes on a black page.
+     * The cards and the credit line are the DOCS site's components. They read
+     * the --sl-* tokens, and those follow the reader's light or dark choice,
+     * while this page is dark either way. Left alone, the cards are white
+     * boxes on a black page.
      *
      * So the --sl-* tokens are set HERE, ON THOSE ELEMENTS. That dresses them
      * for this page only: the docs pages are untouched, the tokens keep their
-     * global meaning, and none of the three components' own files change.
+     * global meaning, and neither component's own file changes.
      *
-     * The landing page gets a header of its own in a later release, and the
-     * header half of this goes with it.
+     * The header is no longer in this list. This page has litro-status-bar,
+     * which reads the --nova-* tokens directly and needs no dressing.
      */
-    starlight-header,
+
+    /* The credit line reads four tokens, and these are the three that carry a
+       color. --sl-text-sm is a size and is right as it stands. */
     litro-footer {
-      --sl-color-bg: var(--nova-bg);
-      --sl-color-bg-nav: var(--nova-bg);
-      --sl-color-text: var(--nova-text);
-      --sl-color-gray-2: var(--nova-border);
       --sl-color-gray-4: var(--nova-text-dim);
-      --sl-color-gray-5: var(--nova-text-dim);
       --sl-color-border: var(--nova-border);
       --sl-color-accent: var(--nova-accent);
-      --sl-color-accent-low: var(--nova-surface);
     }
 
     /* A card is a raised pane, so it takes the surface token, not the page
@@ -273,6 +319,14 @@ export class SupernovaPage extends LitroPage {
       padding: 0 var(--nova-gutter);
       width: 100%;
     }
+
+    /* ── The status bar's slotted links ────────────────────────────────
+     *
+     * The bar's navigation is a slot, so the links below are written by this
+     * page and keep this page's styles. litro-status-bar sizes and colors
+     * them with ::slotted(); there is nothing left for the page to do, and
+     * this comment is here so the next editor knows where to look.
+     */
 
     /* ── Hero ──────────────────────────────────────────────────────────── */
 
@@ -417,18 +471,34 @@ export class SupernovaPage extends LitroPage {
     // It is held in its own binding for the same reason: deleting the anchor
     // then leaves an empty template rather than a hole in the markup.
     //
-    // Reading the page's links from the site navigation config instead — so
-    // that dropping one entry removes every Blog link at once — arrives with
-    // the terminal components in a later release.
+    // The status bar's Blog link is a different thing and needs no rule: it
+    // is rendered from the site navigation, so dropping that entry from
+    // server/starlight.config.js takes the link with it. This button is the
+    // page's own call to action, written by hand, which is why it is matched
+    // by hand.
     const blogButton = html`<a href="/blog" class="button ghost">Blog</a>`;
 
     return html`
       <div class="page">
-        <starlight-header
+        <!-- The landing page's own header, in place of the docs site's
+             starlight-header. It takes the SAME title and the SAME links the
+             docs header shows, from the same place — server/starlight.config.js,
+             through pageData below — so a reader moving between the landing
+             page and the docs sees one site. -->
+        <litro-status-bar
           siteTitle="${siteTitle}"
-          .nav="${nav}"
-          currentPath="/"
-        ></starlight-header>
+          .tabs="${TABS}"
+          tabsLabel="${TABS_LABEL}"
+        >
+          <!-- The same mark as the hero's, drawn small. One symbol, twice. -->
+          <svg slot="mark" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="5" />
+            <circle cx="32" cy="32" r="7" fill="currentColor" />
+          </svg>
+          ${nav.map(
+            (item) => html`<a slot="nav" href="${item.href}">${item.label}</a>`,
+          )}
+        </litro-status-bar>
 
         <main>
           <litro-hero-nova>
@@ -456,6 +526,15 @@ export class SupernovaPage extends LitroPage {
             </section>
           </litro-hero-nova>
 
+          ${
+            // Video section. The component ships in the next phase as <litro-hero-video>.
+            // Drop your own clip in, then uncomment:
+            // <litro-hero-video poster="/demo/poster.jpg" label="What the tool does, in 15 seconds">
+            //   <span slot="caption">A short caption.</span>
+            // </litro-hero-video>
+            ''
+          }
+
           <section class="rows shell" aria-label="What it does">
             ${HIGHLIGHTS.map(
               (row) => html`
@@ -465,8 +544,22 @@ export class SupernovaPage extends LitroPage {
                   .commands="${row.commands}"
                 >
                   <p>${row.description}</p>
-                  <!-- A picture belongs in the "figure" slot. The terminal
-                       components that draw one arrive in a later release. -->
+                  <!-- The picture goes in the "figure" slot. A row whose
+                       HIGHLIGHTS entry has no figure of its own gets none,
+                       and lays itself out across the full width. -->
+                  ${row.figure
+                    ? html`
+                        <litro-term-window
+                          slot="figure"
+                          label="${row.figure.label}"
+                          .rows="${row.figure.rows ?? []}"
+                        >
+                          ${row.figure.shell
+                            ? html`<pre>${row.figure.shell}</pre>`
+                            : ''}
+                        </litro-term-window>
+                      `
+                    : ''}
                 </litro-feature-row>
               `,
             )}
