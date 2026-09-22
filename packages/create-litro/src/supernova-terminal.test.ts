@@ -250,6 +250,41 @@ describe('litro-status-bar carries the site title and the navigation', () => {
     expect(out).toContain('aria-hidden="true"');
   });
 
+  /**
+   * ARIA in HTML does not allow role="img" on a list, and axe-core reports
+   * `aria-allowed-role` when it finds one. The row was an `ol` of `li`
+   * elements, which is what raised it. A row of fake tabs is a PICTURE, not a
+   * list of anything a reader can act on, so it is a div of spans now — and
+   * role="img" makes everything inside it presentational in any case, which
+   * is the second reason a list there described a structure nobody could use.
+   *
+   * This test is what stops the `ol` coming back.
+   */
+  it('marks the tab row as one image on a plain div, never on a list', async () => {
+    const out = await renderText(statusBar(NAV));
+
+    expect(out).toContain('<div class="tabs" role="img"');
+    // A tag boundary, not a bare prefix: "<li" also matches
+    // "<litro-status-bar", which would make this pass for the wrong reason.
+    expect(out).not.toMatch(/<ol[\s>]/);
+    expect(out).not.toMatch(/<li[\s>]/);
+    // The tabs are spans, and each one is still hidden from assistive tech.
+    expect(out).toMatch(/<span class="tab[^"]*" aria-hidden="true">/);
+  });
+
+  /**
+   * The site name is cut on a narrow screen on purpose — the bar is one line
+   * high. Cut with nothing to show for it, the title ends mid-letter and
+   * reads as a rendering fault. text-overflow needs a block container, and
+   * the segment is a flex box, so the name has a span of its own.
+   */
+  it('shortens a name that does not fit, with an ellipsis', async () => {
+    const out = await renderToString(statusBar(NAV));
+
+    expect(out).toContain('<span class="name">');
+    expect(out).toContain('text-overflow: ellipsis');
+  });
+
   it('renders no tab row at all when it is given no tabs', async () => {
     const out = await renderText(
       html`<litro-status-bar siteTitle="my-product"></litro-status-bar>`,
