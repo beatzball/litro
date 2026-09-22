@@ -59,7 +59,7 @@ Regardless of which adapter you choose, these features work identically:
 - **API routes** — `server/api/` with H3 handlers
 - **SSG** — `generateRoutes()` for static prerendering
 - **Deployment** — all Nitro presets (Cloudflare, Vercel, Node.js, etc.)
-- **Recipes** — fullstack, 11ty-blog, and starlight recipes work with all adapters
+- **Recipes** — the fullstack, 11ty-blog, and starlight recipes work with all adapters. The supernova recipe ships a Lit template only.
 
 ## What Differs
 

@@ -197,6 +197,10 @@ const OWNED_TAG_PREFIXES = ['litro-', 'starlight-'];
 const TAG_SOURCE_DIRS = [
   'packages/framework/src', 'packages/litro-router/src', 'packages/docs-ui/src',
   'packages/litro-agent/src', 'docs/pages', 'docs-ssr/pages',
+  // A recipe's template ships real elements, and the docs name them. Without
+  // this the supernova components read as invented tags, because nothing
+  // outside the template defines them.
+  'packages/create-litro/recipes',
 ];
 
 const definedTags = new Set();

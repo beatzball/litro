@@ -36,6 +36,9 @@ npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --ada
 # Starlight docs + blog, static output
 npm create @beatzball/litro@latest my-docs -- --recipe starlight
 
+# Landing page + starlight docs, no blog
+npm create @beatzball/litro@latest my-site -- --recipe supernova --no-blog
+
 # List all available recipes
 npm create @beatzball/litro@latest -- --list-recipes
 ```
@@ -106,6 +109,24 @@ Generated app includes:
 - `server/starlight.config.js` — site title, nav links, sidebar groups
 - `public/styles/starlight.css` — full `--sl-*` CSS token layer with dark/light mode
 - Syntax highlighting via `highlight.js` (fire theme, applied at SSG build time)
+
+### `supernova`
+
+The `starlight` recipe with a product landing page in front of it. SSG-only (no `--mode` flag needed). It sets `extends: 'starlight'`, so the starlight template is copied in first and this recipe's files are written on top.
+
+It asks one question, `Include a blog?`, answered by `--blog` / `--no-blog`. Declining removes `content/blog/`, `pages/blog/`, the Blog nav entry, the Blog button on the landing page and the Blog card in its card grid.
+
+Generated app includes everything the `starlight` recipe generates, plus:
+- `pages/index.ts` — the landing page, which replaces starlight's splash page at `/`
+- `<litro-hero-nova>` — the hero backdrop, a star going off over a star field, drawn entirely in CSS (no image file)
+- `<litro-install-command>` — one command with a `$` prompt and a copy button
+- `<litro-feature-row>` — a "what it does" row with optional command chips and an optional picture
+- `<litro-steps>` — a numbered list with a connector line
+- `<litro-key-hints>` — key and meaning pairs as a definition list
+- `<litro-status-bar>`, `<litro-state-badge>` — the sticky top bar and its task tabs, animated with CSS only
+- `<litro-term-window>` — a small terminal picture: state rows, or a slotted shell transcript
+- `<litro-hero-video>` — a product recording with a poster and a play/pause button; the recipe ships no clip, so the section is commented out in `pages/index.ts`
+- A `--brand-*` token block in the landing page, so the whole page retints from one edit; the docs half keeps its own `--sl-*` tokens
 
 ## After scaffolding
 

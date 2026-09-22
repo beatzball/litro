@@ -8,7 +8,7 @@ A fullstack web framework for [web components](https://developer.mozilla.org/en-
 - **Client hydration** — `LitroRouter` (URLPattern-based) takes over after SSR with no flicker
 - **Server-side data fetching** — `definePageData()` runs on the server before render
 - **Content layer** — `litro:content` virtual module for Markdown blogs with 11ty-compatible frontmatter
-- **Recipe-based scaffolding** — `fullstack`, `11ty-blog`, and `starlight` recipes via `npm create @beatzball/litro`
+- **Recipe-based scaffolding** — `fullstack`, `11ty-blog`, `starlight`, and `supernova` recipes via `npm create @beatzball/litro`
 - **API routes** — plain `server/api/` files, H3 handlers, no framework overhead
 - **AI agents** — `agents/<name>/` directories become durable, streaming, resumable agent endpoints whose tools return server-rendered components (`@beatzball/litro-agent`)
 - **One port in dev** — Vite and Nitro share a single HTTP port, no proxy
