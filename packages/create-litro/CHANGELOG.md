@@ -1,5 +1,14 @@
 # create-litro
 
+## 0.11.1
+
+### Patch Changes
+
+- 67a3eec: Document the supernova recipe in the package README: a `supernova` section
+  covering what it generates and the components it ships, the `--blog` /
+  `--no-blog` flags in the usage examples, and a note that the recipe ships a Lit
+  template only.
+
 ## 0.11.0
 
 ### Minor Changes
