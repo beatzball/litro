@@ -7,23 +7,30 @@ import { customElement } from 'lit/decorators.js';
  *   <h1>Say what your product does, in one line.</h1>
  * </litro-hero-nova>
  *
- * The hero backdrop: a star going off, over a star field. Whatever you slot in
- * sits on top of it.
+ * The hero backdrop: a dark ground, a sparse star field, and one soft wash of
+ * light. Whatever you slot in sits on top of it.
+ *
+ * THE MARK IS THE ONLY THING TO LOOK AT. Everything behind it is dim and has
+ * no edge: the wash fades out long before it reaches a border, so there is
+ * nothing for the eye to catch on. An earlier version of this component drew
+ * a shockwave ring and a bright core around the same point, which put the
+ * project's logo in the middle of a target and pulled attention off both the
+ * logo and the words. It is gone. If you want a brighter hero, raise the
+ * accent tokens rather than adding a shape.
  *
  * ALL OF IT IS CSS. There is no image file, no `<img>` and no `url()`, so the
  * hero costs no extra request and any project can retint it by changing the
- * accent tokens. Four stacked layers make the star: a wide falloff into the
- * dark, a shockwave ring spreading outward, a hot inner glow, and a small
- * bright core. The star field behind them is one element with a handful of
- * tiny radial gradients in its background.
+ * accent tokens. Two layers make it: a star field of tiny radial gradients,
+ * and one wide, low ellipse of accent light near the top.
  *
- * THE PULSE IS OPTIONAL. Only the shockwave moves, and `prefers-reduced-motion`
- * stops it. Nothing else on the component animates, so a reader who asks for
- * less motion still sees the whole picture, held still.
+ * NOTHING MOVES. There is no animation, so there is no
+ * `prefers-reduced-motion` rule to write — a reader who asks for less motion
+ * already gets what everybody gets. Add one again if you ever add a moving
+ * part.
  *
  * THE `mark` SLOT is where a project puts its own logo. It is drawn faded and
- * centered, behind the content and in front of the star. Leave it empty and
- * the star still works.
+ * centered, behind the content. Leave it empty and the wash and the stars
+ * still work.
  *
  * COLORS come from the landing page's token block. This component defines
  * none of its own. Used outside that page, define the `--nova-*` tokens it
@@ -50,8 +57,10 @@ export class LitroHeroNova extends LitElement {
     }
 
     /* ── The star field ────────────────────────────────────────────────
-       Each gradient is one star. A few of them take an accent color so
-       the field is not flatly white. */
+       Each gradient is one star. They are small, sparse and dim on purpose:
+       a star field is texture, and texture that can be counted is no longer
+       texture. Two of them take an accent color so the field is not flatly
+       white. */
     .field {
       background-image:
         radial-gradient(1.5px 1.5px at 12% 18%, var(--nova-text-dim), transparent 100%),
@@ -64,73 +73,27 @@ export class LitroHeroNova extends LitElement {
         radial-gradient(1px 1px at 91% 22%, var(--nova-text-dim), transparent 100%),
         radial-gradient(1px 1px at 19% 87%, var(--nova-accent-2), transparent 100%),
         radial-gradient(1.5px 1.5px at 47% 44%, var(--nova-text-dim), transparent 100%);
-      opacity: 0.55;
+      opacity: 0.4;
     }
 
-    /* ── Light falling off into the dark ──────────────────────────────── */
-    .falloff {
+    /* ── The wash ──────────────────────────────────────────────────────
+       One gradient, and the shape of it is the whole point. It is an ellipse
+       far wider than it is tall, so it never comes to a circle inside the
+       frame, and its three stops are far apart and low in contrast, so there
+       is no ring and no bright center — only the ground getting a little
+       warmer where the mark sits. The last stop reaches transparent well
+       inside the box, so the wash never meets an edge either.
+
+       Wide and shallow is what keeps it a wash. A rounder ellipse, or a stop
+       that jumps, and the light closes into a halo around the mark — which is
+       the thing this component used to do wrong. */
+    .wash {
       background-image: radial-gradient(
-        circle at 50% 42%,
-        color-mix(in srgb, var(--nova-accent) 28%, transparent) 0%,
-        color-mix(in srgb, var(--nova-accent) 8%, transparent) 34%,
-        transparent 68%
+        ellipse 78% 46% at 50% 26%,
+        color-mix(in srgb, var(--nova-accent) 17%, transparent) 0%,
+        color-mix(in srgb, var(--nova-accent-2) 7%, transparent) 48%,
+        transparent 80%
       );
-    }
-
-    /* ── The shockwave ring ───────────────────────────────────────────── */
-    .shock {
-      background-image: radial-gradient(
-        circle at 50% 42%,
-        transparent 0%,
-        transparent 20%,
-        color-mix(in srgb, var(--nova-accent-2) 45%, transparent) 23%,
-        transparent 27%,
-        transparent 100%
-      );
-      animation: nova-pulse 6s ease-out infinite;
-      transform-origin: 50% 42%;
-    }
-
-    /* ── The hot inner glow ───────────────────────────────────────────── */
-    .glow {
-      background-image: radial-gradient(
-        circle at 50% 42%,
-        color-mix(in srgb, var(--nova-accent-2) 70%, transparent) 0%,
-        color-mix(in srgb, var(--nova-accent) 45%, transparent) 5%,
-        transparent 16%
-      );
-    }
-
-    /* ── The core ─────────────────────────────────────────────────────── */
-    .core {
-      background-image: radial-gradient(
-        circle at 50% 42%,
-        color-mix(in srgb, var(--nova-accent-2) 95%, transparent) 0%,
-        color-mix(in srgb, var(--nova-accent-2) 35%, transparent) 2%,
-        transparent 5%
-      );
-    }
-
-    @keyframes nova-pulse {
-      0% {
-        transform: scale(0.82);
-        opacity: 0.15;
-      }
-      35% {
-        opacity: 0.85;
-      }
-      100% {
-        transform: scale(1.5);
-        opacity: 0;
-      }
-    }
-
-    /* A reader who asks for less motion gets the ring standing still. */
-    @media (prefers-reduced-motion: reduce) {
-      .shock {
-        animation: none;
-        opacity: 0.6;
-      }
     }
 
     /* ── The project's own mark ───────────────────────────────────────── */
@@ -159,10 +122,7 @@ export class LitroHeroNova extends LitElement {
   override render() {
     return html`
       <div class="layer field" aria-hidden="true"></div>
-      <div class="layer falloff" aria-hidden="true"></div>
-      <div class="layer shock" aria-hidden="true"></div>
-      <div class="layer glow" aria-hidden="true"></div>
-      <div class="layer core" aria-hidden="true"></div>
+      <div class="layer wash" aria-hidden="true"></div>
       <div class="mark" aria-hidden="true"><slot name="mark"></slot></div>
       <div class="content"><slot></slot></div>
     `;

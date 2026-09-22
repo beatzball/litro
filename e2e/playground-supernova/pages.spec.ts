@@ -225,7 +225,7 @@ test('every component put its content in the server HTML', async ({ request }) =
   expect(body).toContain('<kbd>');
   expect(body).toContain('Stop the current run');
   // litro-hero-nova, drawn in CSS and not from an image file.
-  expect(body).toContain('class="layer core"');
+  expect(body).toContain('class="layer wash"');
   expect(body).toContain('radial-gradient');
   // litro-card, through litro-card-grid.
   expect(body).toContain('Structured documentation with sidebar');

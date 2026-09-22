@@ -186,10 +186,14 @@ describe('the landing page components render on the server', () => {
 
     expect(out).toContain('<template shadowroot');
     expect(out).toContain('name="mark"');
-    // The star's own layers, so the backdrop is really there.
+    // The backdrop's own layers, so the art is really there. There are two
+    // of them and no more: the hero is a star field and one soft wash, and
+    // the ring and the bright core it used to draw around the mark are gone.
     expect(out).toContain('class="layer field"');
-    expect(out).toContain('class="layer shock"');
-    expect(out).toContain('class="layer core"');
+    expect(out).toContain('class="layer wash"');
+    expect(out).not.toContain('class="layer shock"');
+    expect(out).not.toContain('class="layer core"');
+    expect(out).not.toContain('class="layer glow"');
     // The hero's words are slotted, so they are in the HTML too.
     expect(out).toContain('Say what your product does, in one line.');
   });

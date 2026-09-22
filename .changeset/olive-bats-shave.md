@@ -2,10 +2,19 @@
 "@beatzball/create-litro": patch
 ---
 
-supernova: three fixes the landing page needed once a real site used it
+supernova: a quieter hero, and three fixes the landing page needed once a real site used it
 
 Found while rebuilding litro's own docs home pages on this recipe — the first
 project to use it in anger.
+
+- `litro-hero-nova` drew a shockwave ring, a hot inner glow and a bright core
+  around the same point as the `mark` slot, which put the project's logo in the
+  middle of a target and pulled the eye off both the logo and the words. The
+  backdrop is now a dark ground, the same sparse star field, and one wide soft
+  wash of accent light with no edge anywhere. The slots, the tokens it reads and
+  the rest of its API are unchanged, so no page has to change. Nothing in it
+  animates any more, so its `prefers-reduced-motion` rule and its keyframes are
+  deleted rather than left behind as dead CSS.
 
 - `litro-status-bar` sized and colored its navigation with `::slotted(a)`, so a
   page that handed the bar anything else — a routing link element, or a button
