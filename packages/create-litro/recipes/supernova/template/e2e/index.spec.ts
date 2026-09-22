@@ -22,12 +22,46 @@ test('home renders the landing page sections', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
   const root = page.locator('page-home');
+  await expect(root.locator('litro-status-bar')).toHaveCount(1);
   await expect(root.locator('.hero h1')).toBeVisible();
   await expect(root.locator('litro-feature-row')).toHaveCount(3);
+  await expect(root.locator('litro-term-window')).toHaveCount(2);
   await expect(root.locator('litro-steps')).toHaveCount(1);
   await expect(root.locator('litro-key-hints')).toHaveCount(1);
   // Not an exact count: scaffolding without a blog drops the Blog card.
   expect(await root.locator('litro-card').count()).toBeGreaterThanOrEqual(3);
+});
+
+/**
+ * The landing page has a header of its own, and it has to show the same name
+ * and the same links the docs header shows, from server/starlight.config.js.
+ * Change that file and both headers follow; that is the point.
+ */
+test('the status bar carries the site title and the site navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home');
+  const bar = page.locator('page-home litro-status-bar');
+
+  await expect(bar.locator('.seg-name')).not.toBeEmpty();
+  await expect(bar.locator('.home')).toHaveAttribute('href', '/');
+  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
+  // The docs pages keep starlight-header, and this page does not.
+  await expect(page.locator('page-home starlight-header')).toHaveCount(0);
+});
+
+/**
+ * The tabs settle with a CSS animation and no script. A reader who asks for
+ * less motion must see the SETTLED row from the first frame, never the state
+ * it started in, so the starting glyph is taken out of the layout entirely.
+ */
+test('the status bar renders already settled with reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.waitForSelector('page-home');
+  const badge = page.locator('page-home litro-status-bar litro-state-badge').first();
+
+  await expect(badge.locator('.from')).toBeHidden();
+  await expect(badge.locator('.to')).toBeVisible();
 });
 
 /**
@@ -92,6 +126,24 @@ test('landing page copy is in the server HTML', async ({ request }) => {
   expect(body).toContain('class="layer core"');       // litro-hero-nova
   expect(body).toContain('radial-gradient');          // litro-hero-nova
   expect(body).toContain('Structured documentation with sidebar'); // litro-card
+  expect(body).toContain('class="seg seg-name"');     // litro-status-bar
+  expect(body).toContain('slot="nav"');               // litro-status-bar
+  expect(body).toContain('class="to done"');          // litro-state-badge
+  expect(body).toContain('class="row hot"');          // litro-term-window
+  expect(body).toContain('Three tasks listed by state'); // litro-term-window
+});
+
+/**
+ * The video section ships as a comment and nothing else, so the page carries
+ * no video tag and asks for no poster image it does not have. Delete this
+ * test once you uncomment the section and drop your own clip in.
+ */
+test('the page ships no video yet', async ({ request }) => {
+  const response = await request.get('/');
+  const body = await response.text();
+
+  expect(body).not.toContain('<video');
+  expect(body).not.toContain('litro-hero-video');
 });
 
 /**
