@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/docs/installation',
   '/docs/configuration',
@@ -16,6 +17,12 @@ test('home renders page-home component', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
   await expect(page.locator('page-home')).toBeVisible();
+});
+
+test('/docs renders the docs landing page', async ({ page }) => {
+  await page.goto('/docs');
+  await page.waitForSelector('page-docs');
+  await expect(page.locator('page-docs .doc-group').first()).toBeVisible();
 });
 
 test('/docs/getting-started renders', async ({ page }) => {

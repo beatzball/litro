@@ -186,7 +186,7 @@ describe('--for-repo without --with-blog (pinned)', () => {
     });
   });
 
-  it('rewrites the e2e route list to exactly the two routes that survive', async () => {
+  it('rewrites the e2e route list to exactly the routes that survive', async () => {
     await withFixture({ remote: 'https://github.com/acme/widget.git', withBlog: false }, async ({ siteDir }) => {
       const spec = await readFile(join(siteDir, 'e2e/index.spec.ts'), 'utf-8');
       const template = await readFile(
@@ -196,7 +196,7 @@ describe('--for-repo without --with-blog (pinned)', () => {
       // Only the route list changes. Everything else in the spec is untouched.
       const expected = template.replace(
         /const PRERENDERED_ROUTES = \[[\s\S]*?\];/,
-        ["const PRERENDERED_ROUTES = [", "  '/',", "  '/docs/getting-started',", "];"].join('\n'),
+        ["const PRERENDERED_ROUTES = [", "  '/',", "  '/docs',", "  '/docs/getting-started',", "];"].join('\n'),
       );
       expect(spec).toBe(expected);
     });

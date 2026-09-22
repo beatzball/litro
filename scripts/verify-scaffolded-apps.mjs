@@ -324,6 +324,46 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
     }
   }
 
+  // Every recipe with a docs half must prerender /docs, the section landing
+  // page. Without it the path a reader types, or trims a URL back to, is a
+  // 404 — and a static host turns that into a 403, which reads as "forbidden"
+  // rather than "no such page". The check reads the rendered TEXT of the
+  // links, not the raw HTML, because the labels are written as element
+  // content: a tree-shaken registration would leave the tags unexpanded and
+  // the page blank with JavaScript off.
+  if (recipe === 'starlight' || recipe === 'supernova') {
+    const docsIndex = join(dir, 'dist/static/docs/index.html');
+    if (!existsSync(docsIndex)) {
+      results.push({
+        id,
+        status: 'NO-DOCS-INDEX',
+        detail:
+          `/docs did not prerender to ${docsIndex}. Only /docs/<slug> exists, ` +
+          `so /docs is a 404 on a static host — a 403 on one that refuses to ` +
+          `list a directory. The recipe needs pages/docs/index.ts, and the site ` +
+          `navigation has to link /docs so the prerender crawler can reach it.`,
+      });
+      continue;
+    }
+    const docsText = readFileSync(docsIndex, 'utf-8')
+      .replace(/<!--.*?-->/gs, '')
+      .replace(/<[^>]*>/g, ' ');
+    const missingDocs = ['Documentation', 'Getting Started', 'Installation'].filter(
+      (want) => !docsText.includes(want),
+    );
+    if (missingDocs.length > 0) {
+      results.push({
+        id,
+        status: 'EMPTY-DOCS-INDEX',
+        detail:
+          `/docs prerendered but its visible text is missing: ` +
+          `${missingDocs.map((m) => JSON.stringify(m)).join(', ')}. The page ` +
+          `rendered no link labels, so it is blank with JavaScript off.`,
+      });
+      continue;
+    }
+  }
+
   // A recipe option answered on the command line has to reach the BUILT site,
   // not merely the files on disk. `--no-blog` deletes pages, unpicks the
   // landing page's button and card and drops the Blog entry from the site

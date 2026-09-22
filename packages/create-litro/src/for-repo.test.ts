@@ -126,6 +126,7 @@ describe('applyForRepo (integration)', () => {
     await withSite(async (siteDir) => {
       const spec = await readFile(join(siteDir, 'e2e/index.spec.ts'), 'utf-8');
       expect(spec).not.toContain('/blog');
+      expect(spec).toContain("'/docs'");
       expect(spec).toContain("'/docs/getting-started'");
     });
   });

@@ -442,7 +442,7 @@ export async function applyForRepo(options: ForRepoOptions): Promise<RepoInfo> {
     // The sample docs pages went too, a few lines above, so the route list the
     // blog removal pruned still names pages that no longer exist. This is the
     // shape of the site --for-repo leaves behind, so --for-repo states it.
-    await setPrerenderedRoutes(siteDir, ['/', '/docs/getting-started']);
+    await setPrerenderedRoutes(siteDir, ['/', '/docs', '/docs/getting-started']);
   }
 
   const pkgPath = join(siteDir, 'package.json');

@@ -2,7 +2,7 @@ export const siteConfig = {
   title: 'Litro',
   description: 'The fullstack web component framework — SSR, static generation, and your choice of Lit, FAST, or Elena.',
   nav: [
-    { label: 'Docs', href: '/docs/introduction' },
+    { label: 'Docs', href: '/docs' },
     { label: 'Blog', href: '/blog' },
     { label: 'Compare', href: '/compare' },
     { label: 'GitHub', href: 'https://github.com/beatzball/litro' },

@@ -81,6 +81,11 @@ function sidebarPaths(config: { sidebar: Array<{ items: Array<{ slug: string }> 
   return config.sidebar.flatMap((group) => group.items.map((item) => `/docs/${item.slug}`));
 }
 
+// Internal header links only — an external one (GitHub) is not ours to list.
+function navPaths(config: { nav: Array<{ href: string }> }): string[] {
+  return config.nav.map((item) => item.href).filter((href) => href.startsWith('/'));
+}
+
 const apps = [
   { name: 'docs', handler: docsHandler, siteConfig: docsSiteConfig },
   { name: 'docs-ssr', handler: docsSsrHandler, siteConfig: docsSsrSiteConfig },
@@ -106,6 +111,12 @@ describe.each(apps)('$name sitemap.xml — completeness', ({ handler, siteConfig
   it('lists every page the docs sidebar links to', async () => {
     const listed = await sitemapPaths();
     const missing = sidebarPaths(siteConfig).filter((path) => !listed.has(path));
+    expect(missing).toEqual([]);
+  });
+
+  it('lists every page the header navigation links to', async () => {
+    const listed = await sitemapPaths();
+    const missing = navPaths(siteConfig).filter((path) => !listed.has(path));
     expect(missing).toEqual([]);
   });
 

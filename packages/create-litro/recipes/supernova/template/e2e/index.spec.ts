@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/docs/installation',
   '/docs/configuration',
@@ -44,7 +45,7 @@ test('the status bar carries the site title and the site navigation', async ({ p
 
   await expect(bar.locator('.seg-name')).not.toBeEmpty();
   await expect(bar.locator('.home')).toHaveAttribute('href', '/');
-  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(bar.locator('a[slot="nav"][href="/docs"]')).toHaveText('Docs');
   // The docs pages keep starlight-header, and this page does not.
   await expect(page.locator('page-home starlight-header')).toHaveCount(0);
 });
