@@ -80,10 +80,14 @@ test('the status bar draws a tab per entry, each with a state badge', async ({ p
 
   await expect(bar.locator('litro-state-badge')).toHaveCount(4);
   // The row is one picture with one description, not four unlabeled glyphs.
-  await expect(bar.locator('ol[role="img"]')).toHaveAttribute(
+  // A div, not a list: ARIA in HTML does not allow role="img" on an ol, and
+  // axe-core reports aria-allowed-role when it finds one there.
+  await expect(bar.locator('div[role="img"].tabs')).toHaveAttribute(
     'aria-label',
     /build is done/,
   );
+  await expect(bar.locator('ol')).toHaveCount(0);
+  await expect(bar.locator('li')).toHaveCount(0);
 });
 
 /**

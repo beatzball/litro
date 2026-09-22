@@ -44,9 +44,9 @@ export interface StatusTab {
  * with one exception: the size, spacing and color of a slotted `<a>` are the
  * bar's business and are set here with `::slotted()`.
  *
- * THE TABS ARE A PICTURE. The row carries one `role="img"` and the sentence
- * you pass as `tabsLabel`, and every tab inside it is hidden from assistive
- * tech. A screen reader gets one description instead of reading five glyphs
+ * THE TABS ARE A PICTURE, and they are marked as one: a plain div with
+ * `role="img"` and the sentence you pass as `tabsLabel`, and every tab inside
+ * it hidden from assistive tech. A screen reader gets one description instead of reading five glyphs
  * that mean nothing on their own. Pass a `tabsLabel` that says what the row
  * shows. Leave `tabs` empty and the row is not rendered at all.
  *
@@ -138,10 +138,19 @@ export class LitroStatusBar extends LitElement {
       /* A long name must not wrap: the bar is one line high, and a second
          line pushes the segment out of it. min-width: 0 lets the segment
          shrink below the name's own width, so on a narrow screen the name
-         is cut off instead and the bar stays a status line. */
+         is shortened instead and the bar stays a status line. */
       white-space: nowrap;
       min-width: 0;
       overflow: hidden;
+    }
+
+    /* The name is in a span of its own so that the cut reads as a cut.
+       text-overflow needs a block container, and .seg-name is a flex box, so
+       on the segment itself the name would end mid-letter. */
+    .seg-name .name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* The segments paint over an outline on the link, so a focus ring would
@@ -159,6 +168,10 @@ export class LitroStatusBar extends LitElement {
       text-underline-offset: 0.2em;
     }
 
+    /* A div and spans, not an ol and lis. The row is a picture: it carries
+       role="img", which ARIA in HTML does not allow on a list, and which
+       makes everything inside it presentational anyway. Plain elements need
+       no list reset either. */
     .tabs {
       position: relative;
       z-index: 1;
@@ -167,8 +180,6 @@ export class LitroStatusBar extends LitElement {
       min-width: 0;
       /* Tucks the first tab under the name segment's arrow. */
       margin: 0 0 0 calc(-1 * var(--arrow));
-      padding: 0;
-      list-style: none;
       overflow: hidden;
     }
 
@@ -268,14 +279,14 @@ export class LitroStatusBar extends LitElement {
       <header>
         <a class="home" href="${this.homeHref}">
           <span class="seg seg-mark"><slot name="mark"></slot></span>
-          <span class="seg seg-name">${this.siteTitle}</span>
+          <span class="seg seg-name"><span class="name">${this.siteTitle}</span></span>
         </a>
         ${tabs.length > 0
           ? html`
-              <ol class="tabs" role="img" aria-label="${this.tabsLabel}">
+              <div class="tabs" role="img" aria-label="${this.tabsLabel}">
                 ${tabs.map(
                   (tab) => html`
-                    <li class="tab ${tab.current ? 'current' : ''}" aria-hidden="true">
+                    <span class="tab ${tab.current ? 'current' : ''}" aria-hidden="true">
                       <litro-state-badge
                         state="${tab.state}"
                         from="${tab.from ?? ''}"
@@ -283,10 +294,10 @@ export class LitroStatusBar extends LitElement {
                         .glyphs="${this.glyphs ?? DEFAULT_GLYPHS}"
                       ></litro-state-badge>
                       <span>${tab.name}</span>
-                    </li>
+                    </span>
                   `,
                 )}
-              </ol>
+              </div>
             `
           : ''}
         <nav aria-label="Main navigation"><slot name="nav"></slot></nav>
