@@ -40,6 +40,11 @@ export class LitroInstallCommand extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 0.6rem;
+      /* border-box, because a shadow root does not inherit the page's reset.
+         With the default content-box, max-width: 100% caps only the CONTENT,
+         and the padding and border are then added on top — so the box is
+         wider than the space it was given and a phone scrolls sideways. */
+      box-sizing: border-box;
       max-width: 100%;
       padding: 0.6rem 0.6rem 0.6rem 1rem;
       border: 1px solid var(--nova-border);
@@ -62,6 +67,13 @@ export class LitroInstallCommand extends LitElement {
       overflow-x: auto;
       white-space: nowrap;
       padding-bottom: 0.1rem;
+      /* min-width: 0, and the box does not fit on a phone without it. A flex
+         item's automatic minimum size is its CONTENT's width, so a long
+         command refuses to shrink, the box grows past the screen, and the
+         whole page scrolls sideways — overflow-x on this element never gets a
+         chance to act. Zero lets it shrink, and then the command scrolls
+         inside the box the way it was meant to. */
+      min-width: 0;
     }
 
     .copy {

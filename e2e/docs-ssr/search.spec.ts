@@ -80,10 +80,24 @@ test('search page returns 200', async ({ request }) => {
 // Header search pill
 // ---------------------------------------------------------------------------
 
-test('header contains a search pill button', async ({ page }) => {
+// The home page's header is litro-status-bar, and the docs pages' is
+// starlight-header, so the two carry different search controls. Both are a
+// button whose accessible name is "Search documentation", which is the fact a
+// reader actually depends on — so that, and not a class name, is what these
+// tests look for.
+test('the home page header offers a search control', async ({ page }) => {
   await page.goto('/');
-  // After hydration, spaNav property is set and the pill becomes visible.
-  // Wait for the router's post-swap marker (client entry booted) first.
+  // After hydration the control is live. Wait for the router's post-swap
+  // marker (client entry booted) first.
+  await page.waitForSelector('litro-outlet[data-litro-settled]');
+  const control = page
+    .getByRole('button', { name: 'Search documentation' })
+    .first();
+  await expect(control).toBeVisible({ timeout: 5000 });
+});
+
+test('a docs page header offers a search control', async ({ page }) => {
+  await page.goto('/docs/introduction');
   await page.waitForSelector('litro-outlet[data-litro-settled]');
   // Use first() since SSR + hydration may produce two header elements briefly.
   const pill = page.locator('starlight-header').first().locator('.search-pill');
@@ -120,15 +134,14 @@ test('Escape closes search modal', async ({ page }) => {
   await expect(page.locator('search-modal')).not.toHaveAttribute('open', '');
 });
 
-test('header pill click opens search modal', async ({ page }) => {
+test('the header search control opens the search modal', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('search-modal', { state: 'attached' });
   // Attached does not mean upgraded with keyboard/click listeners wired. The
   // router's post-swap marker fires after the client entry has booted (all
   // statically-imported components upgraded) — wait for it before interacting.
   await page.waitForSelector('litro-outlet[data-litro-settled]');
-  const pill = page.locator('starlight-header').first().locator('.search-pill');
-  await pill.click();
+  await page.getByRole('button', { name: 'Search documentation' }).first().click();
   await expect(page.locator('search-modal')).toHaveAttribute('open', '');
 });
 

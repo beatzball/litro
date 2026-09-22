@@ -41,8 +41,10 @@ export interface StatusTab {
  * THE NAVIGATION IS A SLOT, not a property. The page writes the links, so it
  * decides what an entry is: a plain link, a button, an external link with an
  * icon. Slotted content keeps the PAGE's styles rather than this component's,
- * with one exception: the size, spacing and color of a slotted `<a>` are the
- * bar's business and are set here with `::slotted()`.
+ * with one exception: the size, spacing and color of anything in the nav slot
+ * are the bar's business and are set here with `::slotted([slot='nav'])`. The
+ * rule matches on the slot name, not on `a`, so a routing link element or a
+ * button — a search trigger, say — is dressed the same as a plain anchor.
  *
  * THE TABS ARE A PICTURE, and they are marked as one: a plain div with
  * `role="img"` and the sentence you pass as `tabsLabel`, and every tab inside
@@ -222,22 +224,30 @@ export class LitroStatusBar extends LitElement {
       padding: 0 var(--nova-gutter) 0 1rem;
     }
 
-    /* A slot is display: contents, so the links themselves are the flex
-       items. ::slotted reaches a direct child, which is what a link is. */
-    ::slotted(a) {
+    /* A slot is display: contents, so the slotted elements themselves are the
+       flex items. ::slotted reaches a direct child, and the selector matches
+       on the slot name rather than on the tag, because a page may hand the
+       bar something other than a plain anchor — a routing link element, or a
+       button that opens a search dialog. Anything in the nav is sized and
+       colored the same way. */
+    ::slotted([slot='nav']) {
       padding: 0.25rem 0.6rem;
       color: var(--nova-text-dim);
       text-decoration: none;
       border-radius: var(--nova-radius);
       white-space: nowrap;
+      font: inherit;
+      background: none;
+      border: 0;
+      cursor: pointer;
     }
 
-    ::slotted(a:hover) {
+    ::slotted([slot='nav']:hover) {
       color: var(--nova-text);
       background: var(--nova-surface);
     }
 
-    ::slotted(a:focus-visible) {
+    ::slotted([slot='nav']:focus-visible) {
       outline: 2px solid var(--nova-accent);
       outline-offset: 2px;
     }
@@ -253,6 +263,21 @@ export class LitroStatusBar extends LitElement {
     @media (max-width: 36rem) {
       .tabs {
         display: none;
+      }
+    }
+
+    /* Narrower still, and the navigation needs every pixel the bar has. The
+       name segment can shrink to nothing (see min-width above), and an arrow
+       with no word in it reads as a bug rather than as a name that was cut.
+       So below this the name goes and the mark carries the home link on its
+       own — it is the same link, and it was never the thing being cut. */
+    @media (max-width: 30rem) {
+      .seg-name {
+        display: none;
+      }
+
+      .seg-mark {
+        padding-right: var(--nova-gutter);
       }
     }
   `;
