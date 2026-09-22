@@ -22,6 +22,7 @@ This launches the interactive scaffolding wizard. Choose a recipe, rendering mod
 - **fullstack** — SSR app with API routes
 - **11ty-blog** — Markdown blog with content layer
 - **starlight** — Documentation site with sidebar + TOC
+- **supernova** — A product landing page in front of the starlight docs site
 
 You can also pass `--adapter lit|fast|elena` to select the web component framework (default: `lit`). See [Adapters](/docs/adapters/overview) for details.
 

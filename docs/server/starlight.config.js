@@ -55,6 +55,7 @@ export const siteConfig = {
         { label: 'Fullstack App', slug: 'recipes/fullstack' },
         { label: '11ty Blog', slug: 'recipes/11ty-blog' },
         { label: 'Starlight Docs', slug: 'recipes/starlight' },
+        { label: 'Supernova', slug: 'recipes/supernova' },
       ],
     },
     {

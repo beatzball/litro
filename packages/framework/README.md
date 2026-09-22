@@ -101,7 +101,7 @@ Full documentation at [litro.dev](https://litro.dev).
 |---|---|
 | `@beatzball/litro` | This package — core framework |
 | [`@beatzball/litro-router`](https://www.npmjs.com/package/@beatzball/litro-router) | Standalone URLPattern router (zero dependencies) |
-| `@beatzball/create-litro` | `npm create @beatzball/litro` scaffolding CLI — `fullstack`, `11ty-blog`, and `starlight` recipes |
+| `@beatzball/create-litro` | `npm create @beatzball/litro` scaffolding CLI — `fullstack`, `11ty-blog`, `starlight`, and `supernova` recipes |
 
 ---
 

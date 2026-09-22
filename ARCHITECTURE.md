@@ -18,6 +18,7 @@ litro/                          <- Git repo root (pnpm workspace root)
         fullstack/              <- Default fullstack SSR recipe
         11ty-blog/              <- Markdown blog recipe (11ty-compatible)
         starlight/              <- Docs + blog SSG recipe (Astro Starlight-inspired)
+        supernova/              <- Landing page in front of the starlight recipe
     docs-content/               <- Shared Markdown content (@beatzball/litro-docs-content)
     docs-ui/                    <- Shared Lit components + utilities (@beatzball/litro-docs-ui)
   playground/                   <- fullstack recipe test app
@@ -196,6 +197,7 @@ packages/create-litro/recipes/
   fullstack/    <- Default SSR recipe
   11ty-blog/    <- Markdown blog (SSG, content layer)
   starlight/    <- Docs + blog SSG (Astro Starlight-inspired)
+  supernova/    <- Landing page + docs + blog (extends starlight)
 ```
 
 Each recipe has `recipe.config.ts` (exports `LitroRecipe`) and `template/` (files copied verbatim). `scaffold()` replaces `{{placeholder}}` tokens in text files:
