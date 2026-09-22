@@ -225,10 +225,12 @@ export class SupernovaPage extends LitroPage {
     :host {
       color-scheme: dark;
 
-      /* surfaces */
-      --nova-bg: var(--brand-bg, #08090f);
-      --nova-surface: var(--brand-surface, #12141f);
-      --nova-border: var(--brand-border, #262a3d);
+      /* surfaces — the ground is TINTED, not flat black. A near-black page
+         reads as an absence; a deep blue-violet reads as a choice, and it is
+         what lets a dark mark bleeding in from the edge still be seen. */
+      --nova-bg: var(--brand-bg, #0d0e1a);
+      --nova-surface: var(--brand-surface, #171a2b);
+      --nova-border: var(--brand-border, #2a2e45);
 
       /* text */
       --nova-text: var(--brand-text, #e9ecfa);
@@ -249,6 +251,10 @@ export class SupernovaPage extends LitroPage {
       --nova-measure: var(--brand-measure, 64rem);
       --nova-gutter: var(--brand-gutter, 1.5rem);
       --nova-radius: var(--brand-radius, 0.375rem);
+      /* How tall the hero pane is before its content makes it taller. The
+         3rem is the status bar above it, so the hero fills exactly what is
+         left of the first screen. */
+      --nova-hero-min: var(--brand-hero-min, calc(100svh - 3rem));
       --nova-font-mono: var(
         --brand-font-mono,
         ui-monospace,
@@ -296,6 +302,16 @@ export class SupernovaPage extends LitroPage {
 
     /* ── Page frame ────────────────────────────────────────────────────── */
 
+    /* The global stylesheet's box-sizing reset stops at the shadow boundary,
+       so it has to be repeated here. Without it every padded full-width block
+       on this page — .shell most of all — is its width PLUS its gutters, and
+       a phone-sized screen scrolls sideways by exactly the gutter. */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
     :host {
       display: block;
       background: var(--nova-bg);
@@ -328,32 +344,64 @@ export class SupernovaPage extends LitroPage {
      * this comment is here so the next editor knows where to look.
      */
 
-    /* ── Hero ──────────────────────────────────────────────────────────── */
+    /* ── Hero ──────────────────────────────────────────────────────────
+     *
+     * LEFT, ON A COLUMN. Everything in the hero starts on one line down the
+     * left, so the eye has a spine to run down: headline, lede, slab, small
+     * print, buttons. A centered stack has no spine — every line starts
+     * somewhere different and nothing leads anywhere.
+     *
+     * The column stops well short of the measure, which is what leaves the
+     * right of the pane to the mark.
+     */
+
+    /* padding-top and padding-bottom, never the two-value padding shorthand:
+       every section below also carries .shell, whose HORIZONTAL padding is
+       the page's gutter. A rule like "padding: 4rem 0" is later in this sheet
+       at the same specificity, so it would quietly set that gutter to zero
+       and let the section run to the edge of a phone. */
 
     .hero {
-      text-align: center;
-      padding: 5rem 0 4.5rem;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
     }
 
+    .hero-copy {
+      max-width: 46rem;
+    }
+
+    /* THE HEADLINE IS SET IN THE MONO FACE — the same one the status bar, the
+       badges, the terminal pictures and the command below are set in. That is
+       the whole type idea of this page: it speaks in one voice, and the voice
+       is the terminal's. The sans is kept for prose, where it is easier to
+       read, and for nothing else. */
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin: 0 0 1rem;
+      font-family: var(--nova-font-mono);
+      /* The floor is what a phone gets, and a mono face is wide: at 2rem the
+         word "product" alone is most of a 390px column and the headline runs
+         off the side. 1.75rem is the largest floor that still lets this
+         sentence wrap. */
+      font-size: clamp(1.75rem, 5.6vw, 4.25rem);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      margin: 0 0 1.5rem;
+      text-wrap: balance;
     }
 
+    /* The lede keeps its own, narrower measure. The slab below it does not:
+       a command has to be read in one piece, so it takes the whole column. */
     .lede {
-      font-size: 1.15rem;
+      font-size: clamp(1.1rem, 1.5vw, 1.3rem);
       color: var(--nova-text-dim);
-      max-width: 38rem;
-      margin: 0 auto 2rem;
-      line-height: 1.6;
+      max-width: 34rem;
+      margin: 0 0 2.5rem;
+      line-height: 1.75;
     }
 
     .hero litro-install-command {
-      display: flex;
-      justify-content: center;
-      margin: 0 0 2rem;
+      display: block;
+      margin: 0 0 2.5rem;
     }
 
     /* ── Buttons ───────────────────────────────────────────────────────── */
@@ -361,7 +409,6 @@ export class SupernovaPage extends LitroPage {
     .actions {
       display: flex;
       gap: 1rem;
-      justify-content: center;
       flex-wrap: wrap;
     }
 
@@ -395,7 +442,8 @@ export class SupernovaPage extends LitroPage {
       display: flex;
       flex-direction: column;
       gap: 3.5rem;
-      padding: 4rem 0;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
     }
 
     /* Shadow DOM styles stop at a slot, so the paragraph handed to a row is
@@ -411,8 +459,8 @@ export class SupernovaPage extends LitroPage {
     .start {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 2.5rem;
-      padding: 1rem 0 4rem;
+      gap: 2.5rem;      padding-top: 1rem;
+      padding-bottom: 4rem;
     }
 
     @media (min-width: 48rem) {
@@ -436,7 +484,8 @@ export class SupernovaPage extends LitroPage {
 
     .closing {
       text-align: center;
-      padding: 4rem 0 5rem;
+      padding-top: 4rem;
+      padding-bottom: 5rem;
       border-top: 1px solid var(--nova-border);
     }
 
@@ -447,9 +496,13 @@ export class SupernovaPage extends LitroPage {
     }
 
     .closing litro-install-command {
-      display: flex;
+      display: block;
+      max-width: 34rem;
+      margin: 0 auto 2rem;
+    }
+
+    .closing .actions {
       justify-content: center;
-      margin: 0 0 2rem;
     }
   `;
 
@@ -502,26 +555,39 @@ export class SupernovaPage extends LitroPage {
 
         <main>
           <litro-hero-nova>
-            <!-- Your mark goes here. It is drawn faded and centered behind
-                 the words. Drop in your own SVG, or delete the element. -->
-            <svg slot="mark" viewBox="0 0 64 64" role="img" aria-label="">
-              <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="3" />
-              <circle cx="32" cy="32" r="5" fill="currentColor" />
-            </svg>
+            <!-- YOUR MARK GOES HERE. Put an element with slot="mark" on
+                 this line — an inline SVG, or an image from public/ — and the
+                 hero crops it against its right edge. Mark it aria-hidden:
+                 it is atmosphere, and the page already says your project's
+                 name in the status bar and in the headline. The component's
+                 own file has the details.
+
+                 The recipe ships without one on purpose. The hero wants a
+                 real logo at a real size; a placeholder shape would only be
+                 a smudge on the page of somebody who never replaced it. With
+                 nothing slotted the hero is the ground and the wash, and it
+                 is finished. -->
 
             <section class="hero shell">
-              <h1>Say what your product does, in one line.</h1>
-              <p class="lede">
-                ${description ||
-                'Two sentences on who it is for and why it is worth their time. ' +
-                  'Keep it concrete: this is the only paragraph most readers finish.'}
-              </p>
-              <litro-install-command
-                command="${INSTALL_COMMAND}"
-              ></litro-install-command>
-              <div class="actions">
-                <a href="/docs/getting-started" class="button primary">Get Started</a>
-                ${blogButton}
+              <div class="hero-copy">
+                <h1>Say what your product does, in one line.</h1>
+                <p class="lede">
+                  ${description ||
+                  'Two sentences on who it is for and why it is worth their time. ' +
+                    'Keep it concrete: this is the only paragraph most readers finish.'}
+                </p>
+                <litro-install-command command="${INSTALL_COMMAND}">
+                  <!-- One line of small print: what the command needs first,
+                       or what it will not do. Delete it and the line goes. -->
+                  <span slot="note"
+                    >Say what it needs before it will run — a runtime, a
+                    version, an account.</span
+                  >
+                </litro-install-command>
+                <div class="actions">
+                  <a href="/docs/getting-started" class="button primary">Get Started</a>
+                  ${blogButton}
+                </div>
               </div>
             </section>
           </litro-hero-nova>

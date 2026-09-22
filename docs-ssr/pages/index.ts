@@ -229,10 +229,12 @@ export class SplashPage extends LitroPage {
     :host {
       color-scheme: dark;
 
-      /* surfaces */
-      --nova-bg: #0b0d14;
-      --nova-surface: #13161f;
-      --nova-border: #262a3d;
+      /* surfaces — the ground is TINTED, not flat black. A near-black page
+         reads as an absence; a deep blue-violet reads as a choice, and it is
+         what lets the flame, drawn dark at the pane's edge, still be seen. */
+      --nova-bg: #0d0e1a;
+      --nova-surface: #171a2b;
+      --nova-border: #2a2e45;
 
       /* text */
       --nova-text: #e9ecfa;
@@ -263,6 +265,10 @@ export class SplashPage extends LitroPage {
       --nova-measure: 56rem;
       --nova-gutter: 1.5rem;
       --nova-radius: 0.375rem;
+      /* How tall the hero pane is before its content makes it taller. The
+         3rem is the status bar above it, so the hero fills exactly what is
+         left of the first screen. */
+      --nova-hero-min: calc(100svh - 3rem);
       --nova-font-mono: var(
         --sl-font-mono,
         ui-monospace,
@@ -393,16 +399,35 @@ export class SplashPage extends LitroPage {
       }
     }
 
-    /* ── Hero ──────────────────────────────────────────────────────────── */
+    /* ── Hero ──────────────────────────────────────────────────────────
+     *
+     * LEFT, ON A COLUMN. Everything in the hero starts on one line down the
+     * left — eyebrow, headline, lede, slab, small print, buttons — so the eye
+     * has a spine to run down. The old hero centered all six, which gave
+     * every line a different starting point and led nowhere.
+     *
+     * The column stops well short of the measure, which is what leaves the
+     * right of the pane to litro's flame, cropped by the hero's edge.
+     */
+
+    /* padding-top and padding-bottom, never the two-value padding shorthand:
+       every section below also carries .shell, whose HORIZONTAL padding is
+       the page's gutter. A rule like "padding: 4rem 0" is later in this sheet
+       at the same specificity, so it would quietly set that gutter to zero
+       and let the section run to the edge of a phone. */
 
     .hero {
-      text-align: center;
-      padding: 4.5rem 0 4rem;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+
+    .hero-copy {
+      max-width: 46rem;
     }
 
     .eyebrow-pill {
       display: inline-block;
-      margin-bottom: 1.5rem;
+      margin: 0 0 1.5rem;
       padding: 0.3rem 0.9rem;
       border: 1px solid color-mix(in srgb, var(--nova-accent) 50%, transparent);
       border-radius: 9999px;
@@ -412,51 +437,34 @@ export class SplashPage extends LitroPage {
       background: color-mix(in srgb, var(--nova-accent) 10%, transparent);
     }
 
-    .hero-logo {
-      width: 7rem;
-      height: 7rem;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 1.25rem;
-      filter: drop-shadow(
-        0 0 24px color-mix(in srgb, var(--nova-accent) 60%, transparent)
-      );
-    }
+    /* THE HEADLINE IS SET IN THE MONO FACE — the same one the status bar, the
+       state badges, the terminal picture and the command below are set in.
+       That is the type idea of this page: it speaks in one voice, and the
+       voice is the terminal's. The sans is kept for prose, where it is easier
+       to read, and for nothing else.
 
+       It is also a flat color. The gradient fill this heading used to carry
+       needed a drop-shadow under it to stay legible over the old hero's
+       bright center; with the art quiet and the type doing the work, plain
+       --nova-text is both cleaner and higher contrast. */
     .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      font-weight: 800;
-      /* fit-content, and it matters: the gradient is painted across the
-         element's BOX, so a full-width heading puts the word in the middle of
-         the ramp, where the two colors meet and cancel out to gray. Sized to
-         the word, the name runs orange to cyan the way the mark does. */
-      width: fit-content;
-      margin: 0 auto 1.25rem;
-      line-height: 1.05;
-      /* Both stops are orange: the second is the accent mixed part of the way
-         toward the cyan, which is the same ramp the page has always used. A
-         gradient that ran the whole way to cyan would put the middle of the
-         ramp — where the two cancel to gray — right under the word. */
-      background: linear-gradient(
-        135deg,
-        var(--nova-accent) 0%,
-        color-mix(in srgb, var(--nova-accent) 60%, var(--nova-accent-2)) 100%
-      );
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      /* The name sits over the brightest part of the nova. drop-shadow, not
-         text-shadow: it follows the gradient-clipped glyphs, where a
-         text-shadow would paint through the transparent fill. */
-      filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.6));
+      font-family: var(--nova-font-mono);
+      font-size: clamp(2.75rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin: 0 0 1.5rem;
+      color: var(--nova-text);
     }
 
+    /* The lede keeps its own, narrower measure. The slab below it does not:
+       a command has to be read in one piece, so it takes the whole column. */
     .lede {
-      font-size: 1.25rem;
+      font-size: clamp(1.1rem, 1.5vw, 1.3rem);
       color: var(--nova-text-dim);
-      max-width: 40rem;
-      margin: 0 auto 2rem;
-      line-height: 1.6;
+      max-width: 34rem;
+      margin: 0 0 2.5rem;
+      line-height: 1.75;
     }
 
     /* Each adapter's name carries its own logo, so the three choices read as
@@ -474,9 +482,8 @@ export class SplashPage extends LitroPage {
     }
 
     .hero litro-install-command {
-      display: flex;
-      justify-content: center;
-      margin: 0 0 2rem;
+      display: block;
+      margin: 0 0 2.5rem;
     }
 
     /* ── Buttons ───────────────────────────────────────────────────────── */
@@ -484,7 +491,6 @@ export class SplashPage extends LitroPage {
     .actions {
       display: flex;
       gap: 1rem;
-      justify-content: center;
       flex-wrap: wrap;
     }
 
@@ -528,8 +534,8 @@ export class SplashPage extends LitroPage {
 
     /* ── Cards ─────────────────────────────────────────────────────────── */
 
-    .cards {
-      padding: 3rem 0 1rem;
+    .cards {      padding-top: 3rem;
+      padding-bottom: 1rem;
     }
 
     /* ── Feature rows ──────────────────────────────────────────────────── */
@@ -538,7 +544,8 @@ export class SplashPage extends LitroPage {
       display: flex;
       flex-direction: column;
       gap: 3.5rem;
-      padding: 3rem 0 1rem;
+      padding-top: 3rem;
+      padding-bottom: 1rem;
     }
 
     /* Shadow DOM styles stop at a slot, so everything handed to a row is
@@ -588,7 +595,8 @@ export class SplashPage extends LitroPage {
       display: grid;
       grid-template-columns: 1fr;
       gap: 2.5rem;
-      padding: 3rem 0 1rem;
+      padding-top: 3rem;
+      padding-bottom: 1rem;
     }
 
     @media (min-width: 48rem) {
@@ -737,7 +745,8 @@ export class SplashPage extends LitroPage {
 
     .closing {
       text-align: center;
-      padding: 4rem 0 5rem;
+      padding-top: 4rem;
+      padding-bottom: 5rem;
       margin-top: 4rem;
       border-top: 1px solid var(--nova-border);
     }
@@ -749,9 +758,13 @@ export class SplashPage extends LitroPage {
     }
 
     .closing litro-install-command {
-      display: flex;
+      display: block;
+      max-width: 34rem;
+      margin: 0 auto 2rem;
+    }
+
+    .closing .actions {
       justify-content: center;
-      margin: 0 0 2rem;
     }
   `;
 
@@ -857,50 +870,56 @@ export class SplashPage extends LitroPage {
 
         <main>
           <litro-hero-nova>
-            <!-- Litro's flame, drawn faded and centered behind the words. -->
+            <!-- Litro's flame, cropped by the hero's right edge and drawn
+                 dark. It is atmosphere, not a badge: the page already says
+                 the name in the status bar and in the headline. -->
             <img slot="mark" src="/logo.png" alt="" aria-hidden="true" />
 
             <section class="hero shell">
-              <p class="eyebrow-pill">Fullstack Web Framework</p>
-              <img class="hero-logo" src="/logo.png" alt="Litro logo" />
-              <h1>${siteTitle}</h1>
-              ${description
-                ? html`
-                    <p class="lede">
-                      The fullstack web component framework — SSR, static
-                      generation, and your choice of
-                      <span class="adapter"
-                        ><img
-                          src="/logos/lit-flame.svg"
-                          alt=""
-                          aria-hidden="true"
-                        />Lit</span
-                      >,
-                      <span class="adapter"
-                        ><img
-                          src="/logos/fast.svg"
-                          alt=""
-                          aria-hidden="true"
-                        />FAST</span
-                      >, or
-                      <span class="adapter"
-                        ><img
-                          src="/logos/elena.svg"
-                          alt=""
-                          aria-hidden="true"
-                        />Elena</span
-                      >.
-                    </p>
-                  `
-                : ""}
-              <litro-install-command
-                command="${INSTALL_COMMAND}"
-              ></litro-install-command>
-              <div class="actions">
-                <litro-link href="/docs/introduction" class="button primary"
-                  >Get Started</litro-link
-                >
-                <litro-link href="/blog" class="button ghost">Blog</litro-link>
+              <div class="hero-copy">
+                <p class="eyebrow-pill">Fullstack Web Framework</p>
+                <h1>${siteTitle}</h1>
+                ${description
+                  ? html`
+                      <p class="lede">
+                        The fullstack web component framework — SSR, static
+                        generation, and your choice of
+                        <span class="adapter"
+                          ><img
+                            src="/logos/lit-flame.svg"
+                            alt=""
+                            aria-hidden="true"
+                          />Lit</span
+                        >,
+                        <span class="adapter"
+                          ><img
+                            src="/logos/fast.svg"
+                            alt=""
+                            aria-hidden="true"
+                          />FAST</span
+                        >, or
+                        <span class="adapter"
+                          ><img
+                            src="/logos/elena.svg"
+                            alt=""
+                            aria-hidden="true"
+                          />Elena</span
+                        >.
+                      </p>
+                    `
+                  : ""}
+                <litro-install-command command="${INSTALL_COMMAND}">
+                  <span slot="note"
+                    >Needs Node 20.19 or newer. Pick a recipe, a rendering mode
+                    and an adapter as it runs.</span
+                  >
+                </litro-install-command>
+                <div class="actions">
+                  <litro-link href="/docs/introduction" class="button primary"
+                    >Get Started</litro-link
+                  >
+                  <litro-link href="/blog" class="button ghost">Blog</litro-link>
+                </div>
               </div>
             </section>
           </litro-hero-nova>
