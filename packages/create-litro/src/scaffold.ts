@@ -11,6 +11,7 @@
 import { readdir, readFile, writeFile, mkdir, copyFile, stat } from 'node:fs/promises';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertAdapterSupported } from './adapters.js';
 import type { LitroRecipe } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -290,6 +291,15 @@ export async function scaffold(
   const root = options.recipesRoot ?? recipesDir();
   const lineage = await resolveRecipeLineage(recipeName, root);
   const adapter = options.adapter ?? 'lit';
+
+  // Refuse an adapter the recipe does not declare, BEFORE the target directory
+  // is created. A half-written directory is worse than a refusal, and a mixed
+  // one — FAST config over a Lit landing page — is worse than either.
+  //
+  // A recipe directory with no readable config is left alone: templates alone
+  // have always been enough to scaffold from, and that stays true.
+  const recipe = await loadRecipe(recipeName, root);
+  if (recipe) assertAdapterSupported(recipe, adapter);
 
   // Copy order, for `extends`: the base recipe's template/, the base's
   // template-<adapter>/, this recipe's template/, this recipe's

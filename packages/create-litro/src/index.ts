@@ -7,6 +7,9 @@
  *   npx @beatzball/create-litro
  *   npx @beatzball/create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast|elena>]
  *
+ * A recipe declares which adapters it can produce. Asking for one it cannot is
+ * refused before anything is written, and the prompt offers only what it can.
+ *
  * Documentation site for an existing repository:
  *   npx @beatzball/create-litro site --recipe starlight --for-repo . \
  *     --site-url https://example.dev
@@ -39,12 +42,18 @@ import { listRecipes, loadRecipe, resolveRecipeLineage, scaffold } from './scaff
 import { applyForRepo } from './for-repo.js';
 import { parseArgs } from './args.js';
 import {
+  adapterChoices,
+  adapterFromChoice,
+  assertAdapterSupported,
+  supportedAdapters,
+} from './adapters.js';
+import {
   applyRecipeOptions,
   assertFlagsApply,
   declaresOption,
   resolveRecipeOptions,
 } from './recipe-options.js';
-import type { LitroRecipe } from './types.js';
+import type { LitroAdapter, LitroRecipe } from './types.js';
 import type { ScaffoldOptions } from './scaffold.js';
 
 // ---------------------------------------------------------------------------
@@ -161,16 +170,26 @@ async function main(): Promise<void> {
   }
 
   // 4. Adapter selection
-  let adapter: 'lit' | 'fast' | 'elena';
+  //
+  // Only the adapters the chosen recipe declares are ever on offer, and an
+  // adapter asked for on the command line is refused here — before the target
+  // directory is even named, so a refusal leaves nothing behind.
+  const choices = adapterChoices(chosenRecipe);
+  let adapter: LitroAdapter;
   if (args.adapter) {
+    try {
+      assertAdapterSupported(chosenRecipe, args.adapter);
+    } catch (err: unknown) {
+      console.error(`\n  ${(err as Error).message}\n`);
+      process.exit(1);
+    }
     adapter = args.adapter;
+  } else if (choices.length === 1) {
+    // Nothing to choose from — asking a one-answer question wastes a keystroke.
+    adapter = supportedAdapters(chosenRecipe)[0];
   } else {
-    const selected = await promptSelect(
-      'Component framework:',
-      ['lit — Lit (default)', 'fast — Microsoft FAST Element', 'elena — Elena (light DOM)'],
-      'lit — Lit (default)',
-    );
-    adapter = selected.startsWith('elena') ? 'elena' : selected.startsWith('fast') ? 'fast' : 'lit';
+    const selected = await promptSelect('Component framework:', choices, choices[0]);
+    adapter = adapterFromChoice(selected);
   }
 
   // 5. Recipe-specific options.

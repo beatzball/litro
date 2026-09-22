@@ -48,6 +48,18 @@ pnpm create @beatzball/litro my-app --adapter elena
 
 Or omit `--adapter` and choose interactively during scaffolding.
 
+Each recipe declares which adapters it can produce, and asking for one it cannot
+fails before anything is written:
+
+| Recipe | Adapters |
+|---|---|
+| `fullstack` | `lit`, `elena` |
+| `11ty-blog` | `lit` |
+| `starlight` | `lit`, `fast`, `elena` |
+| `supernova` | `lit` |
+
+The interactive prompt offers only the adapters the chosen recipe supports.
+
 ## What Stays the Same
 
 Regardless of which adapter you choose, these features work identically:
