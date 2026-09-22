@@ -42,88 +42,111 @@ test('home renders every landing page component', async ({ page }) => {
  * docs pages; if it came back here the page would have two headers and two
  * looks, which is the thing the status bar exists to avoid.
  */
-test('home renders its own status bar and not the docs header', async ({ page }) => {
+test('home carries the same header the docs pages do', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
   const root = page.locator('page-home:not([hidden])');
-  await expect(root.locator('litro-status-bar')).toHaveCount(1);
-  await expect(root.locator('litro-status-bar')).toBeVisible();
-  await expect(root.locator('starlight-header')).toHaveCount(0);
+  await expect(root.locator('starlight-header')).toHaveCount(1);
+  await expect(root.locator('starlight-header')).toBeVisible();
+  // The terminal bar this page used to carry instead is gone.
+  await expect(root.locator('litro-status-bar')).toHaveCount(0);
 });
 
 /**
- * The bar must show the same title and the same links the docs header shows,
- * from server/starlight.config.js, so the two halves of the site read as one.
+ * The landing page and the docs pages must show the same title and the same
+ * links, from server/starlight.config.js, so the two halves read as one site.
+ * They do because they are the same element now, handed the same data.
  */
-test('the status bar carries the site title and the site navigation', async ({ page }) => {
+test('the header carries the site title and the site navigation', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  const bar = page.locator('page-home:not([hidden]) litro-status-bar');
+  const header = page.locator('page-home:not([hidden]) starlight-header');
 
-  await expect(bar.locator('.seg-name')).toHaveText('playground-supernova');
-  await expect(bar.locator('.home')).toHaveAttribute('href', '/');
-  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
-  await expect(bar.locator('a[slot="nav"][href="/blog"]')).toHaveText('Blog');
-
-  // The same links the docs header renders, on a docs page.
-  const header = page.locator('starlight-header');
-  await page.goto('/docs/getting-started');
-  await page.waitForSelector('page-docs-slug:not([hidden])');
-  await expect(header.first().locator('.site-title')).toHaveText('playground-supernova');
-  await expect(header.first().locator('nav a[href="/docs/getting-started"]')).toBeVisible();
+  await expect(header.locator('.site-title')).toContainText('playground-supernova');
+  await expect(header.locator('.site-title')).toHaveAttribute('href', '/');
+  await expect(header.locator('nav a[href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(header.locator('nav a[href="/blog"]')).toHaveText('Blog');
 });
 
-test('the status bar draws a tab per entry, each with a state badge', async ({ page }) => {
+/**
+ * THE STATUS LINE STATES FACTS. It replaced a terminal bar at the top of the
+ * page whose tab row showed four tasks settling from working to done — a
+ * drawing that read as live state, on a page that had no tasks. Every cell it
+ * ships with is something a freshly scaffolded site can prove.
+ */
+test('the status line at the foot states facts, not tasks', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  const bar = page.locator('page-home:not([hidden]) litro-status-bar');
+  const line = page.locator('page-home:not([hidden]) litro-status-line');
 
-  await expect(bar.locator('litro-state-badge')).toHaveCount(4);
-  // The row is one picture with one description, not four unlabeled glyphs.
-  // A div, not a list: ARIA in HTML does not allow role="img" on an ol, and
-  // axe-core reports aria-allowed-role when it finds one there.
-  await expect(bar.locator('div[role="img"].tabs')).toHaveAttribute(
-    'aria-label',
-    /build is done/,
+  await expect(line.locator('aside.line')).toBeVisible();
+  await expect(line.locator('.mode')).toHaveText('playground-supernova');
+  await expect(line).toContainText('docs');
+  await expect(line).toContainText('built with');
+  // No tab row, and nothing claiming a state the page cannot know.
+  await expect(line.locator('.tabs')).toHaveCount(0);
+});
+
+/** The line is fixed to the foot, so it must not cover the page's last line. */
+test('the status line does not sit on top of the page content', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+
+  // At the BOTTOM of the page, which is the only place the question is real:
+  // the line is fixed to the viewport, so higher up the last element is far
+  // below it and the comparison says nothing.
+  //
+  // behavior: 'instant', because the site's stylesheet sets
+  // `scroll-behavior: smooth` on html — a plain scrollTo animates, and the
+  // measurement below would be taken somewhere in the middle of the page.
+  await page.evaluate(() =>
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'instant' as ScrollBehavior,
+    }),
   );
-  await expect(bar.locator('ol')).toHaveCount(0);
-  await expect(bar.locator('li')).toHaveCount(0);
+  await page.waitForTimeout(100);
+
+  const clear = await page.evaluate(() => {
+    const root = document.querySelector('page-home:not([hidden])')?.shadowRoot;
+    const line = root?.querySelector('litro-status-line')?.shadowRoot
+      ?.querySelector('aside.line');
+    const credit = root?.querySelector('litro-footer');
+    if (!line || !credit) return null;
+    return credit.getBoundingClientRect().bottom <= line.getBoundingClientRect().top + 1;
+  });
+
+  expect(clear, 'the credit line ends above the status line').toBe(true);
 });
 
 /**
- * The settle is the page's one moving part, and it is CSS, so a reader who
- * asks for less motion must get the SETTLED row from the first frame — never
- * the starting glyph. The starting glyph is taken out of the layout, not just
- * faded, so this asserts it is not there at all.
+ * Nothing on this page animates any more. The badges that settled in the old
+ * header went with the header, and the status line that replaced it is text
+ * and hairlines. This asserts the absence, because "no motion" is only a
+ * promise until something checks it.
  */
-test('the status bar renders already settled with reduced motion', async ({ page }) => {
-  // page.emulateMedia, not test.use({ reducedMotion }): the `use` form did
-  // not reach matchMedia in this project, and a check that silently runs
-  // without the preference set would pass against a broken rule.
+test('nothing on the page moves, with or without a motion preference', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  const badge = page
-    .locator('page-home:not([hidden]) litro-status-bar litro-state-badge')
-    .first();
 
-  await expect(badge.locator('.from')).toBeHidden();
-  await expect(badge.locator('.to')).toBeVisible();
-  await expect(badge.locator('.to')).toHaveText('[+]');
-});
+  const moving = await page.evaluate(() => {
+    const out: string[] = [];
+    const walk = (root: ParentNode) => {
+      for (const el of root.querySelectorAll('*')) {
+        const style = getComputedStyle(el);
+        if (style.animationName && style.animationName !== 'none') {
+          out.push(`${el.tagName.toLowerCase()} ${style.animationName}`);
+        }
+        const shadow = (el as Element & { shadowRoot?: ShadowRoot }).shadowRoot;
+        if (shadow) walk(shadow);
+      }
+    };
+    walk(document);
+    return out;
+  });
 
-test('the status bar keeps both glyphs when motion is allowed', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.goto('/');
-  await page.waitForSelector('page-home:not([hidden])');
-  const badge = page
-    .locator('page-home:not([hidden]) litro-status-bar litro-state-badge')
-    .first();
-
-  // Both glyphs are in the layout; the crossfade is opacity only, which is
-  // why the swap never moves the tab name beside it.
-  await expect(badge.locator('.from')).toBeVisible();
-  await expect(badge.locator('.to')).toBeVisible();
+  expect(moving).toEqual([]);
 });
 
 /**
@@ -230,15 +253,17 @@ test('every component put its content in the server HTML', async ({ request }) =
   // litro-card, through litro-card-grid.
   expect(body).toContain('Structured documentation with sidebar');
 
-  // litro-status-bar: the title segment, and the links it was given.
-  expect(body).toContain('class="seg seg-name"');
-  expect(body).toContain('Four tasks: build is done');
-  expect(body).toContain('slot="nav"');
-  // litro-state-badge, inside the bar's tabs. Both glyphs of a settling
-  // badge are in the HTML, because the settle is CSS and nothing waits for
-  // a script to start it.
-  expect(body).toContain('class="from working"');
-  expect(body).toContain('class="to done"');
+  // starlight-header: the site title and the links it was given.
+  expect(body).toContain('class="site-title"');
+  expect(body).toContain('/docs/getting-started');
+  // litro-status-line: the mode segment and a cell, both server-rendered.
+  expect(body).toContain('class="cell mode"');
+  expect(body).toContain('built with');
+  // litro-state-badge, inside the terminal pictures further down the page.
+  // A badge with no `from` draws one glyph and no crossfade, which is what a
+  // terminal row wants — the two-glyph `to`/`from` markup only appeared while
+  // the old status bar's tabs were settling.
+  expect(body).toContain('litro-state-badge');
   expect(body).toContain('[+]');
   // litro-term-window, in a feature row's figure slot: rows in one, and a
   // slotted transcript in the other.

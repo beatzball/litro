@@ -8,6 +8,8 @@ import type { TocEntry } from '../extract-headings.js';
 import './starlight-header.js';
 import './starlight-sidebar.js';
 import './starlight-toc.js';
+import './litro-status-line.js';
+import type { StatusCell } from './litro-status-line.js';
 
 /**
  * <starlight-page
@@ -37,17 +39,57 @@ export class StarlightPage extends LitElement {
     currentPath: { type: String },
     noSidebar:   { type: Boolean },
     spaNav:      { type: Boolean },
+    status:      { type: Array },
     _navOpen:    { state: true },
     _isDrawerMode: { state: true },
   };
 
   static override styles = css`
+    /* THE LINE IS DARK CHROME ON A LIGHT PAGE, on purpose: a status line is
+       the same object on both halves of the site, so it does not change color
+       with the document. The docs pages define no --nova-* tokens, so the set
+       the line reads is given to it here, on the element itself. A landing
+       page that already has a token block overrides these from above. */
+    litro-status-line {
+      --nova-bg: #0d0e1a;
+      --nova-surface: #171a2b;
+      --nova-border: #2a2e45;
+      --nova-text: #e9ecfa;
+      --nova-text-dim: #9aa1bd;
+      /* The mode segment puts WHITE text on this color, and the site accent
+         is picked to sit on a page background rather than under white text —
+         at 0.75rem it needs 4.5:1 and most accents give about 3.5:1. Mixing
+         it most of the way toward black keeps the site's hue and clears the
+         ratio for any accent a project is likely to choose.
+
+         It is fixed rather than theme-dependent because the line is fixed
+         dark chrome: it does not change with the document, so neither can
+         the color underneath its text. */
+      --nova-accent: color-mix(in srgb, var(--sl-color-accent, #7c3aed) 72%, #000);
+      --nova-gutter: 1.5rem;
+      --nova-font-mono: var(--sl-font-mono, ui-monospace, monospace);
+      --nova-error: #f87171;
+      --nova-blocked: #fbbf24;
+      --nova-working: #38bdf8;
+      --nova-done: #4ade80;
+      --nova-idle: #64748b;
+    }
+
     :host {
       display: block;
     }
 
+    /* The status line at the foot is FIXED, so it is out of the flow and the
+       page has to leave room for it by hand. Without this the last line of a
+       document, and the bottom of the sidebar's own scroll, sit under it.
+
+       It is subtracted from min-height too, so a short page still fills the
+       screen exactly once rather than overflowing by the height of the line. */
     .page-wrap {
-      min-height: 100vh;
+      --status-height: var(--nova-status-height, 1.75rem);
+      min-height: calc(100vh - var(--status-height));
+      min-height: calc(100svh - var(--status-height));
+      padding-bottom: var(--status-height);
       display: flex;
       flex-direction: column;
     }
@@ -243,8 +285,44 @@ export class StarlightPage extends LitElement {
     this._navOpen = false;
   }
 
+  /**
+   * Extra cells for the status line at the foot, after the two this component
+   * builds itself. A page passes what only it knows — the link that edits it,
+   * the version it documents — and passes nothing when it has nothing.
+   */
+  status: StatusCell[] = [];
+
+  /**
+   * The cells the line shows: where the reader is, then whatever the page
+   * added.
+   *
+   * WHERE YOU ARE comes from `currentPath`, which every page already passes to
+   * position the navigation, so no page has to be told twice. The first
+   * segment is the section — docs, blog, compare — and the rest is the path
+   * inside it. On a page with no path there is no section to name, so the
+   * cell is left out; with nothing else to show either, `litro-status-line`
+   * renders nothing rather than an empty bar.
+   *
+   * Nothing here is invented: every cell is either the path in the address
+   * bar or something the page handed over.
+   */
+  private get _cells(): StatusCell[] {
+    const path = (this.currentPath ?? '').replace(/^\/+|\/+$/g, '');
+    const cells: StatusCell[] = [];
+    if (path) {
+      const [section, ...rest] = path.split('/');
+      cells.push({
+        state: 'working',
+        value: section,
+        trailing: rest.length > 0 ? `/${rest.join('/')}` : undefined,
+      });
+    }
+    return [...cells, ...(this.status ?? [])];
+  }
+
   override render() {
     const hasSidebar = !this.noSidebar;
+    const cells = this._cells;
     return html`
       <div class="page-wrap">
         <starlight-header
@@ -284,6 +362,15 @@ export class StarlightPage extends LitElement {
           </aside>
         </div>
       </div>
+      <!-- The status line is fixed to the foot of the window, so it sits
+           OUTSIDE .page-wrap: inside it, the sidebar's own scrolling and the
+           sticky header would both have to reason about it. The padding that
+           keeps the last line of content clear of it is on .page-wrap. -->
+      <litro-status-line
+        siteTitle="${this.siteTitle}"
+        .cells="${cells}"
+        label="Page status"
+      ></litro-status-line>
     `;
   }
 }

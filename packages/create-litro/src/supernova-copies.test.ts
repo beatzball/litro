@@ -42,7 +42,7 @@ const RECIPE_COMPONENTS = [
   'litro-install-command',
   'litro-key-hints',
   'litro-state-badge',
-  'litro-status-bar',
+  'litro-status-line',
   'litro-steps',
   'litro-term-window',
 ] as const;
@@ -59,7 +59,7 @@ const DOCS_UI_COMPONENTS = [
   'litro-hero-nova',
   'litro-install-command',
   'litro-state-badge',
-  'litro-status-bar',
+  'litro-status-line',
   'litro-steps',
   'litro-term-window',
 ] as const;

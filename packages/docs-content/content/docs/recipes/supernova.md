@@ -73,7 +73,7 @@ my-site/
       litro-feature-row.ts       ← supernova
       litro-steps.ts             ← supernova
       litro-key-hints.ts         ← supernova
-      litro-status-bar.ts        ← supernova
+      litro-status-line.ts       ← supernova
       litro-state-badge.ts       ← supernova
       litro-term-window.ts       ← supernova
       litro-hero-video.ts        ← supernova
@@ -111,7 +111,7 @@ Every one of these is a plain Lit element in your project. Edit it, restyle it o
 | `litro-feature-row` | One "what it does" row: heading, text, optional command chips, optional picture. Rows alternate sides on a wide screen. |
 | `litro-steps` | A numbered `<ol>` with a connector line drawn between the numbers. |
 | `litro-key-hints` | Key and meaning pairs as a definition list, every key in a `<kbd>`. |
-| `litro-status-bar` | The sticky top bar: your mark and title as one link home, a row of task tabs, and the site navigation. It replaces the docs header on the landing page only. |
+| `litro-status-line` | The status line fixed to the foot of the window: your project's name, then a cell per fact — a version, where the reader is, a link. Every cell has to be something the page can prove; it renders nothing at all when it has nothing to say. |
 | `litro-state-badge` | One state — error, blocked, working, done or idle — drawn as a glyph and a color. The tabs and the terminal rows are made of these. |
 | `litro-term-window` | A small terminal picture: either a list of state, age and name, or whatever you slot in, such as a shell transcript. |
 | `litro-hero-video` | A short product recording with a poster and one play/pause button. |
@@ -119,7 +119,7 @@ Every one of these is a plain Lit element in your project. Edit it, restyle it o
 ### What is safe to delete
 
 - **`litro-hero-video`** is the only component the page does not use. The video section ships commented out, so the file sits unused until you turn it on. Delete the file if you will never add a clip.
-- **The task tabs.** Delete the `TABS` and `TABS_LABEL` constants in `pages/index.ts` and the status bar renders with no tab row at all.
+- **The status line.** Delete the `STATUS_CELLS` entries in `pages/index.ts` and the line renders nothing at all — which is what it should do with nothing true to say.
 - **The key hints.** Delete the `KEY_HINTS` list and the section goes with it.
 - **A row's picture.** A `HIGHLIGHTS` entry with no `figure` gets no terminal window and lays itself out across the full width.
 
@@ -174,7 +174,7 @@ Your logo goes in the `mark` slot. It is drawn faded and centered, behind the co
 </litro-hero-nova>
 ```
 
-Leave the slot empty and the star still works. The scaffolded page puts the same mark in the status bar's `mark` slot too, so one symbol serves both.
+Leave the slot empty and the wash and the ground still work; the recipe ships it empty on purpose, because a placeholder shape cropped against the edge is only a smudge.
 
 ## The Video Section
 
@@ -214,7 +214,7 @@ The whole page is prerendered, so all of the copy is readable with JavaScript tu
 
 - **The copy button** on `litro-install-command` is hidden, because it could do nothing. The command is still rendered, still readable and still selectable by hand — the `$` prompt is marked `user-select: none`, so a selection takes the command and not the prompt.
 - **The video's play button** is hidden for the same reason. The poster stays, and that is the whole picture.
-- **The task tabs still settle.** The badge animation is CSS only, so the status bar plays without a script.
+- **The status line still reads.** It is text and hairlines, rendered by the server, so it needs no script at all.
 - **Rows still alternate sides.** That is `:nth-of-type`, not a property.
 
 ## Less Motion
@@ -222,7 +222,7 @@ The whole page is prerendered, so all of the copy is readable with JavaScript tu
 Under `prefers-reduced-motion: reduce`:
 
 - The hero's shockwave ring stands still. Nothing else on the hero animates, so a reader who asks for less motion still sees the whole picture, held still.
-- Every state badge shows its settled state from the first frame. The starting glyph is taken out of the layout rather than left invisible, so Find in page does not match text nobody can see. The status bar therefore stands still too.
+- Every state badge shows its settled state from the first frame. The starting glyph is taken out of the layout rather than left invisible, so Find in page does not match text nobody can see. Nothing in the header or the status line moves at all.
 - The video does not autostart. It stays on the poster, and pressing the button still plays it — a direct request is not motion the page decided to make.
 
 ## Accessibility of the Pictures

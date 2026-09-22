@@ -103,8 +103,8 @@ describe('the head script decides the theme', () => {
  * first update, falling back to 'light' with no look at the system. It answered
  * a moment after the head script and overwrote a correct value, so on a dark
  * system every page carrying the header flipped to light right after it loaded
- * — while the supernova landing page, which has `litro-status-bar` instead,
- * stayed dark.
+ * — while the supernova landing page, which carried a terminal bar of its own
+ * instead of this header, stayed dark.
  *
  * The header reads `data-theme`; it does not work the theme out a second time.
  */

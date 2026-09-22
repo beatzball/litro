@@ -16,7 +16,7 @@ import { test, expect } from '@playwright/test';
 
 /** Every custom element the rebuilt page places, and how many of each. */
 const COMPONENTS: Array<[tag: string, count: number]> = [
-  ['litro-status-bar', 1],
+  ['litro-status-line', 1],
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
   ['litro-card-grid', 1],
@@ -111,14 +111,14 @@ test('the page calls to action are client-router links', async ({ request }) => 
 });
 
 /**
- * The status bar's navigation is the exception, and it has to be: litro-link
- * builds its inner anchor in the browser, so with JavaScript off it is not a
- * link at all. These are real anchors in the first response, and the client
- * router is layered on top of them.
+ * The header's navigation is a real anchor in the first response, and it has
+ * to be: the client router is layered on top of it by a click handler, so
+ * with JavaScript off the links still work. starlight-header has always done
+ * this, and the landing page gets it now by carrying the same header.
  */
-test('the status bar navigation is a real anchor in the server HTML', async ({ request }) => {
+test('the header navigation is a real anchor in the server HTML', async ({ request }) => {
   const html = await (await request.get('/')).text();
-  expect(html).toMatch(/<a[^>]*slot="nav"[^>]*href="\/docs\/introduction"/);
+  expect(html).toMatch(/<a[^>]*href="\/docs\/introduction"/);
 });
 
 test('the pictures on the page each carry one description', async ({ page }) => {
@@ -126,28 +126,96 @@ test('the pictures on the page each carry one description', async ({ page }) => 
   await page.waitForSelector('page-home:not([hidden])');
   const root = page.locator('page-home:not([hidden])');
 
-  await expect(root.locator('litro-status-bar div[role="img"].tabs')).toHaveAttribute(
-    'aria-label',
-    /Three framework adapters/,
-  );
   await expect(root.locator('litro-term-window div[role="img"]')).toHaveAttribute(
     'aria-label',
     /shell session/,
   );
 });
 
-test('the status bar renders already settled with reduced motion', async ({ page }) => {
-  // page.emulateMedia, not test.use({ reducedMotion }): the `use` form did not
-  // reach matchMedia in this project.
+/**
+ * THE STATUS LINE STATES FACTS. It replaced a terminal bar at the top of the
+ * page whose tab row showed `lit`, `fast` and `elena` settling from working to
+ * done — a drawing that read as live state. Every cell below is something the
+ * page can prove: the version comes from the package manifest, the Node
+ * requirement from the repository's engines, the link from the site
+ * navigation.
+ */
+test('the status line at the foot states facts about the project', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const line = page.locator('page-home:not([hidden]) litro-status-line');
+
+  await expect(line.locator('aside.line')).toBeVisible();
+  // A version, read from the package rather than typed into the page.
+  await expect(line.locator('.cell b').first()).toHaveText(/^v\d+\.\d+\.\d+$/);
+  await expect(line).toContainText('adapters');
+  await expect(line).toContainText('node');
+  // Nothing in it is a task or a state that the page cannot know.
+  await expect(line.locator('.tabs')).toHaveCount(0);
+});
+
+/** The line is fixed to the foot, so it must not cover the page's last line. */
+test('the status line does not sit on top of the page content', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+
+  // At the BOTTOM of the page, which is the only place the question is real:
+  // the line is fixed to the viewport, so higher up the last element is far
+  // below it and the comparison says nothing.
+  //
+  // behavior: 'instant', because the site's stylesheet sets
+  // `scroll-behavior: smooth` on html — a plain scrollTo animates, and the
+  // measurement below would be taken somewhere in the middle of the page.
+  await page.evaluate(() =>
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'instant' as ScrollBehavior,
+    }),
+  );
+  await page.waitForTimeout(100);
+
+  const clear = await page.evaluate(() => {
+    const home = document.querySelector('page-home:not([hidden])');
+    const root = home?.shadowRoot;
+    const line = root?.querySelector('litro-status-line')?.shadowRoot
+      ?.querySelector('aside.line');
+    const closing = root?.querySelector('.closing');
+    if (!line || !closing) return null;
+    return closing.getBoundingClientRect().bottom <= line.getBoundingClientRect().top + 1;
+  });
+
+  expect(clear, 'the closing section ends above the status line').toBe(true);
+});
+
+/**
+ * Nothing on this page animates any more. The badges that used to settle in
+ * the header went with the header; the status line that replaced it is text
+ * and hairlines. This asserts the absence, because "no motion" is only a
+ * promise until something checks it.
+ */
+test('nothing on the page moves, with or without a motion preference', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  const badge = page
-    .locator('page-home:not([hidden]) litro-status-bar litro-state-badge')
-    .first();
 
-  await expect(badge.locator('.from')).toBeHidden();
-  await expect(badge.locator('.to')).toBeVisible();
+  const moving = await page.evaluate(() => {
+    const out: string[] = [];
+    const walk = (root: ParentNode) => {
+      for (const el of root.querySelectorAll('*')) {
+        const s = getComputedStyle(el);
+        if (s.animationName && s.animationName !== 'none') {
+          out.push(`${el.tagName.toLowerCase()} ${s.animationName}`);
+        }
+        if ((el as Element & { shadowRoot?: ShadowRoot }).shadowRoot) {
+          walk((el as Element & { shadowRoot: ShadowRoot }).shadowRoot);
+        }
+      }
+    };
+    walk(document);
+    return out;
+  });
+
+  expect(moving).toEqual([]);
 });
 
 test('the install command says Copied when the clipboard allows it', async ({
@@ -168,10 +236,13 @@ test('the install command says Copied when the clipboard allows it', async ({
   expect(copied).toBe('pnpm create @beatzball/litro my-app');
 });
 
-test('client navigation from the status bar reaches the blog', async ({ page }) => {
+test('client navigation from the header reaches the blog', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('litro-outlet[data-litro-settled]');
-  await page.locator('a[slot="nav"][href="/blog"]').first().click();
+  await page
+    .locator('page-home:not([hidden]) starlight-header nav a[href="/blog"]')
+    .first()
+    .click();
   await page.waitForSelector('page-blog:not([hidden])');
   expect(page.url()).toContain('/blog');
 });

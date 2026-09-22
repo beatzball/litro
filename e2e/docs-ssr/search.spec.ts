@@ -80,11 +80,11 @@ test('search page returns 200', async ({ request }) => {
 // Header search pill
 // ---------------------------------------------------------------------------
 
-// The home page's header is litro-status-bar, and the docs pages' is
-// starlight-header, so the two carry different search controls. Both are a
-// button whose accessible name is "Search documentation", which is the fact a
-// reader actually depends on — so that, and not a class name, is what these
-// tests look for.
+// Every page carries the same starlight-header now, the landing page
+// included, so every page carries the same search control. It is a button
+// whose accessible name is "Search documentation", which is the fact a reader
+// actually depends on — so that, and not a class name, is what these tests
+// look for.
 test('the home page header offers a search control', async ({ page }) => {
   await page.goto('/');
   // After hydration the control is live. Wait for the router's post-swap

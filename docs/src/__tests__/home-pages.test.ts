@@ -16,7 +16,8 @@ const SSR_PAGE = new URL('../../../docs-ssr/pages/index.ts', import.meta.url);
 
 /** The components the rebuilt page places, and therefore must register. */
 const COMPONENTS = [
-  'litro-status-bar',
+  'litro-status-line',
+  'starlight-header',
   'litro-hero-nova',
   'litro-install-command',
   'litro-feature-row',

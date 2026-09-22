@@ -8,22 +8,23 @@ import { starlightHead } from '../src/route-meta.js';
 
 // Register the components used in render(). The landing page's own first...
 import '../src/components/litro-hero-nova.js';
+import '../src/components/litro-status-line.js';
 import '../src/components/litro-install-command.js';
 import '../src/components/litro-feature-row.js';
 import '../src/components/litro-steps.js';
 import '../src/components/litro-key-hints.js';
 import '../src/components/litro-state-badge.js';
-import '../src/components/litro-status-bar.js';
 import '../src/components/litro-term-window.js';
 
 // ...then the ones shared with the docs half of this site.
+import '../src/components/starlight-header.js';
 import '../src/components/litro-card.js';
 import '../src/components/litro-card-grid.js';
 import '../src/components/litro-footer.js';
 
 import type { StepItem } from '../src/components/litro-steps.js';
 import type { KeyHint } from '../src/components/litro-key-hints.js';
-import type { StatusTab } from '../src/components/litro-status-bar.js';
+import type { StatusCell } from '../src/components/litro-status-line.js';
 import type { TermRow } from '../src/components/litro-term-window.js';
 
 /**
@@ -42,26 +43,31 @@ import type { TermRow } from '../src/components/litro-term-window.js';
 const INSTALL_COMMAND = 'npm install playground-supernova';
 
 /**
- * The tabs in the status bar, left to right.
+ * The cells in the status line at the foot of the window.
  *
- * They are a picture of your project at work, not live data: every badge
- * settles from `from` to `state` after `delay` seconds, with a CSS animation
- * and no script, and `prefers-reduced-motion` shows them settled from the
- * first frame. Say what the row shows in TABS_LABEL — that sentence is the
- * only thing a screen reader gets.
+ * EVERY CELL MUST BE A FACT YOUR PROJECT CAN PROVE. A status line is read as
+ * live state, so anything invented in it is a lie told in the most credible
+ * place on the page — which is why the row of settling tabs this page used to
+ * show at the top is gone. Put in a version you actually publish, a path that
+ * actually exists, a link your config actually has. If you have nothing true
+ * for a cell, delete the cell; delete them all and the line is not rendered.
  *
- * Delete both and the bar renders with no tab row at all.
+ * The two below are true of the site you just scaffolded, and they are meant
+ * to be replaced. To add the version, read it in pageData from your own
+ * package.json and pass it through, the way `siteTitle` is passed:
+ *
+ *   { state: 'done', value: 'v' + version }
+ *
+ * `optional` drops a cell on a narrow screen. A phone has room for the
+ * project's name, where you are, and one thing to click.
  */
-const TABS: StatusTab[] = [
-  { name: 'build', state: 'done', from: 'working', delay: 1.6, current: true },
-  { name: 'test', state: 'working' },
-  { name: 'deploy', state: 'blocked', from: 'working', delay: 1.0 },
-  { name: 'docs', state: 'idle', from: 'working', delay: 2.6 },
+const STATUS_CELLS: StatusCell[] = [
+  { state: 'working', value: 'docs', trailing: '/getting-started', href: '/docs/getting-started' },
+  { label: 'built with', value: 'litro', href: 'https://litro.dev', right: true },
 ];
 
-/** What the tab row shows, in one sentence, for a reader who cannot see it. */
-const TABS_LABEL =
-  'Four tasks: build is done, test is working, deploy is blocked, docs is idle.';
+/** What the line is, for a reader who cannot see it. */
+const STATUS_LABEL = 'Project status';
 
 /**
  * The "what it does" rows. Keep the copy here, at the top of the file, so a
@@ -254,7 +260,9 @@ export class SupernovaPage extends LitroPage {
       /* How tall the hero pane is before its content makes it taller. The
          3rem is the status bar above it, so the hero fills exactly what is
          left of the first screen. */
-      --nova-hero-min: var(--brand-hero-min, calc(100svh - 3rem));
+      /* The header above and the status line below both come out of the
+         first screen, so the hero fills exactly what is left of it. */
+      --nova-hero-min: var(--brand-hero-min, calc(100svh - 3.5rem - 1.75rem));
       --nova-font-mono: var(
         --brand-font-mono,
         ui-monospace,
@@ -318,8 +326,14 @@ export class SupernovaPage extends LitroPage {
       color: var(--nova-text);
     }
 
+    /* The status line at the foot is FIXED, so the page has to leave room for
+       it by hand or the credit line sits under it — and the screen it fills
+       is that much shorter. */
     .page {
-      min-height: 100vh;
+      --status-height: var(--nova-status-height, 1.75rem);
+      min-height: calc(100vh - var(--status-height));
+      min-height: calc(100svh - var(--status-height));
+      padding-bottom: var(--status-height);
       display: flex;
       flex-direction: column;
     }
@@ -336,13 +350,35 @@ export class SupernovaPage extends LitroPage {
       width: 100%;
     }
 
-    /* ── The status bar's slotted links ────────────────────────────────
+    /* ── The header ────────────────────────────────────────────────────
      *
-     * The bar's navigation is a slot, so the links below are written by this
-     * page and keep this page's styles. litro-status-bar sizes and colors
-     * them with ::slotted(); there is nothing left for the page to do, and
-     * this comment is here so the next editor knows where to look.
+     * starlight-header is the DOCS half of this site's header, and it reads
+     * the --sl-* tokens, which follow the reader's light or dark choice while
+     * this page is dark either way. So the set it needs is given to it here,
+     * on the element, exactly as litro-card is dressed above.
+     *
+     * --sl-font-brand is the one token that is not a dressing. It is the
+     * header's brand face, and setting it to the mono is what carries the
+     * terminal character into a header that is otherwise the docs header,
+     * unchanged. Delete this one line and the header matches the docs pages'
+     * exactly.
      */
+    starlight-header {
+      --sl-font-brand: var(--nova-font-mono);
+      --sl-color-bg: var(--nova-bg);
+      --sl-color-bg-nav: var(--nova-bg);
+      --sl-color-text: var(--nova-text);
+      --sl-color-gray-2: var(--nova-surface);
+      --sl-color-gray-4: var(--nova-text-dim);
+      --sl-color-gray-5: var(--nova-text-dim);
+      --sl-color-border: var(--nova-border);
+      --sl-color-accent: var(--nova-accent);
+      --sl-color-accent-low: color-mix(
+        in srgb,
+        var(--nova-accent) 18%,
+        transparent
+      );
+    }
 
     /* ── Hero ──────────────────────────────────────────────────────────
      *
@@ -533,25 +569,20 @@ export class SupernovaPage extends LitroPage {
 
     return html`
       <div class="page">
-        <!-- The landing page's own header, in place of the docs site's
-             starlight-header. It takes the SAME title and the SAME links the
-             docs header shows, from the same place — server/starlight.config.js,
-             through pageData below — so a reader moving between the landing
-             page and the docs sees one site. -->
-        <litro-status-bar
+        <!-- THE SAME HEADER THE DOCS HALF OF THIS SITE HAS. This page used
+             to carry a terminal bar of its own here, and a reader met two
+             different headers on one site. The terminal character did not go
+             away: it moved to the status line at the foot of the window,
+             where a status line belongs and where it has a page to describe.
+
+             The wordmark and the links are set in the mono through
+             --sl-font-brand, in the token block above. That is the whole of
+             the difference between this header and the docs pages' one. -->
+        <starlight-header
           siteTitle="${siteTitle}"
-          .tabs="${TABS}"
-          tabsLabel="${TABS_LABEL}"
-        >
-          <!-- The same mark as the hero's, drawn small. One symbol, twice. -->
-          <svg slot="mark" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="5" />
-            <circle cx="32" cy="32" r="7" fill="currentColor" />
-          </svg>
-          ${nav.map(
-            (item) => html`<a slot="nav" href="${item.href}">${item.label}</a>`,
-          )}
-        </litro-status-bar>
+          .nav="${nav}"
+          currentPath="/"
+        ></starlight-header>
 
         <main>
           <litro-hero-nova>
@@ -690,6 +721,15 @@ export class SupernovaPage extends LitroPage {
 
         <!-- Credit line. Delete this element if you would rather not carry it. -->
         <litro-footer recipe="supernova"></litro-footer>
+
+        <!-- The status line. It is fixed to the foot of the window, so it is
+             the last thing in the page and .page carries the padding that
+             keeps the credit line clear of it. -->
+        <litro-status-line
+          siteTitle="${siteTitle}"
+          .cells="${STATUS_CELLS}"
+          label="${STATUS_LABEL}"
+        ></litro-status-line>
       </div>
     `;
   }

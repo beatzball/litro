@@ -22,7 +22,8 @@ test('home renders the landing page sections', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
   const root = page.locator('page-home');
-  await expect(root.locator('litro-status-bar')).toHaveCount(1);
+  await expect(root.locator('starlight-header')).toHaveCount(1);
+  await expect(root.locator('litro-status-line')).toHaveCount(1);
   await expect(root.locator('.hero h1')).toBeVisible();
   await expect(root.locator('litro-feature-row')).toHaveCount(3);
   await expect(root.locator('litro-term-window')).toHaveCount(2);
@@ -33,35 +34,71 @@ test('home renders the landing page sections', async ({ page }) => {
 });
 
 /**
- * The landing page has a header of its own, and it has to show the same name
- * and the same links the docs header shows, from server/starlight.config.js.
- * Change that file and both headers follow; that is the point.
+ * THE LANDING PAGE CARRIES THE SAME HEADER THE DOCS PAGES DO. It used to have
+ * a terminal bar of its own here, which meant a reader met two different
+ * headers on one site. Both halves now read the same name and the same links
+ * out of server/starlight.config.js — change that file and both follow.
  */
-test('the status bar carries the site title and the site navigation', async ({ page }) => {
+test('the header carries the site title and the site navigation', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
-  const bar = page.locator('page-home litro-status-bar');
+  const header = page.locator('page-home starlight-header');
 
-  await expect(bar.locator('.seg-name')).not.toBeEmpty();
-  await expect(bar.locator('.home')).toHaveAttribute('href', '/');
-  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
-  // The docs pages keep starlight-header, and this page does not.
-  await expect(page.locator('page-home starlight-header')).toHaveCount(0);
+  await expect(header.locator('.site-title')).not.toBeEmpty();
+  await expect(header.locator('.site-title')).toHaveAttribute('href', '/');
+  await expect(header.locator('nav a[href="/docs/getting-started"]')).toHaveText('Docs');
 });
 
 /**
- * The tabs settle with a CSS animation and no script. A reader who asks for
- * less motion must see the SETTLED row from the first frame, never the state
- * it started in, so the starting glyph is taken out of the layout entirely.
+ * THE STATUS LINE STATES FACTS. The terminal character moved to the foot of
+ * the window, where a status line belongs and where it has a page to
+ * describe. Every cell it ships with is something a freshly scaffolded site
+ * can prove — which the row of settling tabs it replaced never was.
+ *
+ * Edit the cells in pages/index.ts and this test follows; delete them all and
+ * the line renders nothing, which is what it should do with nothing to say.
  */
-test('the status bar renders already settled with reduced motion', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+test('the status line at the foot states facts, not tasks', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home');
-  const badge = page.locator('page-home litro-status-bar litro-state-badge').first();
+  const line = page.locator('page-home litro-status-line');
 
-  await expect(badge.locator('.from')).toBeHidden();
-  await expect(badge.locator('.to')).toBeVisible();
+  await expect(line.locator('aside.line')).toBeVisible();
+  await expect(line.locator('.mode')).not.toBeEmpty();
+  await expect(line).toContainText('built with');
+  await expect(line.locator('.tabs')).toHaveCount(0);
+});
+
+/** Fixed to the foot, so it must not cover the last line of the page. */
+test('the status line does not sit on top of the page content', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home');
+
+  // At the BOTTOM of the page, which is the only place the question is real:
+  // the line is fixed to the viewport, so higher up the last element is far
+  // below it and the comparison says nothing.
+  //
+  // behavior: 'instant', because the site's stylesheet sets
+  // `scroll-behavior: smooth` on html — a plain scrollTo animates, and the
+  // measurement below would be taken somewhere in the middle of the page.
+  await page.evaluate(() =>
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'instant' as ScrollBehavior,
+    }),
+  );
+  await page.waitForTimeout(100);
+
+  const clear = await page.evaluate(() => {
+    const root = document.querySelector('page-home')?.shadowRoot;
+    const line = root?.querySelector('litro-status-line')?.shadowRoot
+      ?.querySelector('aside.line');
+    const credit = root?.querySelector('litro-footer');
+    if (!line || !credit) return null;
+    return credit.getBoundingClientRect().bottom <= line.getBoundingClientRect().top + 1;
+  });
+
+  expect(clear, 'the credit line ends above the status line').toBe(true);
 });
 
 /**
@@ -123,12 +160,13 @@ test('landing page copy is in the server HTML', async ({ request }) => {
   expect(body).toContain('Point it at your work');    // litro-steps
   expect(body).toContain('<kbd>');                    // litro-key-hints
   expect(body).toContain('Stop the current run');     // litro-key-hints
-  expect(body).toContain('class="layer core"');       // litro-hero-nova
+  expect(body).toContain('class="layer wash"');       // litro-hero-nova
   expect(body).toContain('radial-gradient');          // litro-hero-nova
   expect(body).toContain('Structured documentation with sidebar'); // litro-card
-  expect(body).toContain('class="seg seg-name"');     // litro-status-bar
-  expect(body).toContain('slot="nav"');               // litro-status-bar
-  expect(body).toContain('class="to done"');          // litro-state-badge
+  expect(body).toContain('class="site-title"');       // starlight-header
+  expect(body).toContain('class="cell mode"');        // litro-status-line
+  expect(body).toContain('built with');               // litro-status-line
+  expect(body).toContain('litro-state-badge');        // litro-state-badge
   expect(body).toContain('class="row hot"');          // litro-term-window
   expect(body).toContain('Three tasks listed by state'); // litro-term-window
 });
