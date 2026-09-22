@@ -527,9 +527,29 @@ export class SupernovaPage extends LitroPage {
           </litro-hero-nova>
 
           ${
-            // Video section. The component ships in the next phase as <litro-hero-video>.
-            // Drop your own clip in, then uncomment:
-            // <litro-hero-video poster="/demo/poster.jpg" label="What the tool does, in 15 seconds">
+            // Video section — a short recording of what the product does.
+            //
+            // This recipe ships no clip, so the section is left out rather
+            // than pointing at a file that is not there. To turn it on: put
+            // your recording and its poster frame in `public/demo/`, add the
+            // import below to the TOP of this file next to the other
+            // component imports, and uncomment the markup.
+            //
+            //   import '../src/components/litro-hero-video.js';
+            //
+            // `sources` is a property, not an attribute, so it is set with
+            // `.sources` — a plain attribute would arrive as a string and the
+            // element would show the poster and nothing else. List the
+            // encodings you have; the browser takes the first it can play.
+            //
+            // <litro-hero-video
+            //   poster="/demo/poster.jpg"
+            //   label="What the tool does, in 15 seconds"
+            //   .sources="${[
+            //     { src: '/demo/clip.webm', type: 'video/webm' },
+            //     { src: '/demo/clip.mp4', type: 'video/mp4' },
+            //   ]}"
+            // >
             //   <span slot="caption">A short caption.</span>
             // </litro-hero-video>
             ''

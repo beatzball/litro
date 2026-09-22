@@ -6,8 +6,28 @@ import pagesPlugin from '@beatzball/litro/plugins';
 import ssgPlugin from '@beatzball/litro/plugins/ssg';
 import contentPlugin from '@beatzball/litro/content/plugin';
 
+const ssg = ssgPreset();
+
 export default defineNitroConfig({
-  ...ssgPreset(),
+  ...ssg,
+
+  prerender: {
+    ...ssg.prerender,
+    /**
+     * The seed the crawler starts from.
+     *
+     * `/` HAS TO BE IN THIS LIST. Naming any route here replaces Nitro's
+     * default seed of `/`, and the rest of this site is found only by
+     * following links out of the home page — leave `/` out and the build
+     * prerenders one page and quietly drops the other twenty.
+     *
+     * `/hero-video` is linked from nowhere: it is a harness page for the
+     * `<litro-hero-video>` e2e spec, kept off the landing page so that page
+     * stays the recipe's own. The crawler cannot reach it, so it is named
+     * here and the spec passes against a production build too.
+     */
+    routes: ['/', '/hero-video'],
+  },
 
   srcDir: 'server',
 
