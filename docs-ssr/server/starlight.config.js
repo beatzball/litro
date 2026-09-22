@@ -91,5 +91,9 @@ export const siteConfig = {
       ],
     },
   ],
-  editUrlBase: 'https://github.com/beatzball/litro/edit/main/docs',
+  // The content this site renders lives in packages/docs-content, NOT in
+  // docs/. This base plus the page's own `/content/<collection>/<slug>.md`
+  // is the real path in the repository; it used to say `/docs`, which built
+  // a URL to a file that has never existed.
+  editUrlBase: 'https://github.com/beatzball/litro/edit/main/packages/docs-content',
 };

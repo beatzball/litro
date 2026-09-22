@@ -76,6 +76,60 @@
   --sl-border-radius-sm: 0.25rem;
 }
 
+/* ── The landing page's palette ───────────────────────────────────────
+ *
+ * The supernova landing page reads --nova-* tokens, and each of those reads a
+ * --brand-* value with a fallback. Defining the --brand-* set HERE, in the
+ * same light and dark blocks the --sl-* tokens live in, is what makes the
+ * landing page follow the theme toggle and the system preference — including
+ * with JavaScript turned off, through the prefers-color-scheme block below.
+ *
+ * It used to be a dark-only block inside the page component, so the toggle
+ * had nothing to act on and switching to light left the landing page dark.
+ *
+ * The accent is NOT repeated here: --brand-accent reads --sl-color-accent, so
+ * litro's orange is one value in one place and the landing page and the docs
+ * pages cannot drift apart.
+ */
+:root {
+  /* surfaces — a warm off-white, not pure white: the hero is a large field
+     of one color and pure white under a wash reads as a blown-out photo. */
+  --brand-bg: #fdfcfb;
+  --brand-surface: #f4f1ee;
+  --brand-border: #e4ded8;
+
+  /* text */
+  --brand-text: #1b1a19;
+  --brand-text-dim: #5c5854;
+
+  /* accent — one value, the site's own.
+     --brand-accent-high is the accent you can put WHITE text on: the mode
+     segment of the status line and the primary button both do. A site accent
+     is chosen to sit under a page rather than under white text, and
+     --sl-color-accent-high is chosen to sit ON one, so neither works here.
+     Mixing the accent most of the way toward black keeps the hue and clears
+     4.5:1 in both themes. */
+  --brand-accent: var(--sl-color-accent);
+  --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+  /* The accent as small TEXT on the page. On a light ground the brand orange
+     reads at about 3.5:1, under the 4.5:1 a body-sized word needs, so it is
+     darkened here; on a dark ground the same value is already well clear and
+     the accent is used unchanged. Same hue, both ways. */
+  --brand-accent-text: color-mix(in srgb, var(--sl-color-accent) 78%, #000);
+  --brand-accent-2: #0369a1;
+
+  /* states */
+  --brand-error: #b91c1c;
+  --brand-blocked: #b45309;
+  --brand-working: #0369a1;
+  --brand-done: #15803d;
+  --brand-idle: #6b7280;
+
+  /* How solid the hero's mark is. On a light ground a mark has to be darker
+     to read at all, and a light ground shows far less of a faint shape. */
+  --brand-mark-opacity: 0.16;
+}
+
 /* ── Dark mode ────────────────────────────────────────────────────────
  *
  * TWO RULES, AND THEY MUST STAY IN STEP. CSS has no way to give one
@@ -139,6 +193,23 @@
   /* Shoelace primary palette — dark mode (brighter accent for dark backgrounds) */
   --sl-color-primary-600: #fb923c;
   --sl-color-primary-700: #f97316;
+
+  /* The landing page's palette. See the note beside the light values. */
+  --brand-bg: #0d0e1a;
+  --brand-surface: #171a2b;
+  --brand-border: #2a2e45;
+  --brand-text: #e9ecfa;
+  --brand-text-dim: #9aa1bd;
+  --brand-accent: var(--sl-color-accent);
+  --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+  --brand-accent-text: var(--sl-color-accent);
+  --brand-accent-2: #38bdf8;
+  --brand-error: #f87171;
+  --brand-blocked: #fbbf24;
+  --brand-working: #38bdf8;
+  --brand-done: #4ade80;
+  --brand-idle: #64748b;
+  --brand-mark-opacity: 0.11;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -185,6 +256,23 @@
     /* Shoelace primary palette — dark mode (brighter accent for dark backgrounds) */
     --sl-color-primary-600: #fb923c;
     --sl-color-primary-700: #f97316;
+
+    /* The landing page's palette. See the note beside the light values. */
+    --brand-bg: #0d0e1a;
+    --brand-surface: #171a2b;
+    --brand-border: #2a2e45;
+    --brand-text: #e9ecfa;
+    --brand-text-dim: #9aa1bd;
+    --brand-accent: var(--sl-color-accent);
+    --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+    --brand-accent-text: var(--sl-color-accent);
+    --brand-accent-2: #38bdf8;
+    --brand-error: #f87171;
+    --brand-blocked: #fbbf24;
+    --brand-working: #38bdf8;
+    --brand-done: #4ade80;
+    --brand-idle: #64748b;
+    --brand-mark-opacity: 0.11;
   }
 }
 

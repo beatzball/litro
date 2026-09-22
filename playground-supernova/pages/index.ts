@@ -223,17 +223,18 @@ export class SupernovaPage extends LitroPage {
      * --sl-border-radius-sm. Do not redefine any of those here — the docs
      * pages read them too, and the header on this page is a docs component.
      *
-     * The landing page is dark whatever the reader's light or dark choice is,
-     * the way a product page usually is, while the docs follow that choice. To
-     * make the landing page follow it too, delete the color-scheme line
-     * below and point the surface and text tokens at the --sl-* names.
+     * THE PAGE FOLLOWS THE READER'S LIGHT OR DARK CHOICE, exactly as the docs
+     * half does, because the --brand-* values it reads are defined in the
+     * light and dark blocks of public/styles/starlight.css. Change them there
+     * and both themes move together; there is no color-scheme declaration
+     * here and no dark-only palette, which is what used to leave this page
+     * dark when a reader switched to light.
      */
     :host {
-      color-scheme: dark;
-
-      /* surfaces — the ground is TINTED, not flat black. A near-black page
-         reads as an absence; a deep blue-violet reads as a choice, and it is
-         what lets a dark mark bleeding in from the edge still be seen. */
+      /* surfaces — the dark ground is TINTED, not flat black; the light one
+         is a warm off-white rather than pure white, because the hero is a
+         large field of one color and pure white under a wash reads as a
+         blown-out photograph. */
       --nova-bg: var(--brand-bg, #0d0e1a);
       --nova-surface: var(--brand-surface, #171a2b);
       --nova-border: var(--brand-border, #2a2e45);
@@ -242,8 +243,18 @@ export class SupernovaPage extends LitroPage {
       --nova-text: var(--brand-text, #e9ecfa);
       --nova-text-dim: var(--brand-text-dim, #979db8);
 
-      /* accent */
+      /* accent — TWO of them, and the reason is contrast. --nova-accent is
+         the one that reads as text against the page. It is not dark enough
+         to carry WHITE text on it, so anything that puts words on an accent
+         FIELD — the status line's mode segment, the primary button — takes
+         --nova-accent-high, which the stylesheet derives from the same
+         accent and which clears 4.5:1 in both themes. */
       --nova-accent: var(--brand-accent, #7c3aed);
+      --nova-accent-high: var(--brand-accent-high, #4c1d95);
+      /* And a third: the accent as small TEXT on the page. On a light ground
+         a brand color usually reads under 4.5:1, so the stylesheet darkens it
+         there and leaves it alone on a dark one. */
+      --nova-accent-text: var(--brand-accent-text, #7c3aed);
       --nova-accent-2: var(--brand-accent-2, #22d3ee);
 
       /* states */
@@ -263,6 +274,9 @@ export class SupernovaPage extends LitroPage {
       /* The header above and the status line below both come out of the
          first screen, so the hero fills exactly what is left of it. */
       --nova-hero-min: var(--brand-hero-min, calc(100svh - 3.5rem - 1.75rem));
+      /* How solid the hero's mark is. A light ground shows far less of a
+         faint shape than a dark one, so the value is per theme. */
+      --nova-mark-opacity: var(--brand-mark-opacity, 0.11);
       --nova-font-mono: var(
         --brand-font-mono,
         ui-monospace,

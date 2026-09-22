@@ -242,53 +242,59 @@ export class SplashPage extends LitroPage {
      * tokens and defines no colors of its own, so this block is the one place
      * to retheme the page.
      *
-     * The colors are litro's mark: orange and red on one side of the flame,
-     * blue and cyan on the other. --nova-accent takes the orange the docs
-     * already use as --sl-color-accent; --nova-accent-2 takes the cyan the old
-     * hero gradient ended on.
+     * THE VALUES LIVE IN public/styles/starlight.css, as --brand-* names, in
+     * the same light and dark blocks the --sl-* tokens live in. That is what
+     * makes this page follow the theme toggle and the system preference — and
+     * it is why the toggle works here at all. It used to hard-code a dark
+     * palette and a dark color-scheme, so switching to light left the landing
+     * page dark while the docs pages changed around it.
      *
-     * THE LANDING PAGE IS DARK WHATEVER THE READER'S LIGHT OR DARK CHOICE IS,
-     * the way a product page usually is, while the docs pages follow that
-     * choice. That is how the two are kept from fighting: this page never
-     * redefines a --sl-* token at :host level, so the global light and dark
-     * values keep their meaning everywhere else, and the toggle on the docs
-     * pages still works. The only --sl-* values set here are set ON a docs
-     * component, further down, to dress that one element for a dark page.
+     * Every line below is var(--brand-…, <a dark fallback>), so a page that
+     * somehow loads without the stylesheet still renders, and a project can
+     * override one value without touching this file.
+     *
+     * THE ACCENT IS NOT WRITTEN HERE. --brand-accent reads --sl-color-accent,
+     * which is litro's one orange, so this page and the docs pages cannot
+     * drift apart — they did, because this block had #ea580c typed into it
+     * while the docs switch to a lighter orange in dark mode.
      */
     :host {
-      color-scheme: dark;
-
-      /* surfaces — the ground is TINTED, not flat black. A near-black page
-         reads as an absence; a deep blue-violet reads as a choice, and it is
-         what lets the flame, drawn dark at the pane's edge, still be seen. */
-      --nova-bg: #0d0e1a;
-      --nova-surface: #171a2b;
-      --nova-border: #2a2e45;
+      /* surfaces — the dark ground is TINTED, not flat black; the light one
+         is a warm off-white rather than pure white, because the hero is a
+         large field of one color and pure white under a wash reads as a
+         blown-out photograph. */
+      --nova-bg: var(--brand-bg, #0d0e1a);
+      --nova-surface: var(--brand-surface, #171a2b);
+      --nova-border: var(--brand-border, #2a2e45);
 
       /* text */
-      --nova-text: #e9ecfa;
-      --nova-text-dim: #9aa1bd;
+      --nova-text: var(--brand-text, #e9ecfa);
+      --nova-text-dim: var(--brand-text-dim, #9aa1bd);
 
       /* accent — the two sides of the flame.
        *
-       * TWO ORANGES, and the reason is contrast. --nova-accent is the one the
-       * docs already use, and it is bright enough to read as text on the dark
-       * page. It is NOT dark enough to carry light text ON it: white on
-       * #ea580c is 3.5:1, under the 4.5:1 a body-sized word needs. So
-       * anything that puts words on an orange FIELD — the status bar's name
-       * segment, the primary button — takes --nova-accent-high instead, which
-       * is the docs' own --sl-color-accent-high and reads at 7:1.
+       * TWO ORANGES, and the reason is contrast. --nova-accent is the site's
+       * own, and it is chosen to read as text against the page. It is NOT
+       * dark enough to carry white text ON it: white on #ea580c is 3.5:1,
+       * under the 4.5:1 a body-sized word needs. So anything that puts words
+       * on an orange FIELD — the status line's mode segment, the primary
+       * button — takes --nova-accent-high, which the stylesheet derives from
+       * the same accent and which clears the ratio in both themes.
        */
-      --nova-accent: #ea580c;
-      --nova-accent-high: #9a3412;
-      --nova-accent-2: #38bdf8;
+      --nova-accent: var(--brand-accent, #ea580c);
+      --nova-accent-high: var(--brand-accent-high, #9a3412);
+      /* And a third: the accent as small TEXT on the page. On a light ground
+         the brand orange reads at about 3.5:1, so the stylesheet darkens it
+         there and leaves it alone on a dark one. */
+      --nova-accent-text: var(--brand-accent-text, #ea580c);
+      --nova-accent-2: var(--brand-accent-2, #38bdf8);
 
       /* states */
-      --nova-error: #f87171;
-      --nova-blocked: #fbbf24;
-      --nova-working: #38bdf8;
-      --nova-done: #4ade80;
-      --nova-idle: #64748b;
+      --nova-error: var(--brand-error, #f87171);
+      --nova-blocked: var(--brand-blocked, #fbbf24);
+      --nova-working: var(--brand-working, #38bdf8);
+      --nova-done: var(--brand-done, #4ade80);
+      --nova-idle: var(--brand-idle, #64748b);
 
       /* layout — 56rem is the width the docs home page has always used */
       --nova-measure: 56rem;
@@ -306,6 +312,9 @@ export class SplashPage extends LitroPage {
          a shape filling the side, which is the whole point of the crop. */
       --nova-mark-size: clamp(26rem, 62vw, 56rem);
       --nova-mark-size-narrow: clamp(18rem, 86vw, 30rem);
+      /* How solid the flame is. A light ground shows far less of a faint
+         shape than a dark one, so the value is per theme. */
+      --nova-mark-opacity: var(--brand-mark-opacity, 0.11);
       --nova-font-mono: var(
         --sl-font-mono,
         ui-monospace,
@@ -325,11 +334,30 @@ export class SplashPage extends LitroPage {
      * this page only: the docs pages are untouched, the tokens keep their
      * global meaning, and the component's own file does not change.
      */
-    /* The bar draws the site name as light text on an accent field, so the
-       accent it reads has to be the darker one. It also tints the focus ring,
-       which stays well clear of the 3:1 a control outline needs. */
-    litro-status-bar {
-      --nova-accent: var(--nova-accent-high);
+    /* ── The status line is fixed dark chrome ──────────────────────────
+     *
+     * The line does NOT follow the reader's light or dark choice, and neither
+     * do the docs pages' copies of it: a status line is chrome, not content,
+     * and keeping it the same color on every page and in both themes is what
+     * makes a reader recognize it as the same object. So the dark set it
+     * reads is given to it here, on the element, rather than inherited from a
+     * page that now changes with the theme.
+     *
+     * The accent still comes from the site's own, mixed toward black far
+     * enough to carry white text: the mode segment is a white word on it and
+     * an accent picked to sit under a page gives about 3.5:1. */
+    litro-status-line {
+      --nova-bg: #0d0e1a;
+      --nova-surface: #171a2b;
+      --nova-border: #2a2e45;
+      --nova-text: #e9ecfa;
+      --nova-text-dim: #9aa1bd;
+      --nova-accent: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+      --nova-error: #f87171;
+      --nova-blocked: #fbbf24;
+      --nova-working: #38bdf8;
+      --nova-done: #4ade80;
+      --nova-idle: #64748b;
     }
 
     litro-card {
@@ -456,7 +484,7 @@ export class SplashPage extends LitroPage {
       border-radius: 9999px;
       font-size: 0.875rem;
       font-weight: 500;
-      color: var(--nova-accent);
+      color: var(--nova-accent-text);
       background: color-mix(in srgb, var(--nova-accent) 10%, transparent);
     }
 
@@ -584,7 +612,7 @@ export class SplashPage extends LitroPage {
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--nova-accent);
+      color: var(--nova-accent-text);
       margin: 0 0 0.75rem;
     }
 
@@ -599,7 +627,7 @@ export class SplashPage extends LitroPage {
       gap: 0.375rem;
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--nova-accent);
+      color: var(--nova-accent-text);
       text-decoration: none;
     }
 

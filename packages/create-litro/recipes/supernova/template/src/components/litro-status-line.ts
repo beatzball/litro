@@ -167,7 +167,15 @@ export class LitroStatusLine extends LitElement {
       font-weight: 600;
     }
 
+    /* A LINKED CELL IS THE FLEX ROW, NOT ITS PARENT. The gap that separates a
+       glyph from a word lives on .cell, and .cell's only child is this anchor
+       when the cell links somewhere — so the spans inside it had no gap at
+       all and the line read "built withlitro". The anchor repeats the row so
+       a linked cell and a plain one space their parts the same way. */
     a {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
       color: var(--nova-text-dim);
       text-decoration: none;
     }

@@ -69,6 +69,33 @@ test('the status line at the foot states facts, not tasks', async ({ page }) => 
   await expect(line.locator('.tabs')).toHaveCount(0);
 });
 
+/**
+ * THE WORDS IN A CELL MUST NOT TOUCH. The gap that separates a glyph from a
+ * word lives on `.cell`, and when a cell links somewhere its only child is an
+ * anchor — so everything inside that anchor had no gap at all and the line
+ * read "built withlitro".
+ *
+ * This reads the RENDERED text rather than the markup, because the markup was
+ * never wrong: `<span>built with</span><b>litro</b>` is correct HTML and its
+ * textContent runs the words together either way. Only what a browser lays
+ * out can tell the difference.
+ */
+test('the words in a linked status cell are separated', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home');
+
+  const cells = await page.evaluate(() => {
+    const root = document.querySelector('page-home')?.shadowRoot;
+    const line = root?.querySelector('litro-status-line')?.shadowRoot;
+    return [...(line?.querySelectorAll('.cell') ?? [])].map((c) =>
+      (c as HTMLElement).innerText.replace(/\s+/g, ' ').trim(),
+    );
+  });
+
+  expect(cells).toContain('built with litro');
+  expect(cells.join(' | ')).not.toMatch(/\w\w(litro|docs)\b/);
+});
+
 /** Fixed to the foot, so it must not cover the last line of the page. */
 test('the status line does not sit on top of the page content', async ({ page }) => {
   await page.goto('/');

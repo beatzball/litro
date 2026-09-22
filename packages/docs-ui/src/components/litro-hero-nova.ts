@@ -46,7 +46,8 @@ import { customElement } from 'lit/decorators.js';
  * `--nova-accent`, `--nova-accent-2`, and optionally `--nova-hero-min` (how
  * tall the pane is before its content makes it taller), `--nova-mark-size`
  * and `--nova-mark-size-narrow` (how wide the mark is drawn, on a wide screen
- * and on a phone).
+ * and on a phone) and `--nova-mark-opacity` (how solid it is, which wants a
+ * different value on a light ground than on a dark one).
  */
 @customElement('litro-hero-nova')
 export class LitroHeroNova extends LitElement {
@@ -120,8 +121,12 @@ export class LitroHeroNova extends LitElement {
       line-height: 0;
       /* Low enough that the mark is ground rather than figure. A logo at a
          readable opacity here would be a second thing to look at, right where
-         the eye leaves the headline. */
-      opacity: 0.11;
+         the eye leaves the headline.
+
+         It is a token because a light ground shows far less of a faint shape
+         than a dark one: the same value that is right on near-black is nearly
+         invisible on off-white. */
+      opacity: var(--nova-mark-opacity, 0.11);
       pointer-events: none;
     }
 
@@ -143,7 +148,7 @@ export class LitroHeroNova extends LitElement {
         top: auto;
         bottom: 0;
         transform: translate(22%, 18%);
-        opacity: 0.08;
+        opacity: calc(var(--nova-mark-opacity, 0.11) * 0.75);
       }
 
       ::slotted([slot='mark']) {
