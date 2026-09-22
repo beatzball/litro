@@ -22,6 +22,7 @@
 
 /* Starlight design tokens — light mode defaults */
 :root {
+  color-scheme: light;
   --sl-color-white: #fff;
   --sl-color-black: #23262f;
   --sl-color-gray-1: #f6f6f6;
@@ -75,8 +76,28 @@
   --sl-border-radius-sm: 0.25rem;
 }
 
-/* Dark mode overrides */
+/* ── Dark mode ────────────────────────────────────────────────────────
+ *
+ * TWO RULES, AND THEY MUST STAY IN STEP. CSS has no way to give one
+ * declaration block two conditions, so the dark palette is written twice:
+ *
+ *   [data-theme="dark"]        — what the head script sets, from the
+ *                                reader's stored choice or, when they have
+ *                                made none, from the system.
+ *
+ *   the @media block below     — the only thing that can follow a dark
+ *                                system with JavaScript turned OFF, when
+ *                                nothing sets data-theme at all.
+ *
+ * The :not([data-theme="light"]) guard is what keeps a reader's choice
+ * winning: the moment the head script writes light, that block stops
+ * matching and the light tokens above apply again.
+ *
+ * Edit one and you must edit the other. A test pins them together —
+ * see packages/create-litro/src/theme.test.ts.
+ */
 [data-theme="dark"] {
+  color-scheme: dark;
   --sl-color-text: #f0f0f0;
   --sl-color-bg: #17181c;
   --sl-color-bg-sidebar: #1e1f24;
@@ -99,6 +120,34 @@
   --sl-color-tip: #4ade80;
   --sl-color-caution: #fbbf24;
   --sl-color-danger: #f87171;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --sl-color-text: #f0f0f0;
+    --sl-color-bg: #17181c;
+    --sl-color-bg-sidebar: #1e1f24;
+    --sl-color-bg-nav: #17181c;
+    --sl-color-bg-inline-code: #2a2b30;
+    --sl-color-border: #2e2f35;
+
+    --sl-color-gray-1: #2a2b30;
+    --sl-color-gray-2: #35363d;
+    --sl-color-gray-3: #5a5b63;
+    --sl-color-gray-4: #8a8b94;
+    --sl-color-gray-5: #c0c1cb;
+    --sl-color-gray-6: #e8e9f0;
+
+    --sl-color-accent: #a78bfa;
+    --sl-color-accent-high: #c4b5fd;
+    --sl-color-accent-low: #2e1b54;
+
+    --sl-color-note: #60a5fa;
+    --sl-color-tip: #4ade80;
+    --sl-color-caution: #fbbf24;
+    --sl-color-danger: #f87171;
+  }
 }
 
 /* Base reset */

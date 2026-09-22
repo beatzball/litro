@@ -250,6 +250,12 @@ export class SplashPage extends LitroPage {
          3rem is the status bar above it, so the hero fills exactly what is
          left of the first screen. */
       --nova-hero-min: calc(100svh - 3rem);
+      /* The flame is drawn much larger than the recipe's default, because it
+         has to HOLD the right of the pane rather than sit near its edge.
+         Most of that width is off the edge and cropped away; what is left is
+         a shape filling the side, which is the whole point of the crop. */
+      --nova-mark-size: clamp(26rem, 62vw, 56rem);
+      --nova-mark-size-narrow: clamp(18rem, 86vw, 30rem);
       --nova-font-mono: var(
         --sl-font-mono,
         ui-monospace,

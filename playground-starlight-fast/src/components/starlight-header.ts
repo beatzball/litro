@@ -32,25 +32,55 @@ export class StarlightHeader extends FASTElement {
   hasSidebar = false;
   _theme = 'light';
 
-  private _initialized = false;
+  /**
+   * Keep the toggle's icon on the theme the page is actually showing.
+   *
+   * THIS READS, IT DOES NOT DECIDE. The head script in route-meta.ts sets
+   * data-theme before the first paint, from the reader's stored choice or,
+   * when they have made none, from the system. This used to resolve it a
+   * second time and fall back to 'light' with no look at
+   * prefers-color-scheme, so on a dark system every page carrying the header
+   * flipped to light right after it loaded.
+   */
+  private _readTheme = (): void => {
+    if (typeof document === 'undefined') return;
+    this._theme =
+      document.documentElement.getAttribute('data-theme') === 'dark'
+        ? 'dark'
+        : 'light';
+  };
+
+  private _systemTheme?: MediaQueryList;
 
   override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._initialized && typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('sl-theme') ?? 'light';
-      this._theme = stored;
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', stored);
-      }
-      this._initialized = true;
+    this._readTheme();
+    // The head script follows the system while the reader has stored no
+    // choice, so the icon has to follow it too. The head script's own
+    // listener was registered first, in <head>, so by the time this one runs
+    // data-theme is already up to date.
+    if (typeof window !== 'undefined') {
+      this._systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+      this._systemTheme.addEventListener('change', this._readTheme);
     }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._systemTheme?.removeEventListener('change', this._readTheme);
   }
 
   toggleTheme() {
     const next = this._theme === 'light' ? 'dark' : 'light';
     this._theme = next;
+    // Writing the choice is what stops the head script's system listener
+    // from overriding it later.
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sl-theme', next);
+      try {
+        localStorage.setItem('sl-theme', next);
+      } catch {
+        // Site data blocked. The choice holds for this page either way.
+      }
     }
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', next);

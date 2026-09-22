@@ -43,9 +43,10 @@ import { customElement } from 'lit/decorators.js';
  * COLORS AND HEIGHT come from the landing page's token block. This component
  * defines none of its own. Used outside that page, define the `--nova-*`
  * tokens it reads on any ancestor: `--nova-bg`, `--nova-border`,
- * `--nova-accent`, `--nova-accent-2`, and optionally
- * `--nova-hero-min`, which is how tall the pane is before its content makes it
- * taller.
+ * `--nova-accent`, `--nova-accent-2`, and optionally `--nova-hero-min` (how
+ * tall the pane is before its content makes it taller), `--nova-mark-size`
+ * and `--nova-mark-size-narrow` (how wide the mark is drawn, on a wide screen
+ * and on a phone).
  */
 @customElement('litro-hero-nova')
 export class LitroHeroNova extends LitElement {
@@ -124,9 +125,14 @@ export class LitroHeroNova extends LitElement {
       pointer-events: none;
     }
 
+    /* HOW BIG THE MARK IS, and it is a token rather than an attribute so a
+       site can set it in the same block it sets its colors in — the whole
+       landing page is themed from one place, and the mark's size is part of
+       that. A mark that holds this side of the pane wants to be far wider
+       than the room left for it: most of the width below is off the edge. */
     ::slotted([slot='mark']) {
       display: block;
-      width: clamp(17rem, 42vw, 36rem);
+      width: var(--nova-mark-size, clamp(17rem, 42vw, 36rem));
       height: auto;
     }
 
@@ -141,7 +147,7 @@ export class LitroHeroNova extends LitElement {
       }
 
       ::slotted([slot='mark']) {
-        width: clamp(13rem, 62vw, 22rem);
+        width: var(--nova-mark-size-narrow, clamp(13rem, 62vw, 22rem));
       }
     }
 
