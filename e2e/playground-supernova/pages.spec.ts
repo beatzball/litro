@@ -37,10 +37,104 @@ test('home renders every landing page component', async ({ page }) => {
   await expect(root.locator('litro-card')).toHaveCount(4);
 });
 
-test('home renders the shared starlight header', async ({ page }) => {
+/**
+ * The landing page has a header of its own now. starlight-header stays on the
+ * docs pages; if it came back here the page would have two headers and two
+ * looks, which is the thing the status bar exists to avoid.
+ */
+test('home renders its own status bar and not the docs header', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
-  await expect(page.locator('starlight-header').first()).toBeVisible();
+  const root = page.locator('page-home:not([hidden])');
+  await expect(root.locator('litro-status-bar')).toHaveCount(1);
+  await expect(root.locator('litro-status-bar')).toBeVisible();
+  await expect(root.locator('starlight-header')).toHaveCount(0);
+});
+
+/**
+ * The bar must show the same title and the same links the docs header shows,
+ * from server/starlight.config.js, so the two halves of the site read as one.
+ */
+test('the status bar carries the site title and the site navigation', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const bar = page.locator('page-home:not([hidden]) litro-status-bar');
+
+  await expect(bar.locator('.seg-name')).toHaveText('playground-supernova');
+  await expect(bar.locator('.home')).toHaveAttribute('href', '/');
+  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(bar.locator('a[slot="nav"][href="/blog"]')).toHaveText('Blog');
+
+  // The same links the docs header renders, on a docs page.
+  const header = page.locator('starlight-header');
+  await page.goto('/docs/getting-started');
+  await page.waitForSelector('page-docs-slug:not([hidden])');
+  await expect(header.first().locator('.site-title')).toHaveText('playground-supernova');
+  await expect(header.first().locator('nav a[href="/docs/getting-started"]')).toBeVisible();
+});
+
+test('the status bar draws a tab per entry, each with a state badge', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const bar = page.locator('page-home:not([hidden]) litro-status-bar');
+
+  await expect(bar.locator('litro-state-badge')).toHaveCount(4);
+  // The row is one picture with one description, not four unlabeled glyphs.
+  await expect(bar.locator('ol[role="img"]')).toHaveAttribute(
+    'aria-label',
+    /build is done/,
+  );
+});
+
+/**
+ * The settle is the page's one moving part, and it is CSS, so a reader who
+ * asks for less motion must get the SETTLED row from the first frame — never
+ * the starting glyph. The starting glyph is taken out of the layout, not just
+ * faded, so this asserts it is not there at all.
+ */
+test('the status bar renders already settled with reduced motion', async ({ page }) => {
+  // page.emulateMedia, not test.use({ reducedMotion }): the `use` form did
+  // not reach matchMedia in this project, and a check that silently runs
+  // without the preference set would pass against a broken rule.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const badge = page
+    .locator('page-home:not([hidden]) litro-status-bar litro-state-badge')
+    .first();
+
+  await expect(badge.locator('.from')).toBeHidden();
+  await expect(badge.locator('.to')).toBeVisible();
+  await expect(badge.locator('.to')).toHaveText('[+]');
+});
+
+test('the status bar keeps both glyphs when motion is allowed', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const badge = page
+    .locator('page-home:not([hidden]) litro-status-bar litro-state-badge')
+    .first();
+
+  // Both glyphs are in the layout; the crossfade is opacity only, which is
+  // why the swap never moves the tab name beside it.
+  await expect(badge.locator('.from')).toBeVisible();
+  await expect(badge.locator('.to')).toBeVisible();
+});
+
+/**
+ * The terminal picture is decoration. A screen reader gets one sentence for
+ * the whole window, and nothing inside it is read on its own.
+ */
+test('a feature row carries a terminal window in its figure slot', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+  const root = page.locator('page-home:not([hidden])');
+
+  await expect(root.locator('litro-term-window[slot="figure"]')).toHaveCount(2);
+  await expect(
+    root.locator('litro-term-window').first().locator('div[role="img"]'),
+  ).toHaveAttribute('aria-label', /deploy is blocked/);
 });
 
 /**
@@ -131,6 +225,36 @@ test('every component put its content in the server HTML', async ({ request }) =
   expect(body).toContain('radial-gradient');
   // litro-card, through litro-card-grid.
   expect(body).toContain('Structured documentation with sidebar');
+
+  // litro-status-bar: the title segment, and the links it was given.
+  expect(body).toContain('class="seg seg-name"');
+  expect(body).toContain('Four tasks: build is done');
+  expect(body).toContain('slot="nav"');
+  // litro-state-badge, inside the bar's tabs. Both glyphs of a settling
+  // badge are in the HTML, because the settle is CSS and nothing waits for
+  // a script to start it.
+  expect(body).toContain('class="from working"');
+  expect(body).toContain('class="to done"');
+  expect(body).toContain('[+]');
+  // litro-term-window, in a feature row's figure slot: rows in one, and a
+  // slotted transcript in the other.
+  expect(body).toContain('Three tasks listed by state');
+  expect(body).toContain('class="row hot"');
+  expect(body).toContain('playground-supernova build');
+  expect(body).toContain('done in 1.4s');
+});
+
+/**
+ * The video section ships as a comment, and nothing else. The component
+ * arrives in the next phase; until then the page must not carry a video tag
+ * or ask for a poster image it does not have.
+ */
+test('the page ships no video yet', async ({ request }) => {
+  const response = await request.get('/');
+  const body = await response.text();
+
+  expect(body).not.toContain('<video');
+  expect(body).not.toContain('litro-hero-video');
 });
 
 /**
