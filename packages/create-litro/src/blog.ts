@@ -36,9 +36,9 @@ export interface BlogLinkReplacement {
  * Remove the blog from a scaffolded site.
  *
  * Deletes `content/blog/` and `pages/blog/`, then unpicks what the rest of the
- * site assumes about them: the landing page's Blog button and Blog feature
- * card, the Blog entry in the site navigation, and the blog routes in the
- * generated e2e spec.
+ * site assumes about them: the landing page's Blog button, its Blog feature
+ * pane and any Blog link in its footer columns, the Blog entry in the site
+ * navigation, and the blog routes in the generated e2e spec.
  *
  * @param siteDir      The scaffolded site's root directory.
  * @param replacement  Optional. Given, the Blog button is repointed at this
@@ -118,6 +118,22 @@ async function unlinkLandingPage(
   // The "Blog" feature card advertises a section that no longer exists.
   index = index.replace(
     /\s*\{\s*icon: '[^']*',\s*title: 'Blog',[\s\S]*?\},/,
+    '',
+  );
+
+  // Any other link to the blog written into the page's own data — the footer
+  // columns are the one that exists today.
+  //
+  // THIS IS NOT COSMETIC. Nitro's prerenderer CRAWLS the links it finds, so a
+  // /blog entry left in the footer makes it render a route whose pages were
+  // just deleted, and `--no-blog` ships a site with a blog in it after all.
+  // That is what this line stops, and the scaffolded-apps check is what
+  // caught it.
+  //
+  // Tolerant of a missing entry, like the navigation edit above: a recipe
+  // whose footer never mentioned the blog is not a mistake.
+  index = index.replace(
+    /\n\s*\{ label: '[^']*', href: '\/blog(?:\/[^']*)?' \},/g,
     '',
   );
 

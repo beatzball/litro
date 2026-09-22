@@ -19,8 +19,9 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
   ['litro-status-line', 1],
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
-  ['litro-card-grid', 1],
-  ['litro-card', 7],
+  ['litro-pane-grid', 3],
+  ['litro-pane', 14],
+  ['litro-site-footer', 1],
   ['litro-feature-row', 1],
   ['litro-steps', 1],
   ['litro-term-window', 1],
@@ -31,7 +32,7 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
  * template — that is, the ones the server actually rendered.
  */
 function renderedCount(html: string, tag: string): number {
-  // The lookahead matters: `<litro-card\b` also matches `<litro-card-grid`,
+  // The lookahead matters: `<litro-pane\b` also matches `<litro-pane-grid`,
   // because a hyphen ends a word. Requiring whitespace or the tag's end after
   // the name keeps the two apart.
   const opening = new RegExp(`<${tag}(?=[\\s/>])[^>]*>`, 'g');

@@ -25,18 +25,22 @@ import "@beatzball/litro/runtime/LitroLink.js";
 // Register components used in render(). The landing page's own parts first...
 import "@beatzball/litro-docs-ui/src/components/starlight-header.js";
 import "@beatzball/litro-docs-ui/src/components/litro-status-line.js";
+import "@beatzball/litro-docs-ui/src/components/litro-pane.js";
+import "@beatzball/litro-docs-ui/src/components/litro-pane-grid.js";
+import "@beatzball/litro-docs-ui/src/components/litro-site-footer.js";
 import "@beatzball/litro-docs-ui/src/components/litro-hero-nova.js";
 import "@beatzball/litro-docs-ui/src/components/litro-install-command.js";
 import "@beatzball/litro-docs-ui/src/components/litro-feature-row.js";
 import "@beatzball/litro-docs-ui/src/components/litro-steps.js";
 import "@beatzball/litro-docs-ui/src/components/litro-term-window.js";
 
-// ...then the ones shared with the docs pages.
-import "@beatzball/litro-docs-ui/src/components/litro-card.js";
-import "@beatzball/litro-docs-ui/src/components/litro-card-grid.js";
+// litro-card and litro-card-grid still serve the docs pages; this page no
+// longer uses them. Its feature block is panes sharing hairlines, which is
+// what both of the sites this page is measured against do.
 
 import type { StepItem } from "@beatzball/litro-docs-ui/src/components/litro-steps.js";
 import type { StatusCell } from "@beatzball/litro-docs-ui/src/components/litro-status-line.js";
+import type { FooterColumn } from "@beatzball/litro-docs-ui/src/components/litro-site-footer.js";
 
 /**
  * The home page, built on the supernova recipe's landing-page components.
@@ -75,6 +79,140 @@ const NODE_REQUIREMENT = "20.19+";
 /** The three framework adapters, in the order the docs list them. */
 const ADAPTERS = "lit \u00b7 fast \u00b7 elena";
 
+/**
+ * ── SECTION 4 · Built on ───────────────────────────────────────────────
+ *
+ * The three things litro stands on, named with their own marks. It turns
+ * "another framework to learn" into "parts you already know".
+ */
+const FOUNDATIONS: Array<{
+  name: string;
+  meta: string;
+  icon?: string;
+  description: string;
+}> = [
+  {
+    name: "Web Components",
+    meta: "standards",
+    icon: "/logos/webcomponents.svg",
+    description:
+      "Custom Elements, Shadow DOM and slots — W3C specifications native to " +
+      "every major browser. Your components work anywhere the browser does.",
+  },
+  {
+    name: "Nitro",
+    meta: "server",
+    icon: "/logos/nitro.svg",
+    description:
+      "The same server engine that powers Nuxt. Routing, API routes, SSR and " +
+      "every deployment adapter, with no litro-specific configuration.",
+  },
+  {
+    name: "Vite",
+    meta: "build",
+    description:
+      "The client bundle and hot module replacement in development, on the " +
+      "toolchain most of the ecosystem already uses.",
+  },
+];
+
+/**
+ * ── SECTION 6 · Ecosystem ──────────────────────────────────────────────
+ *
+ * The four recipes, which are what litro extends with today. Each one is a
+ * real page in the docs.
+ */
+const RECIPES: Array<{ name: string; meta: string; description: string; href: string }> = [
+  {
+    name: "fullstack",
+    meta: "app",
+    description: "A server-rendered app with API routes and a client router.",
+    href: "/docs/recipes/fullstack",
+  },
+  {
+    name: "11ty-blog",
+    meta: "content",
+    description: "A Markdown blog on the content layer, with tags and feeds.",
+    href: "/docs/recipes/11ty-blog",
+  },
+  {
+    name: "starlight",
+    meta: "docs",
+    description: "A documentation site with a sidebar, a table of contents and search.",
+    href: "/docs/recipes/starlight",
+  },
+  {
+    name: "supernova",
+    meta: "landing",
+    description: "This page, in front of a starlight docs site. It is what you are reading.",
+    href: "/docs/recipes/supernova",
+  },
+];
+
+/**
+ * ── SECTION 7 · Deploy anywhere ────────────────────────────────────────
+ *
+ * Nitro's deployment presets, which litro inherits whole. Every one of these
+ * is a target Nitro documents, not a target litro wrote an adapter for — that
+ * is the claim, and it is why the list is this long.
+ */
+const DEPLOY_TARGETS = [
+  "Node.js",
+  "Cloudflare Workers",
+  "Vercel",
+  "Netlify",
+  "Deno Deploy",
+  "AWS Lambda",
+  "Azure",
+  "Docker",
+  "GitHub Pages",
+  "any static CDN",
+];
+
+/**
+ * ── SECTION 9 · Footer ─────────────────────────────────────────────────
+ *
+ * The map of everything the page did not cover.
+ */
+const FOOTER_COLUMNS: FooterColumn[] = [
+  {
+    heading: "Start",
+    links: [
+      { label: "Introduction", href: "/docs/introduction" },
+      { label: "Getting started", href: "/docs/getting-started" },
+      { label: "Configuration", href: "/docs/configuration" },
+      { label: "Upgrading", href: "/docs/upgrading" },
+    ],
+  },
+  {
+    heading: "Learn",
+    links: [
+      { label: "Routing", href: "/docs/core-concepts/routing" },
+      { label: "SSR", href: "/docs/core-concepts/ssr" },
+      { label: "Static generation", href: "/docs/ssg" },
+      { label: "Content layer", href: "/docs/content-layer" },
+    ],
+  },
+  {
+    heading: "Adapters",
+    links: [
+      { label: "Overview", href: "/docs/adapters/overview" },
+      { label: "Lit", href: "/docs/adapters/lit" },
+      { label: "FAST Element", href: "/docs/adapters/fast" },
+      { label: "Elena", href: "/docs/adapters/elena" },
+    ],
+  },
+  {
+    heading: "Project",
+    links: [
+      { label: "Blog", href: "/blog" },
+      { label: "Compare", href: "/compare" },
+      { label: "Benchmarks", href: "/benchmarks" },
+      { label: "GitHub", href: "https://github.com/beatzball/litro" },
+    ],
+  },
+];
+
 /** What a reader does, in order, to get from nothing to a running project. */
 const STEPS: StepItem[] = [
   {
@@ -111,8 +249,12 @@ export interface SplashData {
   features: Array<{
     title: string;
     description: string;
-    icon?: string;
+    /** A real mark, where one exists. There is no placeholder icon. */
     iconSrc?: string;
+    /** The short note at the right end of the pane's strip. */
+    meta?: string;
+    /** How many of the grid's six columns the pane takes. */
+    span?: number;
   }>;
   seoHead: string;
   statusCells: StatusCell[];
@@ -159,46 +301,64 @@ export const pageData = definePageData(async (_event) => {
     siteTitle,
     description,
     nav: siteConfig.nav,
+    // ── SECTION 3 · Capabilities ────────────────────────────────────
+    //
+    // Seven panes. The emoji are gone: a 🚀 beside "Streaming SSR" told a
+    // reader nothing the words did not. The five real marks stay, because a
+    // reader recognizes the Lit flame faster than they read "Lit".
+    //
+    // `span` is out of six, so a row is two halves or three thirds. Seven
+    // items fill three rows with no orphan, which a three-column card grid
+    // could not do.
     features: [
       {
         iconSrc: "/logos/webcomponents.svg",
         title: "Web Components",
+        meta: "lit · fast · elena",
+        span: 3,
         description:
           "Pick your component library — Lit, FAST, or Elena. Standard custom elements, zero lock-in.",
       },
       {
         iconSrc: "/logos/nitro.svg",
         title: "Nitro Server",
+        meta: "h3",
+        span: 3,
         description:
           "API routes, middleware, and every Nitro deployment adapter out of the box.",
       },
       {
-        icon: "🚀",
         title: "Streaming SSR",
+        meta: "dsd",
+        span: 2,
         description:
           "Declarative Shadow DOM or light-DOM SSR — each adapter picks the fastest path to first paint.",
       },
       {
-        icon: "🔀",
         title: "File-System Routing",
+        meta: "pages/",
+        span: 2,
         description:
           "Pages folder maps directly to URLs. Dynamic segments, catch-alls, nested routes.",
       },
       {
-        icon: "🏗️",
         title: "Static Generation",
+        meta: "ssg",
+        span: 2,
         description:
           "Prerender all routes to HTML. Deploy to any CDN with zero server cost.",
       },
       {
-        icon: "📝",
         title: "Content Layer",
+        meta: "markdown",
+        span: 3,
         description:
           "Markdown content with 11ty-compatible frontmatter and data cascade.",
       },
       {
-        icon: "🤖",
         title: "AI Agents",
+        meta: "mcp",
+        span: 3,
         description:
           "Filesystem-first agent endpoints whose tools return server-rendered UI — the model sees data, users see components. Durable and resumable.",
       },
@@ -358,17 +518,6 @@ export class SplashPage extends LitroPage {
       --nova-working: #38bdf8;
       --nova-done: #4ade80;
       --nova-idle: #64748b;
-    }
-
-    litro-card {
-      --sl-color-bg: var(--nova-surface);
-      --sl-color-text: var(--nova-text);
-      --sl-color-gray-4: var(--nova-text-dim);
-      --sl-color-border: var(--nova-border);
-      --sl-color-accent: var(--nova-accent);
-      --sl-color-note: var(--nova-working);
-      --sl-color-tip: var(--nova-done);
-      --sl-color-caution: var(--nova-blocked);
     }
 
     /* ── Page frame ────────────────────────────────────────────────────── */
@@ -583,10 +732,50 @@ export class SplashPage extends LitroPage {
       outline-offset: 2px;
     }
 
-    /* ── Cards ─────────────────────────────────────────────────────────── */
+    /* ── SECTIONS 3, 4, 6 · The pane blocks ───────────────────────────── */
 
-    .cards {      padding-top: 3rem;
+    .panes {
+      padding-top: 3rem;
       padding-bottom: 1rem;
+    }
+
+    /* ── SECTION 7 · Deploy anywhere ───────────────────────────────────── */
+
+    .deploy {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .deploy p {
+      max-width: 38rem;
+      margin: 0 0 1.5rem;
+      color: var(--nova-text-dim);
+      line-height: 1.7;
+    }
+
+    .targets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .targets li {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--nova-border);
+      border-radius: var(--nova-radius);
+      background: var(--nova-surface);
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+      color: var(--nova-text);
+    }
+
+    /* ── SECTION 9 · The footer ────────────────────────────────────────── */
+
+    litro-site-footer {
+      margin-top: 4rem;
     }
 
     /* ── Feature rows ──────────────────────────────────────────────────── */
@@ -906,19 +1095,94 @@ export class SplashPage extends LitroPage {
             </section>
           </litro-hero-nova>
 
-          <section class="cards shell" aria-label="What you get">
-            <litro-card-grid>
+          <!-- ── SECTION 3 · Capabilities ─────────────────────────────
+               Panes sharing hairlines, not floating cards. Litro's panes keep
+               their real marks — the Lit, FAST, Elena, Nitro and web
+               components logos are information, not decoration, and a reader
+               recognizes them faster than they read a name. Where there is no
+               real mark there is no icon at all. -->
+          <section class="panes shell" aria-label="What you get">
+            <litro-pane-grid>
               ${features.map(
                 (f) => html`
-                  <litro-card
-                    icon="${f.icon ?? ""}"
-                    iconSrc="${f.iconSrc ?? ""}"
-                    title="${f.title}"
-                    description="${f.description}"
-                  ></litro-card>
+                  <litro-pane
+                    name="${f.title}"
+                    state="done"
+                    meta="${f.meta ?? ""}"
+                    span="${f.span ?? 3}"
+                  >
+                    ${f.iconSrc
+                      ? html`<img
+                          slot="icon"
+                          src="${f.iconSrc}"
+                          alt=""
+                          aria-hidden="true"
+                        />`
+                      : ""}
+                    ${f.description}
+                  </litro-pane>
                 `,
               )}
-            </litro-card-grid>
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 4 · Built on ─────────────────────────────────
+               What litro stands on. Three real dependencies, two with their
+               own marks. -->
+          <section class="panes shell" aria-label="What Litro is built on">
+            <h2 class="section-title">Built on</h2>
+            <litro-pane-grid>
+              ${FOUNDATIONS.map(
+                (item) => html`
+                  <litro-pane name="${item.name}" meta="${item.meta}" span="2">
+                    ${item.icon
+                      ? html`<img
+                          slot="icon"
+                          src="${item.icon}"
+                          alt=""
+                          aria-hidden="true"
+                        />`
+                      : ""}
+                    ${item.description}
+                  </litro-pane>
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 6 · Ecosystem ────────────────────────────────
+               What litro extends with today: the four recipes. Each pane
+               links to the page that documents it. -->
+          <section class="panes shell" aria-label="Recipes">
+            <h2 class="section-title">Start from a recipe</h2>
+            <litro-pane-grid>
+              ${RECIPES.map(
+                (item) => html`
+                  <litro-pane
+                    name="${item.name}"
+                    meta="${item.meta}"
+                    href="${item.href}"
+                    span="3"
+                    >${item.description}</litro-pane
+                  >
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 7 · Deploy anywhere ──────────────────────────
+               Nitro's deployment presets, which litro inherits whole. -->
+          <section class="deploy shell" aria-label="Where it runs">
+            <h2 class="section-title">Deploy anywhere</h2>
+            <p>
+              The server is Nitro, so every target Nitro supports is a target
+              Litro supports — with no adapter of our own in between. Build for
+              one with a single preset, or prerender the whole site and put it
+              on a CDN.
+            </p>
+            <ul class="targets">
+              ${DEPLOY_TARGETS.map((target) => html`<li>${target}</li>`)}
+            </ul>
           </section>
 
           <section class="rows shell" aria-label="Why Litro">
@@ -1032,6 +1296,16 @@ export class SplashPage extends LitroPage {
             </div>
           </section>
         </main>
+
+        <!-- ── SECTION 9 · Footer ───────────────────────────────────────
+             The map of everything the page did not cover. -->
+        <litro-site-footer
+          siteTitle="${siteTitle}"
+          .columns="${FOOTER_COLUMNS}"
+          credit="Apache-2.0"
+          creditHref="https://github.com/beatzball/litro/blob/main/LICENSE"
+          note="— a beatzball project"
+        ></litro-site-footer>
 
         <!-- The status line. It is fixed to the foot of the window, so it is
              the last thing in the page and the page carries the padding that

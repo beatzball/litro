@@ -148,25 +148,44 @@ describe('scaffold', () => {
   });
 
   it('{{recipe}} resolves to the recipe being scaffolded, in every recipe', async () => {
-    // The credit line in <litro-footer> is the same source file in all three
-    // recipes, so it cannot name its own recipe — the scaffolder has to supply
-    // it. A wrong or empty value here would ship a site crediting the wrong
-    // recipe, which nothing else in the suite would notice.
+    // The credit is the same source file in all of the recipes, so it cannot
+    // name its own recipe — the scaffolder has to supply it. A wrong or empty
+    // value here would ship a site crediting the wrong recipe, which nothing
+    // else in the suite would notice.
+    //
+    // WHERE THE CREDIT LIVES DIFFERS BY RECIPE. Most place `litro-footer`, a
+    // single credit line. supernova grew a real footer with link columns, so
+    // its credit is an attribute on `litro-site-footer` instead. Both carry
+    // the same two facts, which is what is asserted.
+    const creditUsage: Record<string, (recipe: string) => string> = {
+      supernova: (recipe) => `note="— the ${recipe} recipe"`,
+    };
+
     for (const recipe of ['fullstack', '11ty-blog', 'starlight', 'supernova'] as const) {
       await withTmpDir(async (dir) => {
         const targetDir = join(dir, 'app');
         await scaffold(recipe, { projectName: 'app', mode: 'ssg' }, targetDir);
         const footer = await readFile(
-          join(targetDir, 'src/components/litro-footer.ts'),
+          join(
+            targetDir,
+            recipe === 'supernova'
+              ? 'src/components/litro-site-footer.ts'
+              : 'src/components/litro-footer.ts',
+          ),
           'utf-8',
         );
-        expect(footer).toContain('https://litro.dev');
+        const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
 
-        // The value lands at the USAGE site, not in the component.
+        // The link is in the component for a one-line credit and on the page
+        // for supernova's footer, which takes it as a property. Either way it
+        // is in the site exactly once.
+        expect(footer + home).toContain('https://litro.dev');
+
+        // The recipe name lands at the USAGE site, not in the component.
         // Exact, not just "the word appears somewhere": a recipe name can
         // occur incidentally in a page, which would make this pass vacuously.
-        const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
-        expect(home).toContain(`<litro-footer recipe="${recipe}">`);
+        const usage = creditUsage[recipe] ?? ((r: string) => `<litro-footer recipe="${r}">`);
+        expect(home).toContain(usage(recipe));
         expect(home).not.toContain('{{recipe}}');
       });
     }
@@ -547,7 +566,11 @@ describe('supernova recipe', () => {
       // assertion that notices.
       expect(home).not.toContain('SplashData');
       // The footer credit names the recipe the user asked for, not the base.
-      expect(home).toContain('<litro-footer recipe="supernova">');
+      // supernova replaced starlight's one-line credit with a real footer, so
+      // the credit is an attribute on that instead.
+      expect(home).toContain('<litro-site-footer');
+      expect(home).toContain('note="— the supernova recipe"');
+      expect(home).not.toContain('<litro-footer');
     });
   });
 

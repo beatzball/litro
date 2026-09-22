@@ -34,7 +34,9 @@ test('home renders every landing page component', async ({ page }) => {
   await expect(root.locator('litro-steps')).toHaveCount(1);
   await expect(root.locator('litro-key-hints')).toHaveCount(1);
   await expect(root.locator('litro-install-command')).toHaveCount(2);
-  await expect(root.locator('litro-card')).toHaveCount(4);
+  await expect(root.locator('litro-pane')).toHaveCount(10);
+  await expect(root.locator('litro-pane-grid')).toHaveCount(3);
+  await expect(root.locator('litro-site-footer')).toHaveCount(1);
 });
 
 /**
@@ -138,7 +140,7 @@ test('the status line does not sit on top of the page content', async ({ page })
     const root = document.querySelector('page-home:not([hidden])')?.shadowRoot;
     const line = root?.querySelector('litro-status-line')?.shadowRoot
       ?.querySelector('aside.line');
-    const credit = root?.querySelector('litro-footer');
+    const credit = root?.querySelector('litro-site-footer');
     if (!line || !credit) return null;
     return credit.getBoundingClientRect().bottom <= line.getBoundingClientRect().top + 1;
   });
@@ -277,7 +279,7 @@ test('every component put its content in the server HTML', async ({ request }) =
   // litro-hero-nova, drawn in CSS and not from an image file.
   expect(body).toContain('class="layer wash"');
   expect(body).toContain('radial-gradient');
-  // litro-card, through litro-card-grid.
+  // litro-pane, through litro-pane-grid.
   expect(body).toContain('Structured documentation with sidebar');
 
   // starlight-header: the site title and the links it was given.

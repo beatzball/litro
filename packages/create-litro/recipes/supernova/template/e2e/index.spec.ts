@@ -29,8 +29,10 @@ test('home renders the landing page sections', async ({ page }) => {
   await expect(root.locator('litro-term-window')).toHaveCount(2);
   await expect(root.locator('litro-steps')).toHaveCount(1);
   await expect(root.locator('litro-key-hints')).toHaveCount(1);
-  // Not an exact count: scaffolding without a blog drops the Blog card.
-  expect(await root.locator('litro-card').count()).toBeGreaterThanOrEqual(3);
+  // Not an exact count: scaffolding without a blog drops the Blog pane.
+  expect(await root.locator('litro-pane').count()).toBeGreaterThanOrEqual(9);
+  await expect(root.locator('litro-pane-grid')).toHaveCount(3);
+  await expect(root.locator('litro-site-footer')).toHaveCount(1);
 });
 
 /**
@@ -120,7 +122,7 @@ test('the status line does not sit on top of the page content', async ({ page })
     const root = document.querySelector('page-home')?.shadowRoot;
     const line = root?.querySelector('litro-status-line')?.shadowRoot
       ?.querySelector('aside.line');
-    const credit = root?.querySelector('litro-footer');
+    const credit = root?.querySelector('litro-site-footer');
     if (!line || !credit) return null;
     return credit.getBoundingClientRect().bottom <= line.getBoundingClientRect().top + 1;
   });
@@ -189,7 +191,7 @@ test('landing page copy is in the server HTML', async ({ request }) => {
   expect(body).toContain('Stop the current run');     // litro-key-hints
   expect(body).toContain('class="layer wash"');       // litro-hero-nova
   expect(body).toContain('radial-gradient');          // litro-hero-nova
-  expect(body).toContain('Structured documentation with sidebar'); // litro-card
+  expect(body).toContain('Structured documentation with sidebar'); // litro-pane
   expect(body).toContain('class="site-title"');       // starlight-header
   expect(body).toContain('class="cell mode"');        // litro-status-line
   expect(body).toContain('built with');               // litro-status-line

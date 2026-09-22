@@ -45,32 +45,33 @@ async function typeScriptFiles(dir: string): Promise<string[]> {
 /**
  * The offending comments in one file.
  *
- * It walks the source character by character rather than matching the whole
- * literal, and it has to: the bug ENDS the literal early, so anything that
- * looked for the closing backtick first would cut the comment in half and
- * never see it. Instead the walk steps over comments as units, and a backtick
- * found inside one is the finding; a backtick found outside one is the end of
- * the template.
+ * It walks the source rather than matching a whole literal, and it has to for
+ * two reasons. The bug ENDS the literal early, so anything that looked for the
+ * closing backtick first would cut the comment in half and never see it. And a
+ * Lit template nests: `${items.map((i) => html`…`)}` puts a whole second
+ * template inside an interpolation of the first, so a scan that stopped at the
+ * next backtick would give up at the first nested template and miss everything
+ * after it — which is exactly what an earlier version of this did, while the
+ * build failed on a comment further down the same file.
+ *
+ * So the walk steps over comments as units, tracks `${ … }` depth, and
+ * recurses into a nested template when it meets one.
  */
 function backtickedComments(source: string): string[] {
   const found: string[] = [];
-  // Only css`` and html`` matter: those are the two that carry comments.
-  const opener = /\b(css|html)`/g;
-  let match: RegExpExecArray | null;
 
-  while ((match = opener.exec(source))) {
-    let i = match.index + match[0].length;
-
+  /** Walk one template body from `start`; return the index after its close. */
+  function walkTemplate(start: number): number {
+    let i = start;
     while (i < source.length) {
       const two = source.slice(i, i + 2);
-      const four = source.slice(i, i + 4);
 
-      if (two === '/*' || four === '<!--') {
+      if (two === '/*' || source.startsWith('<!--', i)) {
         const close = two === '/*' ? '*/' : '-->';
         const at = source.indexOf(close, i + 2);
         const block = source.slice(i, at === -1 ? source.length : at + close.length);
         if (block.includes('`')) found.push(block.replace(/\s+/g, ' ').slice(0, 90));
-        if (at === -1) break;
+        if (at === -1) return source.length;
         i = at + close.length;
         continue;
       }
@@ -80,13 +81,44 @@ function backtickedComments(source: string): string[] {
         continue;
       }
 
-      // A backtick outside a comment closes the template.
-      if (source[i] === '`') break;
+      // An interpolation. Anything inside it is JavaScript, including whole
+      // nested templates, so it is walked by the expression scanner.
+      if (two === '${') {
+        i = walkExpression(i + 2);
+        continue;
+      }
+
+      // Outside a comment and outside an interpolation, a backtick is the end.
+      if (source[i] === '`') return i + 1;
 
       i += 1;
     }
+    return i;
+  }
 
-    opener.lastIndex = i + 1;
+  /** Walk one `${ … }` body from `start`; return the index after its close. */
+  function walkExpression(start: number): number {
+    let i = start;
+    let depth = 1;
+    while (i < source.length && depth > 0) {
+      const c = source[i];
+      if (c === '{') depth += 1;
+      else if (c === '}') depth -= 1;
+      // A nested template. Its own comments are scanned by the same walk.
+      else if (c === '`') {
+        i = walkTemplate(i + 1);
+        continue;
+      }
+      i += 1;
+    }
+    return i;
+  }
+
+  // Only css`` and html`` matter: those are the two that carry comments.
+  const opener = /\b(css|html)`/g;
+  let match: RegExpExecArray | null;
+  while ((match = opener.exec(source))) {
+    opener.lastIndex = walkTemplate(match.index + match[0].length);
   }
 
   return found;
@@ -95,6 +127,20 @@ function backtickedComments(source: string): string[] {
 describe('no backtick inside a comment inside a template literal', () => {
   it('finds one when there is one', () => {
     const broken = "class X { static styles = css`\n  /* a `gap` here */\n  p { color: red; }\n`; }";
+    expect(backtickedComments(broken)).toHaveLength(1);
+  });
+
+  /**
+   * The case the first version of this scanner got wrong: it stopped at the
+   * nested template's opening backtick and never reached the comment below.
+   */
+  it('finds one below a nested template', () => {
+    const broken = [
+      'render() { return html`',
+      '  <ul>${items.map((i) => html`<li>${i}</li>`)}</ul>',
+      '  <!-- a `span` here -->',
+      '`; }',
+    ].join('\n');
     expect(backtickedComments(broken)).toHaveLength(1);
   });
 

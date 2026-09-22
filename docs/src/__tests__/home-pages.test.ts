@@ -23,8 +23,9 @@ const COMPONENTS = [
   'litro-feature-row',
   'litro-steps',
   'litro-term-window',
-  'litro-card',
-  'litro-card-grid',
+  'litro-pane',
+  'litro-pane-grid',
+  'litro-site-footer',
 ];
 
 let staticPage = '';
@@ -97,8 +98,14 @@ describe('the home pages do not redefine the docs tokens globally', () => {
       expect(hostBlock).not.toMatch(/--sl-[a-z-]+\s*:/);
     });
 
-    it(`${label} dresses litro-card with --sl-* tokens instead`, () => {
-      expect(get()).toMatch(/litro-card \{[^}]*--sl-color-bg:/);
+    /**
+     * The page dresses the one docs component it still places — the header —
+     * on the element rather than at :host. The feature block used to be
+     * litro-card and was dressed the same way; it is panes now, which read
+     * the --nova-* tokens directly and need no dressing at all.
+     */
+    it(`${label} dresses starlight-header with --sl-* tokens instead`, () => {
+      expect(get()).toMatch(/starlight-header \{[^}]*--sl-color-bg:/);
     });
   }
 });
