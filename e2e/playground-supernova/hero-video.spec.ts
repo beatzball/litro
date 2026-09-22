@@ -132,7 +132,14 @@ test('with no sources there is a poster and no button', async ({ page }) => {
 // ---------------------------------------------------------------------------
 
 test.describe('with motion allowed', () => {
-  test('the clip starts by itself, muted, and the button says Pause', async ({
+  /**
+   * ONCE, not twice. On a first load the server's HTML hydrates and then the
+   * router builds a fresh page element and swaps it in, dropping the hydrated
+   * one. Both copies used to autostart, so the clip — the heaviest file on a
+   * landing page — was fetched twice and the first copy thrown away. An
+   * assertion of "more than zero" is what let that through, so this counts.
+   */
+  test('the clip starts by itself, once, muted, and the button says Pause', async ({
     page,
   }) => {
     await stubPlayback(page);
@@ -140,7 +147,7 @@ test.describe('with motion allowed', () => {
     const button = root.locator('#with-sources button');
 
     await expect(button).toHaveText('Pause');
-    expect(await playCalls(page)).toBeGreaterThan(0);
+    expect(await playCalls(page)).toBe(1);
 
     // Muted, because a landing page that makes noise by itself is a bug.
     const muted = await root.locator('#with-sources video').evaluate(
@@ -216,6 +223,73 @@ test.describe('with less motion asked for', () => {
     await expect(button).toHaveText('Pause');
     expect(await playCalls(page)).toBe(1);
   });
+});
+
+// ---------------------------------------------------------------------------
+// The clip is fetched once, and only when it is going to be played
+// ---------------------------------------------------------------------------
+
+/**
+ * Route every clip URL to a 404 and count the requests.
+ *
+ * Nothing is stubbed here: the real `play()` runs and the browser really goes
+ * looking for the file, which is the only way to count what a visitor's
+ * connection would carry. The recipe ships no media, so a 404 is what there is
+ * to serve — and what the file answers with does not change how many times it
+ * was asked for.
+ */
+async function count404Clips(page: Page): Promise<string[]> {
+  const asked: string[] = [];
+  await page.route('**/demo/clip.*', async (route) => {
+    asked.push(new URL(route.request().url()).pathname);
+    await route.fulfill({ status: 404, contentType: 'text/plain', body: '' });
+  });
+  return asked;
+}
+
+test('the clip is requested once on a first load', async ({ page }) => {
+  const asked = await count404Clips(page);
+  const root = await openHarness(page, 'no-preference');
+
+  // Wait for the failure to land, so the count is final rather than early.
+  await expect(root.locator('#with-sources button')).toHaveText('Play');
+
+  expect(asked.filter((u) => u === '/demo/clip.webm')).toHaveLength(1);
+});
+
+test('the clip is not requested at all when less motion is asked for', async ({
+  page,
+}) => {
+  const asked = await count404Clips(page);
+  const root = await openHarness(page, 'reduce');
+
+  await expect(root.locator('#with-sources button')).toHaveText('Play');
+  expect(asked).toHaveLength(0);
+});
+
+// ---------------------------------------------------------------------------
+// When the clip cannot be played at all
+// ---------------------------------------------------------------------------
+
+/**
+ * The failure that does not reject.
+ *
+ * With `<source>` children that all fail, Chromium fires `play` and then
+ * `waiting`, leaves `HTMLMediaElement.play()` pending for good, and keeps
+ * `paused` false. A component that trusts the promise leaves "Pause" on the
+ * button over a poster that will never move. The component reads the
+ * element's own state instead.
+ */
+test('the button goes back to Play when every source 404s', async ({ page }) => {
+  await count404Clips(page);
+  const root = await openHarness(page, 'no-preference');
+
+  await expect(root.locator('#with-sources button')).toHaveText('Play');
+  // ...and a reader who cannot see the poster is told, rather than left
+  // wondering why a press did nothing.
+  await expect(root.locator('#with-sources .announce')).toHaveText(
+    'The recording could not be played.',
+  );
 });
 
 // ---------------------------------------------------------------------------

@@ -56,11 +56,15 @@ interface HeroVideoElement {
   label: string;
   sources: HeroVideoSource[];
   _playing: boolean;
+  _trouble: boolean;
   renderRoot: unknown;
   play(): Promise<boolean>;
   pause(): void;
   toggle(): void;
   firstUpdated(): void;
+  /** Private on the class; these tests drive them as the events would. */
+  _onTrouble(): void;
+  _onSourceError(event: { target: unknown }): void;
 }
 
 let LitroHeroVideo: new () => HeroVideoElement;
@@ -100,16 +104,43 @@ async function renderText(template: TemplateResult): Promise<string> {
  * and motion rules in Node: there is no decoder, and a real `play()` would
  * need a real file — and this recipe ships no media.
  */
-function fakeVideo(options: { refuse?: boolean } = {}) {
+function fakeVideo(
+  options: {
+    /** Reject `play()`, the way a playback policy does. */
+    refuse?: boolean;
+    /** Never settle `play()`, the way a clip that 404s does. */
+    hang?: boolean;
+    /** `HTMLMediaElement.networkState`. Defaults to NETWORK_EMPTY. */
+    networkState?: number;
+    /** `HTMLMediaElement.readyState`. Defaults to HAVE_NOTHING. */
+    readyState?: number;
+    /** A `MediaError`, which a bare failing `src` produces. */
+    error?: unknown;
+  } = {},
+) {
   const video = {
+    // The element's own constants, read by name in the component rather than
+    // as bare numbers.
+    NETWORK_EMPTY: 0,
+    NETWORK_IDLE: 1,
+    NETWORK_LOADING: 2,
+    NETWORK_NO_SOURCE: 3,
+    HAVE_NOTHING: 0,
+    HAVE_METADATA: 1,
+
     muted: false,
     paused: true,
     plays: 0,
     pauses: 0,
-    async play() {
+    networkState: options.networkState ?? 0,
+    readyState: options.readyState ?? 0,
+    error: options.error ?? null,
+    play() {
       video.plays += 1;
-      if (options.refuse) throw new Error('refused');
+      if (options.refuse) return Promise.reject(new Error('refused'));
       video.paused = false;
+      if (options.hang) return new Promise<void>(() => {});
+      return Promise.resolve();
     },
     pause() {
       video.pauses += 1;
@@ -119,10 +150,21 @@ function fakeVideo(options: { refuse?: boolean } = {}) {
   return video;
 }
 
-/** Build an element whose `_video` lookup finds the stand-in. */
-function elementWith(video: ReturnType<typeof fakeVideo>): HeroVideoElement {
+/**
+ * Build an element whose `_video` lookup finds the stand-in.
+ *
+ * `candidates` stands in for the rendered `<source>` elements, which is what
+ * the component compares an `error` event's target against.
+ */
+function elementWith(
+  video: ReturnType<typeof fakeVideo>,
+  candidates: unknown[] = [],
+): HeroVideoElement {
   const element = new LitroHeroVideo();
-  element.renderRoot = { querySelector: () => video };
+  element.renderRoot = {
+    querySelector: () => video,
+    querySelectorAll: () => candidates,
+  };
   return element;
 }
 
@@ -328,9 +370,8 @@ describe('litro-hero-video plays only when it should', () => {
   });
 
   /**
-   * A browser can still refuse: no decoder for the format, a missing file, or
-   * a policy the page cannot see. Saying so is better than leaving "Pause" on
-   * a button over a still poster.
+   * A browser can refuse outright: a playback policy the page cannot see.
+   * That one rejects the promise.
    */
   it('reports a refusal rather than claiming it is playing', async () => {
     const video = fakeVideo({ refuse: true });
@@ -351,6 +392,158 @@ describe('litro-hero-video plays only when it should', () => {
     expect(video.pauses).toBe(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// When the clip cannot be played at all
+// ---------------------------------------------------------------------------
+
+/**
+ * The failure that does NOT reject.
+ *
+ * With `<source>` children that all fail — a 404, or a format the browser will
+ * not take — the media resource selection algorithm runs out of candidates,
+ * fires `error` at the last `<source>` (which neither bubbles nor becomes an
+ * error on the video), sets `networkState` to `NETWORK_NO_SOURCE`, and then
+ * waits for somebody to add another source. `play()` is never rejected and
+ * never resolved, and `paused` stays false. Left alone the button reads
+ * "Pause" over a poster that will never move, which is the one thing this
+ * component is not allowed to do.
+ */
+describe('litro-hero-video tells the truth when the clip will not play', () => {
+  const sources = [{ src: '/demo/clip.webm', type: 'video/webm' }];
+
+  /** An element mid-playback whose video has run out of candidates. */
+  function stuckElement() {
+    const video = fakeVideo({
+      hang: true,
+      networkState: 3, // NETWORK_NO_SOURCE
+      readyState: 0, // HAVE_NOTHING
+    });
+    const element = elementWith(video);
+    element.sources = sources;
+    return { video, element };
+  }
+
+  it('puts the button back to Play when the video runs out of sources', () => {
+    const { video, element } = stuckElement();
+    // The `play` event fired, so the component believes it is playing.
+    element._playing = true;
+
+    element._onTrouble();
+
+    expect(element._playing).toBe(false);
+    expect(element._trouble).toBe(true);
+    // `paused` was still false, so the element is put back where the button
+    // now says it is. A press then retries instead of appearing to do nothing.
+    expect(video.pauses).toBe(1);
+  });
+
+  it('settles play() as a failure instead of hanging for good', async () => {
+    const { element } = stuckElement();
+
+    const result = element.play();
+    element._playing = true;
+    element._onTrouble();
+
+    expect(await result).toBe(false);
+  });
+
+  it('treats an error on the video itself as a failure', () => {
+    const video = fakeVideo({
+      hang: true,
+      networkState: 2, // NETWORK_LOADING — but the element reported an error
+      readyState: 1, // HAVE_METADATA
+      error: { code: 4 },
+    });
+    const element = elementWith(video);
+    element.sources = sources;
+    element._playing = true;
+
+    element._onTrouble();
+
+    expect(element._playing).toBe(false);
+    expect(element._trouble).toBe(true);
+  });
+
+  /**
+   * `waiting` and `stalled` also fire on a healthy clip over a slow link. The
+   * state is what decides, not the event: a clip that is still loading has
+   * candidates left, so it is not a failure.
+   */
+  it('leaves a healthy clip alone while it is still loading', () => {
+    const video = fakeVideo({
+      hang: true,
+      networkState: 2, // NETWORK_LOADING
+      readyState: 0, // HAVE_NOTHING — nothing decoded yet
+    });
+    const element = elementWith(video);
+    element.sources = sources;
+    element._playing = true;
+
+    element._onTrouble();
+
+    expect(element._playing).toBe(true);
+    expect(element._trouble).toBe(false);
+    expect(video.pauses).toBe(0);
+  });
+
+  /**
+   * With `preload="none"` an idle element legitimately sits at NETWORK_EMPTY
+   * with nothing decoded from the moment it renders. Judging that as a
+   * failure would announce one before anybody pressed anything.
+   */
+  /**
+   * The signal that actually arrives in Chromium, and the one the first
+   * attempt at this missed: `error` on the last `<source>`. `networkState` is
+   * still NETWORK_LOADING when it fires and only becomes NETWORK_NO_SOURCE
+   * afterwards, with no further event to notice it by.
+   */
+  it('gives up when the last candidate fails to load', () => {
+    const video = fakeVideo({ hang: true, networkState: 2, readyState: 0 });
+    const first = { name: 'webm' };
+    const last = { name: 'mp4' };
+    const element = elementWith(video, [first, last]);
+    element.sources = sources;
+    element._playing = true;
+
+    element._onSourceError({ target: last });
+
+    expect(element._playing).toBe(false);
+    expect(element._trouble).toBe(true);
+    expect(video.pauses).toBe(1);
+  });
+
+  /**
+   * An error on an earlier candidate is ordinary fallback — that is what a
+   * list of encodings is for, and the next one may well play.
+   */
+  it('keeps waiting when an earlier candidate fails and another remains', () => {
+    const video = fakeVideo({ hang: true, networkState: 2, readyState: 0 });
+    const first = { name: 'webm' };
+    const last = { name: 'mp4' };
+    const element = elementWith(video, [first, last]);
+    element.sources = sources;
+    element._playing = true;
+
+    element._onSourceError({ target: first });
+
+    expect(element._playing).toBe(true);
+    expect(element._trouble).toBe(false);
+    expect(video.pauses).toBe(0);
+  });
+
+  it('says nothing about an idle element that was never played', () => {
+    const video = fakeVideo({ networkState: 0, readyState: 0 });
+    const element = elementWith(video);
+    element.sources = sources;
+
+    element._onTrouble();
+
+    expect(element._trouble).toBe(false);
+    expect(video.pauses).toBe(0);
+  });
+});
+
 
 // ---------------------------------------------------------------------------
 // The file a user actually gets
