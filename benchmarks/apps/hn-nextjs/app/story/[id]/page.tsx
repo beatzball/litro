@@ -10,9 +10,10 @@ export async function generateStaticParams() {
 export default async function StoryPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const result = await fetchStoryWithComments(Number(params.id));
+  const { id } = await params;
+  const result = await fetchStoryWithComments(Number(id));
   if (!result) {
     return (
       <>

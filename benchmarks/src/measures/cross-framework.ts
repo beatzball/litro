@@ -19,6 +19,7 @@ export interface FrameworkConfig {
   previewCmd: string;
   previewPort: number;
   versionPkg: string;
+  versionPkgs?: readonly string[];
 }
 
 async function walkSize(dir: string): Promise<number> {
@@ -84,6 +85,26 @@ async function resolveVersion(appDir: string, pkg: string): Promise<string> {
   }
 }
 
+/**
+ * Resolves every package version that shapes this app's numbers.
+ *
+ * A package that is not installed is left out of the map rather than recorded
+ * as 'unknown', so the file only ever states versions that were really there.
+ * Litro links to the workspace, so its own version is the one built from this
+ * commit.
+ */
+async function resolveVersions(
+  appDir: string,
+  pkgs: readonly string[],
+): Promise<Record<string, string>> {
+  const versions: Record<string, string> = {};
+  for (const pkg of pkgs) {
+    const version = await resolveVersion(appDir, pkg);
+    if (version !== 'unknown') versions[pkg] = version;
+  }
+  return versions;
+}
+
 export async function measureFramework(
   config: FrameworkConfig,
   appsDir: string,
@@ -130,6 +151,7 @@ export async function measureFramework(
     await waitForReady(baseUrl, SERVER_READY_TIMEOUT);
 
     const effectiveRoutes = routes ?? CROSS_FRAMEWORK_ROUTES;
+    const broken: string[] = [];
     for (const route of effectiveRoutes) {
       const res = await fetch(baseUrl + route);
       const buf = Buffer.from(await res.arrayBuffer());
@@ -138,7 +160,22 @@ export async function measureFramework(
         gzipBytes: gzipSize(buf),
         statusCode: res.status,
       };
-      console.log(`  ${route}: ${buf.byteLength} bytes (gzip: ${gzipSize(buf)})`);
+      if (res.status !== 200) broken.push(`${route} -> ${res.status}`);
+      console.log(`  ${route}: ${res.status} — ${buf.byteLength} bytes (gzip: ${gzipSize(buf)})`);
+    }
+
+    // Stop the run rather than record a comparison between a working app and a
+    // broken one. The April 2026 results shipped with Litro answering 404 for
+    // /blog/hello while Nuxt and Next answered 200: Litro's page weight for
+    // that route was the weight of an error page, and its output size was the
+    // size of a build missing a page. Nothing in the harness objected, and the
+    // numbers were published. A non-200 on a measured route now fails the run.
+    if (broken.length > 0) {
+      throw new Error(
+        `[${config.name}] did not serve every measured route: ${broken.join(', ')}. ` +
+        `A framework comparison is only meaningful when all apps serve the same pages, ` +
+        `so no results are written. Fix the app, do not relax this check.`,
+      );
     }
 
     if (measureLighthouseFlag) {
@@ -150,11 +187,17 @@ export async function measureFramework(
   }
 
   const version = await resolveVersion(appDir, config.versionPkg);
+  const versions = await resolveVersions(
+    appDir,
+    config.versionPkgs ?? [config.versionPkg],
+  );
   console.log(`  version: ${version}`);
+  console.log(`  stack: ${Object.entries(versions).map(([p, v]) => `${p}@${v}`).join(', ')}`);
 
   return {
     name: config.name,
     version,
+    versions,
     buildTime: computeStats(times),
     outputSize,
     pageWeight,

@@ -24,6 +24,26 @@ export const SERVER_READY_TIMEOUT = 30_000;
 export const CROSS_FRAMEWORK_ROUTES = ['/', '/blog/hello'];
 export const APPS_DIR = new URL('../apps/', import.meta.url).pathname;
 
+/**
+ * The packages whose versions are recorded with each framework's result.
+ *
+ * The headline version alone is not enough to read a number a year later: a
+ * Litro build time depends on Lit, @lit-labs/ssr, Nitro and Vite, and a Next
+ * page weight depends on React. `measureFramework` resolves each of these from
+ * the app's own node_modules and leaves out the ones that are not installed.
+ */
+const LITRO_CORE_PKGS = ['@beatzball/litro', '@beatzball/litro-router'] as const;
+const LITRO_BUILD_PKGS = ['nitropack', 'vite'] as const;
+const LITRO_VERSION_PKGS = [
+  ...LITRO_CORE_PKGS,
+  'lit',
+  '@lit-labs/ssr',
+  '@lit-labs/ssr-client',
+  ...LITRO_BUILD_PKGS,
+] as const;
+const NUXT_VERSION_PKGS = ['nuxt', 'vue', 'vite'] as const;
+const NEXT_VERSION_PKGS = ['next', 'react', 'react-dom'] as const;
+
 export const FRAMEWORK_CONFIGS = [
   {
     name: 'litro',
@@ -34,6 +54,7 @@ export const FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve dist/static -l 4001',
     previewPort: 4001,
     versionPkg: '@beatzball/litro',
+    versionPkgs: LITRO_VERSION_PKGS,
   },
   {
     name: 'nuxt',
@@ -44,6 +65,7 @@ export const FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve .output/public -l 4002',
     previewPort: 4002,
     versionPkg: 'nuxt',
+    versionPkgs: NUXT_VERSION_PKGS,
   },
   {
     name: 'nextjs',
@@ -54,6 +76,7 @@ export const FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve out -l 4003',
     previewPort: 4003,
     versionPkg: 'next',
+    versionPkgs: NEXT_VERSION_PKGS,
   },
 ] as const;
 
@@ -73,6 +96,7 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve dist/static -l 4010',
     previewPort: 4010,
     versionPkg: '@beatzball/litro',
+    versionPkgs: LITRO_VERSION_PKGS,
   },
   {
     name: 'litro-fast',
@@ -83,6 +107,7 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve dist/static -l 4011',
     previewPort: 4011,
     versionPkg: '@beatzball/litro',
+    versionPkgs: [...LITRO_CORE_PKGS, '@microsoft/fast-element', '@microsoft/fast-ssr', ...LITRO_BUILD_PKGS],
   },
   {
     name: 'litro-elena',
@@ -93,6 +118,7 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve dist/static -l 4012',
     previewPort: 4012,
     versionPkg: '@beatzball/litro',
+    versionPkgs: [...LITRO_CORE_PKGS, '@elenajs/core', '@elenajs/ssr', ...LITRO_BUILD_PKGS],
   },
   {
     name: 'nextjs',
@@ -103,6 +129,7 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve out -l 4013',
     previewPort: 4013,
     versionPkg: 'next',
+    versionPkgs: NEXT_VERSION_PKGS,
   },
   {
     name: 'nuxt',
@@ -113,6 +140,7 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewCmd: 'npx serve .output/public -l 4014',
     previewPort: 4014,
     versionPkg: 'nuxt',
+    versionPkgs: NUXT_VERSION_PKGS,
   },
 ] as const;
 

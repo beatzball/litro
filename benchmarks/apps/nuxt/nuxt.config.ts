@@ -6,5 +6,5 @@ export default defineNuxtConfig({
       routes: ['/', '/blog/hello'],
     },
   },
-  compatibilityDate: '2026-04-01',
+  compatibilityDate: '2026-09-22',
 });

@@ -13,6 +13,7 @@ export async function measurePageWeight(
   routes: string[],
 ): Promise<Record<string, PageWeightResult>> {
   const results: Record<string, PageWeightResult> = {};
+  const broken: string[] = [];
 
   for (const route of routes) {
     const url = baseUrl + route;
@@ -24,9 +25,20 @@ export async function measurePageWeight(
     const statusCode = res.status;
 
     results[route] = { rawBytes, gzipBytes, statusCode };
+    if (statusCode !== 200) broken.push(`${route} -> ${statusCode}`);
 
     console.log(
       `[page-weight] ${route} — ${statusCode} — raw: ${formatBytes(rawBytes)}, gzip: ${formatBytes(gzipBytes)}`,
+    );
+  }
+
+  // The weight of an error page is not the weight of the page. Recording one as
+  // the other is how the April 2026 results came to publish a 404 body as a
+  // page weight, so a non-200 stops the run instead.
+  if (broken.length > 0) {
+    throw new Error(
+      `${baseUrl} did not serve every measured route: ${broken.join(', ')}. ` +
+      `No results are written. Fix the app, do not relax this check.`,
     );
   }
 

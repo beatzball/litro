@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { fetchStoryWithComments, timeAgo, hostName } from '../../../hn-shared/api';
+import { fetchStoryWithComments, timeAgo, hostName } from '../../../../hn-shared/api';
 
 const route = useRoute();
 const id = Number(route.params.id);

@@ -5,15 +5,33 @@ import { ssgPreset } from '@beatzball/litro/config';
 import pagesPlugin from '@beatzball/litro/plugins';
 import ssgPlugin from '@beatzball/litro/plugins/ssg';
 
+const ssg = ssgPreset();
+
 export default defineNitroConfig({
-  ...ssgPreset(),
+  ...ssg,
 
   srcDir: 'server',
 
-  static: {
-    prerender: {
-      routes: ['/', '/blog/hello'],
-    },
+  prerender: {
+    ...ssg.prerender,
+    /**
+     * The seed the crawler starts from.
+     *
+     * `/` HAS TO STAY IN THIS LIST. Naming any route here replaces Nitro's
+     * default seed of `/`, and every other page is found only by following
+     * links out of the home page.
+     *
+     * `/blog/hello` is named because the crawler cannot reach it. The home
+     * page does link to it, but that link is rendered inside a declarative
+     * shadow root, and Nitro's link crawler does not look inside one. The
+     * other two benchmark apps put the same link in light DOM, so their
+     * crawlers find it. Naming the route here is what makes the three apps
+     * prerender the same two pages.
+     *
+     * A previous version of this file put this list under a `static:` key,
+     * which Nitro does not read. Both routes were then left unprerendered.
+     */
+    routes: ['/', '/blog/hello'],
   },
 
   publicAssets: [
