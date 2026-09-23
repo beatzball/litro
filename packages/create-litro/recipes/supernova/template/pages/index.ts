@@ -734,6 +734,57 @@ export class SupernovaPage extends LitroPage {
       color: var(--nova-text);
     }
 
+    /* ── SECTION 6 · The showcase ──────────────────────────────────────
+     *
+     * The picture slots, drawn as dashed frames so they read as places for
+     * something rather than as content — the same decision the logo wall
+     * makes, for the same reason.
+     */
+
+    .showcase {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .showcase-copy {
+      margin: 0 0 1rem;
+    }
+
+    /* UNDERLINED, not just colored. A link sitting inside a paragraph has to
+       be told apart from the words around it by something other than color. */
+    .showcase-copy a {
+      color: var(--nova-accent-text);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+      white-space: nowrap;
+    }
+
+    .showcase-copy a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* A small browser frame. With a picture in it, put an img here and give
+       the frame a bar of three dots, the way litro.dev's own page does. */
+    .frame {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 8 / 5;
+      border: 1px dashed var(--nova-border);
+      border-radius: var(--nova-radius);
+      color: var(--nova-text-dim);
+      font-size: 0.8125rem;
+    }
+
     /* ── SECTION 7 · Deploy anywhere ───────────────────────────────────── */
 
     .deploy {
@@ -1050,22 +1101,33 @@ export class SupernovaPage extends LitroPage {
             </dl>
           </section>
 
-          <!-- ── SECTION 6 · Ecosystem ────────────────────────────────
-               What the project extends with. Each pane is a link.
+          <!-- ── SECTION 6 · Ecosystem, and the showcase ──────────────
+               What the project extends with, and what each one looks like.
+
+               THE PICTURE SLOTS SHIP EMPTY, like the logo wall above. Drop a
+               screenshot of a real site into each one — anything under
+               public/ — or delete the list and keep the text. An empty frame
+               on a live site says less than no frame at all.
+
+               WHAT A ROW CLAIMS: it is a starting point, and the pictures
+               show the shape it gives you. Keep it that way and you never
+               have to argue about which site runs which version of what.
 
                DELETE THIS SECTION if your project has no extensions yet. -->
-          <section class="panes shell" aria-label="The ecosystem">
+          <section class="showcase shell" aria-label="The ecosystem">
             <h2 class="section-title">Extend it</h2>
             <litro-pane-grid>
               ${ECOSYSTEM.map(
                 (item) => html`
-                  <litro-pane
-                    name="${item.name}"
-                    meta="${item.meta}"
-                    href="${item.href}"
-                    span="2"
-                    >${item.description}</litro-pane
-                  >
+                  <litro-pane name="${item.name}" meta="${item.meta}" span="2">
+                    <p class="showcase-copy">
+                      ${item.description}
+                      <a href="${item.href}">Read more</a>
+                    </p>
+                    <ul class="shots">
+                      <li><span class="frame frame-empty">Your screenshot</span></li>
+                    </ul>
+                  </litro-pane>
                 `,
               )}
             </litro-pane-grid>

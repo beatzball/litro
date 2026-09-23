@@ -63,74 +63,97 @@ const NODE_REQUIREMENT = "20.19+";
 const ADAPTERS = "lit \u00b7 fast \u00b7 elena";
 
 /**
- * ── SECTION 4 · Built on ───────────────────────────────────────────────
+/**
+ * ── SECTION · The showcase ─────────────────────────────────────────────
  *
- * The three things litro stands on, named with their own marks. It turns
- * "another framework to learn" into "parts you already know".
+ * WHAT THIS SECTION CLAIMS, AND WHAT IT DOES NOT. Each row is a STARTING
+ * POINT — a recipe — and the pictures show the shape that starting point
+ * gives you, drawn from real sites built with Litro. It is not a per-site
+ * statement about which recipe each one runs, and it must never become one:
+ * roost is the site supernova's look was modeled on and is moving onto the
+ * recipe, but it does not run it today. Written this way the page stays true
+ * before and after that migration, with nothing to change either side of it.
+ *
+ * Every picture is a real screenshot taken from the running site, lazy-loaded
+ * and small. Litro's own site is the only one that ships them; the recipe's
+ * page keeps the slots empty, like its logo wall.
  */
-const FOUNDATIONS: Array<{
+const SHOWCASE: Array<{
   name: string;
   meta: string;
-  icon?: string;
   description: string;
+  href: string;
+  shots: Array<{ src: string; alt: string; site: string; siteHref: string }>;
 }> = [
   {
-    name: "Web Components",
-    meta: "standards",
-    icon: "/logos/webcomponents.svg",
+    name: "supernova",
+    meta: "landing",
     description:
-      "Custom Elements, Shadow DOM and slots — W3C specifications native to " +
-      "every major browser. Your components work anywhere the browser does.",
+      "A product landing page in front of a starlight docs site. This page is one.",
+    href: "/docs/recipes/supernova",
+    shots: [
+      {
+        src: "/showcase/roost.jpg",
+        site: "roost",
+        siteHref: "https://roosting.dev",
+        alt:
+          "The roost home page: a dark landing page with a terminal status bar " +
+          "across the top, a large monospaced headline reading “See what every " +
+          "agent is doing.”, and a copyable install command.",
+      },
+      {
+        src: "/showcase/litro.jpg",
+        site: "litro.dev",
+        siteHref: "https://litro.dev",
+        alt:
+          "The Litro home page: a dark landing page with the Litro wordmark in " +
+          "a monospaced face, the flame mark cropped against the right edge, " +
+          "and a copyable install command.",
+      },
+    ],
   },
   {
-    name: "Nitro",
-    meta: "server",
-    icon: "/logos/nitro.svg",
+    name: "starlight",
+    meta: "docs",
     description:
-      "The same server engine that powers Nuxt. Routing, API routes, SSR and " +
-      "every deployment adapter, with no litro-specific configuration.",
+      "A documentation site with a sidebar, a table of contents and search.",
+    href: "/docs/recipes/starlight",
+    shots: [
+      {
+        src: "/showcase/preen.jpg",
+        site: "preen",
+        siteHref: "https://github.com/beatzball/preen",
+        alt:
+          "The preen documentation site: a dark page with a left sidebar of " +
+          "documentation links and a prose column beside it.",
+      },
+    ],
   },
-  {
-    name: "Vite",
-    meta: "build",
-    description:
-      "The client bundle and hot module replacement in development, on the " +
-      "toolchain most of the ecosystem already uses.",
-  },
-];
-
-/**
- * ── SECTION 6 · Ecosystem ──────────────────────────────────────────────
- *
- * The four recipes, which are what litro extends with today. Each one is a
- * real page in the docs.
- */
-const RECIPES: Array<{ name: string; meta: string; description: string; href: string }> = [
   {
     name: "fullstack",
     meta: "app",
     description: "A server-rendered app with API routes and a client router.",
     href: "/docs/recipes/fullstack",
+    shots: [
+      {
+        src: "/showcase/qdoku.jpg",
+        site: "qdoku",
+        siteHref: "https://qdoku.com",
+        alt:
+          "The Qdoku puzzle game: a five by five grid of colored tiles with a " +
+          "level counter above it and Hint, Undo and Menu buttons below.",
+      },
+    ],
   },
   {
     name: "11ty-blog",
     meta: "content",
     description: "A Markdown blog on the content layer, with tags and feeds.",
     href: "/docs/recipes/11ty-blog",
-  },
-  {
-    name: "starlight",
-    meta: "docs",
-    description: "A documentation site with a sidebar, a table of contents and search.",
-    href: "/docs/recipes/starlight",
-  },
-  {
-    name: "supernova",
-    meta: "landing",
-    description: "This page, in front of a starlight docs site. It is what you are reading.",
-    href: "/docs/recipes/supernova",
+    shots: [],
   },
 ];
+
 
 /**
  * ── SECTION 7 · Deploy anywhere ────────────────────────────────────────
@@ -139,18 +162,47 @@ const RECIPES: Array<{ name: string; meta: string; description: string; href: st
  * is a target Nitro documents, not a target litro wrote an adapter for — that
  * is the claim, and it is why the list is this long.
  */
-const DEPLOY_TARGETS = [
-  "Node.js",
-  "Cloudflare Workers",
-  "Vercel",
-  "Netlify",
-  "Deno Deploy",
-  "AWS Lambda",
-  "Azure",
-  "Docker",
-  "GitHub Pages",
-  "any static CDN",
+const DEPLOY_TARGETS: Array<{ name: string; icon?: string }> = [
+  // A MARK ONLY WHERE A REAL ONE EXISTS. These three come from the icon set
+  // the site already serves at /shoelace/assets/icons/ — no new file and no
+  // new dependency. The other seven have no mark in anything this site ships,
+  // so they are text, because a stand-in glyph would say less than the name
+  // already does.
+  { name: "Node.js" },
+  { name: "Cloudflare Workers" },
+  { name: "Vercel" },
+  { name: "Netlify" },
+  { name: "Deno Deploy" },
+  { name: "AWS Lambda", icon: "/shoelace/assets/icons/amazon.svg" },
+  { name: "Azure", icon: "/shoelace/assets/icons/microsoft.svg" },
+  { name: "Docker" },
+  { name: "GitHub Pages", icon: "/shoelace/assets/icons/github.svg" },
+  { name: "any static CDN" },
 ];
+
+/**
+ * ── SECTION · Performance ──────────────────────────────────────────────
+ *
+ * Build time and output size, against Next and Nuxt.
+ *
+ * EVERY FIGURE IS READ FROM benchmarks/results/latest.json. Nothing here is
+ * typed into the page, and a figure the file does not carry is left out
+ * rather than guessed — which is why each cell is built from a lookup that
+ * can return nothing.
+ *
+ * The numbers come from the CROSS-FRAMEWORK run, which builds the same
+ * minimal site in each framework. The realistic-app run in the same file
+ * compares a Hacker News clone, and litro loses output size to Nuxt there;
+ * this section does not claim otherwise, it simply is not that measurement.
+ * Both are on the benchmarks page, which every figure here links to.
+ *
+ * PAGE WEIGHT IS DELIBERATELY ABSENT. Litro does not win it today.
+ */
+interface FrameworkFigure {
+  name: string;
+  buildMs: number | null;
+  outputBytes: number | null;
+}
 
 /**
  * ── SECTION 9 · Footer ─────────────────────────────────────────────────
@@ -241,6 +293,35 @@ export interface SplashData {
   }>;
   seoHead: string;
   statusCells: StatusCell[];
+  benchmark: { frameworks: FrameworkFigure[]; ranAt: string | null };
+}
+
+/**
+ * The three formatters the performance section uses.
+ *
+ * They are plain functions rather than Intl calls with options because the
+ * server renders this page and the client hydrates it, and a number formatted
+ * differently in the two places is a hydration mismatch. Fixed rules, same
+ * answer everywhere.
+ */
+function formatSeconds(ms: number): string {
+  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.round(bytes / 1024)} KB`;
+}
+
+/** The run date, so a reader can tell how old the figures are. */
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
 
 export const pageData = definePageData(async (_event) => {
@@ -259,6 +340,65 @@ export const pageData = definePageData(async (_event) => {
   // The repository link the site navigation already carries. If the nav has
   // no external entry, the cell is left out.
   const repo = siteConfig.nav.find((item) => !item.href.startsWith("/"));
+
+  // ── The performance figures ──────────────────────────────────────────
+  //
+  // Read from the benchmark file the benchmarks page reads, by the same
+  // route: a dynamic import, so the Node built-ins never reach the browser
+  // bundle (CONTENT-008). A missing or unreadable file leaves every figure
+  // null and the section renders nothing, which is the right answer — a
+  // number this page cannot prove is one it must not show.
+  let benchmark: {
+    frameworks: FrameworkFigure[];
+    ranAt: string | null;
+  } = { frameworks: [], ranAt: null };
+
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { resolve } = await import("node:path");
+    const raw = await readFile(
+      resolve(process.cwd(), "..", "benchmarks", "results", "latest.json"),
+      "utf-8",
+    );
+    const parsed = JSON.parse(raw) as {
+      meta?: { timestamp?: string };
+      crossFramework?: Array<{
+        name?: string;
+        buildTime?: { median?: number };
+        outputSize?: number;
+      }>;
+    };
+
+    // The order the page shows, not the order the file happens to hold.
+    const order = ["litro", "nuxt", "nextjs"];
+    const label: Record<string, string> = {
+      litro: "Litro",
+      nuxt: "Nuxt",
+      nextjs: "Next.js",
+    };
+
+    benchmark = {
+      ranAt: parsed.meta?.timestamp ?? null,
+      frameworks: order
+        .map((key) => {
+          const entry = parsed.crossFramework?.find((f) => f.name === key);
+          if (!entry) return null;
+          return {
+            name: label[key] ?? key,
+            buildMs: typeof entry.buildTime?.median === "number"
+              ? entry.buildTime.median
+              : null,
+            outputBytes: typeof entry.outputSize === "number"
+              ? entry.outputSize
+              : null,
+          };
+        })
+        .filter((f): f is FrameworkFigure => f !== null),
+    };
+  } catch {
+    // No file, or a file this page cannot read. Every figure stays null and
+    // the section is not rendered.
+  }
 
   const seoHead = buildSeoHead({
     title: siteTitle,
@@ -284,31 +424,49 @@ export const pageData = definePageData(async (_event) => {
     siteTitle,
     description,
     nav: siteConfig.nav,
-    // ── SECTION 3 · Capabilities ────────────────────────────────────
+    // ── Capabilities ────────────────────────────────────────────────
     //
-    // Seven panes. The emoji are gone: a 🚀 beside "Streaming SSR" told a
-    // reader nothing the words did not. The five real marks stay, because a
-    // reader recognizes the Lit flame faster than they read "Lit".
+    // Seven panes. The emoji went with the card kit, and the [+] glyph went
+    // with them: it reports a STATE, which is what it does in the status line
+    // and the terminal windows, and on a wall of capabilities there is no
+    // state to report.
+    //
+    // A pane carries `iconSrc` only where litro has a real mark. Three do —
+    // web components, Nitro, and the adapter trio through the Lit flame — and
+    // four carry nothing rather than a stand-in.
+    //
+    // THE "BUILT ON" ROW IS FOLDED IN HERE. It was three thin panels saying
+    // what litro stands on, which is not a footnote to the capabilities: it
+    // IS one. Web Components and Nitro now carry the sentence that row
+    // carried, and Vite, which had no mark and no separate claim, is named in
+    // the build pane where a reader meets it.
     //
     // `span` is out of six, so a row is two halves or three thirds. Seven
-    // items fill three rows with no orphan, which a three-column card grid
-    // could not do.
+    // items fill three rows with no orphan.
     features: [
       {
         iconSrc: "/logos/webcomponents.svg",
         title: "Web Components",
-        meta: "lit · fast · elena",
+        meta: "the standard",
         span: 3,
         description:
-          "Pick your component library — Lit, FAST, or Elena. Standard custom elements, zero lock-in.",
+          "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit, FAST or Elena on top; the components underneath work anywhere the browser does.",
       },
       {
         iconSrc: "/logos/nitro.svg",
         title: "Nitro Server",
-        meta: "h3",
+        meta: "the server",
         span: 3,
         description:
-          "API routes, middleware, and every Nitro deployment adapter out of the box.",
+          "The same server engine that powers Nuxt. API routes, middleware and every Nitro deployment target, with no Litro adapter in between — and Vite underneath for the client bundle and hot reload.",
+      },
+      {
+        iconSrc: "/logos/lit-flame.svg",
+        title: "Adapters",
+        meta: "lit · fast · elena",
+        span: 2,
+        description:
+          "Same routing, same data layer, same deployment. Choose the component model and change nothing else.",
       },
       {
         title: "Streaming SSR",
@@ -325,18 +483,11 @@ export const pageData = definePageData(async (_event) => {
           "Pages folder maps directly to URLs. Dynamic segments, catch-alls, nested routes.",
       },
       {
-        title: "Static Generation",
-        meta: "ssg",
-        span: 2,
-        description:
-          "Prerender all routes to HTML. Deploy to any CDN with zero server cost.",
-      },
-      {
         title: "Content Layer",
         meta: "markdown",
         span: 3,
         description:
-          "Markdown content with 11ty-compatible frontmatter and data cascade.",
+          "Markdown content with 11ty-compatible frontmatter and data cascade, prerendered to plain HTML for any CDN.",
       },
       {
         title: "AI Agents",
@@ -358,6 +509,7 @@ export const pageData = definePageData(async (_event) => {
     // This is what the old status bar's tab row should have been. That row
     // showed `lit`, `fast` and `elena` settling from working to done, which
     // looked like live state and was a drawing.
+    benchmark,
     statusCells: [
       ...(version
         ? [{ state: "done" as const, value: `v${version}` }]
@@ -709,7 +861,198 @@ export class SplashPage extends LitroPage {
       outline-offset: 2px;
     }
 
-    /* ── SECTIONS 3, 4, 6 · The pane blocks ───────────────────────────── */
+    /* ── Section heads ─────────────────────────────────────────────────
+     *
+     * A claim and one supporting sentence. Both references open a capability
+     * block this way and neither opens one with a label, because a reader who
+     * has just left the hero wants to know what they are looking at before
+     * they look at it.
+     */
+
+    .section-head {
+      max-width: 42rem;
+      margin: 0 0 1.75rem;
+    }
+
+    .section-head .section-title {
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.4rem, 2.6vw, 2rem);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--nova-text-dim);
+      line-height: 1.7;
+    }
+
+    /* ── Performance ───────────────────────────────────────────────────── */
+
+    .stats {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .stats dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 1px;
+      margin: 0;
+      background: var(--nova-border);
+      border: 1px solid var(--nova-border);
+    }
+
+    .stat {
+      padding: 1.25rem 1.25rem 1.5rem;
+      background: var(--nova-bg);
+    }
+
+    /* Litro's own column is the one the block is about, so it is the one that
+       is lit. It is the same move the status line's mode segment makes. */
+    .stat-ours {
+      background: color-mix(in srgb, var(--nova-accent) 8%, var(--nova-bg));
+    }
+
+    .stat dt {
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--nova-text-dim);
+    }
+
+    .stat-ours dt {
+      color: var(--nova-accent-text);
+    }
+
+    .stat dd {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: baseline;
+      gap: 0.25rem 0.6rem;
+      margin: 0.75rem 0 0;
+    }
+
+    .stat .figure {
+      font-family: var(--nova-font-mono);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--nova-text);
+    }
+
+    .stat .unit {
+      font-size: 0.8125rem;
+      color: var(--nova-text-dim);
+    }
+
+    .stats-note {
+      margin: 1rem 0 0;
+      font-size: 0.875rem;
+      color: var(--nova-text-dim);
+    }
+
+    .stats-note a {
+      color: var(--nova-accent-text);
+      text-underline-offset: 0.2em;
+    }
+
+    /* ── The showcase ──────────────────────────────────────────────────── */
+
+    .showcase {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .showcase-copy {
+      margin: 0 0 1rem;
+    }
+
+    /* UNDERLINED, not just colored. A link sitting inside a paragraph has to
+       be told apart from the words around it by something other than color —
+       axe-core reports link-in-text-block when it is not, and a reader who
+       cannot see the color has nothing else to go on. The links that stand
+       alone, like the ones in the footer columns, do not need this. */
+    .showcase-copy a {
+      color: var(--nova-accent-text);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+      white-space: nowrap;
+    }
+
+    .showcase-copy a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .shots a {
+      display: block;
+      color: var(--nova-text-dim);
+      text-decoration: none;
+    }
+
+    .shots a:focus-visible {
+      outline: 2px solid var(--nova-accent);
+      outline-offset: 3px;
+    }
+
+    /* A small browser frame, drawn in CSS: a bar with three dots and the
+       picture under it. It is what makes a screenshot read as a site rather
+       than as a rectangle of pixels on the page. */
+    .frame {
+      display: block;
+      border: 1px solid var(--nova-border);
+      border-radius: var(--nova-radius);
+      overflow: hidden;
+      background: var(--nova-surface);
+    }
+
+    .frame-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--nova-border);
+    }
+
+    .frame-bar span {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      background: var(--nova-border);
+    }
+
+    .frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      /* The intrinsic size is on the element too, so the row does not jump
+         when a lazy-loaded picture arrives. */
+      aspect-ratio: 8 / 5;
+      object-fit: cover;
+    }
+
+    .shots a:hover .frame {
+      border-color: var(--nova-accent);
+    }
+
+    .shots .site {
+      display: block;
+      margin-top: 0.4rem;
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+    }
+
+    /* ── The pane blocks ──────────────────────────────────────────────── */
 
     .panes {
       padding-top: 3rem;
@@ -740,6 +1083,9 @@ export class SplashPage extends LitroPage {
     }
 
     .targets li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
       padding: 0.35rem 0.75rem;
       border: 1px solid var(--nova-border);
       border-radius: var(--nova-radius);
@@ -747,6 +1093,21 @@ export class SplashPage extends LitroPage {
       font-family: var(--nova-font-mono);
       font-size: 0.8125rem;
       color: var(--nova-text);
+    }
+
+    /* A MASK, NOT AN IMAGE. These marks are single-path SVGs whose fill is
+       currentColor, and an image element gives an external SVG no context to
+       resolve that against — it paints black, which on a dark page is
+       nothing at all. Painted as a mask over the chip's own color, each mark
+       is the chip's text color in either theme and stays one file. */
+    .targets .mark {
+      width: 0.9rem;
+      height: 0.9rem;
+      flex-shrink: 0;
+      background: currentColor;
+      opacity: 0.75;
+      -webkit-mask: var(--mark) center / contain no-repeat;
+      mask: var(--mark) center / contain no-repeat;
     }
 
     /* ── SECTION 9 · The footer ────────────────────────────────────────── */
@@ -993,6 +1354,10 @@ export class SplashPage extends LitroPage {
       nav = [],
       features = [],
       statusCells = [],
+      // No data at all means no figures, which the section reads as nothing
+      // to show. A missing default here would throw and the page would stream
+      // out half-finished.
+      benchmark = { frameworks: [], ranAt: null },
     } = data ?? {};
 
     return html`
@@ -1067,19 +1432,34 @@ export class SplashPage extends LitroPage {
             </section>
           </litro-hero-nova>
 
-          <!-- ── SECTION 3 · Capabilities ─────────────────────────────
-               Panes sharing hairlines, not floating cards. Litro's panes keep
-               their real marks — the Lit, FAST, Elena, Nitro and web
-               components logos are information, not decoration, and a reader
-               recognizes them faster than they read a name. Where there is no
-               real mark there is no icon at all. -->
+          <!-- ── Capabilities ─────────────────────────────────────────
+               The block opens with a CLAIM, not a label, because a reader who
+               has just read the hero wants to know what they are looking at
+               before they look at it.
+
+               The panes carry a mark where litro has a real one and nothing
+               where it does not — no placeholder glyph. They used to lead with
+               [+], which earns its place in the status line and the terminal
+               windows, where it reports a state; on a wall of capabilities it
+               reported nothing.
+
+               The separate "Built on" row was folded in here: what litro
+               stands on and why that matters is a capability, not a footnote,
+               and it was too thin to hold a section of its own. -->
           <section class="panes shell" aria-label="What you get">
+            <div class="section-head">
+              <h2 class="section-title">The web platform, with a server attached.</h2>
+              <p>
+                Standard custom elements on the front, Nitro on the back, and a
+                build that stays out of the way. Nothing here is a Litro
+                invention you would have to unlearn somewhere else.
+              </p>
+            </div>
             <litro-pane-grid>
               ${features.map(
                 (f) => html`
                   <litro-pane
                     name="${f.title}"
-                    state="done"
                     meta="${f.meta ?? ""}"
                     span="${f.span ?? 3}"
                   >
@@ -1098,101 +1478,53 @@ export class SplashPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── SECTION 4 · Built on ─────────────────────────────────
-               What litro stands on. Three real dependencies, two with their
-               own marks. -->
-          <section class="panes shell" aria-label="What Litro is built on">
-            <h2 class="section-title">Built on</h2>
-            <litro-pane-grid>
-              ${FOUNDATIONS.map(
-                (item) => html`
-                  <litro-pane name="${item.name}" meta="${item.meta}" span="2">
-                    ${item.icon
-                      ? html`<img
-                          slot="icon"
-                          src="${item.icon}"
-                          alt=""
-                          aria-hidden="true"
-                        />`
-                      : ""}
-                    ${item.description}
-                  </litro-pane>
-                `,
-              )}
-            </litro-pane-grid>
-          </section>
-
-          <!-- ── SECTION 6 · Ecosystem ────────────────────────────────
-               What litro extends with today: the four recipes. Each pane
-               links to the page that documents it. -->
-          <section class="panes shell" aria-label="Recipes">
-            <h2 class="section-title">Start from a recipe</h2>
-            <litro-pane-grid>
-              ${RECIPES.map(
-                (item) => html`
-                  <litro-pane
-                    name="${item.name}"
-                    meta="${item.meta}"
-                    href="${item.href}"
-                    span="3"
-                    >${item.description}</litro-pane
-                  >
-                `,
-              )}
-            </litro-pane-grid>
-          </section>
-
-          <!-- ── SECTION 7 · Deploy anywhere ──────────────────────────
-               Nitro's deployment presets, which litro inherits whole. -->
-          <section class="deploy shell" aria-label="Where it runs">
-            <h2 class="section-title">Deploy anywhere</h2>
-            <p>
-              The server is Nitro, so every target Nitro supports is a target
-              Litro supports — with no adapter of our own in between. Build for
-              one with a single preset, or prerender the whole site and put it
-              on a CDN.
-            </p>
-            <ul class="targets">
-              ${DEPLOY_TARGETS.map((target) => html`<li>${target}</li>`)}
-            </ul>
-          </section>
-
-          <section class="rows shell" aria-label="Why Litro">
-            <litro-feature-row heading="Why Web Components?">
-              <p class="eyebrow">Built on the Web Platform</p>
-              <p>
-                Custom Elements, Shadow DOM, and slots are W3C specifications
-                native to every major browser — the same layer as
-                <code>&lt;video&gt;</code>, CSS Grid, and Fetch. Standards that
-                get added to the platform stay there.
-              </p>
-              <a href="/why-web-components" class="learn-more">
-                Learn more about web standards longevity
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
-                  />
-                </svg>
-              </a>
-            </litro-feature-row>
-          </section>
-
-          <section class="start shell" aria-label="Get running">
-            <div>
-              <h2 class="section-title">Get running</h2>
-              <litro-steps .steps="${STEPS}"></litro-steps>
-            </div>
-            <litro-term-window label="${TRANSCRIPT_LABEL}">
-              <pre>${TRANSCRIPT}</pre>
-            </litro-term-window>
-          </section>
+          <!-- ── Performance ──────────────────────────────────────────
+               Build time and output size against Next and Nuxt, every figure
+               read from benchmarks/results/latest.json. See the note beside
+               the loader in pageData: nothing is typed in, a missing figure is
+               left out, and with no figures at all the section is not
+               rendered. -->
+          ${benchmark.frameworks.length > 0
+            ? html`
+                <section class="stats shell" aria-label="How Litro performs">
+                  <div class="section-head">
+                    <h2 class="section-title">Faster to build, smaller to ship.</h2>
+                    <p>
+                      The same minimal site, built in each framework on the same
+                      machine. Median of three runs.
+                    </p>
+                  </div>
+                  <dl>
+                    ${benchmark.frameworks.map(
+                      (fw) => html`
+                        <div class="stat${fw.name === "Litro" ? " stat-ours" : ""}">
+                          <dt>${fw.name}</dt>
+                          <dd>
+                            ${fw.buildMs !== null
+                              ? html`<span class="figure"
+                                    >${formatSeconds(fw.buildMs)}</span
+                                  ><span class="unit">build</span>`
+                              : ""}
+                            ${fw.outputBytes !== null
+                              ? html`<span class="figure"
+                                    >${formatBytes(fw.outputBytes)}</span
+                                  ><span class="unit">output</span>`
+                              : ""}
+                          </dd>
+                        </div>
+                      `,
+                    )}
+                  </dl>
+                  <p class="stats-note">
+                    ${benchmark.ranAt
+                      ? html`Measured ${formatDate(benchmark.ranAt)}. `
+                      : ""}<a href="/benchmarks"
+                      >Every run, and the ones Litro does not win</a
+                    >.
+                  </p>
+                </section>
+              `
+            : ""}
 
           <section class="shell" aria-label="How Litro compares">
             <div class="compare">
@@ -1254,6 +1586,131 @@ export class SplashPage extends LitroPage {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section class="rows shell" aria-label="Why Litro">
+            <litro-feature-row heading="Why Web Components?">
+              <p class="eyebrow">Built on the Web Platform</p>
+              <p>
+                Custom Elements, Shadow DOM, and slots are W3C specifications
+                native to every major browser — the same layer as
+                <code>&lt;video&gt;</code>, CSS Grid, and Fetch. Standards that
+                get added to the platform stay there.
+              </p>
+              <a href="/why-web-components" class="learn-more">
+                Learn more about web standards longevity
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
+                  />
+                </svg>
+              </a>
+            </litro-feature-row>
+          </section>
+
+
+          <!-- ── The showcase ─────────────────────────────────────────
+               Each row is a STARTING POINT and the pictures show the shape it
+               gives you, taken from real sites built with Litro. It is not a
+               per-site claim about which recipe each one runs — see the note
+               beside SHOWCASE for why that distinction is the whole point.
+
+               Every picture is lazy-loaded and carries a real description, so
+               the section costs nothing above the fold and reads the same to
+               somebody who cannot see it. -->
+          <section class="showcase shell" aria-label="Recipes">
+            <div class="section-head">
+              <h2 class="section-title">Start from a recipe.</h2>
+              <p>
+                Four starting points. The pictures show the shape each one
+                gives you, from sites built with Litro.
+              </p>
+            </div>
+            <litro-pane-grid>
+              ${SHOWCASE.map(
+                (item) => html`
+                  <litro-pane name="${item.name}" meta="${item.meta}" span="3">
+                    <p class="showcase-copy">
+                      ${item.description}
+                      <a href="${item.href}">Read the recipe</a>
+                    </p>
+                    ${item.shots.length > 0
+                      ? html`
+                          <ul class="shots">
+                            ${item.shots.map(
+                              (shot) => html`
+                                <li>
+                                  <a href="${shot.siteHref}">
+                                    <span class="frame">
+                                      <span class="frame-bar" aria-hidden="true">
+                                        <span></span><span></span><span></span>
+                                      </span>
+                                      <img
+                                        src="${shot.src}"
+                                        alt="${shot.alt}"
+                                        width="800"
+                                        height="500"
+                                        loading="lazy"
+                                        decoding="async"
+                                      />
+                                    </span>
+                                    <span class="site">${shot.site}</span>
+                                  </a>
+                                </li>
+                              `,
+                            )}
+                          </ul>
+                        `
+                      : ""}
+                  </litro-pane>
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── Deploy anywhere ──────────────────────────────────────
+               Nitro's deployment presets, which litro inherits whole. A chip
+               carries a mark only where a real one exists; see the note beside
+               DEPLOY_TARGETS. -->
+          <section class="deploy shell" aria-label="Where it runs">
+            <h2 class="section-title">Deploy anywhere</h2>
+            <p>
+              The server is Nitro, so every target Nitro supports is a target
+              Litro supports — with no adapter of our own in between. Build for
+              one with a single preset, or prerender the whole site and put it
+              on a CDN.
+            </p>
+            <ul class="targets">
+              ${DEPLOY_TARGETS.map(
+                (target) => html`
+                  <li>
+                    ${target.icon
+                      ? html`<span
+                          class="mark"
+                          style="--mark: url('${target.icon}')"
+                          aria-hidden="true"
+                        ></span>`
+                      : ""}${target.name}
+                  </li>
+                `,
+              )}
+            </ul>
+          </section>
+          <section class="start shell" aria-label="Get running">
+            <div>
+              <h2 class="section-title">Get running</h2>
+              <litro-steps .steps="${STEPS}"></litro-steps>
+            </div>
+            <litro-term-window label="${TRANSCRIPT_LABEL}">
+              <pre>${TRANSCRIPT}</pre>
+            </litro-term-window>
           </section>
 
           <section class="closing shell">

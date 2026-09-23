@@ -19,8 +19,8 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
   ['litro-status-line', 1],
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
-  ['litro-pane-grid', 3],
-  ['litro-pane', 14],
+  ['litro-pane-grid', 2],
+  ['litro-pane', 11],
   ['litro-site-footer', 1],
   ['litro-feature-row', 1],
   ['litro-steps', 1],
@@ -89,7 +89,10 @@ test('the home page copy is in the server HTML', async ({ request }) => {
     'Nitro Server',
     'Streaming SSR',
     'File-System Routing',
-    'Static Generation',
+    // "Static Generation" is no longer a pane of its own: prerendering is
+    // named in the Content Layer pane and again in the deploy section, which
+    // is where a reader asks the question. The claim did not go anywhere.
+    'prerendered to plain HTML',
     'Content Layer',
     'AI Agents',
     'pnpm create @beatzball/litro my-app',
