@@ -107,8 +107,8 @@ const SHOWCASE: Array<{
         siteHref: "https://litro.dev",
         alt:
           "The Litro home page: a dark landing page with the Litro wordmark in " +
-          "a monospaced face, the flame mark cropped against the right edge, " +
-          "and a copyable install command.",
+          "a monospaced face, the flame mark cropped against the right edge, a " +
+          "copyable install command, and a terminal status line at the foot.",
       },
     ],
   },
@@ -985,13 +985,28 @@ export class SplashPage extends LitroPage {
       text-decoration-thickness: 2px;
     }
 
+    /* TWO COLUMNS, ALWAYS — not auto-fit. With auto-fit a row holding one
+       screenshot stretched it across the whole pane while a row holding two
+       split the same space between them, so the same 800x500 file came out at
+       two different sizes and the section read as a collage. A fixed column
+       count gives every frame in the block one width, and the fixed aspect
+       ratio below gives them all one height.
+
+       On a phone the panes are full width and one column is the readable
+       choice; every frame is still the same size as every other. */
     .shots {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.75rem;
       margin: 0;
       padding: 0;
       list-style: none;
+    }
+
+    @media (max-width: 52rem) {
+      .shots {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .shots a {
@@ -1628,9 +1643,14 @@ export class SplashPage extends LitroPage {
           <section class="showcase shell" aria-label="Recipes">
             <div class="section-head">
               <h2 class="section-title">Start from a recipe.</h2>
+              <!-- ONE LINE AT 1280px, and it has to stay one: the column is
+                   capped at 42rem, so a wider screen never rescues it. Every
+                   word here is load-bearing — "real Litro sites" is what says
+                   the pictures are genuine without claiming which recipe any
+                   one of them runs. -->
               <p>
-                Four starting points. The pictures show the shape each one
-                gives you, from sites built with Litro.
+                Four starting points. Screenshots of real Litro sites show each
+                shape.
               </p>
             </div>
             <litro-pane-grid>
