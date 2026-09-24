@@ -7,6 +7,7 @@ import { siteConfig } from "../server/starlight.config.js";
 import { starlightHead } from "@beatzball/litro-docs-ui/src/route-meta.js";
 import { buildSeoHead, buildJsonLd } from "@beatzball/litro-docs-ui/src/seo.js";
 import { getPackageInfo } from "@beatzball/litro-docs-ui/src/packages.js";
+import { statusLineChrome } from "@beatzball/litro-docs-ui/src/status-line-chrome.js";
 
 // <litro-link> is registered by this import and not by the runtime barrel,
 // and the difference only shows in a production build. The barrel re-exports
@@ -549,7 +550,9 @@ export const routeMeta = {
 
 @customElement("page-home")
 export class SplashPage extends LitroPage {
-  static override styles = css`
+  static override styles = [
+    statusLineChrome,
+    css`
     /* ── The token block ───────────────────────────────────────────────
      *
      * The landing page's own theme. Every component on this page reads these
@@ -653,26 +656,11 @@ export class SplashPage extends LitroPage {
      * The line does NOT follow the reader's light or dark choice, and neither
      * do the docs pages' copies of it: a status line is chrome, not content,
      * and keeping it the same color on every page and in both themes is what
-     * makes a reader recognize it as the same object. So the dark set it
-     * reads is given to it here, on the element, rather than inherited from a
-     * page that now changes with the theme.
+     * makes a reader recognize it as the same object.
      *
-     * The accent still comes from the site's own, mixed toward black far
-     * enough to carry white text: the mode segment is a white word on it and
-     * an accent picked to sit under a page gives about 3.5:1. */
-    litro-status-line {
-      --nova-bg: #0d0e1a;
-      --nova-surface: #171a2b;
-      --nova-border: #2a2e45;
-      --nova-text: #e9ecfa;
-      --nova-text-dim: #9aa1bd;
-      --nova-accent: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
-      --nova-error: #f87171;
-      --nova-blocked: #fbbf24;
-      --nova-working: #38bdf8;
-      --nova-done: #4ade80;
-      --nova-idle: #64748b;
-    }
+     * Its palette is statusLineChrome, imported above and first in this
+     * class's style list, so this page and every docs page read one set of
+     * values. They used to be typed out in each place and drifted apart. */
 
     /* ── Page frame ────────────────────────────────────────────────────── */
 
@@ -1211,7 +1199,12 @@ export class SplashPage extends LitroPage {
 
     .start {
       display: grid;
-      grid-template-columns: 1fr;
+      /* minmax(0, 1fr), not 1fr. A bare 1fr is minmax(auto, 1fr), so the
+         track never shrinks below its widest item's content — a long
+         transcript line then pushes the column past a phone's screen and the
+         page scrolls sideways at the 320px WCAG 1.4.10 reflow width. The 0
+         lets the track shrink and the item scroll inside itself instead. */
+      grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
       padding-top: 3rem;
       padding-bottom: 1rem;
@@ -1219,7 +1212,7 @@ export class SplashPage extends LitroPage {
 
     @media (min-width: 48rem) {
       .start {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 4rem;
         align-items: start;
       }
@@ -1384,7 +1377,8 @@ export class SplashPage extends LitroPage {
     .closing .actions {
       justify-content: center;
     }
-  `;
+  `,
+  ];
 
   override render() {
     const data = this.serverData as SplashData | null;

@@ -43,6 +43,10 @@ export interface TermRow {
  * altogether, which is right only if it says nothing the page has not already
  * said in words.
  *
+ * IT IS ALSO A TAB STOP, because a long transcript line makes the window
+ * scroll sideways and a reader with a keyboard and no pointer has no other way
+ * to reach the end of the line.
+ *
  * NOTHING HERE MOVES on its own. A row's badge settles only if you give it a
  * `from` state, which these rows do not.
  *
@@ -63,6 +67,13 @@ export class LitroTermWindow extends LitElement {
   static override styles = css`
     :host {
       display: block;
+      /* min-width: 0, and the window does not fit on a phone without it. As a
+         grid or flex item its automatic minimum size is its CONTENT's width —
+         the widest transcript line plus the padding — so a wide transcript
+         refuses to shrink, pushes its track past the screen, and the whole
+         page scrolls sideways. WCAG 1.4.10 measures that at 320px. With this,
+         the transcript scrolls inside .term instead. */
+      min-width: 0;
     }
 
     .term {
@@ -75,6 +86,17 @@ export class LitroTermWindow extends LitElement {
       font-size: 0.8125rem;
       line-height: 1.7;
       overflow-x: auto;
+    }
+
+    /* The window scrolls sideways once a line is longer than it is, and a
+       region that scrolls has to be reachable without a pointer, so it is a
+       tab stop (WCAG 2.1.1; axe calls the failure
+       scrollable-region-focusable). The label property is what a reader
+       hears there, the same sentence the picture already carries. The ring is
+       focus-visible only, so a mouse press shows nothing. */
+    .term:focus-visible {
+      outline: 2px solid var(--nova-accent, currentColor);
+      outline-offset: 2px;
     }
 
     .row {
@@ -129,7 +151,7 @@ export class LitroTermWindow extends LitElement {
     const rows = this.rows ?? [];
 
     return html`
-      <div class="term" role="img" aria-label="${this.label}">
+      <div class="term" role="img" aria-label="${this.label}" tabindex="0">
         <div aria-hidden="true">
           ${rows.length > 0
             ? rows.map(

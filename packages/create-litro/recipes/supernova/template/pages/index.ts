@@ -626,14 +626,19 @@ export class SupernovaPage extends LitroPage {
 
     .start {
       display: grid;
-      grid-template-columns: 1fr;
+      /* minmax(0, 1fr), not 1fr. A bare 1fr is minmax(auto, 1fr), so the
+         track never shrinks below its widest item's content — a long
+         transcript line then pushes the column past a phone's screen and the
+         page scrolls sideways at the 320px WCAG 1.4.10 reflow width. The 0
+         lets the track shrink and the item scroll inside itself instead. */
+      grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;      padding-top: 1rem;
       padding-bottom: 4rem;
     }
 
     @media (min-width: 48rem) {
       .start {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 4rem;
       }
     }

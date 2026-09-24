@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { statusLineChrome } from '../status-line-chrome.js';
 import type { NavItem } from './starlight-header.js';
 import type { SidebarGroup } from './starlight-sidebar.js';
 import type { TocEntry } from '../extract-headings.js';
@@ -44,35 +45,23 @@ export class StarlightPage extends LitElement {
     _isDrawerMode: { state: true },
   };
 
-  static override styles = css`
+  static override styles = [
     /* THE LINE IS DARK CHROME ON A LIGHT PAGE, on purpose: a status line is
        the same object on both halves of the site, so it does not change color
        with the document. The docs pages define no --nova-* tokens, so the set
        the line reads is given to it here, on the element itself. A landing
-       page that already has a token block overrides these from above. */
-    litro-status-line {
-      --nova-bg: #0d0e1a;
-      --nova-surface: #171a2b;
-      --nova-border: #2a2e45;
-      --nova-text: #e9ecfa;
-      --nova-text-dim: #9aa1bd;
-      /* The mode segment puts WHITE text on this color, and the site accent
-         is picked to sit on a page background rather than under white text —
-         at 0.75rem it needs 4.5:1 and most accents give about 3.5:1. Mixing
-         it most of the way toward black keeps the site's hue and clears the
-         ratio for any accent a project is likely to choose.
+       page that already has a token block overrides these from above.
 
-         It is fixed rather than theme-dependent because the line is fixed
-         dark chrome: it does not change with the document, so neither can
-         the color underneath its text. */
-      --nova-accent: color-mix(in srgb, var(--sl-color-accent, #7c3aed) 72%, #000);
+       The colors are shared with both home pages rather than typed out again
+       here — see status-line-chrome.ts for why. */
+    statusLineChrome,
+    css`
+    /* The two the shell adds on top of that set: a docs page has no --nova-*
+       block of its own, so the line has no gutter and no mono stack to
+       inherit. They are page dressing, not part of the shared palette. */
+    litro-status-line {
       --nova-gutter: 1.5rem;
       --nova-font-mono: var(--sl-font-mono, ui-monospace, monospace);
-      --nova-error: #f87171;
-      --nova-blocked: #fbbf24;
-      --nova-working: #38bdf8;
-      --nova-done: #4ade80;
-      --nova-idle: #64748b;
     }
 
     :host {
@@ -239,7 +228,8 @@ export class StarlightPage extends LitElement {
         top: auto;
       }
     }
-  `;
+  `,
+  ];
 
   siteTitle = '';
   pageTitle = '';

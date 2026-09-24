@@ -15,6 +15,11 @@ import { customElement } from 'lit/decorators.js';
  * needs first, or what it will not do. Slot nothing and the line is not there
  * at all; the box below it collapses to no height.
  *
+ * THE COMMAND BOX IS A TAB STOP. It scrolls sideways when the command is
+ * longer than the slab, and a reader with a keyboard and no pointer has no
+ * other way to reach the end of it. `commandLabel` is what they hear on the
+ * way in; set it when the command is not an install command.
+ *
  * The button is the only part that needs JavaScript. Without it the command is
  * still rendered by the server, still readable and still selectable by hand —
  * the prompt is marked `user-select: none`, so a hand-made selection takes the
@@ -37,6 +42,7 @@ export class LitroInstallCommand extends LitElement {
   static override properties = {
     command: { type: String },
     label: { type: String },
+    commandLabel: { type: String },
     _status: { state: true },
   };
 
@@ -93,6 +99,18 @@ export class LitroInstallCommand extends LitElement {
       white-space: nowrap;
       min-width: 0;
       padding-bottom: 0.1rem;
+    }
+
+    /* The command scrolls sideways once it is longer than the slab, and a
+       region that scrolls has to be reachable without a pointer, so it is a
+       tab stop (WCAG 2.1.1; axe calls the failure
+       scrollable-region-focusable). The ring is focus-visible only: a mouse
+       press shows nothing, which is what the design asks for at the widths
+       where the command fits and does not scroll at all. */
+    .command:focus-visible {
+      outline: 2px solid var(--nova-accent);
+      outline-offset: 2px;
+      border-radius: 2px;
     }
 
     .copy {
@@ -152,6 +170,15 @@ export class LitroInstallCommand extends LitElement {
 
   /** The button's resting label. */
   label = 'Copy';
+
+  /**
+   * The name of the command box itself, heard when a keyboard reaches it.
+   *
+   * It is separate from `label`, which names the BUTTON. The box is a tab stop
+   * because it scrolls sideways on a narrow screen, and it is the command that
+   * has to be named there, not the act of copying it.
+   */
+  commandLabel = 'Install command';
 
   /** '' before the button is pressed, then what the press achieved. */
   _status: '' | 'copied' | 'selected' = '';
@@ -222,7 +249,16 @@ export class LitroInstallCommand extends LitElement {
       <p class="box">
         <span class="line">
           <span class="prompt" aria-hidden="true">$</span>
-          <code class="command">${this.command}</code>
+          <!-- role and aria-label, because a focusable box with no name is
+               announced as nothing. "group" rather than "region": a region is
+               a landmark, and a landmark per install command would crowd the
+               page's landmark list for no gain. -->
+          <code
+            class="command"
+            role="group"
+            tabindex="0"
+            aria-label="${this.commandLabel}"
+          >${this.command}</code>
         </span>
         <button
           type="button"

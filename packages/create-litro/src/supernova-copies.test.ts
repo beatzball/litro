@@ -31,7 +31,7 @@
  * and the same into `packages/docs-ui/src/components/` for a component that
  * file lists below.
  */
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { describe, it, expect } from 'vitest';
 
 /** Every landing-page component the recipe ships. */
@@ -70,6 +70,22 @@ const DOCS_UI_COMPONENTS = [
   'litro-term-window',
 ] as const;
 
+const RECIPE_COMPONENT_DIR = new URL(
+  '../recipes/supernova/template/src/components/',
+  import.meta.url,
+);
+
+const DOCS_UI_COMPONENT_DIR = new URL('../../docs-ui/src/components/', import.meta.url);
+
+/** The `.ts` module names in a components directory, sorted. */
+async function componentNames(dir: URL): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
+    .map((entry) => entry.name.replace(/\.ts$/, ''))
+    .sort();
+}
+
 function recipeFile(name: string): URL {
   return new URL(
     `../recipes/supernova/template/src/components/${name}.ts`,
@@ -106,6 +122,75 @@ describe('packages/docs-ui carries the recipe components unchanged', () => {
       expect(docsUi).toBe(recipe);
     });
   }
+});
+
+/**
+ * The two lists above are written by hand, so they can fall behind the
+ * directories they are meant to describe. A thirteenth component added to the
+ * recipe and not to `RECIPE_COMPONENTS` is simply never compared — its copies
+ * are free to drift and the suite stays green, which is the one failure this
+ * whole file exists to prevent.
+ *
+ * So the lists are checked against the directories themselves.
+ */
+describe('the lists name every component there is', () => {
+  it('RECIPE_COMPONENTS is the recipe components directory', async () => {
+    expect(await componentNames(RECIPE_COMPONENT_DIR)).toEqual(
+      [...RECIPE_COMPONENTS].sort(),
+    );
+  });
+
+  it('DOCS_UI_COMPONENTS is every docs-ui file with a recipe twin', async () => {
+    const docsUi = await componentNames(DOCS_UI_COMPONENT_DIR);
+    // packages/docs-ui holds the docs site's own components as well, which the
+    // recipe has never had — only the shared names are in scope here.
+    const shared = docsUi.filter((name) =>
+      (RECIPE_COMPONENTS as readonly string[]).includes(name),
+    );
+    expect(shared).toEqual([...DOCS_UI_COMPONENTS].sort());
+  });
+});
+
+/**
+ * The landing PAGE is a copy as well.
+ *
+ * `playground-supernova/pages/index.ts` is the recipe's `pages/index.ts` with
+ * the scaffolder's placeholders filled in — about 1,200 lines of it, most of
+ * them styles, and the two are pinned nowhere. Finding 2 and Finding 3 of this
+ * branch's review were both exactly that: a style fixed in one page and left
+ * wrong in another, behind a green suite.
+ *
+ * `docs/pages/index.ts` and `docs-ssr/pages/index.ts` are NOT copies — they
+ * carry litro's own words and two sections the recipe has no component for —
+ * so they are not compared here.
+ */
+describe('playground-supernova carries the recipe page unchanged', () => {
+  it('pages/index.ts is the recipe page with its placeholders filled in', async () => {
+    const recipe = await readFile(
+      new URL('../recipes/supernova/template/pages/index.ts', import.meta.url),
+      'utf-8',
+    );
+    const playground = await readFile(
+      new URL('../../../playground-supernova/pages/index.ts', import.meta.url),
+      'utf-8',
+    );
+
+    // The same two variables the scaffolder substitutes, with the values
+    // `playground-supernova` was created with.
+    const filled = recipe
+      .replaceAll('{{projectName}}', 'playground-supernova')
+      .replaceAll('{{recipe}}', 'supernova');
+
+    expect(playground).toBe(filled);
+  });
+
+  it('leaves no placeholder behind in the playground copy', async () => {
+    const playground = await readFile(
+      new URL('../../../playground-supernova/pages/index.ts', import.meta.url),
+      'utf-8',
+    );
+    expect(playground).not.toMatch(/\{\{\w+\}\}/);
+  });
 });
 
 /**

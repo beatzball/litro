@@ -55,3 +55,18 @@ nothing and the line is not there.
   on the command, so a long command pushed the box wider than the space it was
   given and a phone scrolled sideways. The command now scrolls inside the slab,
   which is what its `overflow-x` was always meant to do.
+
+**A scrolling box a keyboard can reach.** Both boxes that scroll sideways on a
+narrow screen — the install command and the terminal window — are tab stops
+now, with a name to hear on the way in and a focus-visible ring. A region that
+scrolls and cannot be focused is unreachable without a pointer; axe-core reports
+it as `scrollable-region-focusable`, and it shipped on every page a scaffolded
+site put the install command on. `litro-install-command` takes a new optional
+`commandLabel` for that name, which defaults to "Install command".
+
+**`litro-term-window` fits on a phone.** Its host had no `min-width: 0`, so as a
+grid item its smallest size was the widest transcript line plus its padding. A
+wide transcript pushed its column past the screen and the landing page scrolled
+sideways at 320px, the width WCAG 1.4.10 measures reflow at. The window shrinks
+now and the transcript scrolls inside it. The recipe's own "Get running" grid
+asks for `minmax(0, 1fr)` rather than a bare `1fr` for the same reason.
