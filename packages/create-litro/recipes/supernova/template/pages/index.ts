@@ -1,10 +1,14 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { getGlobalData } from 'litro:content';
 import { siteConfig } from '../server/starlight.config.js';
 import { starlightHead } from '../src/route-meta.js';
+// Ships with this template, and highlight.js is already in its package.json,
+// so the section below adds no dependency a scaffolded app does not have.
+import { applyHighlighting } from '../src/highlight.js';
 
 // Register the components used in render(). The landing page's own first...
 import '../src/components/litro-hero-nova.js';
@@ -291,11 +295,112 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   },
 ];
 
+/**
+ * ── SECTION 3b · One thing, proved ─────────────────────────────────────
+ *
+ * THE SECTION A FEATURE LIST CANNOT REPLACE. A list of capabilities tells a
+ * reader what a project has. This shows one thing it DOES: a small piece of
+ * real code, and the two things it produces — the value a program gets back,
+ * and the thing a person sees.
+ *
+ * Everything below is placeholder, and the code really runs; paste it into a
+ * file and call it. REPLACE IT with the smallest real example from your own
+ * project. A reader believes a working example in a way they do not believe a
+ * paragraph, so the one rule here is that whatever you put in this band has
+ * to be true. If you have nothing small enough to show, delete the section
+ * rather than inventing an example.
+ */
+const EXAMPLE_FILE = 'summary.ts';
+const EXAMPLE_DIR = 'src/';
+
+const EXAMPLE_SOURCE = `export function summary() {
+  const data = {
+    label: 'Open tasks',
+    count: 12,
+    note: '3 due today',
+  };
+  return {
+    data,
+    text: \`\${data.label}: \${data.count} (\${data.note})\`,
+  };
+}`;
+
+/** What a screen reader gets instead of the code picture. */
+const EXAMPLE_LABEL =
+  'A source file. A summary function builds a plain data object and returns it together with a line of text built from the same fields.';
+
+/** What the function returns, formatted one field to a line. */
+const EXAMPLE_DATA = `{
+  "label": "Open tasks",
+  "count": 12,
+  "note": "3 due today"
+}`;
+
+/** What a screen reader gets instead of the rendered card. */
+const EXAMPLE_CARD_LABEL = 'A card: Open tasks, 12, 3 due today.';
+
+/**
+ * The two doors out of the section. Point each at a real page in your docs —
+ * a pane whose link goes nowhere is worse than no pane.
+ */
+const EXAMPLE_DOORS: Array<{ name: string; meta: string; href: string; description: string }> = [
+  {
+    name: 'How it works',
+    meta: 'concepts',
+    href: '/docs/getting-started',
+    description:
+      'One pane for the reader who wants the idea behind the example before they try it. Link it at the page in your docs that explains the model.',
+  },
+  {
+    name: 'Try it',
+    meta: 'guide',
+    href: '/docs/getting-started',
+    description:
+      'One pane for the reader who is already convinced. Link it at the shortest path from here to something running on their own machine.',
+  },
+];
+
+/**
+ * Highlights one block SERVER-SIDE, through this template's own
+ * `src/highlight.ts` — the same pass the docs and blog pages use.
+ *
+ * It is called from `definePageData`, never at module scope. The page then
+ * reads the same with JavaScript turned off, because the token markup is in
+ * the prerendered HTML rather than produced in a browser, and highlight.js
+ * stays out of the client bundle because the fetcher never reaches it.
+ *
+ * `applyHighlighting` takes and returns a whole `<pre><code>` block, so the
+ * inner markup is unwrapped here: this page draws its own `<pre>`, which
+ * carries the accessible name and the tab stop a scrolling box needs.
+ */
+function highlightBlock(code: string, lang: string): string {
+  const escaped = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const out = applyHighlighting(
+    `<pre><code class="language-${lang}">${escaped}</code></pre>`,
+  );
+  const inner = out.match(/<code class="hljs[^"]*">([\s\S]*)<\/code>/);
+  return inner ? inner[1]! : escaped;
+}
+
+/** The card the example produces, drawn as a picture and read as one sentence. */
+const exampleCard = () => html`
+  <div class="ai-card" role="img" aria-label="${EXAMPLE_CARD_LABEL}">
+    <span class="ai-card-label">Open tasks</span>
+    <span class="ai-card-value">12</span>
+    <span class="ai-card-note">3 due today</span>
+  </div>
+`;
+
 export interface SupernovaData {
   siteTitle: string;
   description: string;
   nav: Array<{ label: string; href: string }>;
   features: Array<{ title: string; description: string; icon?: string }>;
+  /** Highlighted server-side; see highlightBlock(). */
+  code: { example: string; data: string };
 }
 
 export const pageData = definePageData(async (_event) => {
@@ -342,6 +447,10 @@ export const pageData = definePageData(async (_event) => {
         description: 'Pre-rendered to plain HTML. Deploy to any CDN with no server required.',
       },
     ],
+    code: {
+      example: highlightBlock(EXAMPLE_SOURCE, 'typescript'),
+      data: highlightBlock(EXAMPLE_DATA, 'json'),
+    },
   } satisfies SupernovaData;
 });
 
@@ -622,6 +731,221 @@ export class SupernovaPage extends LitroPage {
       margin: 0;
     }
 
+    /* ── One thing, proved ─────────────────────────────────────────────
+     *
+     * NO ACCENT IN THIS SECTION AT ALL. Do not add one. A dark panel crossed by one bright rule is a shape a generator
+     * reaches for, and it was standing in for work the page's own vocabulary
+     * already does.
+     *
+     * What holds the band together instead is the same thing that holds a
+     * litro-pane-grid together — ONE outer rule and SHARED hairlines between
+     * cells, so neighbors divide a single object rather than each drawing its
+     * own box. The source cell takes the raised surface and the output cells
+     * the page ground, which gives the band a lit side and a quiet side
+     * without coloring anything.
+     *
+     * The two outputs are told apart by WHAT THEY ARE, not by a mark beside
+     * them: the data is monospace, dim and wrapped in a code block; the card
+     * is the real component, in the body face, on its own surface. A reader
+     * can see which is which with the captions covered.
+     */
+
+    .ai {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .ai figcaption {
+      margin: 0 0 0.75rem;
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+      color: var(--nova-text-dim);
+    }
+
+    .ai pre {
+      margin: 0;
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.7;
+      color: var(--nova-text);
+    }
+
+    /* The card the example produces. Its own surface and its own type, on
+       the page rather than inside a terminal, because a thing a person sees
+       is the point being made. */
+    .ai-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      max-width: 16rem;
+      padding: 1rem;
+      border: 1px solid var(--nova-border);
+      border-radius: 0.5rem;
+      background: var(--nova-surface);
+      font-family: system-ui, sans-serif;
+      line-height: 1.4;
+    }
+
+    .ai-card-label {
+      font-weight: 600;
+      color: var(--nova-text);
+    }
+
+    .ai-card-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--nova-text);
+    }
+
+    .ai-card-note {
+      color: var(--nova-text-dim);
+    }
+
+    /* ── The band ─────────────────────────────────────────────────────── */
+
+    .ai-band {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      border: 1px solid var(--nova-border);
+      border-radius: var(--nova-radius);
+      background: var(--nova-bg);
+      overflow: hidden;
+    }
+
+    /* The cells SHARE a hairline: the source draws the rule on its own
+       trailing edge and nothing else draws one, so the band is one object
+       with divisions rather than boxes pushed together. */
+    .ai-band-src {
+      min-width: 0;
+      background: var(--nova-surface);
+      border-bottom: 1px solid var(--nova-border);
+    }
+
+    @media (min-width: 60rem) {
+      .ai-band {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      }
+
+      .ai-band-src {
+        border-bottom: 0;
+        border-right: 1px solid var(--nova-border);
+      }
+    }
+
+    /* The strip is litro-pane's title strip, and it belongs to the BAND — it
+       is inside the outer rule, on the source cell's own surface, divided
+       from the code by a hairline. A label floating above the band would be
+       the eyebrow this section is trying not to have. */
+    .ai-strip-bar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.55rem 1.2rem;
+      border-bottom: 1px solid var(--nova-border);
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+    }
+
+    .ai-strip-name {
+      font-weight: 700;
+      color: var(--nova-text);
+    }
+
+    .ai-strip-meta {
+      color: var(--nova-text-dim);
+    }
+
+    /* The source is the only box here that can outrun its cell, so it is the
+       only one that scrolls — and a region that scrolls has to be reachable
+       without a pointer (WCAG 2.1.1), which is what the tab stop and the
+       accessible name on the <pre> are for. */
+    .ai-band-src pre {
+      padding: 1.1rem 1.2rem;
+      overflow-x: auto;
+    }
+
+    .ai-band-src pre:focus-visible {
+      outline: 2px solid var(--nova-text);
+      outline-offset: -2px;
+    }
+
+    .ai-band-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ai-half {
+      margin: 0;
+      min-width: 0;
+      padding: 1.25rem 1.2rem;
+      border-top: 1px solid var(--nova-border);
+    }
+
+    .ai-half:first-child {
+      border-top: 0;
+    }
+
+    /* NEVER WRAPS MID-TOKEN. The object is written one field to a line and
+       the longest of them is twenty characters, so it fits at every width
+       this page supports and the box never becomes a scroll region. */
+    .ai-half-model pre {
+      white-space: pre;
+      color: var(--nova-text-dim);
+    }
+
+    .ai litro-pane-grid {
+      display: block;
+      margin-top: 2.5rem;
+    }
+
+    /* ── Syntax highlighting ───────────────────────────────────────────
+     *
+     * Produced on the SERVER by applyHighlighting() — the same highlight.js
+     * pass the blog posts use — so the tokens are in the prerendered HTML and
+     * a reader with JavaScript off sees exactly this.
+     *
+     * FOUR ROLES, and the rule behind them is: color marks a VALUE or a
+     * KEYWORD, and a name stays plain. Strings take the page's second accent,
+     * numbers and keywords its first, comments the dim text color, and
+     * everything else — identifiers, property names, punctuation — is left
+     * alone. A stock highlight.js theme paints a dozen roles in colors chosen
+     * against some other palette; this is a landing page, and every color
+     * here is a token this page already defines in both themes.
+     */
+    .hljs {
+      background: transparent;
+      color: var(--nova-text);
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: var(--nova-text-dim);
+      font-style: italic;
+    }
+
+    .hljs-keyword,
+    .hljs-literal,
+    .hljs-number,
+    .hljs-built_in {
+      color: var(--nova-accent-text);
+    }
+
+    .hljs-string,
+    .hljs-template-tag,
+    .hljs-regexp,
+    .hljs-symbol {
+      color: var(--nova-accent-2);
+    }
+
+    /* A substitution inside a template literal is code again, not string, so
+       it steps back out of the string color. Without this the whole html
+       template reads as one flat block and the substitution disappears into it. */
+    .hljs-subst {
+      color: var(--nova-text);
+    }
+
+
     /* ── Get running ───────────────────────────────────────────────────── */
 
     .start {
@@ -872,6 +1196,9 @@ export class SupernovaPage extends LitroPage {
       description = '',
       nav = [],
       features = [],
+      // Highlighted on the server. With no page data there is no markup to
+      // put in, and an empty block renders an empty box rather than throwing.
+      code = { example: '', data: '' },
     } = data ?? {};
 
     // The Blog button. create-litro deletes it when the blog is declined, and
@@ -1059,6 +1386,64 @@ export class SupernovaPage extends LitroPage {
                       : ''}
                     ${f.description}
                   </litro-pane>
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 3b · One thing, proved ───────────────────────
+               ONE BAND, NOT THREE BOXES. The cells share hairlines and the
+               block carries a single outer rule, the way litro-pane-grid
+               draws a wall of panes; the source cell sits on the raised
+               surface and the two output cells on the page ground, so the
+               band has a lit side and a quiet side. There is no accent stripe
+               and no eyebrow: a panel crossed by one bright rule is a shape
+               every generated page reaches for, and the structure already
+               says what it was saying.
+
+               The strip is INSIDE the band and carries the file name, which
+               is why the source does not repeat it as a comment.
+
+               DELETE THIS SECTION if you have no small true example to put in
+               it. An invented one costs more than an empty space. -->
+          <section class="ai shell" aria-label="One thing it does">
+            <div class="section-head">
+              <h2 class="section-title">Name the thing only you do.</h2>
+              <p>
+                One claim, one small example, and what it produces. Swap the
+                code below for something your project really runs — a working
+                example persuades where a list of features does not.
+              </p>
+            </div>
+            <div class="ai-band">
+              <div class="ai-band-src">
+                <div class="ai-strip-bar">
+                  <span class="ai-strip-name">${EXAMPLE_FILE}</span>
+                  <span class="ai-strip-meta">${EXAMPLE_DIR}</span>
+                </div>
+                <pre role="img" tabindex="0" aria-label="${EXAMPLE_LABEL}"><code class="hljs">${unsafeHTML(code.example)}</code></pre>
+              </div>
+              <div class="ai-band-split">
+                <figure class="ai-half ai-half-model">
+                  <figcaption>A program gets</figcaption>
+                  <pre><code class="hljs">${unsafeHTML(code.data)}</code></pre>
+                </figure>
+                <figure class="ai-half ai-half-reader">
+                  <figcaption>A reader sees</figcaption>
+                  ${exampleCard()}
+                </figure>
+              </div>
+            </div>
+            <litro-pane-grid>
+              ${EXAMPLE_DOORS.map(
+                (d) => html`
+                  <litro-pane
+                    name="${d.name}"
+                    meta="${d.meta}"
+                    span="3"
+                    href="${d.href}"
+                    >${d.description}</litro-pane
+                  >
                 `,
               )}
             </litro-pane-grid>

@@ -20,8 +20,8 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
   ['litro-status-line', 1],
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
-  ['litro-pane-grid', 2],
-  ['litro-pane', 11],
+  ['litro-pane-grid', 3],
+  ['litro-pane', 12],
   ['litro-site-footer', 1],
   ['litro-feature-row', 1],
   ['litro-steps', 1],
@@ -65,6 +65,8 @@ test('the home page keeps every call to action and link it had', async ({ reques
     '/blog',
     '/compare',
     '/why-web-components',
+    '/docs/agents',
+    '/docs/mcp-apps',
     '/compare/nextjs',
     '/compare/nuxt',
     '/compare/enhance',
@@ -95,7 +97,9 @@ test('the home page copy is in the server HTML', async ({ request }) => {
     // is where a reader asks the question. The claim did not go anywhere.
     'prerendered to plain HTML',
     'Content Layer',
-    'AI Agents',
+    // "AI Agents" was a capability card and is now a section of its own,
+    // directly below the grid. Its claims are asserted in full further down.
+    'A tool call comes back as a component',
     'pnpm create @beatzball/litro my-app',
   ]) {
     expect(text, `copy: ${claim}`).toContain(claim);
@@ -288,4 +292,102 @@ test('the docs pages keep their own theme after the landing page', async ({ page
   // The global light-mode value, untouched by the landing page's token block.
   expect(bg).not.toBe('');
   expect(bg.startsWith('#0b0d14')).toBe(false);
+});
+
+/**
+ * The band's code is highlighted, so every token sits inside its own span and
+ * `&quot;` stands in for a quote. Reading a claim out of that needs the tags
+ * gone and the entities back — which is also a check in its own right: if the
+ * highlighter returned nothing, there is no text here to find.
+ */
+function plainText(html: string): string {
+  return html
+    .replace(/<!--.*?-->/gs, '')
+    // A component's own CSS rides along inside its shadow template, and a
+    // rule named after a class would otherwise read as page copy.
+    .replace(/<style[\s\S]*?<\/style>/g, '')
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * THE AGENT SECTION, WHICH IS ALMOST ENTIRELY GENERATED MARKUP.
+ *
+ * The code and the data in that band are highlighted by `highlightBlock()`
+ * inside `definePageData`, so a mistake there does not throw — it returns an
+ * empty string, the page still builds, and the band arrives as two empty
+ * boxes with captions over them. Nothing else on the page notices.
+ *
+ * This reads what the server sent and insists the band has CONTENT: the file
+ * name in its strip, highlight tokens inside both code blocks, the data one
+ * field to a line, the card's three values, and both doors. Empty any one of
+ * those and this fails.
+ */
+test('the agent section arrives with its code, its data and its card', async ({ request }) => {
+  const html = await (await request.get('/')).text();
+  const text = plainText(html);
+
+  // Highlighted ON THE SERVER. A client-only highlighter would leave these
+  // out of the first response, which is what a reader with JavaScript off
+  // gets.
+  expect(html.match(/class="hljs-keyword"/g)?.length ?? 0, 'highlighted keywords').toBeGreaterThan(3);
+  expect(html.match(/class="hljs-string"/g)?.length ?? 0, 'highlighted strings').toBeGreaterThan(1);
+
+  // The band's strip names the file, and the source no longer repeats it.
+  expect(text, 'the strip names the file').toContain('get-weather.ts');
+
+  // The example, and the data the model is given, one field to a line.
+  for (const claim of [
+    'A tool call comes back as a component',
+    'defineTool',
+    'return ui(',
+    'The model reads',
+    '"city": "Lisbon"',
+    '"tempC": 21',
+    '"summary": "sunny"',
+    'The reader gets',
+  ]) {
+    expect(text, `agent section: ${claim}`).toContain(claim);
+  }
+
+  // The rendered card, which is the whole point of the section.
+  const card = plainText(
+    html.slice(html.indexOf('class="ai-card"'), html.indexOf('class="ai-card"') + 900),
+  );
+  for (const value of ['Lisbon', '70', 'sunny']) {
+    expect(card, `the card shows ${value}`).toContain(value);
+  }
+
+  // Both doors.
+  expect(html, 'the agents door').toContain('href="/docs/agents"');
+  expect(html, 'the MCP Apps door').toContain('href="/docs/mcp-apps"');
+});
+
+/**
+ * There is no Litro MCP server. It is open issue 157, and an unbuilt thing has
+ * no place on a landing page — not as a claim, not as a "coming soon".
+ */
+test('the page does not claim an MCP server', async ({ request }) => {
+  const text = plainText(await (await request.get('/')).text());
+  expect(text).not.toMatch(/MCP server/i);
+  expect(text).not.toMatch(/coming soon/i);
+});
+
+/**
+ * The code block is wider than a phone, so it scrolls sideways — and a region
+ * that scrolls has to be reachable without a pointer (WCAG 2.1.1). The strip
+ * added above it must not have taken either the tab stop or the name away.
+ */
+test('the code block is a named, reachable scroll region', async ({ page }) => {
+  await page.goto('/');
+  const pre = page.locator('page-home:not([hidden]) .ai-band-src pre');
+  await expect(pre).toHaveAttribute('tabindex', '0');
+  await expect(pre).toHaveAttribute('role', 'img');
+  const label = await pre.getAttribute('aria-label');
+  expect(label ?? '', 'a real sentence, not a word').toContain('ui()');
 });

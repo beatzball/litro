@@ -1,5 +1,6 @@
 import { html, css } from "lit";
 import { customElement } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { LitroPage } from "@beatzball/litro/runtime";
 import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
@@ -7,6 +8,7 @@ import { siteConfig } from "../server/starlight.config.js";
 import { starlightHead } from "@beatzball/litro-docs-ui/src/route-meta.js";
 import { buildSeoHead, buildJsonLd } from "@beatzball/litro-docs-ui/src/seo.js";
 import { getPackageInfo } from "@beatzball/litro-docs-ui/src/packages.js";
+import { applyHighlighting } from "@beatzball/litro-docs-ui/src/highlight.js";
 import { statusLineChrome } from "@beatzball/litro-docs-ui/src/status-line-chrome.js";
 
 // Register components used in render(). The landing page's own parts first...
@@ -280,6 +282,166 @@ $ pnpm dev
 const TRANSCRIPT_LABEL =
   "A shell session: create a project, install it, start the dev server, and it serves on localhost port 3000.";
 
+/* ── The agent section ────────────────────────────────────────────────
+ *
+ * EVERY LINE BELOW IS REAL. The source is the documented get-weather tool
+ * from packages/docs-content/content/docs/agents.md, trimmed of its comments
+ * and nothing else; the data is exactly the object that tool passes to ui()'s
+ * `data` option; and the card is what <demo-weather-card> renders for it
+ * (21C is 70F, which the component converts itself).
+ *
+ * There is NO Litro MCP server and nothing on this page says there is. The
+ * two doors are the two things that ship: the agent endpoints and the MCP
+ * Apps packager.
+ */
+
+/**
+ * The documented tool, trimmed.
+ *
+ * It does not open with a `// path/to/file.ts` comment: the band's strip
+ * carries the file name, and a comment repeating it would be the same label
+ * printed twice.
+ */
+const AGENT_TOOL_BODY = `export default defineTool({
+  description: 'Get the weather for a city.',
+  input: citySchema,
+  async execute({ city }) {
+    const data = {
+      city,
+      tempC: 21,
+      summary: 'sunny',
+    };
+    return ui(
+      html\`<weather-card
+        .city=\${city}
+        .tempC=\${data.tempC}
+        .summary=\${data.summary}
+      ></weather-card>\`,
+      { data },
+    );
+  },
+});`;
+
+const AGENT_TOOL_FILE = "get-weather.ts";
+const AGENT_TOOL_DIR = "agents/weather/tools/";
+
+/** What a screen reader gets instead of that picture. */
+const AGENT_TOOL_LABEL =
+  "A tool file. Its execute function builds a plain data object, then returns ui() with a weather-card template and that same object as the data option.";
+
+/**
+ * The `data` option above, as the model receives it — formatted, one field to
+ * a line. Written out rather than JSON.stringify'd so the page shows a fixed
+ * string the server and the client agree on character for character.
+ */
+const AGENT_TOOL_DATA = `{
+  "city": "Lisbon",
+  "tempC": 21,
+  "summary": "sunny"
+}`;
+
+/** What a screen reader gets instead of the rendered card. */
+const AGENT_CARD_LABEL =
+  "The rendered weather card: Lisbon, 70 degrees Fahrenheit, sunny.";
+
+/** The two doors. Both are shipped and both have a docs page. */
+const AGENT_DOORS = [
+  {
+    name: "Agents",
+    meta: "endpoints",
+    href: "/docs/agents",
+    description:
+      "An agent is a folder. Tools are files beside it. Sessions are durable and resume after a disconnect, on disk or in SQLite, and the provider is Anthropic, any OpenAI-compatible API, or a scripted stub for tests.",
+  },
+  {
+    name: "MCP Apps",
+    meta: "ui://",
+    href: "/docs/mcp-apps",
+    description:
+      "Package the same component as a ui:// resource and any MCP host can show it. The document is a static shell; the bridge fills it when a tool result arrives.",
+  },
+];
+
+/**
+ * The card the tool returns, drawn as a picture. It is read as one sentence,
+ * because a column of three loose words means nothing read aloud in order.
+ */
+const weatherCard = () => html`
+  <div class="ai-card" role="img" aria-label="${AGENT_CARD_LABEL}">
+    <span class="ai-card-city">Lisbon</span>
+    <span class="ai-card-temp">70&deg;F</span>
+    <span class="ai-card-sum">sunny</span>
+  </div>
+`;
+
+/**
+ * THE CAPABILITY GRID, card by card.
+ *
+ * Six cards over three rows of the grid's six columns: one full-width, then
+ * two halves, then three thirds. The span is NOT a property of a card, it is a
+ * property of where the card sits, which is why it lives here and not on the
+ * card itself.
+ *
+ * ROW 1 IS EMPHASIS. Web Components is the page's thesis — the section head
+ * above the grid says it in words — so the block opens by stating it across
+ * the whole measure. It is also the longest card, which is what lets a
+ * full-width row look deliberate rather than short of things to say.
+ *
+ * ROW 2 pairs Nitro with Adapters because their copy is of a length, so the
+ * two halves come out near the same height. Content Layer went to row 3 for
+ * the same reason: one sentence fills a third and leaves a hole in a half.
+ *
+ * The titles have to match `features[].title` exactly. `arrange()` throws if
+ * one does not, so a rename cannot quietly drop a card off the page.
+ */
+const GRID: Array<[string, number]> = [
+  ["Web Components", 6],
+  ["Nitro Server", 3],
+  ["Adapters", 3],
+  ["Content Layer", 2],
+  ["Streaming SSR", 2],
+  ["File-System Routing", 2],
+];
+
+/** Puts the cards in the grid's order and spans. */
+function arrange<T extends { title: string }>(
+  features: T[],
+  order: Array<[string, number]>,
+): Array<T & { span: number }> {
+  return order.map(([title, span]) => {
+    const found = features.find((f) => f.title === title);
+    if (!found) throw new Error(`arrange(): no capability card named "${title}"`);
+    return { ...found, span };
+  });
+}
+
+/**
+ * Highlights one block SERVER-SIDE, through the same `applyHighlighting` the
+ * blog posts use — highlight.js, already a dependency of docs-ui, and no
+ * second highlighter anywhere.
+ *
+ * It is called from `definePageData`, never at module scope, for two reasons.
+ * The page must read the same with JavaScript off, so the token markup has to
+ * be in the prerendered HTML rather than produced in a browser; and the
+ * fetcher does not reach the client bundle, which is what keeps highlight.js
+ * out of it. `grep -c hljs docs/dist/client/app.js` is the check.
+ *
+ * `applyHighlighting` takes and returns a whole `<pre><code>` block, so the
+ * inner markup is unwrapped here: this page draws its own `<pre>`, which
+ * carries the accessible name and the tab stop a scrolling box needs.
+ */
+function highlightBlock(code: string, lang: string): string {
+  const escaped = code
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const out = applyHighlighting(
+    `<pre><code class="language-${lang}">${escaped}</code></pre>`,
+  );
+  const inner = out.match(/<code class="hljs[^"]*">([\s\S]*)<\/code>/);
+  return inner ? inner[1]! : escaped;
+}
+
 export interface SplashData {
   siteTitle: string;
   description: string;
@@ -291,9 +453,9 @@ export interface SplashData {
     iconSrc?: string;
     /** The short note at the right end of the pane's strip. */
     meta?: string;
-    /** How many of the grid's six columns the pane takes. */
-    span?: number;
   }>;
+  /** Highlighted server-side; see highlightBlock(). */
+  code: { tool: string; data: string };
   seoHead: string;
   statusCells: StatusCell[];
   benchmark: { frameworks: FrameworkFigure[]; ranAt: string | null };
@@ -429,7 +591,11 @@ export const pageData = definePageData(async (_event) => {
     nav: siteConfig.nav,
     // ── Capabilities ────────────────────────────────────────────────
     //
-    // Seven panes. The emoji went with the card kit, and the [+] glyph went
+    // Six panes. The seventh was "AI Agents", and it is gone: its words were
+    // the headline of the agent section immediately below this block, so the
+    // card summarized something a reader met two inches later.
+    //
+    // The emoji went with the card kit, and the [+] glyph went
     // with them: it reports a STATE, which is what it does in the status line
     // and the terminal windows, and on a wall of capabilities there is no
     // state to report.
@@ -444,14 +610,15 @@ export const pageData = definePageData(async (_event) => {
     // carried, and Vite, which had no mark and no separate claim, is named in
     // the build pane where a reader meets it.
     //
-    // `span` is out of six, so a row is two halves or three thirds. Seven
-    // items fill three rows with no orphan.
+    // `span` IS NOT SET HERE. Six cards fill a six-column grid in more than
+    // one way, and which card takes a full-width row is emphasis, not
+    // arithmetic — so the layout lives in GRID above, which assigns each card
+    // its span by title.
     features: [
       {
         iconSrc: "/logos/webcomponents.svg",
         title: "Web Components",
         meta: "the standard",
-        span: 3,
         description:
           "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit, FAST or Elena on top; the components underneath work anywhere the browser does.",
       },
@@ -459,7 +626,6 @@ export const pageData = definePageData(async (_event) => {
         iconSrc: "/logos/nitro.svg",
         title: "Nitro Server",
         meta: "the server",
-        span: 3,
         description:
           "The same server engine that powers Nuxt. API routes, middleware and every Nitro deployment target, with no Litro adapter in between — and Vite underneath for the client bundle and hot reload.",
       },
@@ -467,39 +633,32 @@ export const pageData = definePageData(async (_event) => {
         iconSrc: "/logos/lit-flame.svg",
         title: "Adapters",
         meta: "lit · fast · elena",
-        span: 2,
         description:
           "Same routing, same data layer, same deployment. Choose the component model and change nothing else.",
       },
       {
         title: "Streaming SSR",
         meta: "dsd",
-        span: 2,
         description:
           "Declarative Shadow DOM or light-DOM SSR — each adapter picks the fastest path to first paint.",
       },
       {
         title: "File-System Routing",
         meta: "pages/",
-        span: 2,
         description:
           "Pages folder maps directly to URLs. Dynamic segments, catch-alls, nested routes.",
       },
       {
         title: "Content Layer",
         meta: "markdown",
-        span: 3,
         description:
           "Markdown content with 11ty-compatible frontmatter and data cascade, prerendered to plain HTML for any CDN.",
       },
-      {
-        title: "AI Agents",
-        meta: "mcp",
-        span: 3,
-        description:
-          "Filesystem-first agent endpoints whose tools return server-rendered UI — the model sees data, users see components. Durable and resumable.",
-      },
     ],
+    code: {
+      tool: highlightBlock(AGENT_TOOL_BODY, "typescript"),
+      data: highlightBlock(AGENT_TOOL_DATA, "json"),
+    },
     seoHead,
     // ── The status line at the foot ───────────────────────────────────
     //
@@ -1172,6 +1331,223 @@ export class SplashPage extends LitroPage {
       outline-offset: 2px;
     }
 
+    /* ── The agent section ─────────────────────────────────────────────
+     *
+     * NO ACCENT IN THIS SECTION AT ALL. The band used to carry an accent rule
+     * along its top edge and the captions a short colored bar each. Both are
+     * gone: a dark panel crossed by one bright rule is a shape a generator
+     * reaches for, and it was standing in for work the page's own vocabulary
+     * already does.
+     *
+     * What holds the band together instead is the same thing that holds a
+     * litro-pane-grid together — ONE outer rule and SHARED hairlines between
+     * cells, so neighbors divide a single object rather than each drawing its
+     * own box. The source cell takes the raised surface and the output cells
+     * the page ground, which gives the band a lit side and a quiet side
+     * without coloring anything.
+     *
+     * The two outputs are told apart by WHAT THEY ARE, not by a mark beside
+     * them: the data is monospace, dim and wrapped in a code block; the card
+     * is the real component, in the body face, on its own surface. A reader
+     * can see which is which with the captions covered.
+     */
+
+    .ai {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .ai figcaption {
+      margin: 0 0 0.75rem;
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+      color: var(--nova-text-dim);
+    }
+
+    .ai pre {
+      margin: 0;
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.7;
+      color: var(--nova-text);
+    }
+
+    /* The card the tool returns, drawn the way <demo-weather-card> draws it:
+       its own surface, its own type, sitting on the page rather than inside a
+       terminal, because that is the point being made. */
+    .ai-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      max-width: 16rem;
+      padding: 1rem;
+      border: 1px solid var(--nova-border);
+      border-radius: 0.5rem;
+      background: var(--nova-surface);
+      font-family: system-ui, sans-serif;
+      line-height: 1.4;
+    }
+
+    .ai-card-city {
+      font-weight: 600;
+      color: var(--nova-text);
+    }
+
+    .ai-card-temp {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--nova-text);
+    }
+
+    .ai-card-sum {
+      color: var(--nova-text-dim);
+    }
+
+    /* ── The band ─────────────────────────────────────────────────────── */
+
+    .ai-band {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      border: 1px solid var(--nova-border);
+      border-radius: var(--nova-radius);
+      background: var(--nova-bg);
+      overflow: hidden;
+    }
+
+    /* The cells SHARE a hairline: the source draws the rule on its own
+       trailing edge and nothing else draws one, so the band is one object
+       with divisions rather than boxes pushed together. */
+    .ai-band-src {
+      min-width: 0;
+      background: var(--nova-surface);
+      border-bottom: 1px solid var(--nova-border);
+    }
+
+    @media (min-width: 60rem) {
+      .ai-band {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      }
+
+      .ai-band-src {
+        border-bottom: 0;
+        border-right: 1px solid var(--nova-border);
+      }
+    }
+
+    /* The strip is litro-pane's title strip, and it belongs to the BAND — it
+       is inside the outer rule, on the source cell's own surface, divided
+       from the code by a hairline. A label floating above the band would be
+       the eyebrow this section is trying not to have. */
+    .ai-strip-bar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.55rem 1.2rem;
+      border-bottom: 1px solid var(--nova-border);
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+    }
+
+    .ai-strip-name {
+      font-weight: 700;
+      color: var(--nova-text);
+    }
+
+    .ai-strip-meta {
+      color: var(--nova-text-dim);
+    }
+
+    /* The source is the only box here that can outrun its cell, so it is the
+       only one that scrolls — and a region that scrolls has to be reachable
+       without a pointer (WCAG 2.1.1), which is what the tab stop and the
+       accessible name on the <pre> are for. */
+    .ai-band-src pre {
+      padding: 1.1rem 1.2rem;
+      overflow-x: auto;
+    }
+
+    .ai-band-src pre:focus-visible {
+      outline: 2px solid var(--nova-text);
+      outline-offset: -2px;
+    }
+
+    .ai-band-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ai-half {
+      margin: 0;
+      min-width: 0;
+      padding: 1.25rem 1.2rem;
+      border-top: 1px solid var(--nova-border);
+    }
+
+    .ai-half:first-child {
+      border-top: 0;
+    }
+
+    /* NEVER WRAPS MID-TOKEN. The object is written one field to a line and
+       the longest of them is twenty characters, so it fits at every width
+       this page supports and the box never becomes a scroll region. */
+    .ai-half-model pre {
+      white-space: pre;
+      color: var(--nova-text-dim);
+    }
+
+    .ai litro-pane-grid {
+      display: block;
+      margin-top: 2.5rem;
+    }
+
+    /* ── Syntax highlighting ───────────────────────────────────────────
+     *
+     * Produced on the SERVER by applyHighlighting() — the same highlight.js
+     * pass the blog posts use — so the tokens are in the prerendered HTML and
+     * a reader with JavaScript off sees exactly this.
+     *
+     * FOUR ROLES, and the rule behind them is: color marks a VALUE or a
+     * KEYWORD, and a name stays plain. Strings take the page's second accent,
+     * numbers and keywords its first, comments the dim text color, and
+     * everything else — identifiers, property names, punctuation — is left
+     * alone. A stock highlight.js theme paints a dozen roles in colors chosen
+     * against some other palette; this is a landing page, and every color
+     * here is a token this page already defines in both themes.
+     */
+    .hljs {
+      background: transparent;
+      color: var(--nova-text);
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: var(--nova-text-dim);
+      font-style: italic;
+    }
+
+    .hljs-keyword,
+    .hljs-literal,
+    .hljs-number,
+    .hljs-built_in {
+      color: var(--nova-accent-text);
+    }
+
+    .hljs-string,
+    .hljs-template-tag,
+    .hljs-regexp,
+    .hljs-symbol {
+      color: var(--nova-accent-2);
+    }
+
+    /* A substitution inside a template literal is code again, not string, so
+       it steps back out of the string color. Without this the whole html
+       template reads as one flat block and the substitution disappears into it. */
+    .hljs-subst {
+      color: var(--nova-text);
+    }
+
+
     /* ── Get running ───────────────────────────────────────────────────── */
 
     .start {
@@ -1369,6 +1745,9 @@ export class SplashPage extends LitroPage {
       // to show. A missing default here would throw and the page would stream
       // out half-finished.
       benchmark = { frameworks: [], ranAt: null },
+      // Highlighted on the server. With no page data there is no markup to
+      // put in, and an empty block renders an empty box rather than throwing.
+      code = { tool: "", data: "" },
     } = data ?? {};
 
     return html`
@@ -1467,12 +1846,12 @@ export class SplashPage extends LitroPage {
               </p>
             </div>
             <litro-pane-grid>
-              ${features.map(
+              ${arrange(features, GRID).map(
                 (f) => html`
                   <litro-pane
                     name="${f.title}"
                     meta="${f.meta ?? ""}"
-                    span="${f.span ?? 3}"
+                    span="${f.span}"
                   >
                     ${f.iconSrc
                       ? html`<img
@@ -1484,6 +1863,73 @@ export class SplashPage extends LitroPage {
                       : ""}
                     ${f.description}
                   </litro-pane>
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ══ THE AGENT SECTION ════════════════════════════════════
+               Option C, with the accent rule along the top removed.
+
+               A near-black panel with one bright rule across it is a shape a
+               generator reaches for, and it was doing a job the page can do
+               with its own vocabulary instead. What now says "this is ONE
+               object, not three boxes":
+
+                 · the cells SHARE hairlines and the block carries a single
+                   outer rule, the way litro-pane-grid draws a wall of panes;
+                 · the source cell sits on the raised surface and the two
+                   output cells on the page ground, so the band reads as one
+                   thing with a lit side and a quiet side;
+                 · the two outputs differ in their OWN right — the data is
+                   monospace and dim, the card is real, in the body face, on
+                   its own surface — so the fork is legible with no stripe
+                   pointing at it.
+
+               There is no accent anywhere in this section.
+
+               THE STRIP IS INSIDE THE BAND, not above it. It carries the file
+               name, which is why the source does not repeat it as a comment,
+               and it gives the band a head so the whole thing reads as one
+               object from across the page rather than only up close. It is
+               litro-pane's own title strip. -->
+          <section class="ai shell" aria-label="Agents">
+            <div class="section-head">
+              <h2 class="section-title">A tool call comes back as a component.</h2>
+              <p>
+                One return value, two audiences. Litro agents run on the same
+                server as your pages, so a tool can render one and hand it back.
+              </p>
+            </div>
+            <div class="ai-band">
+              <div class="ai-band-src">
+                <div class="ai-strip-bar">
+                  <span class="ai-strip-name">${AGENT_TOOL_FILE}</span>
+                  <span class="ai-strip-meta">${AGENT_TOOL_DIR}</span>
+                </div>
+                <pre role="img" tabindex="0" aria-label="${AGENT_TOOL_LABEL}"><code class="hljs">${unsafeHTML(code.tool)}</code></pre>
+              </div>
+              <div class="ai-band-split">
+                <figure class="ai-half ai-half-model">
+                  <figcaption>The model reads</figcaption>
+                  <pre><code class="hljs">${unsafeHTML(code.data)}</code></pre>
+                </figure>
+                <figure class="ai-half ai-half-reader">
+                  <figcaption>The reader gets</figcaption>
+                  ${weatherCard()}
+                </figure>
+              </div>
+            </div>
+            <litro-pane-grid>
+              ${AGENT_DOORS.map(
+                (d) => html`
+                  <litro-pane
+                    name="${d.name}"
+                    meta="${d.meta}"
+                    span="3"
+                    href="${d.href}"
+                    >${d.description}</litro-pane
+                  >
                 `,
               )}
             </litro-pane-grid>
