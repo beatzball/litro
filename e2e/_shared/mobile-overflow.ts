@@ -54,24 +54,44 @@ export async function measureOverflow(
     walk(document, 'document');
 
     const viewport = document.documentElement.clientWidth;
+
+    // A code block inside `pre { overflow-x: auto }` is WIDER than the screen
+    // and scrolls by itself — that is the design, not a bug. Only an element
+    // that sticks out with no scrollable box between it and the document can
+    // take the page sideways, so walk up and check.
+    const scrollsItself = (el: Element): boolean => {
+      let node: Node | null = el.parentNode;
+      while (node && node !== document.documentElement) {
+        if (node instanceof Element) {
+          const overflowX = getComputedStyle(node).overflowX;
+          if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
+            return true;
+          }
+        }
+        // Step out of a shadow root through its host, not into nothing.
+        node = node.parentNode ?? (node as ShadowRoot).host ?? null;
+      }
+      return false;
+    };
+
     const culprits = found
       .filter(({ el }) => {
         const box = el.getBoundingClientRect();
-        // An element parked off-screen on purpose (a closed drawer, a decorative
-        // mark inside an overflow:hidden box) does not scroll the page, so only
-        // count what is actually laid out wider than the screen.
-        return box.width > viewport + 0.5 && box.left >= -0.5;
+        // The right edge, not the width: an element narrower than the screen
+        // still scrolls the page when it is pushed past the edge.
+        return box.right > viewport + 0.5 && box.width > 0 && !scrollsItself(el);
       })
       .map(({ el, host }) => {
         const cls =
           typeof el.className === 'string' && el.className.trim()
             ? `.${el.className.trim().split(/\s+/).join('.')}`
             : '';
+        const box = el.getBoundingClientRect();
         const style = getComputedStyle(el);
         return (
           `${el.tagName.toLowerCase()}${cls} inside <${host}> ` +
-          `is ${Math.round(el.getBoundingClientRect().width)}px ` +
-          `(box-sizing: ${style.boxSizing})`
+          `is ${Math.round(box.width)}px wide and ends at ` +
+          `${Math.round(box.right)}px (box-sizing: ${style.boxSizing})`
         );
       });
 
