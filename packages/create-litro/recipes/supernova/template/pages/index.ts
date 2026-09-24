@@ -911,11 +911,11 @@ export class SupernovaPage extends LitroPage {
                  name in the status bar and in the headline. The component's
                  own file has the details.
 
-                 The recipe ships without one on purpose. The hero wants a
-                 real logo at a real size; a placeholder shape would only be
-                 a smudge on the page of somebody who never replaced it. With
-                 nothing slotted the hero is the ground and the wash, and it
-                 is finished. -->
+                 Until you do, the hero draws the recipe's own mark: the
+                 ejecta, a spray of shards thrown out of a point off the
+                 right edge, in your accent. It is the slot's fallback, so
+                 the moment you slot a mark of your own it goes away by
+                 itself. There is nothing to delete here. -->
 
             <section class="hero shell">
               <div class="hero-copy">

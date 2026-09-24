@@ -1,5 +1,42 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, svg } from 'lit';
 import { customElement } from 'lit/decorators.js';
+
+/**
+ * THE RECIPE'S OWN MARK, drawn only when a project slots none of its own.
+ *
+ * Nine tapered shards thrown from a root that sits off the right edge of the
+ * box, spread over about 150 degrees, so the host's crop cuts the root away
+ * and a reader sees the spray rather than the point it came from. Every shard
+ * ends on TWO corners rather than one flat cut; that ragged end is what keeps
+ * the drawing from reading as a starburst. Four knots sit out beyond them.
+ *
+ * The `opacity` on each path is RELATIVE shading inside the drawing, not how
+ * solid the mark is on the page — that is the hero's own
+ * `--nova-mark-opacity`, applied to the whole box. Alternate shards are drawn
+ * lighter, so the mass has depth instead of reading as one flat silhouette.
+ *
+ * COLOR COMES FROM THE TOKENS. Most of it is `currentColor`, which the rule
+ * for `.ejecta` sets to `--nova-text`; two shards carry `--nova-accent`. A
+ * project that changes its accent recolors the mark with it and touches
+ * nothing here.
+ */
+const EJECTA = svg`
+  <svg class="ejecta" viewBox="0 0 480 480" fill="none" aria-hidden="true">
+    <path d="M 485.2 265.8 L 394.4 529.0 L 443.1 486.9 L 540.8 288.3 Z" fill="currentColor" opacity="0.95" />
+    <path d="M 485.1 254.2 L 221.4 541.7 L 272.1 518.9 L 515.3 283.4 Z" fill="currentColor" opacity="0.6" />
+    <path d="M 476.5 229.7 L 194.1 404.9 L 229.7 423.2 L 509.5 289.1 Z" fill="currentColor" opacity="0.95" />
+    <path class="accent" d="M 483.9 224.8 L 67.6 325.1 L 141.2 333.5 L 493.9 271.8 Z" opacity="0.6" />
+    <path d="M 491.7 203.0 L 124.0 180.3 L 157.2 216.3 L 484.8 268.6 Z" fill="currentColor" opacity="0.95" />
+    <path d="M 498.6 206.9 L 228.1 102.0 L 275.5 142.3 L 483.8 241.9 Z" fill="currentColor" opacity="0.6" />
+    <path class="accent" d="M 515.2 192.3 L 187.8 -54.9 L 211.9 1.2 L 478.7 237.4 Z" opacity="0.95" />
+    <path d="M 527.9 193.9 L 360.4 -74.3 L 351.5 -44.5 L 488.1 216.9 Z" fill="currentColor" opacity="0.6" />
+    <path d="M 550.0 194.4 L 481.4 -56.8 L 461.0 -6.5 L 489.4 207.3 Z" fill="currentColor" opacity="0.95" />
+    <circle cx="74" cy="148" r="17" fill="currentColor" opacity="0.75" />
+    <circle cx="36" cy="276" r="12" fill="currentColor" opacity="0.75" />
+    <circle cx="118" cy="404" r="20" fill="currentColor" opacity="0.75" />
+    <circle cx="196" cy="62" r="11" fill="currentColor" opacity="0.75" />
+  </svg>
+`;
 
 /**
  * <litro-hero-nova>
@@ -26,15 +63,17 @@ import { customElement } from 'lit/decorators.js';
  * it your real mark at any size; the width below is what decides how much of
  * it shows.
  *
- * AN EMPTY HERO IS A FINISHED HERO. Nothing is painted behind the `mark` slot,
- * so a page that slots no mark gets no ghost shape, no circle and no smudge —
- * just the ground and the wash, which still read as composed. The wash sits
- * where the mark would come in, so the light has a reason to be there either
- * way.
+ * A DEFAULT MARK, AND YOURS REPLACES IT. With nothing in the `mark` slot the
+ * slot draws its own fallback: the ejecta, below. Slot anything with
+ * `slot="mark"` and the browser drops that fallback, so a project's own logo
+ * is never laid over the recipe's. There is no attribute to set and no flag
+ * to unset — a slotted mark wins by construction, in the server-rendered HTML
+ * as much as in the browser. The wash is anchored where the mark comes in, so
+ * the light has a reason to be there either way.
  *
- * ALL OF IT IS CSS. There is no image file, no `<img>` and no `url()` in this
- * component, so the hero costs no extra request and any project can retint it
- * from the token block alone.
+ * NO IMAGE FILE. There is no `<img>` and no `url()` in this component, so the
+ * hero costs no extra request and any project can retint it from the token
+ * block alone.
  *
  * NOTHING MOVES. There is no animation, so there is no
  * `prefers-reduced-motion` rule to write — a reader who asks for less motion
@@ -43,8 +82,9 @@ import { customElement } from 'lit/decorators.js';
  * COLORS AND HEIGHT come from the landing page's token block. This component
  * defines none of its own. Used outside that page, define the `--nova-*`
  * tokens it reads on any ancestor: `--nova-bg`, `--nova-border`,
- * `--nova-accent`, `--nova-accent-2`, and optionally `--nova-hero-min` (how
- * tall the pane is before its content makes it taller), `--nova-mark-size`
+ * `--nova-text`, `--nova-accent`, `--nova-accent-2`, and optionally
+ * `--nova-hero-min` (how tall the pane is before its content makes it
+ * taller), `--nova-mark-size`
  * and `--nova-mark-size-narrow` (how wide the mark is drawn, on a wide screen
  * and on a phone) and `--nova-mark-opacity` (how solid it is, which wants a
  * different value on a light ground than on a dark one).
@@ -108,10 +148,10 @@ export class LitroHeroNova extends LitElement {
       );
     }
 
-    /* ── The project's own mark ────────────────────────────────────────
-       No background, no border, no size of its own: this box is exactly its
-       slotted content, so with nothing slotted there is nothing here at all.
-       line-height: 0 keeps an empty box from claiming a text line. */
+    /* ── The mark: the project's, or the recipe's ──────────────────────
+       No background, no border and no size of its own: this box is exactly
+       the drawing inside it, whether that is a slotted logo or the fallback
+       ejecta. line-height: 0 keeps it from claiming a text line. */
     .mark {
       position: absolute;
       top: 50%;
@@ -135,10 +175,24 @@ export class LitroHeroNova extends LitElement {
        landing page is themed from one place, and the mark's size is part of
        that. A mark that holds this side of the pane wants to be far wider
        than the room left for it: most of the width below is off the edge. */
-    ::slotted([slot='mark']) {
+    ::slotted([slot='mark']),
+    .ejecta {
       display: block;
       width: var(--nova-mark-size, clamp(17rem, 42vw, 36rem));
       height: auto;
+    }
+
+    /* The fallback is drawn IN the shadow root rather than slotted into it,
+       so it takes its color by inheritance from here and not from the page.
+       Naming the token keeps it right wherever the hero is used. */
+    .ejecta {
+      color: var(--nova-text);
+    }
+
+    /* Two of the nine shards take the accent. A project that sets its own
+       accent recolors the mark with it and changes nothing else. */
+    .ejecta .accent {
+      fill: var(--nova-accent, currentColor);
     }
 
     /* A phone has no room beside the words, so the mark drops behind them,
@@ -151,7 +205,8 @@ export class LitroHeroNova extends LitElement {
         opacity: calc(var(--nova-mark-opacity, 0.11) * 0.75);
       }
 
-      ::slotted([slot='mark']) {
+      ::slotted([slot='mark']),
+      .ejecta {
         width: var(--nova-mark-size-narrow, clamp(13rem, 62vw, 22rem));
       }
     }
@@ -166,7 +221,9 @@ export class LitroHeroNova extends LitElement {
   override render() {
     return html`
       <div class="layer wash" aria-hidden="true"></div>
-      <div class="mark" aria-hidden="true"><slot name="mark"></slot></div>
+      <div class="mark" aria-hidden="true">
+        <slot name="mark">${EJECTA}</slot>
+      </div>
       <div class="content"><slot></slot></div>
     `;
   }
