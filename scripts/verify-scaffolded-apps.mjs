@@ -58,6 +58,12 @@ const VARIANTS = [
   { recipe: 'starlight', adapter: 'elena' },
   { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:blog', flags: ['--blog'] },
   { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:no-blog', flags: ['--no-blog'] },
+  // `--for-repo` writes its OWN server/starlight.config.js rather than copying
+  // the template's, so every navigation fix has to be made twice. Nothing built
+  // this path before: the unit tests pin the emitted spec text and the template
+  // e2e suite runs `pnpm dev`, which serves every page file whether or not it
+  // prerendered. Only a real build can tell that /docs is missing.
+  { recipe: 'starlight', adapter: 'lit', id: 'starlight:lit:for-repo', flags: ['--for-repo', '.'] },
 ];
 
 /** Workspace packages an app installs from the registry. */
@@ -348,9 +354,13 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
     const docsText = readFileSync(docsIndex, 'utf-8')
       .replace(/<!--.*?-->/gs, '')
       .replace(/<[^>]*>/g, ' ');
-    const missingDocs = ['Documentation', 'Getting Started', 'Installation'].filter(
-      (want) => !docsText.includes(want),
-    );
+    // `--for-repo` deletes the recipe's sample pages and seeds one starter, so
+    // it has a single group with a single entry. Every other variant keeps the
+    // full sample sidebar.
+    const wantDocsText = flags.includes('--for-repo')
+      ? ['Documentation', 'Getting Started']
+      : ['Documentation', 'Getting Started', 'Installation'];
+    const missingDocs = wantDocsText.filter((want) => !docsText.includes(want));
     if (missingDocs.length > 0) {
       results.push({
         id,

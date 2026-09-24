@@ -46,14 +46,18 @@ export const pageData = definePageData(async (_event) => {
     if (description) descriptions.set(post.url.slice(contentPrefix.length), description);
   }
 
-  const groups = siteConfig.sidebar.map(group => ({
-    label: group.label,
-    items: group.items.map(item => ({
-      label: item.label,
-      href: `/docs/${item.slug}`,
-      description: descriptions.get(item.slug) ?? null,
-    })),
-  }));
+  // A group with an empty `items` array is dropped: rendering it would put a
+  // heading over an empty list.
+  const groups = siteConfig.sidebar
+    .map(group => ({
+      label: group.label,
+      items: group.items.map(item => ({
+        label: item.label,
+        href: `/docs/${item.slug}`,
+        description: descriptions.get(item.slug) ?? null,
+      })),
+    }))
+    .filter(group => group.items.length > 0);
 
   return {
     groups,

@@ -64,6 +64,17 @@ describe('rendered files', () => {
     expect(renderStarlightConfig(repo, 'site')).toContain("slug: 'getting-started'");
   });
 
+  it('links the Docs nav entry at exactly /docs so the crawler prerenders it', () => {
+    // The recipe lists no explicit prerender routes, so the crawler seeds from
+    // '/' and follows links. This nav entry is the ONLY link to exactly /docs
+    // in the site — the home page links /docs/getting-started and the sidebar
+    // links /docs/<slug>. Deepen it and dist/static/docs/index.html is never
+    // written, which is the 403 this page exists to prevent.
+    const out = renderStarlightConfig(repo, 'site');
+    expect(out).toContain("{ label: 'Docs', href: '/docs' },");
+    expect(out).not.toContain("{ label: 'Docs', href: '/docs/getting-started' },");
+  });
+
   it('tells agents not to hand-edit the sidebar', () => {
     const out = renderAgentsMd(repo, 'https://roosting.dev', 'site');
     expect(out).toContain('litro docs sync');
@@ -146,6 +157,7 @@ describe('applyForRepo (integration)', () => {
       expect(existsSync(join(siteDir, 'content/docs/getting-started.md'))).toBe(true);
       const config = await readFile(join(siteDir, 'server/starlight.config.js'), 'utf-8');
       expect(config).toContain("slug: 'getting-started'");
+      expect(config).toContain("{ label: 'Docs', href: '/docs' },");
       // and the recipe's Litro-specific sample pages are gone
       expect(existsSync(join(siteDir, 'content/docs/guides-deploying.md'))).toBe(false);
     });
