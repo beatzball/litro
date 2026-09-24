@@ -26,6 +26,8 @@ interface Overflow {
   viewport: number;
   scrollWidth: number;
   culprits: string[];
+  /** Numbers that tell a real overflow apart from a platform scrollbar. */
+  metrics: string;
 }
 
 /** Load `path` at `width` and report anything wider than the viewport. */
@@ -95,10 +97,27 @@ export async function measureOverflow(
         );
       });
 
+    // When nothing sticks out and the page still scrolls, the difference is
+    // almost always the platform's own scrollbar, so print the numbers that
+    // separate the two rather than leaving the next reader to guess.
+    const widest = found
+      .map(({ el, host }) => ({ el, host, right: el.getBoundingClientRect().right }))
+      .sort((a, b) => b.right - a.right)
+      .slice(0, 3)
+      .map(({ el, host, right }) => `${el.tagName.toLowerCase()}@${host}=${Math.round(right)}`)
+      .join(' ');
+
     return {
       viewport,
       scrollWidth: document.documentElement.scrollWidth,
       culprits: culprits.slice(0, 8),
+      metrics:
+        `innerWidth=${window.innerWidth} ` +
+        `documentElement.clientWidth=${document.documentElement.clientWidth} ` +
+        `documentElement.scrollWidth=${document.documentElement.scrollWidth} ` +
+        `body.clientWidth=${document.body.clientWidth} ` +
+        `body.scrollWidth=${document.body.scrollWidth} ` +
+        `dpr=${window.devicePixelRatio} | furthest right edges: ${widest}`,
     };
   });
 }
@@ -111,15 +130,17 @@ export function testNoSideScroll(
   for (const path of paths) {
     for (const width of PHONE_WIDTHS) {
       test(`${path} does not scroll sideways at ${width}px`, async ({ page }) => {
-        const { viewport, scrollWidth, culprits } = await measureOverflow(page, path, width);
+        const { viewport, scrollWidth, culprits, metrics } = await measureOverflow(page, path, width);
         expect(
           scrollWidth,
-          culprits.length > 0
-            ? `${path} is ${scrollWidth - viewport}px wider than a ${width}px screen.\n` +
-              `Wider than the viewport:\n  ${culprits.join('\n  ')}\n` +
-              `A "box-sizing: content-box" above means the shadow root is missing ` +
-              `the reset — see .agents/rules/adapters-ssr.md (SSR-008).`
-            : `${path} is ${scrollWidth - viewport}px wider than a ${width}px screen.`,
+          `${path} is ${scrollWidth - viewport}px wider than a ${width}px screen.\n` +
+            (culprits.length > 0
+              ? `Sticking out past the right edge:\n  ${culprits.join('\n  ')}\n` +
+                `A "box-sizing: content-box" above means the shadow root is missing ` +
+                `the reset — see .agents/rules/adapters-ssr.md (SSR-008).\n`
+              : `Nothing is laid out past the right edge, so the difference is ` +
+                `not one element's width.\n`) +
+            metrics,
         ).toBeLessThanOrEqual(viewport);
       });
     }
