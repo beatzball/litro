@@ -15,18 +15,25 @@ export default defineNitroConfig({
   prerender: {
     ...ssg.prerender,
     /**
-     * The seed the crawler starts from.
+     * Every measured route, named.
      *
      * `/` HAS TO STAY IN THIS LIST. Naming any route here replaces Nitro's
-     * default seed of `/`, and every other page is found only by following
-     * links out of the home page.
+     * default seed of `/`, and every other page is then found only by
+     * following links out of whatever is seeded.
      *
-     * `/blog/hello` is named because the crawler cannot reach it. The home
-     * page does link to it, but that link is rendered inside a declarative
-     * shadow root, and Nitro's link crawler does not look inside one. The
-     * other two benchmark apps put the same link in light DOM, so their
-     * crawlers find it. Naming the route here is what makes the three apps
-     * prerender the same two pages.
+     * `/blog/hello` is named so that this app does not depend on a crawler,
+     * the same way the other two do not: Nuxt names it in `nuxt.config.ts`
+     * and Next names it from `generateStaticParams`. All three build the same
+     * two pages from an explicit list, so the comparison does not turn on how
+     * well each one's link discovery works.
+     *
+     * The crawler does in fact reach `/blog/hello` from `/` on its own.
+     * Building with `routes: ['/']` alone still writes `blog/hello/index.html`
+     * ("Prerendering 1 initial routes with crawler", then `/blog/hello`),
+     * even though the link is inside `<template shadowrootmode="open">`:
+     * Nitro parses the page with ultrahtml and walks every node carrying an
+     * `href`, template content included. An earlier version of this comment
+     * claimed the opposite. It was wrong.
      *
      * A previous version of this file put this list under a `static:` key,
      * which Nitro does not read. Both routes were then left unprerendered.

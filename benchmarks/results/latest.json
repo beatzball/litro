@@ -1,6 +1,6 @@
 {
   "meta": {
-    "timestamp": "2026-09-23T04:04:56.462Z",
+    "timestamp": "2026-09-24T06:33:52.078Z",
     "nodeVersion": "v24.7.0",
     "platform": "darwin",
     "arch": "arm64",
@@ -8,77 +8,77 @@
     "cpuCount": 16,
     "memoryGB": 128,
     "loadAverage": [
-      2.09130859375,
-      2.8671875,
-      5.21142578125
+      3.05517578125,
+      4.8017578125,
+      5.88232421875
     ],
-    "commitSha": "a398c22",
-    "commitMessage": "fix(create-litro): refuse an adapter a recipe cannot produce (#189)"
+    "commitSha": "2d8f474",
+    "commitMessage": "bench: fix the cross-framework Litro app and re-run every phase"
   },
   "buildTime": {
     "ssg": {
       "runs": [
-        13994,
-        15265,
-        15081,
-        13980,
-        11535
+        9399,
+        8979,
+        9222,
+        9023,
+        8918
       ],
-      "mean": 13971,
-      "median": 13994,
-      "p95": 15265,
-      "stddev": 1330,
-      "min": 11535,
-      "max": 15265
+      "mean": 9108,
+      "median": 9023,
+      "p95": 9399,
+      "stddev": 178,
+      "min": 8918,
+      "max": 9399
     },
     "ssr": {
       "runs": [
-        4964,
-        7290,
-        5242,
-        4863,
-        6729
+        3638,
+        3599,
+        3658,
+        3594,
+        3587
       ],
-      "mean": 5818,
-      "median": 5242,
-      "p95": 7290,
-      "stddev": 997,
-      "min": 4863,
-      "max": 7290
+      "mean": 3615,
+      "median": 3599,
+      "p95": 3658,
+      "stddev": 28,
+      "min": 3587,
+      "max": 3658
     }
   },
   "bundleSize": {
     "ssg": {
-      "clientJS": 1211625,
+      "clientJS": 1212223,
       "clientCSS": 7796,
       "serverBundle": 0,
-      "staticHTML": 6777064,
-      "totalOutput": 12955589
+      "staticHTML": 6778010,
+      "totalOutput": 12957731
     },
     "ssr": {
-      "clientJS": 1233027,
+      "clientJS": 1233625,
       "clientCSS": 0,
-      "serverBundle": 6676448,
+      "serverBundle": 6677644,
       "staticHTML": 0,
-      "totalOutput": 14021417
+      "totalOutput": 14023270
     }
   },
   "httpPerf": {
     "ssg": {
       "/": {
         "latency": {
-          "mean": 0.11,
+          "mean": 0.05,
           "p50": 0,
           "p97_5": 1,
-          "p99": 2,
-          "max": 31
+          "p99": 1,
+          "max": 6
         },
         "requests": {
-          "mean": 14157.46,
-          "total": 155725
+          "mean": 17737.1,
+          "total": 195097
         },
         "throughput": {
-          "mean": 712197585.46
+          "mean": 892219019.64
         },
         "errors": 0,
         "timeouts": 0,
@@ -87,18 +87,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 0.34,
+          "mean": 0.26,
           "p50": 0,
           "p97_5": 1,
-          "p99": 2,
-          "max": 10
+          "p99": 1,
+          "max": 7
         },
         "requests": {
-          "mean": 10756.73,
-          "total": 118325
+          "mean": 13125.46,
+          "total": 144373
         },
         "throughput": {
-          "mean": 776732672
+          "mean": 947745885.1
         },
         "errors": 0,
         "timeouts": 0,
@@ -107,18 +107,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 2.46,
+          "mean": 2.21,
           "p50": 2,
-          "p97_5": 5,
-          "p99": 5,
-          "max": 13
+          "p97_5": 4,
+          "p99": 4,
+          "max": 12
         },
         "requests": {
-          "mean": 3178.8,
-          "total": 31782
+          "mean": 3922.6,
+          "total": 39220
         },
         "throughput": {
-          "mean": 881590272
+          "mean": 1088002457.6
         },
         "errors": 0,
         "timeouts": 0,
@@ -127,18 +127,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 0.07,
+          "mean": 0.04,
           "p50": 0,
           "p97_5": 1,
-          "p99": 2,
-          "max": 7
+          "p99": 1,
+          "max": 8
         },
         "requests": {
-          "mean": 16634.8,
-          "total": 166379
+          "mean": 19458.19,
+          "total": 214010
         },
         "throughput": {
-          "mean": 479540019.2
+          "mean": 560666437.82
         },
         "errors": 0,
         "timeouts": 0,
@@ -149,18 +149,18 @@
     "ssr": {
       "/": {
         "latency": {
-          "mean": 33.85,
-          "p50": 33,
-          "p97_5": 44,
-          "p99": 51,
-          "max": 147
+          "mean": 27.3,
+          "p50": 27,
+          "p97_5": 38,
+          "p99": 41,
+          "max": 71
         },
         "requests": {
-          "mean": 290.64,
-          "total": 3197
+          "mean": 359.2,
+          "total": 3592
         },
         "throughput": {
-          "mean": 15481018.19
+          "mean": 19136921.61
         },
         "errors": 0,
         "timeouts": 0,
@@ -169,18 +169,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 115.3,
-          "p50": 98,
-          "p97_5": 250,
-          "p99": 282,
-          "max": 528
+          "mean": 63.16,
+          "p50": 62,
+          "p97_5": 78,
+          "p99": 115,
+          "max": 385
         },
         "requests": {
-          "mean": 86,
-          "total": 860
+          "mean": 156.64,
+          "total": 1723
         },
         "throughput": {
-          "mean": 6757990.4
+          "mean": 12307735.28
         },
         "errors": 0,
         "timeouts": 0,
@@ -189,18 +189,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 87.34,
-          "p50": 83,
-          "p97_5": 145,
-          "p99": 178,
-          "max": 552
+          "mean": 66.07,
+          "p50": 65,
+          "p97_5": 80,
+          "p99": 85,
+          "max": 362
         },
         "requests": {
-          "mean": 113.4,
-          "total": 1134
+          "mean": 149.7,
+          "total": 1497
         },
         "throughput": {
-          "mean": 32198656
+          "mean": 42516480
         },
         "errors": 0,
         "timeouts": 0,
@@ -209,18 +209,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 13.17,
-          "p50": 12,
-          "p97_5": 24,
-          "p99": 26,
-          "max": 93
+          "mean": 10.63,
+          "p50": 10,
+          "p97_5": 19,
+          "p99": 22,
+          "max": 79
         },
         "requests": {
-          "mean": 732,
-          "total": 7320
+          "mean": 896.7,
+          "total": 8967
         },
         "throughput": {
-          "mean": 21972582.4
+          "mean": 26915635.2
         },
         "errors": 0,
         "timeouts": 0,
@@ -279,35 +279,35 @@
     "ssg": {
       "/": {
         "performance": 80,
-        "fcp": 2421.7363,
-        "lcp": 4768.0605,
+        "fcp": 2411.98535,
+        "lcp": 4748.64225,
         "cls": 0,
         "tbt": 0,
-        "speedIndex": 2421.7363
+        "speedIndex": 2411.98535
       },
       "/docs/introduction": {
         "performance": 63,
-        "fcp": 4762.3377,
-        "lcp": 9640.783599999999,
+        "fcp": 4733.9146,
+        "lcp": 9616.552800000001,
         "cls": 0,
-        "tbt": 50.5,
-        "speedIndex": 4762.3377
+        "tbt": 32,
+        "speedIndex": 4733.9146
       },
       "/blog": {
-        "performance": 72,
-        "fcp": 3482.58595,
-        "lcp": 5661.643250000001,
+        "performance": 71,
+        "fcp": 3476.24365,
+        "lcp": 6029.072750000001,
         "cls": 0,
         "tbt": 0,
-        "speedIndex": 3482.58595
+        "speedIndex": 3476.24365
       },
       "/blog/welcome": {
         "performance": 64,
-        "fcp": 4584.311900000001,
-        "lcp": 9317.749199999998,
+        "fcp": 4604.94135,
+        "lcp": 9332.9218,
         "cls": 0,
-        "tbt": 48.5,
-        "speedIndex": 4584.311900000001
+        "tbt": 30.5,
+        "speedIndex": 4604.94135
       }
     }
   },
@@ -321,20 +321,20 @@
       },
       "/docs/introduction": {
         "ttfb": 0,
-        "ttlb": 7,
-        "delta": 7,
+        "ttlb": 6,
+        "delta": 6,
         "totalBytes": 72147
       },
       "/blog": {
-        "ttfb": 2,
-        "ttlb": 8,
-        "delta": 6,
+        "ttfb": 1,
+        "ttlb": 6,
+        "delta": 5,
         "totalBytes": 278215
       },
       "/blog/welcome": {
         "ttfb": 0,
-        "ttlb": 2,
-        "delta": 2,
+        "ttlb": 1,
+        "delta": 1,
         "totalBytes": 28808
       }
     }
@@ -354,20 +354,20 @@
       },
       "buildTime": {
         "runs": [
-          1263,
-          1252,
-          1239,
-          1235,
-          1278
+          1036,
+          977,
+          954,
+          949,
+          952
         ],
-        "mean": 1253,
-        "median": 1252,
-        "p95": 1278,
-        "stddev": 16,
-        "min": 1235,
-        "max": 1278
+        "mean": 974,
+        "median": 954,
+        "p95": 1036,
+        "stddev": 33,
+        "min": 949,
+        "max": 1036
       },
-      "outputSize": 38415,
+      "outputSize": 37938,
       "pageWeight": {
         "/": {
           "rawBytes": 3650,
@@ -391,29 +391,29 @@
       },
       "buildTime": {
         "runs": [
-          3135,
-          2328,
-          3661,
-          5146,
-          3672
+          2672,
+          1768,
+          1773,
+          1741,
+          1780
         ],
-        "mean": 3588,
-        "median": 3661,
-        "p95": 5146,
-        "stddev": 920,
-        "min": 2328,
-        "max": 5146
+        "mean": 1947,
+        "median": 1773,
+        "p95": 2672,
+        "stddev": 363,
+        "min": 1741,
+        "max": 2672
       },
       "outputSize": 206476,
       "pageWeight": {
         "/": {
           "rawBytes": 1420,
-          "gzipBytes": 714,
+          "gzipBytes": 715,
           "statusCode": 200
         },
         "/blog/hello": {
           "rawBytes": 1426,
-          "gzipBytes": 713,
+          "gzipBytes": 714,
           "statusCode": 200
         }
       }
@@ -428,29 +428,29 @@
       },
       "buildTime": {
         "runs": [
-          3923,
-          3942,
-          3136,
-          3055,
-          2993
+          3237,
+          3016,
+          2931,
+          2915,
+          2895
         ],
-        "mean": 3410,
-        "median": 3136,
-        "p95": 3942,
-        "stddev": 429,
-        "min": 2993,
-        "max": 3942
+        "mean": 2999,
+        "median": 2931,
+        "p95": 3237,
+        "stddev": 126,
+        "min": 2895,
+        "max": 3237
       },
       "outputSize": 634970,
       "pageWeight": {
         "/": {
           "rawBytes": 5072,
-          "gzipBytes": 1679,
+          "gzipBytes": 1678,
           "statusCode": 200
         },
         "/blog/hello": {
           "rawBytes": 6026,
-          "gzipBytes": 1726,
+          "gzipBytes": 1729,
           "statusCode": 200
         }
       }
@@ -471,24 +471,24 @@
       },
       "buildTime": {
         "runs": [
-          1813,
-          1778,
-          1773,
-          1770,
-          1819
+          1396,
+          1342,
+          1329,
+          1551,
+          1377
         ],
-        "mean": 1791,
-        "median": 1778,
-        "p95": 1819,
-        "stddev": 21,
-        "min": 1770,
-        "max": 1819
+        "mean": 1399,
+        "median": 1377,
+        "p95": 1551,
+        "stddev": 80,
+        "min": 1329,
+        "max": 1551
       },
-      "outputSize": 2501908,
+      "outputSize": 2477444,
       "pageWeight": {
         "/": {
           "rawBytes": 45655,
-          "gzipBytes": 9023,
+          "gzipBytes": 9015,
           "statusCode": 200
         },
         "/ask": {
@@ -498,12 +498,12 @@
         },
         "/show": {
           "rawBytes": 69148,
-          "gzipBytes": 18850,
+          "gzipBytes": 18847,
           "statusCode": 200
         },
         "/story/47760529": {
           "rawBytes": 62569,
-          "gzipBytes": 15102,
+          "gzipBytes": 15100,
           "statusCode": 200
         },
         "/user/divan": {
@@ -515,43 +515,43 @@
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1071.0209499999999,
-          "lcp": 1224.6945999999998,
+          "fcp": 977.05725,
+          "lcp": 1052.4687,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1071.0209499999999
+          "speedIndex": 977.05725
         },
         "/ask": {
           "performance": 100,
-          "fcp": 1219.0763,
-          "lcp": 1372.7684,
+          "fcp": 1216.92085,
+          "lcp": 1370.2278,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1219.0763
+          "speedIndex": 1216.92085
         },
         "/show": {
           "performance": 100,
-          "fcp": 1222.2871,
-          "lcp": 1376.3828,
+          "fcp": 1217.41805,
+          "lcp": 1370.5574,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1222.2871
+          "speedIndex": 1217.41805
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1149.2029,
-          "lcp": 1377.9372,
+          "fcp": 1144.45965,
+          "lcp": 1372.9462,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1149.2029
+          "speedIndex": 1144.45965
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1143.382,
-          "lcp": 1372.176,
+          "fcp": 986.92,
+          "lcp": 1062.504,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1143.382
+          "speedIndex": 986.92
         }
       }
     },
@@ -568,24 +568,24 @@
       },
       "buildTime": {
         "runs": [
-          1803,
-          1799,
-          1811,
-          1848,
-          1867
+          1420,
+          1349,
+          1339,
+          1439,
+          1402
         ],
-        "mean": 1826,
-        "median": 1811,
-        "p95": 1867,
-        "stddev": 27,
-        "min": 1799,
-        "max": 1867
+        "mean": 1390,
+        "median": 1402,
+        "p95": 1439,
+        "stddev": 39,
+        "min": 1339,
+        "max": 1439
       },
-      "outputSize": 2197957,
+      "outputSize": 2173493,
       "pageWeight": {
         "/": {
           "rawBytes": 38377,
-          "gzipBytes": 8619,
+          "gzipBytes": 8616,
           "statusCode": 200
         },
         "/ask": {
@@ -595,7 +595,7 @@
         },
         "/show": {
           "rawBytes": 59320,
-          "gzipBytes": 17833,
+          "gzipBytes": 17826,
           "statusCode": 200
         },
         "/story/47760529": {
@@ -612,43 +612,43 @@
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1303.55915,
-          "lcp": 1523.4122,
+          "fcp": 1052.3501,
+          "lcp": 1510.7002000000002,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1303.55915
+          "speedIndex": 1052.3501
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1433.7975999999999,
-          "lcp": 1665.3968,
+          "fcp": 1433.3999,
+          "lcp": 1664.5331999999999,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1433.7975999999999
+          "speedIndex": 1433.3999
         },
         "/show": {
           "performance": 99,
-          "fcp": 1447.6675,
-          "lcp": 1673.89,
+          "fcp": 1443.2625,
+          "lcp": 1669.3500000000001,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1447.6675
+          "speedIndex": 1443.2625
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1300.8411,
-          "lcp": 1527.4548,
+          "fcp": 1294.8541,
+          "lcp": 1521.1388,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1300.8411
+          "speedIndex": 1294.8541
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1217.9830000000002,
-          "lcp": 1519.7728,
+          "fcp": 1291.6227999999999,
+          "lcp": 1517.8303999999998,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1217.9830000000002
+          "speedIndex": 1291.6227999999999
         }
       }
     },
@@ -665,24 +665,24 @@
       },
       "buildTime": {
         "runs": [
-          1678,
-          1643,
-          1610,
-          1595,
-          1591
+          1221,
+          1172,
+          1179,
+          1190,
+          1164
         ],
-        "mean": 1623,
-        "median": 1610,
-        "p95": 1678,
-        "stddev": 33,
-        "min": 1591,
-        "max": 1678
+        "mean": 1185,
+        "median": 1179,
+        "p95": 1221,
+        "stddev": 20,
+        "min": 1164,
+        "max": 1221
       },
-      "outputSize": 1928241,
+      "outputSize": 1903777,
       "pageWeight": {
         "/": {
           "rawBytes": 29516,
-          "gzipBytes": 8095,
+          "gzipBytes": 8092,
           "statusCode": 200
         },
         "/ask": {
@@ -692,12 +692,12 @@
         },
         "/show": {
           "rawBytes": 50459,
-          "gzipBytes": 17145,
+          "gzipBytes": 17139,
           "statusCode": 200
         },
         "/story/47760529": {
           "rawBytes": 48924,
-          "gzipBytes": 11042,
+          "gzipBytes": 11037,
           "statusCode": 200
         },
         "/user/divan": {
@@ -709,43 +709,43 @@
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1068.26205,
-          "lcp": 1219.3494,
+          "fcp": 1068.10995,
+          "lcp": 1366.1466,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1068.26205
+          "speedIndex": 1068.10995
         },
         "/ask": {
           "performance": 100,
-          "fcp": 1218.5571,
-          "lcp": 1369.7428,
+          "fcp": 1216.3867500000001,
+          "lcp": 1364.8490000000002,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1218.5571
+          "speedIndex": 1216.3867500000001
         },
         "/show": {
-          "performance": 84,
-          "fcp": 1222.4971,
-          "lcp": 1368.6628,
-          "cls": 0.3053235115431349,
+          "performance": 100,
+          "fcp": 1214.64855,
+          "lcp": 1365.5313999999998,
+          "cls": 0,
           "tbt": 0,
-          "speedIndex": 1222.4971
+          "speedIndex": 1214.64855
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1068.4502499999999,
-          "lcp": 1218.9403,
+          "fcp": 1069.857375,
+          "lcp": 1216.8288499999999,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1068.4502499999999
+          "speedIndex": 1069.857375
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1132.2454,
-          "lcp": 1362.3272,
+          "fcp": 1131.76,
+          "lcp": 1361.68,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1132.2454
+          "speedIndex": 1131.76
         }
       }
     },
@@ -759,87 +759,87 @@
       },
       "buildTime": {
         "runs": [
-          3610,
-          3370,
-          3657,
-          3362,
-          3584
+          3749,
+          3341,
+          3237,
+          3275,
+          3422
         ],
-        "mean": 3517,
-        "median": 3584,
-        "p95": 3657,
-        "stddev": 125,
-        "min": 3362,
-        "max": 3657
+        "mean": 3405,
+        "median": 3341,
+        "p95": 3749,
+        "stddev": 183,
+        "min": 3237,
+        "max": 3749
       },
       "outputSize": 7539902,
       "pageWeight": {
         "/": {
           "rawBytes": 45832,
-          "gzipBytes": 6680,
+          "gzipBytes": 6675,
           "statusCode": 200
         },
         "/ask": {
           "rawBytes": 35524,
-          "gzipBytes": 5041,
+          "gzipBytes": 5040,
           "statusCode": 200
         },
         "/show": {
           "rawBytes": 44733,
-          "gzipBytes": 5959,
+          "gzipBytes": 5944,
           "statusCode": 200
         },
         "/story/47760529": {
           "rawBytes": 65473,
-          "gzipBytes": 16738,
+          "gzipBytes": 16712,
           "statusCode": 200
         },
         "/user/divan": {
           "rawBytes": 7404,
-          "gzipBytes": 2015,
+          "gzipBytes": 2013,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 753.22,
-          "lcp": 1879.22,
+          "fcp": 752.9223999999999,
+          "lcp": 1860.9224,
           "cls": 0,
-          "tbt": 26,
-          "speedIndex": 753.22
+          "tbt": 8,
+          "speedIndex": 752.9223999999999
         },
         "/ask": {
           "performance": 100,
-          "fcp": 754.0363,
-          "lcp": 1880.0363,
+          "fcp": 752.758,
+          "lcp": 1864.758,
           "cls": 0,
-          "tbt": 26,
-          "speedIndex": 754.0363
+          "tbt": 12,
+          "speedIndex": 752.758
         },
         "/show": {
           "performance": 100,
-          "fcp": 753.4191000000001,
-          "lcp": 1878.4191,
+          "fcp": 754.0464999999999,
+          "lcp": 1862.0465,
           "cls": 0,
-          "tbt": 25,
-          "speedIndex": 753.4191000000001
+          "tbt": 8,
+          "speedIndex": 754.0464999999999
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 754.0287000000001,
-          "lcp": 1880.0287,
+          "fcp": 753.2466999999999,
+          "lcp": 1863.2467,
           "cls": 0,
-          "tbt": 26,
-          "speedIndex": 754.0287000000001
+          "tbt": 10,
+          "speedIndex": 753.2466999999999
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 753.6587999999999,
-          "lcp": 1878.6588,
+          "fcp": 752.7221999999999,
+          "lcp": 1859.7222,
           "cls": 0,
-          "tbt": 25,
-          "speedIndex": 753.6587999999999
+          "tbt": 7,
+          "speedIndex": 752.7221999999999
         }
       }
     },
@@ -853,87 +853,87 @@
       },
       "buildTime": {
         "runs": [
-          2993,
-          2782,
-          2821,
-          2796,
-          2820
+          3258,
+          2235,
+          2197,
+          2301,
+          2362
         ],
-        "mean": 2842,
-        "median": 2820,
-        "p95": 2993,
-        "stddev": 77,
-        "min": 2782,
-        "max": 2993
+        "mean": 2471,
+        "median": 2301,
+        "p95": 3258,
+        "stddev": 398,
+        "min": 2197,
+        "max": 3258
       },
       "outputSize": 1196884,
       "pageWeight": {
         "/": {
           "rawBytes": 15633,
-          "gzipBytes": 3901,
+          "gzipBytes": 3897,
           "statusCode": 200
         },
         "/ask": {
           "rawBytes": 12065,
-          "gzipBytes": 2662,
+          "gzipBytes": 2659,
           "statusCode": 200
         },
         "/show": {
           "rawBytes": 14865,
-          "gzipBytes": 3258,
+          "gzipBytes": 3251,
           "statusCode": 200
         },
         "/story/47760529": {
           "rawBytes": 26564,
-          "gzipBytes": 9053,
+          "gzipBytes": 9037,
           "statusCode": 200
         },
         "/user/divan": {
           "rawBytes": 2003,
-          "gzipBytes": 878,
+          "gzipBytes": 877,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 99,
-          "fcp": 1502.3543999999997,
-          "lcp": 1652.3763999999996,
-          "cls": 0.04155862830842828,
-          "tbt": 73,
-          "speedIndex": 1502.3543999999997
+          "fcp": 1502.2318,
+          "lcp": 1652.2498,
+          "cls": 0.04198827451067898,
+          "tbt": 59.5,
+          "speedIndex": 1502.2318
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1502.7976999999996,
-          "lcp": 1652.8191499999998,
-          "cls": 0.03589438865929791,
-          "tbt": 43,
-          "speedIndex": 1502.7976999999996
+          "fcp": 1502.1132000000002,
+          "lcp": 1652.1382,
+          "cls": 0.04839732047082653,
+          "tbt": 55,
+          "speedIndex": 1502.1132000000002
         },
         "/show": {
           "performance": 99,
-          "fcp": 1502.3754,
-          "lcp": 1652.3972,
-          "cls": 0.03668383709988665,
-          "tbt": 95.9890999999999,
-          "speedIndex": 1502.3754
+          "fcp": 1502.8942,
+          "lcp": 1652.9119999999998,
+          "cls": 0.032065493172984,
+          "tbt": 42.5,
+          "speedIndex": 1502.8942
         },
         "/story/47760529": {
           "performance": 78,
-          "fcp": 1502.7012,
-          "lcp": 1652.7219,
+          "fcp": 1502.4739,
+          "lcp": 1652.49505,
           "cls": 0.5192051339522703,
-          "tbt": 61,
-          "speedIndex": 1502.7012
+          "tbt": 50,
+          "speedIndex": 1502.4739
         },
         "/user/divan": {
           "performance": 99,
-          "fcp": 1502.4683,
-          "lcp": 1652.4911500000003,
+          "fcp": 1502.2742,
+          "lcp": 1652.295,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1502.4683
+          "speedIndex": 1502.2742
         }
       }
     }
