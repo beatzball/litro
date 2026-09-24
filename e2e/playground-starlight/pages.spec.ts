@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { docGroupSections } from '../_shared/docs-index-html.js';
 
 const PRERENDERED_ROUTES = [
   '/',
@@ -163,7 +164,15 @@ test('docs index links every doc, in the server HTML', async ({ request }) => {
   const response = await request.get('/docs');
   expect(response.status()).toBe(200);
   const body = await response.text();
+
+  // Read the index's OWN <section class="doc-group"> blocks. The sidebar is
+  // server-rendered on /docs too and emits the same href="/docs/<slug>", so a
+  // search of the whole body passes on an empty index list.
+  const sections = docGroupSections(body);
+  expect(sections.length, 'no doc-group sections in the server HTML').toBe(2);
+
+  const list = sections.join(' ');
   for (const slug of ['getting-started', 'installation', 'configuration', 'guides-first-page', 'guides-deploying']) {
-    expect(body, `Expected /docs to link /docs/${slug}`).toContain(`href="/docs/${slug}"`);
+    expect(list, `Expected the docs index to link /docs/${slug}`).toContain(`href="/docs/${slug}"`);
   }
 });

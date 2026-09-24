@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { docGroupSections, docGroupText } from '../_shared/docs-index-html.js';
 
 /**
  * /docs is the section landing page.
@@ -27,7 +28,9 @@ test('/docs lists every sidebar group as a section', async ({ page }) => {
 test('/docs links to the first doc page', async ({ page }) => {
   await page.goto('/docs');
   await page.waitForSelector('page-docs:not([hidden])');
-  const link = page.locator('page-docs:not([hidden]) a[href="/docs/introduction"]');
+  // Scoped to the index list: a Playwright CSS selector pierces shadow roots,
+  // so an unscoped a[href="/docs/introduction"] matches the sidebar's copy too.
+  const link = page.locator('page-docs:not([hidden]) .doc-group a[href="/docs/introduction"]');
   await expect(link.first()).toBeVisible();
 });
 
@@ -35,6 +38,18 @@ test('the server HTML carries the links, so /docs works with no JavaScript', asy
   const response = await request.get('/docs');
   expect(response.status()).toBe(200);
   const body = await response.text();
-  expect(body).toContain('href="/docs/introduction"');
-  expect(body).toContain('Documentation');
+
+  // Everything below is read out of the index's OWN <section class="doc-group">
+  // blocks. The sidebar renders on /docs too and emits the same
+  // <a href="/docs/<slug>"> links, and the __litro_data__ script repeats every
+  // label as JSON text, so a check against the whole body passes on a page
+  // whose group list rendered nothing.
+  const sections = docGroupSections(body);
+  expect(sections.length, 'no doc-group sections in the server HTML').toBeGreaterThan(1);
+  expect(sections.join(' ')).toContain('href="/docs/introduction"');
+
+  const text = docGroupText(body);
+  for (const label of ['Getting Started', 'Introduction']) {
+    expect(text, `missing "${label}" in the index list`).toContain(label);
+  }
 });
