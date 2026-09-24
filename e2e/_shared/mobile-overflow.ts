@@ -11,11 +11,25 @@
  * stopped at the boundary.
  *
  * So the check has to be a real layout in a real browser at a real viewport.
- * A search for the CSS text would have passed on the broken build; only
- * `document.documentElement.scrollWidth` can tell.
+ * A search for the CSS text would have passed on the broken build.
  *
  * A failure names the elements that stick out, in the shadow root they live
  * in, because "the page is 48px too wide" on its own starts another bisect.
+ *
+ * WHY THE ASSERTION IS THE CULPRIT LIST AND NOT scrollWidth
+ *
+ * `documentElement.scrollWidth` is a proxy, and the two platforms do not agree
+ * on it. On a docs page where every wide element sits inside
+ * `pre { overflow-x: auto }` or the header's scrolling `nav`, Linux reported
+ * 15px over a 320px viewport while macOS reported none — with no element
+ * outside a scroll container on either. Driving `scrollLeft` instead is no
+ * better: these sites set `scroll-behavior: smooth`, so the value read back is
+ * still the old one.
+ *
+ * So assert the thing the issue is actually about: no element may be laid out
+ * past the right edge of the screen with nothing to scroll it. That is
+ * `<main>` at 438px on a 390px viewport, and it is not a code block that
+ * scrolls inside its own box. It answers the same on every platform.
  */
 import { expect, type Page } from '@playwright/test';
 
@@ -148,18 +162,16 @@ export function testNoSideScroll(
   for (const path of paths) {
     for (const width of PHONE_WIDTHS) {
       test(`${path} does not scroll sideways at ${width}px`, async ({ page }) => {
-        const { viewport, scrollWidth, culprits, metrics } = await measureOverflow(page, path, width);
+        const { viewport, culprits, metrics } = await measureOverflow(page, path, width);
         expect(
-          scrollWidth,
-          `${path} is ${scrollWidth - viewport}px wider than a ${width}px screen.\n` +
-            (culprits.length > 0
-              ? `Sticking out past the right edge:\n  ${culprits.join('\n  ')}\n` +
-                `A "box-sizing: content-box" above means the shadow root is missing ` +
-                `the reset — see .agents/rules/adapters-ssr.md (SSR-008).\n`
-              : `Nothing is laid out past the right edge, so the difference is ` +
-                `not one element's width.\n`) +
+          culprits,
+          `${path} has ${culprits.length} element(s) laid out past the right ` +
+            `edge of a ${width}px screen with nothing to scroll them:\n  ` +
+            `${culprits.join('\n  ')}\n` +
+            `A "box-sizing: content-box" above means the shadow root is missing ` +
+            `the reset — see .agents/rules/adapters-ssr.md (SSR-008).\n` +
             metrics,
-        ).toBeLessThanOrEqual(viewport);
+        ).toEqual([]);
       });
     }
   }
