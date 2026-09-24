@@ -11,6 +11,8 @@ const SITE_URL = (process.env.SITE_URL ?? 'https://litro.dev').replace(/\/$/, ''
 const STATIC_ROUTES: Array<{ path: string; priority: string }> = [
   { path: '/', priority: '1.0' },
   { path: '/why-web-components', priority: '0.9' },
+  { path: '/docs', priority: '0.9' },
+  { path: '/compare', priority: '0.9' },
   { path: '/compare/nextjs', priority: '0.9' },
   { path: '/compare/nuxt', priority: '0.9' },
   { path: '/compare/enhance', priority: '0.9' },

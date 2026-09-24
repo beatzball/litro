@@ -12,6 +12,7 @@ import { test, expect } from '@playwright/test';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/blog',
   '/blog/welcome',
@@ -62,7 +63,7 @@ test('the status bar carries the site title and the site navigation', async ({ p
 
   await expect(bar.locator('.seg-name')).toHaveText('playground-supernova');
   await expect(bar.locator('.home')).toHaveAttribute('href', '/');
-  await expect(bar.locator('a[slot="nav"][href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(bar.locator('a[slot="nav"][href="/docs"]')).toHaveText('Docs');
   await expect(bar.locator('a[slot="nav"][href="/blog"]')).toHaveText('Blog');
 
   // The same links the docs header renders, on a docs page.
@@ -70,7 +71,7 @@ test('the status bar carries the site title and the site navigation', async ({ p
   await page.goto('/docs/getting-started');
   await page.waitForSelector('page-docs-slug:not([hidden])');
   await expect(header.first().locator('.site-title')).toHaveText('playground-supernova');
-  await expect(header.first().locator('nav a[href="/docs/getting-started"]')).toBeVisible();
+  await expect(header.first().locator('nav a[href="/docs"]')).toBeVisible();
 });
 
 test('the status bar draws a tab per entry, each with a state badge', async ({ page }) => {
@@ -282,4 +283,15 @@ test('all prerendered routes return 200', async ({ request }) => {
     const response = await request.get(route);
     expect(response.status(), `Expected 200 for ${route}`).toBe(200);
   }
+});
+
+/**
+ * /docs is the section landing page the starlight half brings with it.
+ * Supernova inherits it; this check proves the inherited page survived the
+ * template overlay.
+ */
+test('the inherited docs index renders', async ({ page }) => {
+  await page.goto('/docs');
+  await page.waitForSelector('page-docs:not([hidden])');
+  await expect(page.locator('page-docs:not([hidden]) .doc-group').first().locator('h2')).toBeVisible();
 });

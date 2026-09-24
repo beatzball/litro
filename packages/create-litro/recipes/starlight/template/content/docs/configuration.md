@@ -38,7 +38,7 @@ Top-level navigation links shown in the header:
 
 ```js
 nav: [
-  { label: 'Docs', href: '/docs/getting-started' },
+  { label: 'Docs', href: '/docs' },
   { label: 'Blog', href: '/blog' },
 ],
 ```

@@ -26,6 +26,7 @@ export default defineNitroConfig({
     routes: [
       '/',
       '/why-web-components',
+      '/docs',
       '/compare',
       '/compare/nextjs',
       '/compare/nuxt',

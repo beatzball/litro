@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { docGroupSections } from '../_shared/docs-index-html.js';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/docs/installation',
   '/docs/configuration',
@@ -139,5 +141,38 @@ test('all prerendered routes return 200', async ({ request }) => {
   for (const route of PRERENDERED_ROUTES) {
     const response = await request.get(route);
     expect(response.status(), `Expected 200 for ${route}`).toBe(200);
+  }
+});
+
+/**
+ * /docs is the section landing page.
+ *
+ * It exists because /docs used to be a 404 — only /docs/<slug> did. A reader
+ * who types the obvious path, or trims a URL back one segment, must land on
+ * something. The server HTML check guards the no-JavaScript case, which is the
+ * one a reader typing a URL is in.
+ */
+test('docs index renders a section per sidebar group', async ({ page }) => {
+  await page.goto('/docs');
+  await page.waitForSelector('page-docs:not([hidden])');
+  const groups = page.locator('page-docs:not([hidden]) .doc-group');
+  expect(await groups.count()).toBe(2);
+  await expect(groups.first().locator('h2')).toContainText('Start Here');
+});
+
+test('docs index links every doc, in the server HTML', async ({ request }) => {
+  const response = await request.get('/docs');
+  expect(response.status()).toBe(200);
+  const body = await response.text();
+
+  // Read the index's OWN <section class="doc-group"> blocks. The sidebar is
+  // server-rendered on /docs too and emits the same href="/docs/<slug>", so a
+  // search of the whole body passes on an empty index list.
+  const sections = docGroupSections(body);
+  expect(sections.length, 'no doc-group sections in the server HTML').toBe(2);
+
+  const list = sections.join(' ');
+  for (const slug of ['getting-started', 'installation', 'configuration', 'guides-first-page', 'guides-deploying']) {
+    expect(list, `Expected the docs index to link /docs/${slug}`).toContain(`href="/docs/${slug}"`);
   }
 });

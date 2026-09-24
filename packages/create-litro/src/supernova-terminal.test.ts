@@ -190,7 +190,7 @@ describe('litro-state-badge renders one state on the server', () => {
 
 /** The navigation the docs header shows, as `server/starlight.config.js` has it. */
 const NAV = [
-  { label: 'Docs', href: '/docs/getting-started' },
+  { label: 'Docs', href: '/docs' },
   { label: 'Blog', href: '/blog' },
 ];
 
@@ -416,7 +416,7 @@ describe('a --no-blog scaffold has no Blog link in the status bar', () => {
       expect(siteConfig.nav.some((item) => item.href.startsWith('/blog'))).toBe(false);
 
       const out = await renderText(statusBar(siteConfig.nav));
-      expect(out).toContain('href="/docs/getting-started"');
+      expect(out).toContain('href="/docs"');
       expect(out).toContain('Docs');
       expect(out).not.toContain('/blog');
       expect(out).not.toContain('Blog');
