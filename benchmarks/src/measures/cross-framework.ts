@@ -8,7 +8,8 @@ import { computeStats } from '../utils/stats.js';
 import { gzipSize } from '../utils/gzip.js';
 import { measureLighthouse } from './lighthouse.js';
 import type { FrameworkResult, LighthouseResult, PageWeightResult } from '../types.js';
-import { SERVER_READY_TIMEOUT, CROSS_FRAMEWORK_ROUTES } from '../config.js';
+import { SERVER_READY_TIMEOUT, CROSS_FRAMEWORK_ROUTE_CHECKS } from '../config.js';
+import { checkPage, toRouteCheck, type RouteSpec } from '../utils/page-check.js';
 
 export interface FrameworkConfig {
   name: string;
@@ -16,9 +17,15 @@ export interface FrameworkConfig {
   installCmd: string;
   buildCmd: string;
   outputDir: string;
+  /**
+   * Everything else the build writes and would read back on the next run.
+   * Cleared with `outputDir` before every timed build, so each one is cold.
+   */
+  cacheDirs?: readonly string[];
   previewCmd: string;
   previewPort: number;
   versionPkg: string;
+  versionPkgs?: readonly string[];
 }
 
 async function walkSize(dir: string): Promise<number> {
@@ -84,11 +91,31 @@ async function resolveVersion(appDir: string, pkg: string): Promise<string> {
   }
 }
 
+/**
+ * Resolves every package version that shapes this app's numbers.
+ *
+ * A package that is not installed is left out of the map rather than recorded
+ * as 'unknown', so the file only ever states versions that were really there.
+ * Litro links to the workspace, so its own version is the one built from this
+ * commit.
+ */
+async function resolveVersions(
+  appDir: string,
+  pkgs: readonly string[],
+): Promise<Record<string, string>> {
+  const versions: Record<string, string> = {};
+  for (const pkg of pkgs) {
+    const version = await resolveVersion(appDir, pkg);
+    if (version !== 'unknown') versions[pkg] = version;
+  }
+  return versions;
+}
+
 export async function measureFramework(
   config: FrameworkConfig,
   appsDir: string,
   runs: number,
-  routes?: string[],
+  routes?: readonly RouteSpec[],
   env?: Record<string, string>,
   measureLighthouseFlag = false,
 ): Promise<FrameworkResult> {
@@ -102,11 +129,22 @@ export async function measureFramework(
     execSync(config.installCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
   }
 
-  // Build N times
+  // Build N times.
+  //
+  // Every timed build is a cold build. Removing only `outputDir` used to leave
+  // `.next/cache`, Nuxt's `node_modules/.cache/nuxt` and Litro's `.nitro` and
+  // `node_modules/.vite` in place, so even run 1 was an incremental rebuild.
+  // That was symmetric and therefore fair, but "build time" then meant
+  // something no reader assumes it means, and the figure moved with whatever
+  // happened to be on disk. Clearing the caches makes the number the one a
+  // clean checkout produces.
   const times: number[] = [];
   for (let i = 0; i < runs; i++) {
     const outputDir = join(appDir, config.outputDir);
     rmSync(outputDir, { recursive: true, force: true });
+    for (const cacheDir of config.cacheDirs ?? []) {
+      rmSync(join(appDir, cacheDir), { recursive: true, force: true });
+    }
 
     const start = performance.now();
     execSync(config.buildCmd, { cwd: appDir, stdio: 'pipe', env: execEnv });
@@ -129,8 +167,10 @@ export async function measureFramework(
   try {
     await waitForReady(baseUrl, SERVER_READY_TIMEOUT);
 
-    const effectiveRoutes = routes ?? CROSS_FRAMEWORK_ROUTES;
-    for (const route of effectiveRoutes) {
+    const effectiveRoutes = (routes ?? CROSS_FRAMEWORK_ROUTE_CHECKS).map(toRouteCheck);
+    const broken: string[] = [];
+    for (const check of effectiveRoutes) {
+      const route = check.path;
       const res = await fetch(baseUrl + route);
       const buf = Buffer.from(await res.arrayBuffer());
       pageWeight[route] = {
@@ -138,23 +178,47 @@ export async function measureFramework(
         gzipBytes: gzipSize(buf),
         statusCode: res.status,
       };
-      console.log(`  ${route}: ${buf.byteLength} bytes (gzip: ${gzipSize(buf)})`);
+      const problem = checkPage(check, res.status, buf.toString('utf-8'));
+      if (problem) broken.push(problem);
+      console.log(`  ${route}: ${res.status} — ${buf.byteLength} bytes (gzip: ${gzipSize(buf)})`);
+    }
+
+    // Stop the run rather than record a comparison between a working app and a
+    // broken one. The April 2026 results shipped with Litro answering 404 for
+    // /blog/hello while Nuxt and Next answered 200: Litro's page weight for
+    // that route was the weight of an error page, and its output size was the
+    // size of a build missing a page. Nothing in the harness objected, and the
+    // numbers were published. A route that does not answer 200 with its own
+    // rendered content now fails the run — see utils/page-check.ts for the two
+    // ways a broken app still answers 200.
+    if (broken.length > 0) {
+      throw new Error(
+        `[${config.name}] did not serve every measured route: ${broken.join(', ')}. ` +
+        `A framework comparison is only meaningful when all apps serve the same pages, ` +
+        `so no results are written. Fix the app, do not relax this check.`,
+      );
     }
 
     if (measureLighthouseFlag) {
       console.log(`  lighthouse audit...`);
-      lighthouse = await measureLighthouse(baseUrl, effectiveRoutes);
+      lighthouse = await measureLighthouse(baseUrl, effectiveRoutes.map(r => r.path));
     }
   } finally {
     await stopProc(proc);
   }
 
   const version = await resolveVersion(appDir, config.versionPkg);
+  const versions = await resolveVersions(
+    appDir,
+    config.versionPkgs ?? [config.versionPkg],
+  );
   console.log(`  version: ${version}`);
+  console.log(`  stack: ${Object.entries(versions).map(([p, v]) => `${p}@${v}`).join(', ')}`);
 
   return {
     name: config.name,
     version,
+    versions,
     buildTime: computeStats(times),
     outputSize,
     pageWeight,

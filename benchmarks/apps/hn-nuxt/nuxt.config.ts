@@ -14,5 +14,5 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/hn.css'],
-  compatibilityDate: '2025-01-01',
+  compatibilityDate: '2026-09-22',
 });
