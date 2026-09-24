@@ -39,7 +39,7 @@ const COMPONENTS = new URL(
 /** The three terminal parts this phase adds. */
 const COMPONENT_FILES = [
   'litro-state-badge',
-  'litro-status-bar',
+  'litro-status-line',
   'litro-term-window',
 ];
 
@@ -52,10 +52,21 @@ const DEFAULT_GLYPH: Record<string, string> = {
   idle: '[.]',
 };
 
+/**
+ * starlight-header is not one of supernova's own files — the recipe inherits
+ * it from starlight, which is the point of the assertion that uses it: the
+ * landing page carries the SAME header the docs pages do.
+ */
+const STARLIGHT_HEADER = new URL(
+  '../recipes/starlight/template/src/components/starlight-header.ts',
+  import.meta.url,
+);
+
 beforeAll(async () => {
   for (const name of COMPONENT_FILES) {
     await import(new URL(`${name}.ts`, COMPONENTS).href);
   }
+  await import(STARLIGHT_HEADER.href);
 });
 
 /** Flatten Lit SSR's chunk iterable into one string of HTML. */
@@ -185,113 +196,110 @@ describe('litro-state-badge renders one state on the server', () => {
 });
 
 // ---------------------------------------------------------------------------
-// litro-status-bar
+// litro-status-line
 // ---------------------------------------------------------------------------
 
-/** The navigation the docs header shows, as `server/starlight.config.js` has it. */
-const NAV = [
-  { label: 'Docs', href: '/docs' },
-  { label: 'Blog', href: '/blog' },
+/**
+ * The cells a landing page shows. Every one is a fact the page can prove —
+ * that is the whole point of the component, and what the tab row it replaced
+ * could never be.
+ */
+const CELLS = [
+  { state: 'done' as const, value: 'v1.2.0' },
+  { state: 'working' as const, value: 'docs', trailing: '/getting-started' },
+  { label: 'node', value: '20.19+', optional: true },
+  { value: 'github', href: 'https://example.com/repo', right: true },
 ];
 
-function statusBar(nav: Array<{ label: string; href: string }>): TemplateResult {
+function statusLine(cells: unknown[]): TemplateResult {
   return html`
-    <litro-status-bar
+    <litro-status-line
       siteTitle="my-product"
-      tabsLabel="Two tasks: build is done, test is working."
-      .tabs="${[
-        { name: 'build', state: 'done', from: 'working', delay: 1.6, current: true },
-        { name: 'test', state: 'working' },
-      ]}"
-    >
-      <svg slot="mark"></svg>
-      ${nav.map((item) => html`<a slot="nav" href="${item.href}">${item.label}</a>`)}
-    </litro-status-bar>
+      label="Project status"
+      .cells="${cells}"
+    ></litro-status-line>
   `;
 }
 
-describe('litro-status-bar carries the site title and the navigation', () => {
-  it('renders the title as a link home, with a slot for the mark', async () => {
-    const out = await renderText(statusBar(NAV));
+describe('litro-status-line states facts, and nothing else', () => {
+  it('renders the project name as a link home', async () => {
+    const out = await renderText(statusLine(CELLS));
 
     expect(out).toContain('<template shadowroot');
     expect(out).toContain('my-product');
     expect(out).toContain('href="/"');
-    expect(out).toContain('name="mark"');
+  });
+
+  it('renders every cell, with its glyph, value and trailing text', async () => {
+    const out = await renderText(statusLine(CELLS));
+
+    expect(out).toContain('v1.2.0');
+    expect(out).toContain('docs');
+    expect(out).toContain('/getting-started');
+    expect(out).toContain('node');
+    expect(out).toContain('20.19+');
+    // The glyphs come from litro-state-badge's set, so the line and the
+    // badges speak the same grammar.
+    expect(out).toContain('[+]');
+    expect(out).toContain('[~]');
+  });
+
+  it('makes a cell with an href a link, and leaves the rest as text', async () => {
+    const out = await renderToString(statusLine(CELLS));
+
+    expect(out).toContain('href="https://example.com/repo"');
+    // Nothing that does not link is styled as though it does.
+    expect(out.match(/<a /g) ?? []).toHaveLength(2); // the name, and github
   });
 
   /**
-   * The bar replaces the docs header on the landing page, so a reader must
-   * find the same links in it. They are slotted, which means they are light
-   * DOM and are in the server HTML whether or not the element expanded.
+   * A status line is read as live state, so an empty one is worse than none:
+   * it takes a row of every viewport and says nothing. With no cells the
+   * component renders nothing at all.
    */
-  it('renders every navigation link the docs header shows', async () => {
-    const out = await renderText(statusBar(NAV));
-
-    expect(out).toContain('name="nav"');
-    for (const item of NAV) {
-      expect(out).toContain(`href="${item.href}"`);
-      expect(out).toContain(item.label);
-    }
-  });
-
-  it('renders a tab per entry, each with its state badge', async () => {
-    const out = await renderText(statusBar(NAV));
-
-    expect(out).toContain('build');
-    expect(out).toContain('test');
-    // The badges really expanded inside the bar's shadow root, rather than
-    // sitting there as bare tags.
-    expect(out).toContain('[+]'); // build, settled on done
-    expect(out).toContain('[~]'); // test, working
-    // The row is one picture, described once, with its parts hidden.
-    expect(out).toContain('role="img"');
-    expect(out).toContain('Two tasks: build is done, test is working.');
-    expect(out).toContain('aria-hidden="true"');
-  });
-
-  /**
-   * ARIA in HTML does not allow role="img" on a list, and axe-core reports
-   * `aria-allowed-role` when it finds one. The row was an `ol` of `li`
-   * elements, which is what raised it. A row of fake tabs is a PICTURE, not a
-   * list of anything a reader can act on, so it is a div of spans now — and
-   * role="img" makes everything inside it presentational in any case, which
-   * is the second reason a list there described a structure nobody could use.
-   *
-   * This test is what stops the `ol` coming back.
-   */
-  it('marks the tab row as one image on a plain div, never on a list', async () => {
-    const out = await renderText(statusBar(NAV));
-
-    expect(out).toContain('<div class="tabs" role="img"');
-    // A tag boundary, not a bare prefix: "<li" also matches
-    // "<litro-status-bar", which would make this pass for the wrong reason.
-    expect(out).not.toMatch(/<ol[\s>]/);
-    expect(out).not.toMatch(/<li[\s>]/);
-    // The tabs are spans, and each one is still hidden from assistive tech.
-    expect(out).toMatch(/<span class="tab[^"]*" aria-hidden="true">/);
-  });
-
-  /**
-   * The site name is cut on a narrow screen on purpose — the bar is one line
-   * high. Cut with nothing to show for it, the title ends mid-letter and
-   * reads as a rendering fault. text-overflow needs a block container, and
-   * the segment is a flex box, so the name has a span of its own.
-   */
-  it('shortens a name that does not fit, with an ellipsis', async () => {
-    const out = await renderToString(statusBar(NAV));
-
-    expect(out).toContain('<span class="name">');
-    expect(out).toContain('text-overflow: ellipsis');
-  });
-
-  it('renders no tab row at all when it is given no tabs', async () => {
-    const out = await renderText(
-      html`<litro-status-bar siteTitle="my-product"></litro-status-bar>`,
+  it('renders nothing when it is given no cells', async () => {
+    const out = await renderToString(
+      html`<litro-status-line siteTitle="my-product"></litro-status-line>`,
     );
 
-    expect(out).toContain('my-product');
-    expect(out).not.toContain('class="tabs"');
+    // The host tag and its attributes are still in the HTML — that is the
+    // element the page wrote. What must not be there is the line itself.
+    expect(out).not.toContain('<aside');
+    expect(out).not.toContain('class="line"');
+    expect(out).not.toContain('class="cell');
+  });
+
+  /**
+   * The line is inside a landmark, so a page does not leave content sitting
+   * outside one — which is what axe-core's `region` rule reports.
+   */
+  it('is a landmark with a name of its own', async () => {
+    const out = await renderToString(statusLine(CELLS));
+
+    expect(out).toContain('<aside class="line"');
+    expect(out).toContain('aria-label="Project status"');
+  });
+
+  /**
+   * The glyphs are the one thing hidden: a bracket and a plus sign read aloud
+   * say nothing, while the words beside them are the fact.
+   */
+  it('hides the glyphs from assistive tech and leaves the words', async () => {
+    const out = await renderToString(statusLine(CELLS));
+
+    expect(out).toMatch(/<span class="glyph" data-state="done" aria-hidden="true"/);
+  });
+
+  /**
+   * A phone has room for the project's name, where you are, and one thing to
+   * click. Everything else is marked optional and dropped by a media query
+   * rather than wrapped onto a second row, because a status line is one row.
+   */
+  it('marks optional cells so a narrow screen can drop them', async () => {
+    const out = await renderToString(statusLine(CELLS));
+
+    expect(out).toContain('optional');
+    expect(out).toContain('@media (max-width: 52rem)');
   });
 });
 
@@ -374,7 +382,7 @@ done in 1.4s</pre>
  * stopped rendering the bar's links from the navigation, a scaffold without a
  * blog would ship a dead link in the header of its landing page.
  */
-describe('a --no-blog scaffold has no Blog link in the status bar', () => {
+describe('a --no-blog scaffold has no Blog link in the header', () => {
   async function scaffoldWithoutBlog(dir: string): Promise<string> {
     const targetDir = join(dir, 'my-product');
     await scaffold(
@@ -387,18 +395,21 @@ describe('a --no-blog scaffold has no Blog link in the status bar', () => {
     return targetDir;
   }
 
-  it('renders the bar from the navigation, not from links written by hand', async () => {
+  it('takes the header links from the navigation, not from links written by hand', async () => {
     await withTmpDir(async (dir) => {
       const targetDir = await scaffoldWithoutBlog(dir);
       const home = await readFile(join(targetDir, 'pages/index.ts'), 'utf-8');
 
-      // The links in the bar's nav slot are mapped from the page's `nav`
-      // data, which pageData reads from server/starlight.config.js.
-      expect(home).toContain('<litro-status-bar');
-      expect(home).toContain('slot="nav"');
-      expect(home).toMatch(/nav\.map\(/);
-      // ...and the docs header it replaced is gone from this page.
-      expect(home).not.toContain('<starlight-header');
+      // The landing page carries the SAME header the docs pages do, and hands
+      // it the nav data pageData read from server/starlight.config.js. So a
+      // link removed from the config is removed from every page at once, and
+      // this page writes no link of its own.
+      expect(home).toContain('<starlight-header');
+      expect(home).toMatch(/\.nav="\$\{nav\}"/);
+      // The terminal bar that used to be here is gone; the terminal character
+      // is in the status line at the foot instead.
+      expect(home).not.toContain('<litro-status-bar');
+      expect(home).toContain('<litro-status-line');
     });
   });
 
@@ -415,7 +426,13 @@ describe('a --no-blog scaffold has no Blog link in the status bar', () => {
       };
       expect(siteConfig.nav.some((item) => item.href.startsWith('/blog'))).toBe(false);
 
-      const out = await renderText(statusBar(siteConfig.nav));
+      const out = await renderText(
+        html`<starlight-header
+          siteTitle="my-product"
+          .nav="${siteConfig.nav}"
+          currentPath="/"
+        ></starlight-header>`,
+      );
       expect(out).toContain('href="/docs"');
       expect(out).toContain('Docs');
       expect(out).not.toContain('/blog');

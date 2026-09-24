@@ -2,9 +2,23 @@ import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 /**
- * <litro-install-command command="npm install my-product"></litro-install-command>
+ * <litro-install-command command="npm install my-product">
+ *   <span slot="note">Needs Node 20 or newer.</span>
+ * </litro-install-command>
  *
- * One command, with a `$` prompt in front of it and a copy button after it.
+ * The install slab: a prompt, the command, and a labeled copy control, across
+ * the full width of whatever column it is given. It is the one thing on a
+ * landing page a reader is meant to take away with them, so it is sized like
+ * it: a slab, not a chip.
+ *
+ * THE `note` SLOT is one line of small print under the slab — what the command
+ * needs first, or what it will not do. Slot nothing and the line is not there
+ * at all; the box below it collapses to no height.
+ *
+ * THE COMMAND BOX IS A TAB STOP. It scrolls sideways when the command is
+ * longer than the slab, and a reader with a keyboard and no pointer has no
+ * other way to reach the end of it. `commandLabel` is what they hear on the
+ * way in; set it when the command is not an install command.
  *
  * The button is the only part that needs JavaScript. Without it the command is
  * still rendered by the server, still readable and still selectable by hand —
@@ -28,6 +42,7 @@ export class LitroInstallCommand extends LitElement {
   static override properties = {
     command: { type: String },
     label: { type: String },
+    commandLabel: { type: String },
     _status: { state: true },
   };
 
@@ -36,18 +51,39 @@ export class LitroInstallCommand extends LitElement {
       display: block;
     }
 
+    /* The slab runs the full width it is given, and it is one box with a seam
+       down it rather than a chip with a button tacked on the end: the command
+       takes the room it needs and the copy control is a panel of its own,
+       flush to the right edge. overflow: hidden is what lets the panel square
+       itself off against the slab's rounded corners. */
     .box {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      max-width: 100%;
-      padding: 0.6rem 0.6rem 0.6rem 1rem;
+      display: flex;
+      align-items: stretch;
+      /* border-box, because a shadow root does not inherit the page's reset.
+         With the default content-box, a full-width slab is its width PLUS its
+         border, and the line it sits on scrolls sideways. */
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0;
       border: 1px solid var(--nova-border);
       border-radius: var(--nova-radius);
       background: var(--nova-surface);
+      overflow: hidden;
       font-family: var(--nova-font-mono);
-      font-size: 0.9rem;
+      font-size: 0.9375rem;
       text-align: left;
+    }
+
+    .line {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex: 1;
+      /* min-width: 0, and the slab does not fit on a phone without it. A flex
+         item's automatic minimum size is its CONTENT's width, so a long
+         command refuses to shrink and pushes the slab past the screen. */
+      min-width: 0;
+      padding: 0.85rem 1rem;
     }
 
     .prompt {
@@ -61,30 +97,43 @@ export class LitroInstallCommand extends LitElement {
       color: var(--nova-text);
       overflow-x: auto;
       white-space: nowrap;
+      min-width: 0;
       padding-bottom: 0.1rem;
+    }
+
+    /* The command scrolls sideways once it is longer than the slab, and a
+       region that scrolls has to be reachable without a pointer, so it is a
+       tab stop (WCAG 2.1.1; axe calls the failure
+       scrollable-region-focusable). The ring is focus-visible only: a mouse
+       press shows nothing, which is what the design asks for at the widths
+       where the command fits and does not scroll at all. */
+    .command:focus-visible {
+      outline: 2px solid var(--nova-accent);
+      outline-offset: 2px;
+      border-radius: 2px;
     }
 
     .copy {
       flex-shrink: 0;
-      margin-left: 0.4rem;
-      padding: 0.3rem 0.7rem;
-      border: 1px solid var(--nova-border);
-      border-radius: var(--nova-radius);
-      background: transparent;
-      color: var(--nova-text-dim);
+      padding: 0 1.5rem;
+      border: 0;
+      border-left: 1px solid var(--nova-border);
+      border-radius: 0;
+      background: color-mix(in srgb, var(--nova-text) 9%, transparent);
+      color: var(--nova-text);
       font: inherit;
-      font-size: 0.8rem;
+      font-size: 0.875rem;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .copy:hover {
-      color: var(--nova-text);
-      border-color: var(--nova-accent);
+      background: color-mix(in srgb, var(--nova-text) 16%, transparent);
     }
 
     .copy:focus-visible {
       outline: 2px solid var(--nova-accent);
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
 
     /* The button does nothing without JavaScript, so it is not shown then. */
@@ -92,6 +141,18 @@ export class LitroInstallCommand extends LitElement {
       .copy {
         display: none;
       }
+    }
+
+    /* The small print. The wrapper carries no styles of its own, so with
+       nothing slotted it is an empty block with no height and the slab has no
+       gap under it. Everything that makes the line look like small print is
+       on ::slotted, which applies only when there is something to style. */
+    ::slotted([slot='note']) {
+      display: block;
+      margin-top: 0.75rem;
+      color: var(--nova-text-dim);
+      font-size: 0.875rem;
+      line-height: 1.6;
     }
 
     .announce {
@@ -109,6 +170,15 @@ export class LitroInstallCommand extends LitElement {
 
   /** The button's resting label. */
   label = 'Copy';
+
+  /**
+   * The name of the command box itself, heard when a keyboard reaches it.
+   *
+   * It is separate from `label`, which names the BUTTON. The box is a tab stop
+   * because it scrolls sideways on a narrow screen, and it is the command that
+   * has to be named there, not the act of copying it.
+   */
+  commandLabel = 'Install command';
 
   /** '' before the button is pressed, then what the press achieved. */
   _status: '' | 'copied' | 'selected' = '';
@@ -177,8 +247,19 @@ export class LitroInstallCommand extends LitElement {
 
     return html`
       <p class="box">
-        <span class="prompt" aria-hidden="true">$</span>
-        <code class="command">${this.command}</code>
+        <span class="line">
+          <span class="prompt" aria-hidden="true">$</span>
+          <!-- role and aria-label, because a focusable box with no name is
+               announced as nothing. "group" rather than "region": a region is
+               a landmark, and a landmark per install command would crowd the
+               page's landmark list for no gain. -->
+          <code
+            class="command"
+            role="group"
+            tabindex="0"
+            aria-label="${this.commandLabel}"
+          >${this.command}</code>
+        </span>
         <button
           type="button"
           class="copy"
@@ -188,6 +269,7 @@ export class LitroInstallCommand extends LitElement {
           >${this._status ? word : ''}</span
         >
       </p>
+      <div class="note"><slot name="note"></slot></div>
     `;
   }
 }

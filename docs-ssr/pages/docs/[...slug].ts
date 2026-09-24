@@ -206,6 +206,9 @@ export class DocPage extends LitroPage {
         currentSlug="${data.currentSlug}"
         currentPath="/docs/${data.currentSlug}"
         .spaNav="${true}"
+        .status="${data.editUrl
+          ? [{ value: 'edit this page', href: data.editUrl, right: true }]
+          : []}"
       >
         <div slot="content">
           ${unsafeHTML(data.body)}

@@ -6,6 +6,25 @@ export interface NavItem {
 }
 
 /**
+ * A real browser, not a server DOM shim.
+ *
+ * `typeof document !== 'undefined'` is NOT enough. A server-side DOM shim can
+ * define `document` and still leave `documentElement` undefined, which is how
+ * the FAST copy of this header threw
+ * "Cannot read properties of undefined (reading 'getAttribute')" during SSR
+ * and took down every page that carried it. Elena's SSR runs only
+ * willUpdate() and render() (see `.agents/rules/adapters-ssr.md`, SSR-002),
+ * so this copy never reached the bug — but the three adapter copies are read
+ * against each other, and the shape has to be the same in all of them.
+ *
+ * Guard on the thing you are about to touch, not on a global a shim provides.
+ */
+function themeRoot(): HTMLElement | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.documentElement ?? undefined;
+}
+
+/**
  * <starlight-header sitetitle="My Docs" .nav=${nav} currentpath="/docs/getting-started">
  *   Top navigation bar with site title, nav links, and dark/light theme toggle.
  *   Light DOM — styles scoped via @scope.
@@ -22,17 +41,40 @@ export class StarlightHeader extends Elena(HTMLElement) {
   hassidebar = false;
   _theme = 'light';
 
-  private _initialized = false;
+  /**
+   * Keep the toggle's icon on the theme the page is actually showing.
+   *
+   * THIS READS, IT DOES NOT DECIDE. The head script in route-meta.ts sets
+   * data-theme before the first paint, from the reader's stored choice or,
+   * when they have made none, from the system. This used to resolve it a
+   * second time and fall back to 'light' with no look at
+   * prefers-color-scheme, so on a dark system every page carrying the header
+   * flipped to light right after it loaded.
+   */
+  private _readTheme = (): void => {
+    if (!themeRoot()) return;
+    this._theme =
+      document.documentElement.getAttribute('data-theme') === 'dark'
+        ? 'dark'
+        : 'light';
+  };
+
+  private _systemTheme?: MediaQueryList;
 
   override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._initialized && typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('sl-theme') ?? 'light';
-      this._theme = stored;
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', stored);
+    // With no documentElement there is no theme to read and no system
+    // preference worth listening to. A server DOM shim reaches here.
+    if (themeRoot()) {
+      this._readTheme();
+      // The head script follows the system while the reader has stored no
+      // choice, so the icon has to follow it too. The head script's own
+      // listener was registered first, in <head>, so by the time this one
+      // runs data-theme is already up to date.
+      if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+        this._systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        this._systemTheme.addEventListener('change', this._readTheme);
       }
-      this._initialized = true;
     }
     // Elena renders plain HTML — wire up click events via delegation
     this.addEventListener('click', this._handleClick);
@@ -40,6 +82,7 @@ export class StarlightHeader extends Elena(HTMLElement) {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    this._systemTheme?.removeEventListener('change', this._readTheme);
     this.removeEventListener('click', this._handleClick);
   }
 
@@ -54,10 +97,16 @@ export class StarlightHeader extends Elena(HTMLElement) {
   toggleTheme() {
     const next = this._theme === 'light' ? 'dark' : 'light';
     this._theme = next;
+    // Writing the choice is what stops the head script's system listener
+    // from overriding it later.
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sl-theme', next);
+      try {
+        localStorage.setItem('sl-theme', next);
+      } catch {
+        // Site data blocked. The choice holds for this page either way.
+      }
     }
-    if (typeof document !== 'undefined') {
+    if (themeRoot()) {
       document.documentElement.setAttribute('data-theme', next);
     }
   }
@@ -124,7 +173,16 @@ export class StarlightHeader extends Elena(HTMLElement) {
           @media (max-width: 72rem) {
             .menu-btn:not(.menu-btn-hidden) { display: flex; }
           }
-          .site-title {
+          /* THE BRAND FACE. --sl-font-brand is what the wordmark and the navigation
+       are set in, and it falls back to the body sans, so a site that never
+       sets it looks exactly as it did. A site that wants the terminal
+       character in its header sets it once, to the mono, and both the name
+       and the links follow.
+
+       It is a token rather than a fork of this component because that is the
+       whole of the difference: two declarations, not a second header. */
+    .site-title {
+            font-family: var(--sl-font-brand, var(--sl-font-sans));
             font-size: var(--sl-text-lg, 1.125rem);
             font-weight: 700;
             color: var(--sl-color-text, #23262f);
@@ -137,8 +195,36 @@ export class StarlightHeader extends Elena(HTMLElement) {
             align-items: center;
             gap: 0.25rem;
             flex: 1;
+            /* min-width: 0, or a flex item refuses to shrink below its content and
+               the whole header grows past a phone's screen. On the docs pages the
+               nav is hidden behind the hamburger below 72rem and this never showed;
+               the landing page has no sidebar, so it keeps its links and needs the
+               row to be able to give way. */
+            min-width: 0;
+          }
+
+          /* A phone cannot fit four links, a search control and two icon buttons.
+             The links SCROLL rather than disappear: dropping one would take a
+             destination away from exactly the reader with the least room to go
+             looking for it. The bar is hidden because a scrollbar inside a header
+             is noise, and the links are still reachable by keyboard and by swipe. */
+          @media (max-width: 48rem) {
+            nav {
+              overflow-x: auto;
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+            }
+
+            nav::-webkit-scrollbar {
+              display: none;
+            }
+
+            nav a {
+              flex-shrink: 0;
+            }
           }
           nav a {
+            font-family: var(--sl-font-brand, var(--sl-font-sans));
             padding: 0.35rem 0.75rem;
             font-size: var(--sl-text-sm, 0.875rem);
             font-weight: 500;

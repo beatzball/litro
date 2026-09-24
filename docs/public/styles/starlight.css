@@ -22,6 +22,7 @@
 
 /* Starlight design tokens — light mode defaults */
 :root {
+  color-scheme: light;
   --sl-color-white: #fff;
   --sl-color-black: #23262f;
   --sl-color-gray-1: #f6f6f6;
@@ -75,8 +76,82 @@
   --sl-border-radius-sm: 0.25rem;
 }
 
-/* Dark mode overrides */
+/* ── The landing page's palette ───────────────────────────────────────
+ *
+ * The supernova landing page reads --nova-* tokens, and each of those reads a
+ * --brand-* value with a fallback. Defining the --brand-* set HERE, in the
+ * same light and dark blocks the --sl-* tokens live in, is what makes the
+ * landing page follow the theme toggle and the system preference — including
+ * with JavaScript turned off, through the prefers-color-scheme block below.
+ *
+ * It used to be a dark-only block inside the page component, so the toggle
+ * had nothing to act on and switching to light left the landing page dark.
+ *
+ * The accent is NOT repeated here: --brand-accent reads --sl-color-accent, so
+ * litro's orange is one value in one place and the landing page and the docs
+ * pages cannot drift apart.
+ */
+:root {
+  /* surfaces — a warm off-white, not pure white: the hero is a large field
+     of one color and pure white under a wash reads as a blown-out photo. */
+  --brand-bg: #fdfcfb;
+  --brand-surface: #f4f1ee;
+  --brand-border: #e4ded8;
+
+  /* text */
+  --brand-text: #1b1a19;
+  --brand-text-dim: #5c5854;
+
+  /* accent — one value, the site's own.
+     --brand-accent-high is the accent you can put WHITE text on: the mode
+     segment of the status line and the primary button both do. A site accent
+     is chosen to sit under a page rather than under white text, and
+     --sl-color-accent-high is chosen to sit ON one, so neither works here.
+     Mixing the accent most of the way toward black keeps the hue and clears
+     4.5:1 in both themes. */
+  --brand-accent: var(--sl-color-accent);
+  --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+  /* The accent as small TEXT on the page. On a light ground the brand orange
+     reads at about 3.5:1, under the 4.5:1 a body-sized word needs, so it is
+     darkened here; on a dark ground the same value is already well clear and
+     the accent is used unchanged. Same hue, both ways. */
+  --brand-accent-text: color-mix(in srgb, var(--sl-color-accent) 78%, #000);
+  --brand-accent-2: #0369a1;
+
+  /* states */
+  --brand-error: #b91c1c;
+  --brand-blocked: #b45309;
+  --brand-working: #0369a1;
+  --brand-done: #15803d;
+  --brand-idle: #6b7280;
+
+  /* How solid the hero's mark is. On a light ground a mark has to be darker
+     to read at all, and a light ground shows far less of a faint shape. */
+  --brand-mark-opacity: 0.16;
+}
+
+/* ── Dark mode ────────────────────────────────────────────────────────
+ *
+ * TWO RULES, AND THEY MUST STAY IN STEP. CSS has no way to give one
+ * declaration block two conditions, so the dark palette is written twice:
+ *
+ *   [data-theme="dark"]        — what the head script sets, from the
+ *                                reader's stored choice or, when they have
+ *                                made none, from the system.
+ *
+ *   the @media block below     — the only thing that can follow a dark
+ *                                system with JavaScript turned OFF, when
+ *                                nothing sets data-theme at all.
+ *
+ * The :not([data-theme="light"]) guard is what keeps a reader's choice
+ * winning: the moment the head script writes light, that block stops
+ * matching and the light tokens above apply again.
+ *
+ * Edit one and you must edit the other. A test pins them together —
+ * see packages/create-litro/src/theme.test.ts.
+ */
 [data-theme="dark"] {
+  color-scheme: dark;
   --sl-color-text: #f0f0f0;
   --sl-color-bg: #17181c;
   --sl-color-bg-sidebar: #1e1f24;
@@ -118,6 +193,87 @@
   /* Shoelace primary palette — dark mode (brighter accent for dark backgrounds) */
   --sl-color-primary-600: #fb923c;
   --sl-color-primary-700: #f97316;
+
+  /* The landing page's palette. See the note beside the light values. */
+  --brand-bg: #0d0e1a;
+  --brand-surface: #171a2b;
+  --brand-border: #2a2e45;
+  --brand-text: #e9ecfa;
+  --brand-text-dim: #9aa1bd;
+  --brand-accent: var(--sl-color-accent);
+  --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+  --brand-accent-text: var(--sl-color-accent);
+  --brand-accent-2: #38bdf8;
+  --brand-error: #f87171;
+  --brand-blocked: #fbbf24;
+  --brand-working: #38bdf8;
+  --brand-done: #4ade80;
+  --brand-idle: #64748b;
+  --brand-mark-opacity: 0.11;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --sl-color-text: #f0f0f0;
+    --sl-color-bg: #17181c;
+    --sl-color-bg-sidebar: #1e1f24;
+    --sl-color-bg-nav: #17181c;
+    --sl-color-bg-inline-code: #2a2b30;
+    --sl-color-border: #2e2f35;
+
+    --sl-color-gray-1: #2a2b30;
+    --sl-color-gray-2: #35363d;
+    --sl-color-gray-3: #5a5b63;
+    --sl-color-gray-4: #8a8b94;
+    --sl-color-gray-5: #c0c1cb;
+    --sl-color-gray-6: #e8e9f0;
+
+    --sl-color-accent: #fb923c;
+    --sl-color-accent-high: #fed7aa;
+    --sl-color-accent-low: #3a1e0a;
+
+    --sl-color-note: #38bdf8;
+    --sl-color-tip: #4ade80;
+    --sl-color-caution: #fbbf24;
+    --sl-color-danger: #f87171;
+
+    /* Shoelace neutral palette — dark mode remapping (used by sl-button, sl-icon-button, etc.) */
+    --sl-color-neutral-0: hsl(240, 5.9%, 10%);
+    --sl-color-neutral-50: hsl(240, 4.9%, 12.5%);
+    --sl-color-neutral-100: hsl(240, 3.7%, 15.9%);
+    --sl-color-neutral-200: hsl(240, 5.9%, 20%);
+    --sl-color-neutral-300: hsl(240, 5.9%, 25%);
+    --sl-color-neutral-400: hsl(240, 5.9%, 40%);
+    --sl-color-neutral-500: hsl(240, 3.8%, 46.1%);
+    --sl-color-neutral-600: hsl(240, 5%, 64.9%);
+    --sl-color-neutral-700: hsl(240, 5.3%, 78.4%);
+    --sl-color-neutral-800: hsl(240, 3.7%, 87.8%);
+    --sl-color-neutral-900: hsl(240, 4.9%, 92.5%);
+    --sl-color-neutral-950: hsl(240, 5.3%, 96.1%);
+    --sl-color-neutral-1000: hsl(0, 0%, 100%);
+
+    /* Shoelace primary palette — dark mode (brighter accent for dark backgrounds) */
+    --sl-color-primary-600: #fb923c;
+    --sl-color-primary-700: #f97316;
+
+    /* The landing page's palette. See the note beside the light values. */
+    --brand-bg: #0d0e1a;
+    --brand-surface: #171a2b;
+    --brand-border: #2a2e45;
+    --brand-text: #e9ecfa;
+    --brand-text-dim: #9aa1bd;
+    --brand-accent: var(--sl-color-accent);
+    --brand-accent-high: color-mix(in srgb, var(--sl-color-accent) 62%, #000);
+    --brand-accent-text: var(--sl-color-accent);
+    --brand-accent-2: #38bdf8;
+    --brand-error: #f87171;
+    --brand-blocked: #fbbf24;
+    --brand-working: #38bdf8;
+    --brand-done: #4ade80;
+    --brand-idle: #64748b;
+    --brand-mark-opacity: 0.11;
+  }
 }
 
 /* Base reset */

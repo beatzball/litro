@@ -186,10 +186,15 @@ describe('the landing page components render on the server', () => {
 
     expect(out).toContain('<template shadowroot');
     expect(out).toContain('name="mark"');
-    // The star's own layers, so the backdrop is really there.
-    expect(out).toContain('class="layer field"');
-    expect(out).toContain('class="layer shock"');
-    expect(out).toContain('class="layer core"');
+    // The backdrop, and there is exactly one layer of it: a deep ground and
+    // one soft wash. The ring, the bright core and the star field the hero
+    // used to stack on top of each other are all gone, and naming them here
+    // keeps them from coming back unnoticed.
+    expect(out).toContain('class="layer wash"');
+    expect(out).not.toContain('class="layer field"');
+    expect(out).not.toContain('class="layer shock"');
+    expect(out).not.toContain('class="layer core"');
+    expect(out).not.toContain('class="layer glow"');
     // The hero's words are slotted, so they are in the HTML too.
     expect(out).toContain('Say what your product does, in one line.');
   });
@@ -243,6 +248,54 @@ describe('litro-install-command copies, or selects instead', () => {
 // ---------------------------------------------------------------------------
 // The hero costs no request
 // ---------------------------------------------------------------------------
+
+describe('litro-hero-nova and the default mark', () => {
+  /**
+   * The ejecta is the slot's FALLBACK, not a layer painted behind the slot.
+   * That distinction is the whole feature: a project that slots its own logo
+   * must not get the recipe's mark underneath it. Writing it as fallback
+   * content means the browser drops it the moment anything is assigned, with
+   * no attribute to set and nothing for a project to remember to turn off.
+   *
+   * These two cases are the proof, in the server-rendered HTML that a reader
+   * with no JavaScript gets.
+   */
+  it('draws the ejecta when a page slots no mark of its own', async () => {
+    const out = await renderToString(html`<litro-hero-nova></litro-hero-nova>`);
+
+    expect(out).toContain('class="ejecta"');
+    expect(out).toContain('viewBox="0 0 480 480"');
+  });
+
+  it('drops the ejecta as soon as a page slots its own mark', async () => {
+    const out = await renderToString(html`
+      <litro-hero-nova>
+        <svg slot="mark" id="my-logo"></svg>
+      </litro-hero-nova>
+    `);
+
+    // The fallback is still in the shadow template, because that is what
+    // fallback content IS; what matters is that the slot has an assigned node,
+    // so the browser renders the logo and not the fallback.
+    expect(out).toContain('id="my-logo"');
+    expect(out).toContain('name="mark"');
+  });
+
+  it('takes its color from the tokens, so an accent change recolors it', async () => {
+    const out = await renderToString(html`<litro-hero-nova></litro-hero-nova>`);
+
+    expect(out).toContain('var(--nova-accent, currentColor)');
+    expect(out).toContain('color: var(--nova-text)');
+  });
+
+  it('has no animation, so there is nothing to stop for reduced motion', async () => {
+    const out = await renderToString(html`<litro-hero-nova></litro-hero-nova>`);
+
+    expect(out).not.toContain('@keyframes');
+    expect(out).not.toContain('animation:');
+    expect(out).not.toContain('transition:');
+  });
+});
 
 describe('litro-hero-nova asks for no image', () => {
   /**

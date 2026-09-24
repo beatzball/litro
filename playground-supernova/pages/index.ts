@@ -8,22 +8,28 @@ import { starlightHead } from '../src/route-meta.js';
 
 // Register the components used in render(). The landing page's own first...
 import '../src/components/litro-hero-nova.js';
+import '../src/components/litro-status-line.js';
+import '../src/components/litro-pane.js';
+import '../src/components/litro-pane-grid.js';
+import '../src/components/litro-site-footer.js';
 import '../src/components/litro-install-command.js';
 import '../src/components/litro-feature-row.js';
 import '../src/components/litro-steps.js';
 import '../src/components/litro-key-hints.js';
 import '../src/components/litro-state-badge.js';
-import '../src/components/litro-status-bar.js';
 import '../src/components/litro-term-window.js';
 
 // ...then the ones shared with the docs half of this site.
-import '../src/components/litro-card.js';
-import '../src/components/litro-card-grid.js';
-import '../src/components/litro-footer.js';
+import '../src/components/starlight-header.js';
+// litro-card, litro-card-grid and litro-footer are the docs half of this
+// site's components and they still serve it; this page no longer uses any of
+// them. The feature block is panes now, and the credit line grew into a
+// footer with columns.
 
 import type { StepItem } from '../src/components/litro-steps.js';
 import type { KeyHint } from '../src/components/litro-key-hints.js';
-import type { StatusTab } from '../src/components/litro-status-bar.js';
+import type { StatusCell } from '../src/components/litro-status-line.js';
+import type { FooterColumn } from '../src/components/litro-site-footer.js';
 import type { TermRow } from '../src/components/litro-term-window.js';
 
 /**
@@ -42,26 +48,31 @@ import type { TermRow } from '../src/components/litro-term-window.js';
 const INSTALL_COMMAND = 'npm install playground-supernova';
 
 /**
- * The tabs in the status bar, left to right.
+ * The cells in the status line at the foot of the window.
  *
- * They are a picture of your project at work, not live data: every badge
- * settles from `from` to `state` after `delay` seconds, with a CSS animation
- * and no script, and `prefers-reduced-motion` shows them settled from the
- * first frame. Say what the row shows in TABS_LABEL — that sentence is the
- * only thing a screen reader gets.
+ * EVERY CELL MUST BE A FACT YOUR PROJECT CAN PROVE. A status line is read as
+ * live state, so anything invented in it is a lie told in the most credible
+ * place on the page — which is why the row of settling tabs this page used to
+ * show at the top is gone. Put in a version you actually publish, a path that
+ * actually exists, a link your config actually has. If you have nothing true
+ * for a cell, delete the cell; delete them all and the line is not rendered.
  *
- * Delete both and the bar renders with no tab row at all.
+ * The two below are true of the site you just scaffolded, and they are meant
+ * to be replaced. To add the version, read it in pageData from your own
+ * package.json and pass it through, the way `siteTitle` is passed:
+ *
+ *   { state: 'done', value: 'v' + version }
+ *
+ * `optional` drops a cell on a narrow screen. A phone has room for the
+ * project's name, where you are, and one thing to click.
  */
-const TABS: StatusTab[] = [
-  { name: 'build', state: 'done', from: 'working', delay: 1.6, current: true },
-  { name: 'test', state: 'working' },
-  { name: 'deploy', state: 'blocked', from: 'working', delay: 1.0 },
-  { name: 'docs', state: 'idle', from: 'working', delay: 2.6 },
+const STATUS_CELLS: StatusCell[] = [
+  { state: 'working', value: 'docs', trailing: '/getting-started', href: '/docs/getting-started' },
+  { label: 'built with', value: 'litro', href: 'https://litro.dev', right: true },
 ];
 
-/** What the tab row shows, in one sentence, for a reader who cannot see it. */
-const TABS_LABEL =
-  'Four tasks: build is done, test is working, deploy is blocked, docs is idle.';
+/** What the line is, for a reader who cannot see it. */
+const STATUS_LABEL = 'Project status';
 
 /**
  * The "what it does" rows. Keep the copy here, at the top of the file, so a
@@ -143,6 +154,143 @@ const KEY_HINTS: KeyHint[] = [
   { keys: 'Enter', meaning: 'Accept what is selected' },
 ];
 
+/**
+ * ── SECTION 2 · Proof ──────────────────────────────────────────────────
+ *
+ * A row of logos: the people already using your project. It is the oldest
+ * argument on a landing page and the strongest, which is exactly why it must
+ * not be invented — a wall of names nobody agreed to is the one mistake a
+ * reader cannot forgive.
+ *
+ * So this ships EMPTY, with slots that say what goes in them. Fill them with
+ * real marks when you have real users, or DELETE THE WHOLE SECTION from
+ * render() below. An empty logo wall on a live site says less than no logo
+ * wall at all.
+ */
+const LOGOS = ['Your logo', 'Your logo', 'Your logo', 'Your logo', 'Your logo'];
+
+/**
+ * ── SECTION 4 · Built on ───────────────────────────────────────────────
+ *
+ * What your project stands on, in three panels. It turns "another dependency
+ * to learn" into "parts you already know", and every project can fill it on
+ * day one: you know what you built this with.
+ */
+const FOUNDATIONS: Array<{ name: string; meta: string; description: string }> = [
+  {
+    name: 'First dependency',
+    meta: 'what it does',
+    description:
+      'Name the thing and say, in one sentence, what your project gets from ' +
+      'it. A reader who already knows it has just learned half of what you do.',
+  },
+  {
+    name: 'Second dependency',
+    meta: 'what it does',
+    description:
+      'The same again. Three is the usual number: enough to place the ' +
+      'project, few enough to read at a glance.',
+  },
+  {
+    name: 'Third dependency',
+    meta: 'what it does',
+    description:
+      'If you only have two, delete this panel and give the other two half ' +
+      'the row each.',
+  },
+];
+
+/**
+ * ── SECTION 5 · Proof by number ────────────────────────────────────────
+ *
+ * Downloads, stars, contributors — whatever you can count. The values below
+ * are DASHES on purpose: a number you have not measured is a lie with a
+ * decimal point, and a reader who checks one and finds it wrong stops
+ * believing the rest of the page.
+ *
+ * Put real figures in, or delete the section. Do not ship the dashes.
+ */
+const STATS: Array<{ value: string; label: string }> = [
+  { value: '—', label: 'downloads' },
+  { value: '—', label: 'stars' },
+  { value: '—', label: 'contributors' },
+  { value: '—', label: 'releases' },
+];
+
+/**
+ * ── SECTION 6 · Ecosystem ──────────────────────────────────────────────
+ *
+ * What your project extends with: templates, plugins, modules, presets. It
+ * answers "can I make it do MY thing" without a paragraph.
+ */
+const ECOSYSTEM: Array<{ name: string; meta: string; description: string; href: string }> = [
+  {
+    name: 'first-extension',
+    meta: 'category',
+    description: 'One line on what it adds and who would reach for it.',
+    href: '/docs/getting-started',
+  },
+  {
+    name: 'second-extension',
+    meta: 'category',
+    description: 'Point each of these at a real page in your docs.',
+    href: '/docs/getting-started',
+  },
+  {
+    name: 'third-extension',
+    meta: 'category',
+    description: 'Three is a sample, not a catalog. Link the catalog below.',
+    href: '/docs/getting-started',
+  },
+];
+
+/**
+ * ── SECTION 7 · Deploy anywhere ────────────────────────────────────────
+ *
+ * Where it runs. One claim and a list, because "where does this have to live"
+ * is the objection that stops an evaluation dead, and it answers in a glance.
+ */
+const DEPLOY_TARGETS = [
+  'your platform',
+  'your platform',
+  'your platform',
+  'your platform',
+  'your platform',
+  'your platform',
+];
+
+/**
+ * ── SECTION 9 · Footer ─────────────────────────────────────────────────
+ *
+ * The map of everything the page did not cover. Build it from the same config
+ * the navigation reads where you can, so a link added to the site turns up in
+ * both places.
+ */
+const FOOTER_COLUMNS: FooterColumn[] = [
+  {
+    heading: 'Docs',
+    links: [
+      { label: 'Getting started', href: '/docs/getting-started' },
+      { label: 'Installation', href: '/docs/installation' },
+      { label: 'Configuration', href: '/docs/configuration' },
+    ],
+  },
+  {
+    heading: 'Guides',
+    links: [
+      { label: 'Your first page', href: '/docs/guides-first-page' },
+      { label: 'Deploying', href: '/docs/guides-deploying' },
+    ],
+  },
+  {
+    heading: 'Project',
+    links: [
+      { label: 'Blog', href: '/blog' },
+      { label: 'Built with Litro', href: 'https://litro.dev' },
+    ],
+  },
+];
+
 export interface SupernovaData {
   siteTitle: string;
   description: string;
@@ -156,29 +304,40 @@ export const pageData = definePageData(async (_event) => {
     siteTitle: String(metadata.title ?? siteConfig.title),
     description: String(metadata.description ?? siteConfig.description),
     nav: siteConfig.nav,
+    // ── SECTION 3 · Capabilities ────────────────────────────────────
+    //
+    // What the project does, one pane each. These are drawn as panes sharing
+    // hairlines, not as floating cards, and they carry WORDS rather than
+    // pictures: a scaffolded site has no icon that means anything yet, and a
+    // decorative emoji beside "Docs" tells a reader nothing they did not
+    // already know from the word.
+    //
+    // `icon` is a PATH, and it is empty on purpose. Put a real mark in it —
+    // a dependency's logo, a language's mark — and the pane draws it small
+    // before the name. Leave it empty and nothing is drawn; there is no
+    // placeholder icon.
     features: [
       {
-        icon: '📄',
+        icon: '',
         title: 'Docs',
         description: 'Structured documentation with sidebar, TOC, and prev/next navigation.',
       },
-      // The Blog card. create-litro removes this card when the blog is
-      // declined, and it finds the card by the exact object shape below: an
-      // `icon` field, then a `title` field whose value is the word Blog. The
-      // match lives in create-litro's own blog.ts. Keep the shape if you edit
-      // the card.
+      // The Blog pane. create-litro removes it when the blog is declined, and
+      // it finds it by the exact object shape below: an `icon` field, then a
+      // `title` field whose value is the word Blog. The match lives in
+      // create-litro's own blog.ts. Keep the shape if you edit this entry.
       {
-        icon: '✍️',
+        icon: '',
         title: 'Blog',
         description: 'Write posts in Markdown. Tags, dates, and listing pages auto-generated.',
       },
       {
-        icon: '🎨',
+        icon: '',
         title: 'Theming',
         description: 'Light and dark mode via CSS custom properties. Zero JavaScript required.',
       },
       {
-        icon: '⚡',
+        icon: '',
         title: 'Static',
         description: 'Pre-rendered to plain HTML. Deploy to any CDN with no server required.',
       },
@@ -217,25 +376,38 @@ export class SupernovaPage extends LitroPage {
      * --sl-border-radius-sm. Do not redefine any of those here — the docs
      * pages read them too, and the header on this page is a docs component.
      *
-     * The landing page is dark whatever the reader's light or dark choice is,
-     * the way a product page usually is, while the docs follow that choice. To
-     * make the landing page follow it too, delete the color-scheme line
-     * below and point the surface and text tokens at the --sl-* names.
+     * THE PAGE FOLLOWS THE READER'S LIGHT OR DARK CHOICE, exactly as the docs
+     * half does, because the --brand-* values it reads are defined in the
+     * light and dark blocks of public/styles/starlight.css. Change them there
+     * and both themes move together; there is no color-scheme declaration
+     * here and no dark-only palette, which is what used to leave this page
+     * dark when a reader switched to light.
      */
     :host {
-      color-scheme: dark;
-
-      /* surfaces */
-      --nova-bg: var(--brand-bg, #08090f);
-      --nova-surface: var(--brand-surface, #12141f);
-      --nova-border: var(--brand-border, #262a3d);
+      /* surfaces — the dark ground is TINTED, not flat black; the light one
+         is a warm off-white rather than pure white, because the hero is a
+         large field of one color and pure white under a wash reads as a
+         blown-out photograph. */
+      --nova-bg: var(--brand-bg, #0d0e1a);
+      --nova-surface: var(--brand-surface, #171a2b);
+      --nova-border: var(--brand-border, #2a2e45);
 
       /* text */
       --nova-text: var(--brand-text, #e9ecfa);
       --nova-text-dim: var(--brand-text-dim, #979db8);
 
-      /* accent */
+      /* accent — TWO of them, and the reason is contrast. --nova-accent is
+         the one that reads as text against the page. It is not dark enough
+         to carry WHITE text on it, so anything that puts words on an accent
+         FIELD — the status line's mode segment, the primary button — takes
+         --nova-accent-high, which the stylesheet derives from the same
+         accent and which clears 4.5:1 in both themes. */
       --nova-accent: var(--brand-accent, #7c3aed);
+      --nova-accent-high: var(--brand-accent-high, #4c1d95);
+      /* And a third: the accent as small TEXT on the page. On a light ground
+         a brand color usually reads under 4.5:1, so the stylesheet darkens it
+         there and leaves it alone on a dark one. */
+      --nova-accent-text: var(--brand-accent-text, #7c3aed);
       --nova-accent-2: var(--brand-accent-2, #22d3ee);
 
       /* states */
@@ -249,6 +421,15 @@ export class SupernovaPage extends LitroPage {
       --nova-measure: var(--brand-measure, 64rem);
       --nova-gutter: var(--brand-gutter, 1.5rem);
       --nova-radius: var(--brand-radius, 0.375rem);
+      /* How tall the hero pane is before its content makes it taller. The
+         3rem is the status bar above it, so the hero fills exactly what is
+         left of the first screen. */
+      /* The header above and the status line below both come out of the
+         first screen, so the hero fills exactly what is left of it. */
+      --nova-hero-min: var(--brand-hero-min, calc(100svh - 3.5rem - 1.75rem));
+      /* How solid the hero's mark is. A light ground shows far less of a
+         faint shape than a dark one, so the value is per theme. */
+      --nova-mark-opacity: var(--brand-mark-opacity, 0.11);
       --nova-font-mono: var(
         --brand-font-mono,
         ui-monospace,
@@ -258,43 +439,18 @@ export class SupernovaPage extends LitroPage {
       );
     }
 
-    /* ── Dressing the docs components for a dark page ──────────────────
-     *
-     * The cards and the credit line are the DOCS site's components. They read
-     * the --sl-* tokens, and those follow the reader's light or dark choice,
-     * while this page is dark either way. Left alone, the cards are white
-     * boxes on a black page.
-     *
-     * So the --sl-* tokens are set HERE, ON THOSE ELEMENTS. That dresses them
-     * for this page only: the docs pages are untouched, the tokens keep their
-     * global meaning, and neither component's own file changes.
-     *
-     * The header is no longer in this list. This page has litro-status-bar,
-     * which reads the --nova-* tokens directly and needs no dressing.
-     */
-
-    /* The credit line reads four tokens, and these are the three that carry a
-       color. --sl-text-sm is a size and is right as it stands. */
-    litro-footer {
-      --sl-color-gray-4: var(--nova-text-dim);
-      --sl-color-border: var(--nova-border);
-      --sl-color-accent: var(--nova-accent);
-    }
-
-    /* A card is a raised pane, so it takes the surface token, not the page
-       background. Its four rotating top borders take the state colors. */
-    litro-card {
-      --sl-color-bg: var(--nova-surface);
-      --sl-color-text: var(--nova-text);
-      --sl-color-gray-4: var(--nova-text-dim);
-      --sl-color-border: var(--nova-border);
-      --sl-color-accent: var(--nova-accent);
-      --sl-color-note: var(--nova-working);
-      --sl-color-tip: var(--nova-done);
-      --sl-color-caution: var(--nova-blocked);
-    }
 
     /* ── Page frame ────────────────────────────────────────────────────── */
+
+    /* The global stylesheet's box-sizing reset stops at the shadow boundary,
+       so it has to be repeated here. Without it every padded full-width block
+       on this page — .shell most of all — is its width PLUS its gutters, and
+       a phone-sized screen scrolls sideways by exactly the gutter. */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
     :host {
       display: block;
@@ -302,8 +458,14 @@ export class SupernovaPage extends LitroPage {
       color: var(--nova-text);
     }
 
+    /* The status line at the foot is FIXED, so the page has to leave room for
+       it by hand or the credit line sits under it — and the screen it fills
+       is that much shorter. */
     .page {
-      min-height: 100vh;
+      --status-height: var(--nova-status-height, 1.75rem);
+      min-height: calc(100vh - var(--status-height));
+      min-height: calc(100svh - var(--status-height));
+      padding-bottom: var(--status-height);
       display: flex;
       flex-direction: column;
     }
@@ -320,40 +482,94 @@ export class SupernovaPage extends LitroPage {
       width: 100%;
     }
 
-    /* ── The status bar's slotted links ────────────────────────────────
+    /* ── The header ────────────────────────────────────────────────────
      *
-     * The bar's navigation is a slot, so the links below are written by this
-     * page and keep this page's styles. litro-status-bar sizes and colors
-     * them with ::slotted(); there is nothing left for the page to do, and
-     * this comment is here so the next editor knows where to look.
+     * starlight-header is the DOCS half of this site's header, and it reads
+     * the --sl-* tokens, which follow the reader's light or dark choice while
+     * this page is dark either way. So the set it needs is given to it here,
+     * on the element, exactly as litro-card is dressed above.
+     *
+     * --sl-font-brand is the one token that is not a dressing. It is the
+     * header's brand face, and setting it to the mono is what carries the
+     * terminal character into a header that is otherwise the docs header,
+     * unchanged. Delete this one line and the header matches the docs pages'
+     * exactly.
+     */
+    starlight-header {
+      --sl-font-brand: var(--nova-font-mono);
+      --sl-color-bg: var(--nova-bg);
+      --sl-color-bg-nav: var(--nova-bg);
+      --sl-color-text: var(--nova-text);
+      --sl-color-gray-2: var(--nova-surface);
+      --sl-color-gray-4: var(--nova-text-dim);
+      --sl-color-gray-5: var(--nova-text-dim);
+      --sl-color-border: var(--nova-border);
+      --sl-color-accent: var(--nova-accent);
+      --sl-color-accent-low: color-mix(
+        in srgb,
+        var(--nova-accent) 18%,
+        transparent
+      );
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────────────
+     *
+     * LEFT, ON A COLUMN. Everything in the hero starts on one line down the
+     * left, so the eye has a spine to run down: headline, lede, slab, small
+     * print, buttons. A centered stack has no spine — every line starts
+     * somewhere different and nothing leads anywhere.
+     *
+     * The column stops well short of the measure, which is what leaves the
+     * right of the pane to the mark.
      */
 
-    /* ── Hero ──────────────────────────────────────────────────────────── */
+    /* padding-top and padding-bottom, never the two-value padding shorthand:
+       every section below also carries .shell, whose HORIZONTAL padding is
+       the page's gutter. A rule like "padding: 4rem 0" is later in this sheet
+       at the same specificity, so it would quietly set that gutter to zero
+       and let the section run to the edge of a phone. */
 
     .hero {
-      text-align: center;
-      padding: 5rem 0 4.5rem;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
     }
 
+    .hero-copy {
+      max-width: 46rem;
+    }
+
+    /* THE HEADLINE IS SET IN THE MONO FACE — the same one the status bar, the
+       badges, the terminal pictures and the command below are set in. That is
+       the whole type idea of this page: it speaks in one voice, and the voice
+       is the terminal's. The sans is kept for prose, where it is easier to
+       read, and for nothing else. */
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin: 0 0 1rem;
+      font-family: var(--nova-font-mono);
+      /* The floor is what a phone gets, and a mono face is wide: at 2rem the
+         word "product" alone is most of a 390px column and the headline runs
+         off the side. 1.75rem is the largest floor that still lets this
+         sentence wrap. */
+      font-size: clamp(1.75rem, 5.6vw, 4.25rem);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      margin: 0 0 1.5rem;
+      text-wrap: balance;
     }
 
+    /* The lede keeps its own, narrower measure. The slab below it does not:
+       a command has to be read in one piece, so it takes the whole column. */
     .lede {
-      font-size: 1.15rem;
+      font-size: clamp(1.1rem, 1.5vw, 1.3rem);
       color: var(--nova-text-dim);
-      max-width: 38rem;
-      margin: 0 auto 2rem;
-      line-height: 1.6;
+      max-width: 34rem;
+      margin: 0 0 2.5rem;
+      line-height: 1.75;
     }
 
     .hero litro-install-command {
-      display: flex;
-      justify-content: center;
-      margin: 0 0 2rem;
+      display: block;
+      margin: 0 0 2.5rem;
     }
 
     /* ── Buttons ───────────────────────────────────────────────────────── */
@@ -361,7 +577,6 @@ export class SupernovaPage extends LitroPage {
     .actions {
       display: flex;
       gap: 1rem;
-      justify-content: center;
       flex-wrap: wrap;
     }
 
@@ -395,7 +610,8 @@ export class SupernovaPage extends LitroPage {
       display: flex;
       flex-direction: column;
       gap: 3.5rem;
-      padding: 4rem 0;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
     }
 
     /* Shadow DOM styles stop at a slot, so the paragraph handed to a row is
@@ -410,16 +626,207 @@ export class SupernovaPage extends LitroPage {
 
     .start {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 2.5rem;
-      padding: 1rem 0 4rem;
+      /* minmax(0, 1fr), not 1fr. A bare 1fr is minmax(auto, 1fr), so the
+         track never shrinks below its widest item's content — a long
+         transcript line then pushes the column past a phone's screen and the
+         page scrolls sideways at the 320px WCAG 1.4.10 reflow width. The 0
+         lets the track shrink and the item scroll inside itself instead. */
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;      padding-top: 1rem;
+      padding-bottom: 4rem;
     }
 
     @media (min-width: 48rem) {
       .start {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 4rem;
       }
+    }
+
+    /* ── SECTION 2 · The logo wall ──────────────────────────────────────
+     *
+     * Empty slots, drawn as dashed outlines so they read as places for
+     * something rather than as content. They are text, not images: a
+     * scaffolded site has no logo to show and a gray box pretending to be one
+     * is worse than a sentence saying so.
+     */
+
+    .logos {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 1.25rem;
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nova-text-dim);
+    }
+
+    .logo-wall {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .logo-wall li {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 8rem;
+      height: 3rem;
+      padding: 0 1rem;
+      border: 1px dashed var(--nova-border);
+      border-radius: var(--nova-radius);
+      color: var(--nova-text-dim);
+      font-size: 0.875rem;
+    }
+
+    /* ── SECTIONS 3, 4, 6 · The pane blocks ───────────────────────────── */
+
+    .panes {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    /* Shadow DOM styles stop at a slot, so a pane's body text is styled by
+       the pane and the page needs nothing here. */
+
+    /* ── SECTION 5 · The stats row ─────────────────────────────────────── */
+
+    .stats {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .stats dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+      gap: 1px;
+      margin: 0;
+      background: var(--nova-border);
+      border: 1px solid var(--nova-border);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.35rem;
+      padding: 1.5rem 1rem;
+      background: var(--nova-bg);
+    }
+
+    .stat dt {
+      font-family: var(--nova-font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--nova-text-dim);
+    }
+
+    .stat dd {
+      margin: 0;
+      font-family: var(--nova-font-mono);
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--nova-text);
+    }
+
+    /* ── SECTION 6 · The showcase ──────────────────────────────────────
+     *
+     * The picture slots, drawn as dashed frames so they read as places for
+     * something rather than as content — the same decision the logo wall
+     * makes, for the same reason.
+     */
+
+    .showcase {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .showcase-copy {
+      margin: 0 0 1rem;
+    }
+
+    /* UNDERLINED, not just colored. A link sitting inside a paragraph has to
+       be told apart from the words around it by something other than color. */
+    .showcase-copy a {
+      color: var(--nova-accent-text);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+      white-space: nowrap;
+    }
+
+    .showcase-copy a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* A small browser frame. With a picture in it, put an img here and give
+       the frame a bar of three dots, the way litro.dev's own page does. */
+    .frame {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 8 / 5;
+      border: 1px dashed var(--nova-border);
+      border-radius: var(--nova-radius);
+      color: var(--nova-text-dim);
+      font-size: 0.8125rem;
+    }
+
+    /* ── SECTION 7 · Deploy anywhere ───────────────────────────────────── */
+
+    .deploy {
+      padding-top: 3rem;
+      padding-bottom: 1rem;
+    }
+
+    .deploy p {
+      max-width: 34rem;
+      margin: 0 0 1.5rem;
+      color: var(--nova-text-dim);
+      line-height: 1.7;
+    }
+
+    .targets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .targets li {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--nova-border);
+      border-radius: var(--nova-radius);
+      background: var(--nova-surface);
+      font-family: var(--nova-font-mono);
+      font-size: 0.8125rem;
+      color: var(--nova-text);
+    }
+
+    /* ── SECTION 9 · The footer ────────────────────────────────────────── */
+
+    litro-site-footer {
+      margin-top: 4rem;
     }
 
     /* ── Section headings and closing ──────────────────────────────────── */
@@ -436,7 +843,8 @@ export class SupernovaPage extends LitroPage {
 
     .closing {
       text-align: center;
-      padding: 4rem 0 5rem;
+      padding-top: 4rem;
+      padding-bottom: 5rem;
       border-top: 1px solid var(--nova-border);
     }
 
@@ -447,9 +855,13 @@ export class SupernovaPage extends LitroPage {
     }
 
     .closing litro-install-command {
-      display: flex;
+      display: block;
+      max-width: 34rem;
+      margin: 0 auto 2rem;
+    }
+
+    .closing .actions {
       justify-content: center;
-      margin: 0 0 2rem;
     }
   `;
 
@@ -480,48 +892,56 @@ export class SupernovaPage extends LitroPage {
 
     return html`
       <div class="page">
-        <!-- The landing page's own header, in place of the docs site's
-             starlight-header. It takes the SAME title and the SAME links the
-             docs header shows, from the same place — server/starlight.config.js,
-             through pageData below — so a reader moving between the landing
-             page and the docs sees one site. -->
-        <litro-status-bar
+        <!-- THE SAME HEADER THE DOCS HALF OF THIS SITE HAS. This page used
+             to carry a terminal bar of its own here, and a reader met two
+             different headers on one site. The terminal character did not go
+             away: it moved to the status line at the foot of the window,
+             where a status line belongs and where it has a page to describe.
+
+             The wordmark and the links are set in the mono through
+             --sl-font-brand, in the token block above. That is the whole of
+             the difference between this header and the docs pages' one. -->
+        <starlight-header
           siteTitle="${siteTitle}"
-          .tabs="${TABS}"
-          tabsLabel="${TABS_LABEL}"
-        >
-          <!-- The same mark as the hero's, drawn small. One symbol, twice. -->
-          <svg slot="mark" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="5" />
-            <circle cx="32" cy="32" r="7" fill="currentColor" />
-          </svg>
-          ${nav.map(
-            (item) => html`<a slot="nav" href="${item.href}">${item.label}</a>`,
-          )}
-        </litro-status-bar>
+          .nav="${nav}"
+          currentPath="/"
+        ></starlight-header>
 
         <main>
           <litro-hero-nova>
-            <!-- Your mark goes here. It is drawn faded and centered behind
-                 the words. Drop in your own SVG, or delete the element. -->
-            <svg slot="mark" viewBox="0 0 64 64" role="img" aria-label="">
-              <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="3" />
-              <circle cx="32" cy="32" r="5" fill="currentColor" />
-            </svg>
+            <!-- YOUR MARK GOES HERE. Put an element with slot="mark" on
+                 this line — an inline SVG, or an image from public/ — and the
+                 hero crops it against its right edge. Mark it aria-hidden:
+                 it is atmosphere, and the page already says your project's
+                 name in the status bar and in the headline. The component's
+                 own file has the details.
+
+                 Until you do, the hero draws the recipe's own mark: the
+                 ejecta, a spray of shards thrown out of a point off the
+                 right edge, in your accent. It is the slot's fallback, so
+                 the moment you slot a mark of your own it goes away by
+                 itself. There is nothing to delete here. -->
 
             <section class="hero shell">
-              <h1>Say what your product does, in one line.</h1>
-              <p class="lede">
-                ${description ||
-                'Two sentences on who it is for and why it is worth their time. ' +
-                  'Keep it concrete: this is the only paragraph most readers finish.'}
-              </p>
-              <litro-install-command
-                command="${INSTALL_COMMAND}"
-              ></litro-install-command>
-              <div class="actions">
-                <a href="/docs/getting-started" class="button primary">Get Started</a>
-                ${blogButton}
+              <div class="hero-copy">
+                <h1>Say what your product does, in one line.</h1>
+                <p class="lede">
+                  ${description ||
+                  'Two sentences on who it is for and why it is worth their time. ' +
+                    'Keep it concrete: this is the only paragraph most readers finish.'}
+                </p>
+                <litro-install-command command="${INSTALL_COMMAND}">
+                  <!-- One line of small print: what the command needs first,
+                       or what it will not do. Delete it and the line goes. -->
+                  <span slot="note"
+                    >Say what it needs before it will run — a runtime, a
+                    version, an account.</span
+                  >
+                </litro-install-command>
+                <div class="actions">
+                  <a href="/docs/getting-started" class="button primary">Get Started</a>
+                  ${blogButton}
+                </div>
               </div>
             </section>
           </litro-hero-nova>
@@ -554,6 +974,26 @@ export class SupernovaPage extends LitroPage {
             // </litro-hero-video>
             ''
           }
+
+          <!-- ── SECTION 2 · Proof ────────────────────────────────────
+               The people already using your project, as a row of marks.
+
+               IT SHIPS EMPTY, and the slots say so. Put real logos in — an
+               image or an inline vector per slot — or DELETE THIS SECTION.
+               Never put a name in here that did not agree to be here; a wall
+               of borrowed logos is the one mistake a reader does not forgive.
+
+               A COMMENT IN A LIT TEMPLATE IS RENDERED INTO THE PAGE, so this
+               text ships to every visitor. That is why it names no tags: the
+               words "less than i m g" in here would have made the recipe's
+               own "asks for no image" test fail, which is how this was
+               found. -->
+          <section class="logos shell" aria-label="Who uses it">
+            <p class="eyebrow">Used by</p>
+            <ul class="logo-wall">
+              ${LOGOS.map((label) => html`<li>${label}</li>`)}
+            </ul>
+          </section>
 
           <section class="rows shell" aria-label="What it does">
             ${HIGHLIGHTS.map(
@@ -596,19 +1036,123 @@ export class SupernovaPage extends LitroPage {
             </div>
           </section>
 
-          <section class="cards shell" aria-label="What you get">
+          <!-- ── SECTION 3 · Capabilities ─────────────────────────────
+               What the project does. Panes sharing hairlines, not cards: a
+               block that reads as one object with divisions rather than a
+               scatter of floating boxes.
+
+               The panes are two per row on a wide screen and one per row on a
+               phone. Change the span attribute to 3 for halves, 2 for thirds;
+               the grid is six columns wide. -->
+          <section class="panes shell" aria-label="What you get">
             <h2 class="section-title">What ${siteTitle} ships with</h2>
-            <litro-card-grid>
+            <litro-pane-grid>
               ${features.map(
                 (f) => html`
-                  <litro-card
-                    icon="${f.icon ?? ''}"
-                    title="${f.title}"
-                    description="${f.description}"
-                  ></litro-card>
+                  <litro-pane
+                    name="${f.title}"
+                    state="done"
+                    span="3"
+                  >
+                    ${f.icon
+                      ? html`<img slot="icon" src="${f.icon}" alt="" aria-hidden="true" />`
+                      : ''}
+                    ${f.description}
+                  </litro-pane>
                 `,
               )}
-            </litro-card-grid>
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 4 · Built on ─────────────────────────────────
+               What the project stands on. Every project can fill this on the
+               day it is scaffolded, which is why it ships with real structure
+               and placeholder names rather than empty slots.
+
+               DELETE THIS SECTION if you would rather not name your
+               dependencies. -->
+          <section class="panes shell" aria-label="What it is built on">
+            <h2 class="section-title">Built on</h2>
+            <litro-pane-grid>
+              ${FOUNDATIONS.map(
+                (item) => html`
+                  <litro-pane
+                    name="${item.name}"
+                    meta="${item.meta}"
+                    span="2"
+                    >${item.description}</litro-pane
+                  >
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 5 · Proof by number ──────────────────────────
+               Downloads, stars, contributors. The values are DASHES until you
+               measure them — see the note beside STATS.
+
+               DELETE THIS SECTION until you have numbers. A row of dashes on
+               a live site says less than no row at all. -->
+          <section class="stats shell" aria-label="The project in numbers">
+            <dl>
+              ${STATS.map(
+                (stat) => html`
+                  <div class="stat">
+                    <dt>${stat.label}</dt>
+                    <dd>${stat.value}</dd>
+                  </div>
+                `,
+              )}
+            </dl>
+          </section>
+
+          <!-- ── SECTION 6 · Ecosystem, and the showcase ──────────────
+               What the project extends with, and what each one looks like.
+
+               THE PICTURE SLOTS SHIP EMPTY, like the logo wall above. Drop a
+               screenshot of a real site into each one — anything under
+               public/ — or delete the list and keep the text. An empty frame
+               on a live site says less than no frame at all.
+
+               WHAT A ROW CLAIMS: it is a starting point, and the pictures
+               show the shape it gives you. Keep it that way and you never
+               have to argue about which site runs which version of what.
+
+               DELETE THIS SECTION if your project has no extensions yet. -->
+          <section class="showcase shell" aria-label="The ecosystem">
+            <h2 class="section-title">Extend it</h2>
+            <litro-pane-grid>
+              ${ECOSYSTEM.map(
+                (item) => html`
+                  <litro-pane name="${item.name}" meta="${item.meta}" span="2">
+                    <p class="showcase-copy">
+                      ${item.description}
+                      <a href="${item.href}">Read more</a>
+                    </p>
+                    <ul class="shots">
+                      <li><span class="frame frame-empty">Your screenshot</span></li>
+                    </ul>
+                  </litro-pane>
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── SECTION 7 · Deploy anywhere ──────────────────────────
+               Where it runs. One claim and a list, because "where does this
+               have to live" is the objection that stops an evaluation dead.
+
+               DELETE THIS SECTION if your project is not something a reader
+               deploys. -->
+          <section class="deploy shell" aria-label="Where it runs">
+            <h2 class="section-title">Deploy anywhere</h2>
+            <p>
+              One sentence on where your project can run, and what it needs
+              from the place it runs in.
+            </p>
+            <ul class="targets">
+              ${DEPLOY_TARGETS.map((target) => html`<li>${target}</li>`)}
+            </ul>
           </section>
 
           <section class="closing shell">
@@ -622,8 +1166,26 @@ export class SupernovaPage extends LitroPage {
           </section>
         </main>
 
-        <!-- Credit line. Delete this element if you would rather not carry it. -->
-        <litro-footer recipe="supernova"></litro-footer>
+        <!-- ── SECTION 9 · Footer ───────────────────────────────────────
+             The map of everything the page did not cover. Pass no columns and
+             only the fine print is drawn, which is where this started: one
+             credit line. -->
+        <litro-site-footer
+          siteTitle="${siteTitle}"
+          .columns="${FOOTER_COLUMNS}"
+          credit="Created using Litro"
+          creditHref="https://litro.dev"
+          note="— the supernova recipe"
+        ></litro-site-footer>
+
+        <!-- The status line. It is fixed to the foot of the window, so it is
+             the last thing in the page and .page carries the padding that
+             keeps the credit line clear of it. -->
+        <litro-status-line
+          siteTitle="${siteTitle}"
+          .cells="${STATUS_CELLS}"
+          label="${STATUS_LABEL}"
+        ></litro-status-line>
       </div>
     `;
   }
