@@ -140,8 +140,10 @@ const SHOWCASE: Array<{
         site: "qdoku",
         siteHref: "https://qdoku.com",
         alt:
-          "The Qdoku puzzle game: a five by five grid of colored tiles with a " +
-          "level counter above it and Hint, Undo and Menu buttons below.",
+          "The Qdoku puzzle game part way through a round, in its Gem theme: a " +
+          "five by five grid of blue, red, green and purple tiles with three " +
+          "diamonds placed and nine cells crossed out, a three of five counter " +
+          "and three lives above it, and Hint, Undo and Menu buttons below.",
       },
     ],
   },
