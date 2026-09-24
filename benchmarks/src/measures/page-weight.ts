@@ -1,4 +1,5 @@
 import { gzipSize } from '../utils/gzip.js';
+import { checkPage, toRouteCheck, type RouteSpec } from '../utils/page-check.js';
 import type { PageWeightResult } from '../types.js';
 
 function formatBytes(bytes: number): string {
@@ -10,11 +11,14 @@ function formatBytes(bytes: number): string {
 
 export async function measurePageWeight(
   baseUrl: string,
-  routes: string[],
+  routes: readonly RouteSpec[],
 ): Promise<Record<string, PageWeightResult>> {
   const results: Record<string, PageWeightResult> = {};
+  const broken: string[] = [];
 
-  for (const route of routes) {
+  for (const spec of routes) {
+    const check = toRouteCheck(spec);
+    const route = check.path;
     const url = baseUrl + route;
     const res = await fetch(url);
     const buf = Buffer.from(await res.arrayBuffer());
@@ -24,9 +28,22 @@ export async function measurePageWeight(
     const statusCode = res.status;
 
     results[route] = { rawBytes, gzipBytes, statusCode };
+    const problem = checkPage(check, statusCode, buf.toString('utf-8'));
+    if (problem) broken.push(problem);
 
     console.log(
       `[page-weight] ${route} — ${statusCode} — raw: ${formatBytes(rawBytes)}, gzip: ${formatBytes(gzipBytes)}`,
+    );
+  }
+
+  // The weight of an error page is not the weight of the page, and neither is
+  // the weight of a directory listing. Recording one as the other is how the
+  // April 2026 results came to publish a 404 body and a `serve` listing as page
+  // weights, so either one stops the run instead. See utils/page-check.ts.
+  if (broken.length > 0) {
+    throw new Error(
+      `${baseUrl} did not serve every measured route: ${broken.join(', ')}. ` +
+      `No results are written. Fix the app, do not relax this check.`,
     );
   }
 

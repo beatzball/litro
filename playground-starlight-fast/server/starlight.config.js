@@ -4,7 +4,7 @@ export const siteConfig = {
   logo: null,
   editUrlBase: null, // e.g. 'https://github.com/you/repo/edit/main'
   nav: [
-    { label: 'Docs', href: '/docs/getting-started' },
+    { label: 'Docs', href: '/docs' },
     { label: 'Blog', href: '/blog' },
   ],
   sidebar: [

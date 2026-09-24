@@ -90,6 +90,10 @@ async function withRecipes(
         displayName: name,
         description: `Fixture recipe ${name}`,
         mode: 'ssg',
+        // Every fixture here has the overlays it scaffolds with, so all three
+        // are declared. A recipe's real declaration is checked in
+        // adapters.test.ts.
+        adapters: ['lit', 'fast', 'elena'],
         ...fixture.config,
       };
       await writeFile(
@@ -353,6 +357,7 @@ describe('the blog recipe option', () => {
     displayName: 'Fixture',
     description: 'Fixture',
     mode: 'ssg',
+    adapters: ['lit'],
     extends: 'starlight',
     options: [{ key: 'blog', prompt: 'Include a blog?', type: 'confirm', default: true }],
   };
@@ -395,6 +400,7 @@ describe('the blog recipe option', () => {
       displayName: 'Starlight',
       description: 'Docs',
       mode: 'ssg',
+      adapters: ['lit', 'fast', 'elena'],
     };
     expect(() => assertFlagsApply(starlight, { blog: false })).toThrow(
       /--blog \/ --no-blog answers the 'blog' option, which the 'starlight' recipe does not have/,

@@ -27,11 +27,11 @@ Follow the interactive prompts to choose a recipe, rendering mode, and framework
 # Fullstack SSR app with Lit (default)
 npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
 
-# Fullstack SSR app with FAST Element
-npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter fast
-
 # Fullstack SSR app with Elena (light DOM)
 npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter elena
+
+# Starlight docs + blog with FAST Element
+npm create @beatzball/litro@latest my-docs -- --recipe starlight --adapter fast
 
 # Starlight docs + blog, static output
 npm create @beatzball/litro@latest my-docs -- --recipe starlight
@@ -53,7 +53,27 @@ Choose the web component framework for your project:
 | `fast` | FAST Element 2 | Shadow DOM | Declarative Shadow DOM |
 | `elena` | Elena | Light DOM | Direct rendering |
 
-Omitting `--adapter` defaults to `lit`. The interactive wizard also prompts for adapter selection.
+Omitting `--adapter` defaults to `lit`.
+
+Not every recipe supports every adapter. A recipe declares what it can really
+produce, and asking for anything else fails before a single file is written:
+
+| Recipe | Adapters |
+|---|---|
+| `fullstack` | `lit`, `elena` |
+| `11ty-blog` | `lit` |
+| `starlight` | `lit`, `fast`, `elena` |
+| `supernova` | `lit` |
+
+```
+$ npm create @beatzball/litro@latest my-site -- --recipe supernova --adapter fast
+
+  The 'supernova' recipe supports the 'lit' adapter today. Re-run without
+  --adapter, or pick a recipe that supports 'fast'.
+```
+
+The interactive wizard offers only the adapters the chosen recipe supports, and
+does not ask at all when there is just one.
 
 ### Recipe options
 

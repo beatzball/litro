@@ -5,7 +5,14 @@
  * Usage:
  *   npm create @beatzball/litro
  *   npx @beatzball/create-litro
- *   npx @beatzball/create-litro <project-name> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast|elena>]
+ *   npx @beatzball/create-litro <project-path> [--recipe <recipe>] [--mode <ssg|ssr>] [--adapter <lit|fast|elena>]
+ *
+ * <project-path> is a path, not a bare name. Relative to the current
+ * directory, or absolute, and a quoted leading `~` means your home
+ * directory. The project is named after the last segment.
+ *
+ * A recipe declares which adapters it can produce. Asking for one it cannot is
+ * refused before anything is written, and the prompt offers only what it can.
  *
  * Documentation site for an existing repository:
  *   npx @beatzball/create-litro site --recipe starlight --for-repo . \
@@ -33,18 +40,24 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import process from 'node:process';
 import { listRecipes, loadRecipe, resolveRecipeLineage, scaffold } from './scaffold.js';
 import { applyForRepo } from './for-repo.js';
 import { parseArgs } from './args.js';
+import { resolveProjectPath, resolveUserPath, siteRelativeToRepo } from './project-path.js';
+import {
+  adapterChoices,
+  adapterFromChoice,
+  assertAdapterSupported,
+  supportedAdapters,
+} from './adapters.js';
 import {
   applyRecipeOptions,
   assertFlagsApply,
   declaresOption,
   resolveRecipeOptions,
 } from './recipe-options.js';
-import type { LitroRecipe } from './types.js';
+import type { LitroAdapter, LitroRecipe } from './types.js';
 import type { ScaffoldOptions } from './scaffold.js';
 
 // ---------------------------------------------------------------------------
@@ -116,8 +129,41 @@ async function main(): Promise<void> {
 
   console.log('\n  Welcome to Litro!\n');
 
-  // 1. Project name
-  const projectName = args.projectName ?? await prompt('Project name', 'my-litro-app');
+  // 1. Project path
+  //
+  // The argument is a PATH, not a bare name: `create-litro /tmp/demo/my-app`
+  // must write to /tmp/demo/my-app. It used to be joined onto the current
+  // directory, which concatenates an absolute path rather than replacing it,
+  // so the app landed in ./tmp/demo/my-app and the CLI reported success.
+  const projectArg = args.projectName ?? await prompt('Project name', 'my-litro-app');
+  let project: ReturnType<typeof resolveProjectPath>;
+  try {
+    project = resolveProjectPath(projectArg);
+  } catch (err: unknown) {
+    console.error(`\n  ${(err as Error).message}\n`);
+    process.exit(1);
+  }
+  // `name` is the last segment alone: {{projectName}} becomes package.json's
+  // `name` and the site title, and neither can hold a path.
+  const projectName = project.name;
+
+  // 1b. --for-repo paths, resolved before anything is written.
+  //
+  // `siteRelPath` is the path from the repository root down to the site. It is
+  // published: the starlight config's `editUrlBase` becomes an "Edit this page"
+  // link on GitHub, and it heads the generated AGENTS.md. A site outside the
+  // repository has no such path, so refuse here — a refusal after the scaffold
+  // step would leave a half-shaped project behind.
+  let forRepo: { repoDir: string; siteRelPath: string } | undefined;
+  if (args.forRepo !== undefined) {
+    try {
+      const repoDir = resolveUserPath(args.forRepo);
+      forRepo = { repoDir, siteRelPath: siteRelativeToRepo(repoDir, project.dir) };
+    } catch (err: unknown) {
+      console.error(`\n  --for-repo: ${(err as Error).message}\n`);
+      process.exit(1);
+    }
+  }
 
   // 2. Recipe selection
   const recipes = await listRecipes();
@@ -161,16 +207,26 @@ async function main(): Promise<void> {
   }
 
   // 4. Adapter selection
-  let adapter: 'lit' | 'fast' | 'elena';
+  //
+  // Only the adapters the chosen recipe declares are ever on offer, and an
+  // adapter asked for on the command line is refused here — before the target
+  // directory is even named, so a refusal leaves nothing behind.
+  const choices = adapterChoices(chosenRecipe);
+  let adapter: LitroAdapter;
   if (args.adapter) {
+    try {
+      assertAdapterSupported(chosenRecipe, args.adapter);
+    } catch (err: unknown) {
+      console.error(`\n  ${(err as Error).message}\n`);
+      process.exit(1);
+    }
     adapter = args.adapter;
+  } else if (choices.length === 1) {
+    // Nothing to choose from — asking a one-answer question wastes a keystroke.
+    adapter = supportedAdapters(chosenRecipe)[0];
   } else {
-    const selected = await promptSelect(
-      'Component framework:',
-      ['lit — Lit (default)', 'fast — Microsoft FAST Element', 'elena — Elena (light DOM)'],
-      'lit — Lit (default)',
-    );
-    adapter = selected.startsWith('elena') ? 'elena' : selected.startsWith('fast') ? 'fast' : 'lit';
+    const selected = await promptSelect('Component framework:', choices, choices[0]);
+    adapter = adapterFromChoice(selected);
   }
 
   // 5. Recipe-specific options.
@@ -195,10 +251,13 @@ async function main(): Promise<void> {
   });
 
   // 6. Validate target directory
-  const projectDir = join(process.cwd(), projectName);
+  //
+  // The SAME resolved path the scaffolder writes to, so an existing directory
+  // is still refused and nothing is ever overwritten.
+  const projectDir = project.dir;
 
   if (existsSync(projectDir)) {
-    console.error(`\n  Error: directory "${projectName}" already exists.\n`);
+    console.error(`\n  Error: directory "${project.display}" already exists.\n`);
     process.exit(1);
   }
 
@@ -226,7 +285,7 @@ async function main(): Promise<void> {
   // site. Only starlight, and recipes built on it, produce a docs site, so
   // refuse loudly rather than half-applying to a template with no content/docs.
   let forRepoSummary = '';
-  if (args.forRepo !== undefined) {
+  if (forRepo) {
     // A recipe that extends starlight has starlight's docs site in it, so it
     // can be shaped the same way. Anything else has no content/docs to shape.
     const lineage = await resolveRecipeLineage(chosenRecipe.name);
@@ -238,15 +297,12 @@ async function main(): Promise<void> {
       );
       process.exit(1);
     }
-    const { relative, resolve: resolvePath } = await import('node:path');
-    const repoDir = resolvePath(args.forRepo);
-    const siteRelPath = relative(repoDir, projectDir) || projectName;
-
     const repo = await applyForRepo({
-      repoDir,
+      // Both resolved in step 1b, before anything was written.
+      repoDir: forRepo.repoDir,
       siteDir: projectDir,
       siteUrl: args.siteUrl,
-      siteRelPath,
+      siteRelPath: forRepo.siteRelPath,
       deploy: args.deploy,
       withBlog: args.withBlog,
     });
@@ -261,11 +317,11 @@ async function main(): Promise<void> {
   }
 
   console.log(`
-  Created ${projectName}${forRepoSummary}
+  Created ${project.display}${forRepoSummary}
 
   Next steps:
 
-    cd ${projectName}
+    cd ${project.display}
     npm install          # or: pnpm install / yarn install
     npm run dev          # start dev server on http://localhost:3000
 

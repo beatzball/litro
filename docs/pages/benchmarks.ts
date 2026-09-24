@@ -412,6 +412,9 @@ export class BenchmarksPage extends LitroPage {
       <p class="note">
         Identical minimal apps (2 routes, same content) built in SSG mode.
         Litro uses Lit + Nitro, Nuxt uses Vue + Nitro, Next.js uses React.
+        Build times are cold builds that transpile only: caches are cleared
+        before every run, and Next.js type checking is turned off so that all
+        three do the same work.
       </p>
 
       <!-- Summary cards -->
@@ -486,6 +489,9 @@ export class BenchmarksPage extends LitroPage {
         Five identical Hacker News clones (3 Litro adapters + Next.js + Nuxt),
         same fixture data, same routes (~100 pages), SSG mode. Tests realistic app
         complexity with data fetching, dynamic routes, and nested comment trees.
+        Build times are cold builds that transpile only: caches are cleared
+        before every run, and Next.js type checking is turned off so that all
+        five do the same work.
       </p>
 
       <section class="summary-section" aria-label="HN benchmark summary">
@@ -574,7 +580,13 @@ export class BenchmarksPage extends LitroPage {
         <h3>Production Build Time</h3>
         <div class="table-wrap">
           <table>
-            <caption>Time to complete a full production build (${frameworks[0]?.buildTime.runs?.length ?? '?'} runs each).</caption>
+            <caption>
+              Time to complete a full production build
+              (${frameworks[0]?.buildTime.runs?.length ?? '?'} runs each).
+              Every run is a cold build &mdash; each framework's build caches are
+              deleted first &mdash; and all three transpile only, with no type
+              checking.
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Framework</th>

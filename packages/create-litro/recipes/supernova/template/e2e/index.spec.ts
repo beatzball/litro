@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/docs/installation',
   '/docs/configuration',
@@ -48,7 +49,7 @@ test('the header carries the site title and the site navigation', async ({ page 
 
   await expect(header.locator('.site-title')).not.toBeEmpty();
   await expect(header.locator('.site-title')).toHaveAttribute('href', '/');
-  await expect(header.locator('nav a[href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(header.locator('nav a[href="/docs"]')).toHaveText('Docs');
 });
 
 /**

@@ -58,6 +58,12 @@ const VARIANTS = [
   { recipe: 'starlight', adapter: 'elena' },
   { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:blog', flags: ['--blog'] },
   { recipe: 'supernova', adapter: 'lit', id: 'supernova:lit:no-blog', flags: ['--no-blog'] },
+  // `--for-repo` writes its OWN server/starlight.config.js rather than copying
+  // the template's, so every navigation fix has to be made twice. Nothing built
+  // this path before: the unit tests pin the emitted spec text and the template
+  // e2e suite runs `pnpm dev`, which serves every page file whether or not it
+  // prerendered. Only a real build can tell that /docs is missing.
+  { recipe: 'starlight', adapter: 'lit', id: 'starlight:lit:for-repo', flags: ['--for-repo', '.'] },
 ];
 
 /** Workspace packages an app installs from the registry. */
@@ -321,6 +327,69 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
         });
         continue;
       }
+    }
+  }
+
+  // Every recipe with a docs half must prerender /docs, the section landing
+  // page. Without it the path a reader types, or trims a URL back to, is a
+  // 404 — and a static host turns that into a 403, which reads as "forbidden"
+  // rather than "no such page".
+  //
+  // Both checks read the index's OWN <section class="doc-group"> blocks, and
+  // nothing else on the page. The sidebar renders on /docs as well and carries
+  // every label and every /docs/<slug> link, and the __litro_data__ script
+  // repeats the whole sidebar as JSON, which is plain text once the tags come
+  // off. A check against the whole page therefore passes on an index that
+  // rendered nothing at all. No group sections is also what a tree-shaken
+  // registration looks like: the element prints unexpanded and emits none.
+  if (recipe === 'starlight' || recipe === 'supernova') {
+    const docsIndex = join(dir, 'dist/static/docs/index.html');
+    if (!existsSync(docsIndex)) {
+      results.push({
+        id,
+        status: 'NO-DOCS-INDEX',
+        detail:
+          `/docs did not prerender to ${docsIndex}. Only /docs/<slug> exists, ` +
+          `so /docs is a 404 on a static host — a 403 on one that refuses to ` +
+          `list a directory. The recipe needs pages/docs/index.ts, and the site ` +
+          `navigation has to link /docs so the prerender crawler can reach it.`,
+      });
+      continue;
+    }
+    const docsHtml = readFileSync(docsIndex, 'utf-8')
+      // The serialized page data repeats every sidebar label as JSON text.
+      .replace(/<script\b[^>]*\bid="__litro_data__"[^>]*>[\s\S]*?<\/script>/g, ' ');
+    const docsGroups = docsHtml
+      .split('<section class="doc-group">')
+      .slice(1)
+      .map((part) => part.split('</section>')[0] ?? '');
+    const docsText = docsGroups
+      .join(' ')
+      .replace(/<!--.*?-->/gs, '')
+      .replace(/<[^>]*>/g, ' ');
+    // `--for-repo` deletes the recipe's sample pages and seeds one starter, so
+    // it has a single group, labeled "Documentation", with a single entry.
+    // Every other variant keeps the full sample sidebar: "Start Here" and
+    // "Guides". Every string below is a group heading or a link label, so it
+    // exists only where the index rendered that group.
+    const wantDocsText = flags.includes('--for-repo')
+      ? ['Documentation', 'Getting Started']
+      : ['Start Here', 'Getting Started', 'Installation', 'Guides', 'Deploying'];
+    const missingDocs = wantDocsText.filter((want) => !docsText.includes(want));
+    if (docsGroups.length === 0 || missingDocs.length > 0) {
+      results.push({
+        id,
+        status: 'EMPTY-DOCS-INDEX',
+        detail:
+          `/docs prerendered but its group list is wrong: ` +
+          `${docsGroups.length} <section class="doc-group"> block(s)` +
+          (missingDocs.length > 0
+            ? `, missing text ${missingDocs.map((m) => JSON.stringify(m)).join(', ')}`
+            : '') +
+          `. The page rendered no link labels of its own, so it is blank with ` +
+          `JavaScript off.`,
+      });
+      continue;
     }
   }
 

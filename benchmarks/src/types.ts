@@ -1,6 +1,18 @@
 export interface FrameworkResult {
   name: string;
+  /** Version of the headline package — the one the framework is named after. */
   version: string;
+  /**
+   * Every package version that shapes this app's numbers, resolved from the
+   * app's own node_modules at run time. The headline `version` alone hides the
+   * rest of the stack: a Litro result says nothing about Lit or @lit-labs/ssr,
+   * and a Next result says nothing about React. The published figures carry a
+   * date, so the file has to say what was actually measured.
+   *
+   * A package that is not installed in the app is left out rather than
+   * recorded as "unknown".
+   */
+  versions: Record<string, string>;
   buildTime: RunStats;
   outputSize: number;
   pageWeight: Record<string, PageWeightResult>;
@@ -16,6 +28,15 @@ export interface BenchmarkResults {
     cpuModel: string;
     cpuCount: number;
     memoryGB: number;
+    /**
+     * System load average at the moment the run started, as [1m, 5m, 15m].
+     *
+     * Published figures carry a date, so they have to carry the condition they
+     * were taken under too. A build time measured while something else was
+     * using the machine is not comparable with one measured on an idle one,
+     * and nothing else in this file would say which it was.
+     */
+    loadAverage: [number, number, number];
     commitSha: string;
     commitMessage: string;
   };

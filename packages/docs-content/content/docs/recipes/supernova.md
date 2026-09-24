@@ -18,7 +18,14 @@ It is a marketing page and a docs site in one project, sharing one title, one na
 
 Output is static (SSG). There is no `--mode` flag to choose.
 
-The recipe ships a Lit template only. FAST Element and Elena overlays are not written yet, so `--adapter fast` and `--adapter elena` give you the Lit landing page.
+The recipe ships a Lit template only. FAST Element and Elena overlays are not written yet, so `--adapter fast` and `--adapter elena` are refused:
+
+```
+The 'supernova' recipe supports the 'lit' adapter today. Re-run without
+--adapter, or pick a recipe that supports 'fast'.
+```
+
+Nothing is written when it refuses. The interactive wizard does not offer an adapter here at all, because there is only one to pick.
 
 ## Scaffold
 

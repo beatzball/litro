@@ -27,6 +27,7 @@ my-docs/
       welcome.md
   pages/
     index.ts              ← splash/home
+    docs/index.ts         ← docs landing page
     docs/[slug].ts        ← doc article
     blog/index.ts         ← blog listing
     blog/[slug].ts        ← blog post

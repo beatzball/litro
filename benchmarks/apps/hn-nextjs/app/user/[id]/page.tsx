@@ -9,9 +9,10 @@ export async function generateStaticParams() {
 export default async function UserPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const user = await fetchUser(params.id);
+  const { id } = await params;
+  const user = await fetchUser(id);
   if (!user) {
     return (
       <>

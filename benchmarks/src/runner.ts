@@ -15,7 +15,7 @@ import {
   APPS_DIR,
   FRAMEWORK_CONFIGS,
   HN_FRAMEWORK_CONFIGS,
-  HN_ROUTES,
+  HN_ROUTE_CHECKS,
   MOCK_API_PORT,
 } from './config.js';
 import { startServer, waitForReady, stopServer } from './utils/server-lifecycle.js';
@@ -55,6 +55,7 @@ async function collectMeta(): Promise<BenchmarkResults['meta']> {
     cpuModel: cpus[0]?.model ?? 'unknown',
     cpuCount: cpus.length,
     memoryGB: Math.round(os.totalmem() / (1024 ** 3)),
+    loadAverage: os.loadavg() as [number, number, number],
     commitSha,
     commitMessage,
   };
@@ -77,7 +78,8 @@ function printSummary(results: BenchmarkResults): void {
   console.log(`Node:       ${results.meta.nodeVersion}`);
   console.log(`Platform:   ${results.meta.platform}/${results.meta.arch}`);
   console.log(`CPU:        ${results.meta.cpuModel} (${results.meta.cpuCount} cores)`);
-  console.log(`Memory:     ${results.meta.memoryGB} GB\n`);
+  console.log(`Memory:     ${results.meta.memoryGB} GB`);
+  console.log(`Load avg:   ${results.meta.loadAverage.map(n => n.toFixed(2)).join(', ')} (1m, 5m, 15m)\n`);
 
   console.log('--- Build Time ---');
   console.log(`  SSG: ${results.buildTime.ssg.mean}ms (median: ${results.buildTime.ssg.median}ms)`);
@@ -220,7 +222,7 @@ async function main(): Promise<void> {
       try {
         const hnResults = [];
         for (const config of HN_FRAMEWORK_CONFIGS) {
-          const result = await measureFramework(config, APPS_DIR, buildRuns, HN_ROUTES, hnEnv, !skipLighthouse);
+          const result = await measureFramework(config, APPS_DIR, buildRuns, HN_ROUTE_CHECKS, hnEnv, !skipLighthouse);
           hnResults.push(result);
         }
         results.hnBenchmark = hnResults;

@@ -660,7 +660,7 @@ describe('supernova recipe', () => {
         // landing page.
         const config = await readFile(join(targetDir, 'server/starlight.config.js'), 'utf-8');
         expect(config).not.toContain("'/blog'");
-        expect(config).toContain("'/docs/getting-started'");
+        expect(config).toContain("'/docs'");
       });
     });
 

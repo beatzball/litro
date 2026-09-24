@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { fetchUser, timeAgo } from '../../../hn-shared/api';
+import { fetchUser, timeAgo } from '../../../../hn-shared/api';
 
 const route = useRoute();
 const id = route.params.id as string;

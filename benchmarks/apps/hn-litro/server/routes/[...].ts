@@ -22,7 +22,7 @@
  *   a client-only HTML shell so the page remains functional via client-side Lit.
  */
 
-import { defineEventHandler, setResponseHeader, getRequestURL } from 'h3';
+import { defineEventHandler, setResponseHeader, setResponseStatus, getRequestURL } from 'h3';
 import { createPageHandler } from '@beatzball/litro/runtime/create-page-handler.js';
 import type { LitroRoute } from '@beatzball/litro';
 import { routes, pageModules } from '#litro/page-manifest';
@@ -91,6 +91,10 @@ export default defineEventHandler(async (event) => {
   const result = matchRoute(pathname);
 
   if (!result) {
+    // The status has to say 404 too. Returning this body with the default 200
+    // is how two 404 pages were written into a measured static build and
+    // counted as real pages: the benchmark harness only looked at the status.
+    setResponseStatus(event, 404);
     setResponseHeader(event, 'content-type', 'text/html; charset=utf-8');
     return `<!DOCTYPE html>
 <html lang="en">

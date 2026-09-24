@@ -433,7 +433,7 @@ describe('a --no-blog scaffold has no Blog link in the header', () => {
           currentPath="/"
         ></starlight-header>`,
       );
-      expect(out).toContain('href="/docs/getting-started"');
+      expect(out).toContain('href="/docs"');
       expect(out).toContain('Docs');
       expect(out).not.toContain('/blog');
       expect(out).not.toContain('Blog');

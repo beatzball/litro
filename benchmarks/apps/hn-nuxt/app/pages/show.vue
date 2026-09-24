@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { fetchAskStories, fetchStories, timeAgo, hostName } from '../../hn-shared/api';
+import { fetchShowStories, fetchStories, timeAgo, hostName } from '../../../hn-shared/api';
 
-const ids = await fetchAskStories(30);
+const ids = await fetchShowStories(30);
 const stories = await fetchStories(ids);
 </script>
 

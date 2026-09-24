@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { CommentTree } from '../../hn-shared/types';
-import { timeAgo } from '../../hn-shared/api';
+import type { CommentTree } from '../../../hn-shared/types';
+import { timeAgo } from '../../../hn-shared/api';
 
 defineProps<{
   comment: CommentTree;

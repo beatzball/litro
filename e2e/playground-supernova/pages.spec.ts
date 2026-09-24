@@ -12,6 +12,7 @@ import { test, expect } from '@playwright/test';
 
 const PRERENDERED_ROUTES = [
   '/',
+  '/docs',
   '/docs/getting-started',
   '/blog',
   '/blog/welcome',
@@ -66,7 +67,7 @@ test('the header carries the site title and the site navigation', async ({ page 
 
   await expect(header.locator('.site-title')).toContainText('playground-supernova');
   await expect(header.locator('.site-title')).toHaveAttribute('href', '/');
-  await expect(header.locator('nav a[href="/docs/getting-started"]')).toHaveText('Docs');
+  await expect(header.locator('nav a[href="/docs"]')).toHaveText('Docs');
   await expect(header.locator('nav a[href="/blog"]')).toHaveText('Blog');
 });
 
@@ -336,4 +337,15 @@ test('all prerendered routes return 200', async ({ request }) => {
     const response = await request.get(route);
     expect(response.status(), `Expected 200 for ${route}`).toBe(200);
   }
+});
+
+/**
+ * /docs is the section landing page the starlight half brings with it.
+ * Supernova inherits it; this check proves the inherited page survived the
+ * template overlay.
+ */
+test('the inherited docs index renders', async ({ page }) => {
+  await page.goto('/docs');
+  await page.waitForSelector('page-docs:not([hidden])');
+  await expect(page.locator('page-docs:not([hidden]) .doc-group').first().locator('h2')).toBeVisible();
 });
