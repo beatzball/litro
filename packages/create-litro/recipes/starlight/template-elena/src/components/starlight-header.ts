@@ -6,6 +6,25 @@ export interface NavItem {
 }
 
 /**
+ * A real browser, not a server DOM shim.
+ *
+ * `typeof document !== 'undefined'` is NOT enough. A server-side DOM shim can
+ * define `document` and still leave `documentElement` undefined, which is how
+ * the FAST copy of this header threw
+ * "Cannot read properties of undefined (reading 'getAttribute')" during SSR
+ * and took down every page that carried it. Elena's SSR runs only
+ * willUpdate() and render() (see `.agents/rules/adapters-ssr.md`, SSR-002),
+ * so this copy never reached the bug — but the three adapter copies are read
+ * against each other, and the shape has to be the same in all of them.
+ *
+ * Guard on the thing you are about to touch, not on a global a shim provides.
+ */
+function themeRoot(): HTMLElement | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.documentElement ?? undefined;
+}
+
+/**
  * <starlight-header sitetitle="My Docs" .nav=${nav} currentpath="/docs/getting-started">
  *   Top navigation bar with site title, nav links, and dark/light theme toggle.
  *   Light DOM — styles scoped via @scope.
@@ -33,7 +52,7 @@ export class StarlightHeader extends Elena(HTMLElement) {
    * flipped to light right after it loaded.
    */
   private _readTheme = (): void => {
-    if (typeof document === 'undefined') return;
+    if (!themeRoot()) return;
     this._theme =
       document.documentElement.getAttribute('data-theme') === 'dark'
         ? 'dark'
@@ -44,14 +63,18 @@ export class StarlightHeader extends Elena(HTMLElement) {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this._readTheme();
-    // The head script follows the system while the reader has stored no
-    // choice, so the icon has to follow it too. The head script's own
-    // listener was registered first, in <head>, so by the time this one runs
-    // data-theme is already up to date.
-    if (typeof window !== 'undefined') {
-      this._systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-      this._systemTheme.addEventListener('change', this._readTheme);
+    // With no documentElement there is no theme to read and no system
+    // preference worth listening to. A server DOM shim reaches here.
+    if (themeRoot()) {
+      this._readTheme();
+      // The head script follows the system while the reader has stored no
+      // choice, so the icon has to follow it too. The head script's own
+      // listener was registered first, in <head>, so by the time this one
+      // runs data-theme is already up to date.
+      if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+        this._systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        this._systemTheme.addEventListener('change', this._readTheme);
+      }
     }
     // Elena renders plain HTML — wire up click events via delegation
     this.addEventListener('click', this._handleClick);
@@ -83,7 +106,7 @@ export class StarlightHeader extends Elena(HTMLElement) {
         // Site data blocked. The choice holds for this page either way.
       }
     }
-    if (typeof document !== 'undefined') {
+    if (themeRoot()) {
       document.documentElement.setAttribute('data-theme', next);
     }
   }

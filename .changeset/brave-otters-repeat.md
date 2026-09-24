@@ -28,3 +28,13 @@ too.
 `--nova-mark-size-narrow`, for how wide the mark is drawn. A site whose mark
 should hold the whole right of the pane sets them in the same block it sets its
 colors in; the recipe's defaults are unchanged.
+
+The guard around that read is a browser check, not a `document` check.
+`typeof document === 'undefined'` is not the same question:
+`@microsoft/fast-ssr` runs `connectedCallback` on the server against a document
+shim that defines `document` and leaves `documentElement` undefined, so the
+first version of this fix reached
+`document.documentElement.getAttribute('data-theme')` during SSR and threw.
+Every page in a FAST starlight site served a stream that stopped at the header.
+All three overlays now guard on `document.documentElement` itself and keep
+`matchMedia` off the server path.

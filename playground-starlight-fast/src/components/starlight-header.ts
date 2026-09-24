@@ -21,6 +21,25 @@ const closeSvg = html`
 `;
 
 /**
+ * A real browser, not a server DOM shim.
+ *
+ * `typeof document !== 'undefined'` is NOT enough here. @microsoft/fast-ssr
+ * runs connectedCallback ON THE SERVER, against a document shim that has no
+ * documentElement — so that guard waved the server straight into
+ * `document.documentElement.getAttribute(...)`, which threw
+ * "Cannot read properties of undefined (reading 'getAttribute')" and took
+ * down the SSR stream for every page carrying this header. Lit's SSR never
+ * calls connectedCallback and Elena's never does either, so only FAST broke.
+ *
+ * Guard on the thing you are about to touch, not on a global that a shim
+ * also provides. See `.agents/rules/adapters-ssr.md`.
+ */
+function themeRoot(): HTMLElement | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.documentElement ?? undefined;
+}
+
+/**
  * <starlight-header siteTitle="My Docs" .nav=${nav} currentPath="/docs/getting-started">
  *   Top navigation bar with site title, nav links, and dark/light theme toggle.
  */
@@ -43,7 +62,7 @@ export class StarlightHeader extends FASTElement {
    * flipped to light right after it loaded.
    */
   private _readTheme = (): void => {
-    if (typeof document === 'undefined') return;
+    if (!themeRoot()) return;
     this._theme =
       document.documentElement.getAttribute('data-theme') === 'dark'
         ? 'dark'
@@ -54,12 +73,16 @@ export class StarlightHeader extends FASTElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    // One guard for the whole block: with no documentElement there is no
+    // theme to read and no system preference worth listening to, and FAST
+    // runs this method during SSR.
+    if (!themeRoot()) return;
     this._readTheme();
     // The head script follows the system while the reader has stored no
     // choice, so the icon has to follow it too. The head script's own
     // listener was registered first, in <head>, so by the time this one runs
     // data-theme is already up to date.
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
       this._systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
       this._systemTheme.addEventListener('change', this._readTheme);
     }
@@ -82,7 +105,7 @@ export class StarlightHeader extends FASTElement {
         // Site data blocked. The choice holds for this page either way.
       }
     }
-    if (typeof document !== 'undefined') {
+    if (themeRoot()) {
       document.documentElement.setAttribute('data-theme', next);
     }
   }

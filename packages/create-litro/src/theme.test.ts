@@ -134,6 +134,45 @@ describe('the header reads the theme rather than deciding it', () => {
         expect(source).toContain('disconnectedCallback');
         expect(source).toMatch(/removeEventListener\(\s*['"]change['"]/);
       });
+
+      /**
+       * THE SECOND BUG THIS PINS. `typeof document === 'undefined'` is not a
+       * browser check. @microsoft/fast-ssr runs connectedCallback ON THE
+       * SERVER, against a document shim that defines `document` and leaves
+       * `documentElement` undefined — so that guard waved the server into
+       * `documentElement.getAttribute(...)`, threw
+       * "Cannot read properties of undefined (reading 'getAttribute')" and
+       * killed the SSR stream for every page carrying the header. Lit's SSR
+       * never calls firstUpdated and Elena's never calls connectedCallback,
+       * so five of these copies rendered fine and only the FAST one broke.
+       *
+       * The guard tests the node it is about to touch. The render side is
+       * covered by
+       * `packages/framework/src/adapter/__tests__/fast-ssr-header.test.ts`;
+       * this holds the shape in all eight copies.
+       */
+      it('guards on documentElement, not on typeof document', async () => {
+        const source = code(await read(file));
+        expect(source).toMatch(/function themeRoot\(\)/);
+        expect(source).toMatch(/document\.documentElement \?\? undefined/);
+        // No copy may gate a documentElement touch on `document` alone.
+        expect(source).not.toMatch(
+          /typeof document [!=]==? ['"]undefined['"][\s\S]{0,120}?documentElement\.(get|set)Attribute/,
+        );
+      });
+
+      /**
+       * `matchMedia` is the same class of problem one line further down: the
+       * FAST shim provides it, so a `typeof window !== 'undefined'` guard
+       * registers a listener on the server that nothing ever removes. Keep it
+       * behind the browser check and behind its own feature test.
+       */
+      it('keeps matchMedia off the server path', async () => {
+        const source = code(await read(file));
+        expect(source).toMatch(
+          /typeof window\.matchMedia [!=]==? ['"]function['"]/,
+        );
+      });
     });
   }
 });

@@ -7,6 +7,25 @@ export interface NavItem {
 }
 
 /**
+ * A real browser, not a server DOM shim.
+ *
+ * `typeof document !== "undefined"` is NOT enough. A server-side DOM shim can
+ * define `document` and still leave `documentElement` undefined, which is how
+ * the FAST copy of this header threw
+ * "Cannot read properties of undefined (reading 'getAttribute')" during SSR
+ * and took down every page that carried it. Lit's SSR never calls
+ * firstUpdated(), so this copy never reached the bug — but the adapter copies
+ * are read against each other, and the shape has to be the same in all of
+ * them. See `.agents/rules/adapters-ssr.md`.
+ *
+ * Guard on the thing you are about to touch, not on a global a shim provides.
+ */
+function themeRoot(): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined;
+  return document.documentElement ?? undefined;
+}
+
+/**
  * <starlight-header siteTitle="My Docs" .nav=${nav} currentPath="/docs/getting-started">
  *   Top navigation bar with site title, nav links, and dark/light theme toggle.
  */
@@ -193,7 +212,7 @@ export class StarlightHeader extends LitElement {
    * after it loaded.
    */
   private _readTheme = () => {
-    if (typeof document === "undefined") return;
+    if (!themeRoot()) return;
     this._theme =
       document.documentElement.getAttribute("data-theme") === "dark"
         ? "dark"
@@ -203,12 +222,15 @@ export class StarlightHeader extends LitElement {
   private _systemTheme?: MediaQueryList;
 
   override firstUpdated() {
+    // One guard for the whole block: with no documentElement there is no
+    // theme to read and no system preference worth listening to.
+    if (!themeRoot()) return;
     this._readTheme();
     // The head script follows the system while the reader has stored no
     // choice, so the icon has to follow it too. The head script's own
     // listener was registered first, in <head>, so by the time this one runs
     // data-theme is already up to date.
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
       this._systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
       this._systemTheme.addEventListener("change", this._readTheme);
     }
@@ -231,7 +253,7 @@ export class StarlightHeader extends LitElement {
         // Site data blocked. The choice holds for this page either way.
       }
     }
-    if (typeof document !== "undefined") {
+    if (themeRoot()) {
       document.documentElement.setAttribute("data-theme", next);
     }
   }
