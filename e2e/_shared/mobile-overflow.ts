@@ -100,11 +100,29 @@ export async function measureOverflow(
     // When nothing sticks out and the page still scrolls, the difference is
     // almost always the platform's own scrollbar, so print the numbers that
     // separate the two rather than leaving the next reader to guess.
+    const clipper = (el: Element): string => {
+      let node: Node | null = el.parentNode;
+      while (node && node !== document.documentElement) {
+        if (node instanceof Element) {
+          const overflowX = getComputedStyle(node).overflowX;
+          if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
+            return `${node.tagName.toLowerCase()}[${overflowX}]`;
+          }
+        }
+        node = node.parentNode ?? (node as ShadowRoot).host ?? null;
+      }
+      return 'none';
+    };
+
     const widest = found
       .map(({ el, host }) => ({ el, host, right: el.getBoundingClientRect().right }))
+      .filter(({ right }) => right > viewport + 0.5)
       .sort((a, b) => b.right - a.right)
-      .slice(0, 3)
-      .map(({ el, host, right }) => `${el.tagName.toLowerCase()}@${host}=${Math.round(right)}`)
+      .slice(0, 10)
+      .map(
+        ({ el, host, right }) =>
+          `${el.tagName.toLowerCase()}@${host}=${Math.round(right)}(clip:${clipper(el)})`,
+      )
       .join(' ');
 
     return {
@@ -117,7 +135,7 @@ export async function measureOverflow(
         `documentElement.scrollWidth=${document.documentElement.scrollWidth} ` +
         `body.clientWidth=${document.body.clientWidth} ` +
         `body.scrollWidth=${document.body.scrollWidth} ` +
-        `dpr=${window.devicePixelRatio} | furthest right edges: ${widest}`,
+        `dpr=${window.devicePixelRatio}\n  past the right edge: ${widest || 'nothing'}`,
     };
   });
 }
