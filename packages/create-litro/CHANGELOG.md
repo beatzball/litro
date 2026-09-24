@@ -1,5 +1,279 @@
 # create-litro
 
+## 0.12.0
+
+### Minor Changes
+
+- a398c22: Refuse an adapter the chosen recipe cannot produce.
+
+  `--recipe supernova --adapter fast` used to exit 0 with a mixed app. Supernova
+  extends starlight, so starlight's FAST overlay set `LITRO_ADAPTER = 'fast'` and
+  swapped the docs pages over, and supernova's own template then put its Lit
+  landing page and its nine Lit components back on top. Nothing said so.
+
+  Each recipe now declares the adapters it really supports in its config —
+  `fullstack` lit and elena, `11ty-blog` lit, `starlight` lit, fast and elena,
+  `supernova` lit. Support is declared, never read off the `template-<adapter>/`
+  directories on disk, because a recipe that extends another inherits its base's
+  overlays. Asking for anything else exits non-zero, names the recipe, the
+  adapter and what the recipe does support, and writes nothing at all. The
+  interactive prompt offers only the adapters the chosen recipe supports, and
+  skips the question when there is one.
+
+- bada4f1: Give a scaffolded docs site a page at `/docs`.
+
+  The starlight recipe shipped only `pages/docs/[slug].ts`, so `/docs` was a 404.
+  A reader who typed the obvious path, or trimmed a URL back one segment from
+  `/docs/getting-started`, landed on nothing — and a static host that will not
+  list a directory turns that into a 403, which reads as "forbidden" rather than
+  "no such page". Supernova inherited the same hole.
+
+  Every adapter variant of the recipe now ships `pages/docs/index.ts`, a landing
+  page that lists each sidebar group and each entry under it, with the entry's
+  frontmatter `description` where the content file has one. It is a real
+  prerendered page, not a redirect, so any static host serves it and it works
+  with no client JavaScript. The site navigation's Docs entry points at `/docs`,
+  which is also what lets the prerender crawler reach the page — in the recipe
+  template and in the config `--for-repo` writes for itself, which is a separate
+  copy.
+
+  A sidebar group whose `items` array is empty is dropped rather than rendered as
+  a heading over an empty list.
+
+### Patch Changes
+
+- c69b421: Scaffold an absolute project path where it was asked for.
+
+  `create-litro /tmp/demo/my-app` wrote a whole `./tmp/demo/my-app` tree inside
+  the current directory and printed the usual success block. The target was built
+  with `join(process.cwd(), projectName)`, and `join` concatenates an absolute
+  second argument rather than replacing the first.
+
+  The path is now resolved once and used everywhere: for the target directory,
+  for the "directory already exists" refusal, and for the path printed back, so
+  `cd <path>` is a command that works. A relative path behaves exactly as before.
+
+  `{{projectName}}` — which becomes `package.json`'s `name` and the site title —
+  is now the last segment of the path alone, because neither can hold a path.
+
+  A quoted leading `~` expands to the home directory instead of creating a
+  directory literally called `~`. A `~someone` form is refused rather than
+  guessed at, as is a path with no last segment to name the project after.
+
+  `--for-repo` now refuses a site outside the repository it names. The path from
+  the repo root down to the site is published — it becomes the starlight config's
+  `editUrlBase`, which is an "Edit this page" link on GitHub, and it heads the
+  generated `AGENTS.md`. A site beside the repository produced `..` in both, and
+  an edit link with `..` in it does not resolve. The refusal names both paths and
+  runs before anything is written.
+
+- 8aafdf0: starlight: docs and blog pages no longer open in light mode on a dark system
+
+  The head script set `data-theme` before the first paint, from the reader's
+  stored choice or, when there was none, from `prefers-color-scheme`. That part
+  was right. `starlight-header` then resolved the theme a SECOND time in its
+  first update and wrote the answer back — with a bare `?? 'light'` fallback and
+  no look at the system. It answered a moment later and overwrote a correct value,
+  so on a dark system every page carrying the header flipped to light right after
+  it loaded. All three adapter overlays had it.
+
+  The header now READS `data-theme` instead of deciding it, and stops when it is
+  taken off the page. The head script stays the one decider: it guards every
+  `localStorage` read, because storage throws rather than returning null when site
+  data is blocked, and it follows a later system change while — and only while —
+  the reader has stored no choice of their own.
+
+  The stylesheet gains an `@media (prefers-color-scheme: dark)` branch guarded by
+  `:not([data-theme="light"])`, so a dark system gets a dark page with JavaScript
+  turned off, and an explicit light choice still wins when scripts are running.
+  Both themes now declare a `color-scheme`, so form controls and scrollbars follow
+  too.
+
+  `litro-hero-nova` also gains two optional tokens, `--nova-mark-size` and
+  `--nova-mark-size-narrow`, for how wide the mark is drawn. A site whose mark
+  should hold the whole right of the pane sets them in the same block it sets its
+  colors in; the recipe's defaults are unchanged.
+
+  The guard around that read is a browser check, not a `document` check.
+  `typeof document === 'undefined'` is not the same question:
+  `@microsoft/fast-ssr` runs `connectedCallback` on the server against a document
+  shim that defines `document` and leaves `documentElement` undefined, so the
+  first version of this fix reached
+  `document.documentElement.getAttribute('data-theme')` during SSR and threw.
+  Every page in a FAST starlight site served a stream that stopped at the header.
+  All three overlays now guard on `document.documentElement` itself and keep
+  `matchMedia` off the server path.
+
+- 8aafdf0: supernova: the hero gets a default mark, and your own logo still replaces it
+- 8aafdf0: supernova: a redesigned hero, and the fixes the landing page needed once a real site used it
+
+  Found while rebuilding litro's own docs home pages on this recipe — the first
+  project to use it in anger.
+
+  **The hero is redesigned.** It drew a shockwave ring, a hot inner glow and a
+  bright core around the same point as the `mark` slot, and laid a centered stack
+  of copy over the top. The logo sat in the middle of a target, and nothing in the
+  composition led the eye anywhere.
+
+  `litro-hero-nova` is now one screen-high pane: a deep tinted ground, one wide
+  soft wash of accent light, and the `mark` slot drawn very large and cropped
+  against the pane's right edge, so a project's logo reads as atmosphere rather
+  than as a badge floating in the middle. With no mark slotted nothing is painted
+  at all — an empty hero is a finished hero, with no ghost shape. Its slots and
+  its tag are unchanged, so no page has to change; it reads one new optional
+  token, `--nova-hero-min`, for the pane's height. Nothing animates, so its
+  `prefers-reduced-motion` rule and its keyframes are deleted rather than left as
+  dead CSS.
+
+  **The landing page is left-aligned on a column**, and its headline is set in the
+  same mono face as the status bar, the badges and the command — so the page
+  speaks in one voice. The sans is kept for prose.
+
+  **`litro-install-command` is a slab, not a chip.** It fills the column it is
+  given, the copy control is a labeled panel of its own flush to the right edge,
+  and a new optional `note` slot carries one line of small print underneath. Slot
+  nothing and the line is not there.
+
+  - `litro-status-bar` styled its navigation with `::slotted(a)`, so a page that
+    handed the bar anything else — a routing link element, or a button that opens
+    a search dialog — got an unstyled control beside the styled links. The rule
+    now matches on the slot name, `::slotted([slot='nav'])`, and resets a
+    button's own font, background and border.
+  - `litro-status-bar` let the name segment shrink to nothing on a phone, which
+    left an empty arrow where the project's name should be. Below 30rem the name
+    segment is dropped and the mark carries the home link on its own.
+  - The landing page's shadow root never repeated the global `box-sizing` reset,
+    so every full-width section was its width PLUS its gutters and a phone
+    scrolled sideways by exactly one gutter.
+
+  - `litro-status-bar` sized and colored its navigation with `::slotted(a)`, so a
+    page that handed the bar anything else — a routing link element, or a button
+    that opens a search dialog — got an unstyled control beside the styled links.
+    The rule now matches on the slot name, `::slotted([slot='nav'])`, and resets
+    a button's own font, background and border.
+  - `litro-status-bar` let the name segment shrink to nothing on a phone, which
+    left an empty arrow where the project's name should be. Below 30rem the name
+    segment is dropped and the mark carries the home link on its own.
+  - `litro-install-command` had no `box-sizing` on its box and no `min-width: 0`
+    on the command, so a long command pushed the box wider than the space it was
+    given and a phone scrolled sideways. The command now scrolls inside the slab,
+    which is what its `overflow-x` was always meant to do.
+
+  **A scrolling box a keyboard can reach.** Both boxes that scroll sideways on a
+  narrow screen — the install command and the terminal window — are tab stops
+  now, with a name to hear on the way in and a focus-visible ring. A region that
+  scrolls and cannot be focused is unreachable without a pointer; axe-core reports
+  it as `scrollable-region-focusable`, and it shipped on every page a scaffolded
+  site put the install command on. `litro-install-command` takes a new optional
+  `commandLabel` for that name, which defaults to "Install command".
+
+  **`litro-term-window` fits on a phone.** Its host had no `min-width: 0`, so as a
+  grid item its smallest size was the widest transcript line plus its padding. A
+  wide transcript pushed its column past the screen and the landing page scrolled
+  sideways at 320px, the width WCAG 1.4.10 measures reflow at. The window shrinks
+  now and the transcript scrolls inside it. The recipe's own "Get running" grid
+  asks for `minmax(0, 1fr)` rather than a bare `1fr` for the same reason.
+
+- 8aafdf0: supernova: one header on every page, and the terminal line moves to the foot
+
+  The landing page carried a terminal bar of its own at the top, so a reader met
+  two different headers on one site — the risk section 13 of the recipe's spec
+  named. It now carries the SAME `starlight-header` the docs pages do, and the
+  terminal character moves to where a status line belongs: a fixed line at the
+  foot of the window.
+
+  `litro-status-bar` is replaced by `litro-status-line`, a new tag. It is not a
+  second layout mode on the old component: every property the bar had was about
+  being a header — a home link, a tab row, a navigation slot — and none of them
+  survive the move. What the line does instead is state facts:
+
+  - on a landing page, whatever the project can prove about itself;
+  - on a docs or blog page, where the reader is, and the link that edits it.
+
+  **Every cell must be true.** The bar's tab row showed tasks settling from
+  working to done on a page that had no tasks, which is a drawing in the most
+  credible place on a page. The line has no tabs and no states it cannot know,
+  and with no cells at all it renders nothing rather than an empty bar.
+
+  `starlight-header` gains `--sl-font-brand`, the face its wordmark and links are
+  set in. It falls back to the body sans, so a site that never sets it looks
+  exactly as it did; supernova sets it to the mono, which is the whole of the
+  difference between its header and the docs pages' one. The header's navigation
+  also scrolls rather than overflowing below 48rem — on the docs pages it was
+  hidden behind the hamburger and this never showed, but a landing page has no
+  sidebar and keeps its links.
+
+- 8aafdf0: supernova: the cards stop floating, and the landing page gains six sections
+
+  **The feature block is panes, not cards.** `litro-pane` and `litro-pane-grid`
+  replace the card kit on the landing page: square corners, no shadow, and a
+  hairline that two neighbors SHARE rather than each carrying their own. The grid
+  is six columns, so a row is two halves or three thirds and seven items fill
+  three rows with no orphan. Both of the sites this page is measured against do
+  exactly this, and neither uses a card kit.
+
+  The emoji are gone. A pane carries a state glyph, which says something true —
+  `[+]` ships, `[~]` is still moving — and an `icon` slot for a REAL mark where a
+  project has one. A scaffolded site has no mark that means anything yet, so it
+  says it in words and no placeholder icon is drawn.
+
+  **Six more sections**, each one block with a comment above it saying what it is
+  for and that deleting it is fine: a logo wall, a capability block, what the
+  project is built on, a stats row, an ecosystem list, deploy targets, and a real
+  footer with link columns in place of the one-line credit.
+
+  **Placeholders are honestly empty.** The logo wall's slots read "Your logo",
+  the stats are dashes, and nothing invents a company, a download count or a
+  quote. A scaffolded site never claims proof it does not have.
+
+  `litro-site-footer` is new. Pass it no columns and only the fine print is
+  drawn, which is where this started.
+
+  `removeBlog` now also unpicks a `/blog` link from the landing page's footer
+  columns. Nitro's prerenderer crawls the links it finds, so one left behind made
+  `--no-blog` prerender a blog whose pages had just been deleted.
+
+- 8aafdf0: supernova: the landing page follows the theme, and a status cell's words no longer touch
+
+  **Light mode did nothing on the landing page.** The page hard-coded a dark
+  palette and `color-scheme: dark`, so the toggle had nothing to act on: a reader
+  switching to light watched the docs pages change and the landing page stay
+  dark. The palette now lives in `public/styles/starlight.css` as `--brand-*`
+  values, in the same light and dark blocks the `--sl-*` tokens use — so the
+  landing page follows the toggle, the system preference, and the
+  `prefers-color-scheme` block that carries both with JavaScript turned off. The
+  page's token block is unchanged in shape: every line is still
+  `var(--brand-…, <fallback>)`.
+
+  **The accent is one value again.** `--brand-accent` reads `--sl-color-accent`
+  rather than repeating a hex, so the landing page and the docs pages cannot
+  drift. Two more accents are derived from it rather than typed: one dark enough
+  to carry white text on it, for the status line's mode segment and the primary
+  button, and one dark enough to read as small text on a light page.
+
+  **A linked status cell lost its word spacing.** The gap that separates a glyph
+  from a word lives on `.cell`, and a cell that links somewhere has one child —
+  an anchor — so everything inside it had no gap and the line read
+  "built withlitro". The anchor is the flex row now.
+
+  The hero's mark also reads `--nova-mark-opacity`, because the value that is
+  right on a near-black ground is nearly invisible on an off-white one.
+
+- 8aafdf0: supernova: the showcase takes pictures, and a capability block opens with a claim
+
+  The recipe's ecosystem section becomes a showcase: each row is a starting
+  point and the picture slots show the shape it gives you. They ship EMPTY, as
+  dashed frames that say "Your screenshot", exactly like the logo wall — a
+  project fills them with real sites or deletes the list.
+
+  A row never claims which recipe a particular site runs. That distinction is
+  the point: a site's look and a site's recipe are different facts, and writing
+  the section this way means it stays true when either one changes.
+
+  Links inside a paragraph are underlined now, not only colored. A link told
+  apart by color alone fails for a reader who cannot see the color, and
+  axe-core reports it.
+
 ## 0.11.1
 
 ### Patch Changes
