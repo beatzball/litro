@@ -73,6 +73,21 @@ export class WhyWebComponentsPage extends LitroPage {
   static override styles = [
     compareStyles,
     css`
+      /* A document stylesheet stops at this shadow boundary, so the box-sizing
+         reset has to be repeated inside it. Without it a padded full-width box
+         measures its width PLUS its gutters, and a phone scrolls sideways by
+         exactly the gutter.
+         See .agents/rules/adapters-ssr.md (SSR-008). */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      :host {
+        display: block;
+      }
+
       /* ── highlight.js fire theme ─────────────────────────────────────── */
       pre:has(.hljs) { background-color: #0d0d10; color: #cbd5e1; }
       .hljs { color: #cbd5e1; background: transparent; }

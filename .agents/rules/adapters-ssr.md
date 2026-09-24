@@ -115,3 +115,35 @@ reads `document` while it loads, so it runs before the shim finishes and
 crashes.
 
 **Check:** read the file header. Any `import` or `await` in that file is the bug.
+
+### SSR-008 — A shadow root needs its own `box-sizing` reset
+
+Every Lit and FAST component this repo ships — page components included —
+starts its styles with:
+
+```css
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+```
+
+A page component also sets `:host { display: block; }`.
+
+**Why:** a document stylesheet does not cross a shadow boundary. The starlight
+recipe ships the reset in `public/styles/starlight.css`, and `<main>` lives
+inside `page-home`'s shadow root, so it computed as `content-box`. Its
+`width: 100%` resolved to the full viewport and `padding: 4rem 1.5rem 3rem`
+was added on top: 438px on a 390px screen, on every scaffolded site. Above
+~900px `max-width: 56rem` caps the element first, so the bug is invisible on a
+desktop. A page host with no `display` computes as `inline`, which is the same
+mistake one level up.
+
+Elena is the exception: it server-renders light DOM, so the document
+stylesheet already reaches its content and the reset must not be repeated.
+
+**Check:** `e2e/_shared/mobile-overflow.ts` loads each page at 320, 360 and
+390px and fails when `document.documentElement.scrollWidth` exceeds the
+viewport. Grepping for the CSS text cannot see this bug — the broken build
+shipped the reset too, it simply could not reach the element.

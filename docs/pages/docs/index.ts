@@ -1,4 +1,4 @@
-import { html } from 'lit';
+import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
@@ -59,6 +59,23 @@ export const routeMeta = {
 
 @customElement('page-docs')
 export class DocsIndexPage extends LitroPage {
+  static override styles = css`
+    /* A document stylesheet stops at this shadow boundary, so the box-sizing
+       reset has to be repeated inside it. Without it a padded full-width box
+       measures its width PLUS its gutters, and a phone scrolls sideways by
+       exactly the gutter.
+       See .agents/rules/adapters-ssr.md (SSR-008). */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    :host {
+      display: block;
+    }
+  `;
+
   /**
    * Styles live in this page's shadow root so they reach the
    * <div slot="content"> subtree. Global stylesheets cannot pierce it.

@@ -73,7 +73,12 @@ export const compareStyles = css`
   .callout strong { color: var(--sl-color-accent, #ea580c); }
 
   /* ── Inline code ─────────────────────────────────────────────────── */
+  /* An inline code span holds unbreakable tokens — a flag, a path, a package
+     name — and one longer than the screen takes the whole page sideways. A
+     code BLOCK keeps its own horizontal scroll instead, so the pre rule below
+     puts wrapping back. */
   code {
+    overflow-wrap: anywhere;
     font-family: var(--sl-font-mono, ui-monospace, monospace);
     font-size: 0.875em;
     background: var(--sl-color-bg-inline-code, #f1f5f9);
@@ -94,7 +99,7 @@ export const compareStyles = css`
     line-height: 1.6;
     font-family: var(--sl-font-mono, ui-monospace, monospace);
   }
-  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
 
   /* ── Code pane labels ────────────────────────────────────────────── */
   .pane-label {

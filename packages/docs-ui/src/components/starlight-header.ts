@@ -43,6 +43,17 @@ export class StarlightHeader extends LitElement {
   };
 
   static override styles = css`
+    /* A document stylesheet stops at this shadow boundary, so the box-sizing
+       reset has to be repeated inside it. Without it a padded full-width box
+       measures its width PLUS its gutters, and a phone scrolls sideways by
+       exactly the gutter.
+       See .agents/rules/adapters-ssr.md (SSR-008). */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
     :host {
       display: block;
       position: sticky;
@@ -111,6 +122,12 @@ export class StarlightHeader extends LitElement {
       color: var(--sl-color-text, #23262f);
       text-decoration: none;
       white-space: nowrap;
+      /* A flex item will not shrink below its own text, so a long site name
+         pushes the theme toggle past the right edge of a 320px screen. These
+         three let the row give way and end the name in an ellipsis instead. */
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .site-title:hover {
