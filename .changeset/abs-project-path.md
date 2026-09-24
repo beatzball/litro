@@ -19,3 +19,10 @@ is now the last segment of the path alone, because neither can hold a path.
 A quoted leading `~` expands to the home directory instead of creating a
 directory literally called `~`. A `~someone` form is refused rather than
 guessed at, as is a path with no last segment to name the project after.
+
+`--for-repo` now refuses a site outside the repository it names. The path from
+the repo root down to the site is published — it becomes the starlight config's
+`editUrlBase`, which is an "Edit this page" link on GitHub, and it heads the
+generated `AGENTS.md`. A site beside the repository produced `..` in both, and
+an edit link with `..` in it does not resolve. The refusal names both paths and
+runs before anything is written.

@@ -16,7 +16,7 @@ import { mkdtemp, mkdir, rm, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import { join, isAbsolute, resolve, sep } from 'node:path';
-import { resolveProjectPath, resolveUserPath } from './project-path.js';
+import { resolveProjectPath, resolveUserPath, siteRelativeToRepo } from './project-path.js';
 import { scaffold } from './scaffold.js';
 
 const CWD = '/work/dir';
@@ -120,6 +120,40 @@ describe('--for-repo resolves the same way', () => {
     expect(resolveUserPath('../repo', CWD)).toBe(join('/work', 'repo'));
     expect(resolveUserPath('~/repo', CWD)).toBe(join(homedir(), 'repo'));
     expect(() => resolveUserPath('~someone/repo', CWD)).toThrow(/Cannot expand '~someone'/);
+  });
+});
+
+describe('--for-repo refuses a site outside the repository', () => {
+  // `siteRelPath` is published: it becomes the starlight config's `editUrlBase`
+  // ("Edit this page" on GitHub) and heads the generated AGENTS.md. A `..` in
+  // it is a link that does not resolve.
+  it('accepts a site inside the repository', () => {
+    expect(siteRelativeToRepo('/repo', '/repo/site')).toBe('site');
+    expect(siteRelativeToRepo('/repo', '/repo/docs/site')).toBe(join('docs', 'site'));
+  });
+
+  it('refuses a sibling of the repository', () => {
+    expect(() => siteRelativeToRepo('/work/repo', '/work/out/site')).toThrow(
+      /The site must be inside the repository --for-repo names/,
+    );
+  });
+
+  it('names both paths, so the mistake is visible', () => {
+    expect(() => siteRelativeToRepo('/work/repo', '/work/out/site')).toThrow(/\/work\/out\/site/);
+    expect(() => siteRelativeToRepo('/work/repo', '/work/out/site')).toThrow(/\/work\/repo/);
+  });
+
+  it('refuses the repository parent, and a bare ..', () => {
+    expect(() => siteRelativeToRepo('/work/repo', '/work')).toThrow(/must be inside the repository/);
+    expect(() => siteRelativeToRepo('/work/repo/site', '/work/repo')).toThrow(
+      /must be inside the repository/,
+    );
+  });
+
+  it('is the repo root itself only when the two paths are equal', () => {
+    // '' — the CLI cannot reach this: the repo root exists, so the "directory
+    // already exists" refusal stops it first. No fallback name is needed.
+    expect(siteRelativeToRepo('/repo', '/repo')).toBe('');
   });
 });
 

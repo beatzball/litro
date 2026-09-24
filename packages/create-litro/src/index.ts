@@ -44,7 +44,7 @@ import process from 'node:process';
 import { listRecipes, loadRecipe, resolveRecipeLineage, scaffold } from './scaffold.js';
 import { applyForRepo } from './for-repo.js';
 import { parseArgs } from './args.js';
-import { resolveProjectPath, resolveUserPath } from './project-path.js';
+import { resolveProjectPath, resolveUserPath, siteRelativeToRepo } from './project-path.js';
 import {
   adapterChoices,
   adapterFromChoice,
@@ -146,6 +146,24 @@ async function main(): Promise<void> {
   // `name` is the last segment alone: {{projectName}} becomes package.json's
   // `name` and the site title, and neither can hold a path.
   const projectName = project.name;
+
+  // 1b. --for-repo paths, resolved before anything is written.
+  //
+  // `siteRelPath` is the path from the repository root down to the site. It is
+  // published: the starlight config's `editUrlBase` becomes an "Edit this page"
+  // link on GitHub, and it heads the generated AGENTS.md. A site outside the
+  // repository has no such path, so refuse here — a refusal after the scaffold
+  // step would leave a half-shaped project behind.
+  let forRepo: { repoDir: string; siteRelPath: string } | undefined;
+  if (args.forRepo !== undefined) {
+    try {
+      const repoDir = resolveUserPath(args.forRepo);
+      forRepo = { repoDir, siteRelPath: siteRelativeToRepo(repoDir, project.dir) };
+    } catch (err: unknown) {
+      console.error(`\n  --for-repo: ${(err as Error).message}\n`);
+      process.exit(1);
+    }
+  }
 
   // 2. Recipe selection
   const recipes = await listRecipes();
@@ -267,7 +285,7 @@ async function main(): Promise<void> {
   // site. Only starlight, and recipes built on it, produce a docs site, so
   // refuse loudly rather than half-applying to a template with no content/docs.
   let forRepoSummary = '';
-  if (args.forRepo !== undefined) {
+  if (forRepo) {
     // A recipe that extends starlight has starlight's docs site in it, so it
     // can be shaped the same way. Anything else has no content/docs to shape.
     const lineage = await resolveRecipeLineage(chosenRecipe.name);
@@ -279,23 +297,12 @@ async function main(): Promise<void> {
       );
       process.exit(1);
     }
-    const { relative } = await import('node:path');
-    let repoDir: string;
-    try {
-      repoDir = resolveUserPath(args.forRepo);
-    } catch (err: unknown) {
-      console.error(`\n  --for-repo: ${(err as Error).message}\n`);
-      process.exit(1);
-    }
-    // Both sides are absolute, so this is the real path from the repo root to
-    // the site — the edit links in the generated starlight config depend on it.
-    const siteRelPath = relative(repoDir, projectDir) || projectName;
-
     const repo = await applyForRepo({
-      repoDir,
+      // Both resolved in step 1b, before anything was written.
+      repoDir: forRepo.repoDir,
       siteDir: projectDir,
       siteUrl: args.siteUrl,
-      siteRelPath,
+      siteRelPath: forRepo.siteRelPath,
       deploy: args.deploy,
       withBlog: args.withBlog,
     });

@@ -14,7 +14,7 @@
  *
  * No external dependencies — uses Node.js built-ins only.
  */
-import { basename, isAbsolute, resolve } from 'node:path';
+import { basename, isAbsolute, relative, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
 
 export interface ProjectPath {
@@ -102,4 +102,37 @@ export function resolveUserPath(input: string, cwd: string = process.cwd()): str
     );
   }
   return isAbsolute(trimmed) ? resolve(trimmed) : resolve(cwd, trimmed);
+}
+
+/**
+ * The path from a repository root down to the docs site inside it.
+ *
+ * `--for-repo` writes this into published files: the starlight config's
+ * `editUrlBase`, which becomes an "Edit this page" link on GitHub, and the
+ * heading of the generated `AGENTS.md`. A site outside the repository produces
+ * a path with `..` in it, and `.../edit/main/../out/site/content/docs` is a
+ * link that does not resolve. Refuse instead of publishing a broken link.
+ *
+ * @param repoDir  Absolute path to the repository root.
+ * @param siteDir  Absolute path the site is scaffolded into.
+ *
+ * @throws When the site is not inside the repository.
+ */
+export function siteRelativeToRepo(repoDir: string, siteDir: string): string {
+  const rel = relative(repoDir, siteDir);
+
+  // `relative` returns a `..` path when the site is outside the repository, and
+  // an absolute one when the two are on different Windows drives.
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    throw new Error(
+      `The site must be inside the repository --for-repo names.\n  Site: ${siteDir}\n  Repo: ${repoDir}\n` +
+        `  The edit links and AGENTS.md are written relative to the repo root, ` +
+        `and '${rel}' is not a path inside it.`,
+    );
+  }
+
+  // `rel` is '' only when the site IS the repository root, and the CLI refuses
+  // that earlier: the root exists, so the "directory already exists" check
+  // stops it before this runs. No fallback is needed here.
+  return rel;
 }
