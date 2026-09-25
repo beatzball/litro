@@ -1,4 +1,5 @@
 import { FASTElement, attr, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-tab-item label="Tab Label">
@@ -13,7 +14,7 @@ export class LitroTabItem extends FASTElement {
 
 const template = html<LitroTabItem>`<slot></slot>`;
 
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: block;
   }
@@ -21,7 +22,7 @@ const styles = css`
   :host(:not([selected])) {
     display: none;
   }
-`;
+`];
 
 LitroTabItem.define({ name: 'litro-tab-item', template, styles });
 

@@ -54,6 +54,7 @@ const _ssrResult = _fastSSR({ renderMode: 'async' });
 // singleton if that preamble already ran first in this process.
 (globalThis as Record<string, unknown>).__litro_fast_template_renderer__ ??= _ssrResult.templateRenderer;
 import { FASTElement, attr, nullableNumberConverter, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 export class DemoWeatherCard extends FASTElement {
   @attr city = '';
@@ -84,7 +85,7 @@ DemoWeatherCard.define({
       <span class="summary">${(x) => x.summary}</span>
     </div>
   `,
-  styles: css`
+  styles: [pageReset, css`
     :host {
       display: block;
     }
@@ -101,7 +102,7 @@ DemoWeatherCard.define({
     .city {
       font-weight: 600;
     }
-  `,
+  `],
 });
 
 export default DemoWeatherCard;

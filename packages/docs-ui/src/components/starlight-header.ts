@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { customElement } from "lit/decorators.js";
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 export interface NavItem {
   label: string;
@@ -42,7 +43,9 @@ export class StarlightHeader extends LitElement {
     _isMac: { type: Boolean, state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       position: sticky;
@@ -111,6 +114,12 @@ export class StarlightHeader extends LitElement {
       color: var(--sl-color-text, #23262f);
       text-decoration: none;
       white-space: nowrap;
+      /* A flex item will not shrink below its own text, so a long site name
+         pushes the theme toggle past the right edge of a 320px screen. These
+         three let the row give way and end the name in an ellipsis instead. */
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .site-title:hover {
@@ -339,7 +348,8 @@ export class StarlightHeader extends LitElement {
         display: none;
       }
     }
-  `;
+  `,
+  ];
 
   siteTitle = "";
   nav: NavItem[] = [];

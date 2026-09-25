@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 type AsideType = 'note' | 'tip' | 'caution' | 'danger';
 
@@ -42,7 +43,7 @@ const template = html<LitroAside>`
   </aside>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host { display: block; }
 
   .aside {
@@ -76,7 +77,7 @@ const styles = css`
   .aside.danger  .aside-title { color: var(--sl-color-danger, #b91c1c); }
 
   ::slotted(p:last-child) { margin-bottom: 0; }
-`;
+`];
 
 LitroAside.define({ name: 'litro-aside', template, styles });
 

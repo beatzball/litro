@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 export interface SearchModalResult {
   title: string;
@@ -29,7 +30,9 @@ export class SearchModal extends LitElement {
     _announceText: { type: String, state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host(:not([open])) {
       display: none;
     }
@@ -248,7 +251,8 @@ export class SearchModal extends LitElement {
       white-space: nowrap;
       border: 0;
     }
-  `;
+  `,
+  ];
 
   open = false;
   results: SearchModalResult[] = [];

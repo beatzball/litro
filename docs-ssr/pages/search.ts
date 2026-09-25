@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { getQuery } from 'h3';
 import { siteConfig } from '../server/starlight.config.js';
@@ -55,7 +55,9 @@ export const routeMeta = {
 @customElement('page-search')
 export class SearchPage extends LitroPage {
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     .result-card {
       border-bottom: 1px solid var(--sl-color-border, #e8e8e8);
       padding-bottom: 1.25rem;
@@ -113,7 +115,8 @@ export class SearchPage extends LitroPage {
       background: var(--sl-color-gray-2, #e8e8e8);
       color: var(--sl-color-gray-5, #4b4b4b);
     }
-  `;
+  `,
+  ];
 
   override render() {
     const data = this.serverData as SearchPageData | null;

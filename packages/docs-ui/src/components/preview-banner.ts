@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <preview-banner>
@@ -8,7 +9,9 @@ import { customElement } from 'lit/decorators.js';
  */
 @customElement('preview-banner')
 export class PreviewBanner extends LitElement {
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       position: fixed;
@@ -39,7 +42,8 @@ export class PreviewBanner extends LitElement {
     .exit-link:hover {
       opacity: 0.85;
     }
-  `;
+  `,
+  ];
 
   override render() {
     return html`

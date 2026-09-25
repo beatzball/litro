@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 
 import { DEFAULT_GLYPHS } from './litro-state-badge.js';
 import type { BadgeState, GlyphSet } from './litro-state-badge.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One cell in the line. Everything in it has to be true. */
 export interface StatusCell {
@@ -75,7 +76,9 @@ export class LitroStatusLine extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       /* Fixed, because a status line that scrolls away is a footer. The page
          above it carries the matching padding-bottom. */
@@ -95,11 +98,6 @@ export class LitroStatusLine extends LitElement {
       --arrow: 0.6rem;
       display: flex;
       align-items: stretch;
-      /* border-box, because a shadow root does not inherit the page's reset.
-         With the default content-box the hairline on top is ADDED to the
-         height, the line is a pixel taller than the padding a page leaves for
-         it, and the last line of that page ends up under it. */
-      box-sizing: border-box;
       height: var(--nova-status-height, 1.75rem);
       font-family: var(--nova-font-mono);
       font-size: 0.75rem;
@@ -241,7 +239,8 @@ export class LitroStatusLine extends LitElement {
         display: none;
       }
     }
-  `;
+  `,
+  ];
 
   /** The project's name, shown in the mode segment. */
   siteTitle = '';

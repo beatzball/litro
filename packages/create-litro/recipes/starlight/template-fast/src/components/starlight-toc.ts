@@ -1,5 +1,6 @@
 import { FASTElement, Observable, html, css, repeat, when } from '@microsoft/fast-element';
 import type { TocEntry } from '../extract-headings.js';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <starlight-toc .entries=${toc}>
@@ -49,7 +50,7 @@ const template = html<StarlightToc>`
   `)}
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host { display: block; }
 
   nav {
@@ -94,7 +95,7 @@ const styles = css`
     color: var(--sl-color-accent, #7c3aed);
     border-left-color: var(--sl-color-accent, #7c3aed);
   }
-`;
+`];
 
 StarlightToc.define({ name: 'starlight-toc', template, styles });
 

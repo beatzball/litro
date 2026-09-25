@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 type BadgeVariant = 'note' | 'tip' | 'caution' | 'danger' | 'default';
 
@@ -20,7 +21,7 @@ const template = html<LitroBadge>`
   </span>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: inline-flex;
   }
@@ -61,7 +62,7 @@ const styles = css`
     background-color: var(--sl-color-accent-low, #ede9fe);
     color: var(--sl-color-accent-high, #5b21b6);
   }
-`;
+`];
 
 LitroBadge.define({ name: 'litro-badge', template, styles });
 

@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** The five states a badge can show, in order of how much they want you. */
 export type BadgeState = 'error' | 'blocked' | 'working' | 'done' | 'idle';
@@ -58,7 +59,9 @@ export class LitroStateBadge extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: inline-flex;
       align-items: center;
@@ -136,7 +139,8 @@ export class LitroStateBadge extends LitElement {
         animation: none;
       }
     }
-  `;
+  `,
+  ];
 
   /** The state the badge ends on. */
   state: BadgeState = 'idle';

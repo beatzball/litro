@@ -8,6 +8,7 @@ import './starlight-header.js';
 import './starlight-sidebar.js';
 import './starlight-toc.js';
 import './litro-footer.js';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <starlight-page
@@ -100,7 +101,7 @@ const template = html<StarlightPage>`
   </div>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host { display: block; }
 
   .page-wrap {
@@ -202,7 +203,7 @@ const styles = css`
 
     .toc-wrap { display: none; }
   }
-`;
+`];
 
 StarlightPage.define({ name: 'starlight-page', template, styles });
 

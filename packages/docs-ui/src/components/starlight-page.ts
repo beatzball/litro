@@ -11,6 +11,7 @@ import './starlight-sidebar.js';
 import './starlight-toc.js';
 import './litro-status-line.js';
 import type { StatusCell } from './litro-status-line.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <starlight-page
@@ -46,6 +47,7 @@ export class StarlightPage extends LitElement {
   };
 
   static override styles = [
+    pageReset,
     /* THE LINE IS DARK CHROME ON A LIGHT PAGE, on purpose: a status line is
        the same object on both halves of the site, so it does not change color
        with the document. The docs pages define no --nova-* tokens, so the set

@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 
 import { DEFAULT_GLYPHS } from './litro-state-badge.js';
 import type { BadgeState, GlyphSet } from './litro-state-badge.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-pane name="pages/" state="done" meta="routing" span="2">
@@ -51,7 +52,9 @@ export class LitroPane extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       /* The span is a REFLECTED attribute and the rules below are plain
          selectors, so the width is decided by CSS alone. Writing it as an
@@ -188,7 +191,8 @@ export class LitroPane extends LitElement {
       outline: 2px solid var(--nova-accent);
       outline-offset: -2px;
     }
-  `;
+  `,
+  ];
 
   /** The pane's name, in the strip. */
   name = '';

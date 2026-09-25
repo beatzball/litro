@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-install-command command="npm install my-product">
@@ -46,7 +47,9 @@ export class LitroInstallCommand extends LitElement {
     _status: { state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -59,10 +62,6 @@ export class LitroInstallCommand extends LitElement {
     .box {
       display: flex;
       align-items: stretch;
-      /* border-box, because a shadow root does not inherit the page's reset.
-         With the default content-box, a full-width slab is its width PLUS its
-         border, and the line it sits on scrolls sideways. */
-      box-sizing: border-box;
       width: 100%;
       margin: 0;
       border: 1px solid var(--nova-border);
@@ -163,7 +162,8 @@ export class LitroInstallCommand extends LitElement {
       clip-path: inset(50%);
       white-space: nowrap;
     }
-  `;
+  `,
+  ];
 
   /** The command to show and to copy. */
   command = '';
