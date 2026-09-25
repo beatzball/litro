@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { siteConfig } from '../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
@@ -174,23 +174,9 @@ export const routeMeta = {
 @customElement('page-benchmarks')
 export class BenchmarksPage extends LitroPage {
   static override styles = [
+    pageReset,
     compareStyles,
     css`
-      /* A document stylesheet stops at this shadow boundary, so the box-sizing
-         reset has to be repeated inside it. Without it a padded full-width box
-         measures its width PLUS its gutters, and a phone scrolls sideways by
-         exactly the gutter.
-         See .agents/rules/adapters-ssr.md (SSR-008). */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-
-      :host {
-        display: block;
-      }
-
       /* ── Meta block ────────────────────────────────────────────────── */
       .meta {
         font-size: var(--sl-text-sm, 0.875rem);

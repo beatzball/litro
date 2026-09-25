@@ -314,6 +314,9 @@ importers:
 
   packages/create-litro:
     devDependencies:
+      '@beatzball/litro':
+        specifier: workspace:*
+        version: link:../framework
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1

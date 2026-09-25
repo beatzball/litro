@@ -1,4 +1,4 @@
-import { css, html } from 'lit';
+import { html } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement, state } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
@@ -30,23 +30,6 @@ export async function generateRoutes(): Promise<string[]> {
 
 @customElement('page-blog-slug')
 export class BlogPostPage extends LitroPage {
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    :host {
-      display: block;
-    }
-  `;
-
   @state() declare serverData: PostData | null;
 
   render() {

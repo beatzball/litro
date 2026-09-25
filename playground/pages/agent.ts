@@ -13,6 +13,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { agentSession, hydrateUIResult } from '@beatzball/litro-agent/client';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 // No import from '@beatzball/litro-agent' (or any of its server-only deep
 // imports) here -- only the browser-safe './client' entry point. `ev`'s
@@ -23,23 +24,15 @@ import { agentSession, hydrateUIResult } from '@beatzball/litro-agent/client';
 
 @customElement('page-agent')
 export class AgentPage extends LitElement {
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host { display: block; padding: 1rem; font-family: system-ui, sans-serif; }
     #chat-log { display: flex; flex-direction: column; gap: 0.25rem; margin: 1rem 0; }
     .chat-text { margin: 0; }
     #ui-slot { margin: 1rem 0; }
-  `;
+  `,
+  ];
 
   @state() private sessionId = '';
   @state() private sending = false;

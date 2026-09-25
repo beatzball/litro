@@ -1,4 +1,5 @@
 import { FASTElement, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-card-grid>
@@ -14,18 +15,7 @@ const template = html<LitroCardGrid>`
   </div>
 `;
 
-const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
+const styles = [pageReset, css`
   :host {
     display: block;
     counter-reset: card;
@@ -36,7 +26,7 @@ const styles = css`
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: 1.25rem;
   }
-`;
+`];
 
 LitroCardGrid.define({ name: 'litro-card-grid', template, styles });
 

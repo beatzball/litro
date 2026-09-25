@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { LitroTabItem } from './litro-tab-item.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-tabs>
@@ -18,18 +19,9 @@ export class LitroTabs extends LitElement {
     _selectedIndex: { type: Number, state: true },
   };
 
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       margin: 1.5rem 0;
@@ -70,7 +62,8 @@ export class LitroTabs extends LitElement {
     .tab-content {
       padding-top: 1rem;
     }
-  `;
+  `,
+  ];
 
   _labels: string[] = [];
   _selectedIndex = 0;

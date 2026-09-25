@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 
 import { DEFAULT_GLYPHS } from './litro-state-badge.js';
 import type { BadgeState, GlyphSet } from './litro-state-badge.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-pane name="pages/" state="done" meta="routing" span="2">
@@ -51,18 +52,9 @@ export class LitroPane extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       /* The span is a REFLECTED attribute and the rules below are plain
          selectors, so the width is decided by CSS alone. Writing it as an
@@ -199,7 +191,8 @@ export class LitroPane extends LitElement {
       outline: 2px solid var(--nova-accent);
       outline-offset: -2px;
     }
-  `;
+  `,
+  ];
 
   /** The pane's name, in the strip. */
   name = '';

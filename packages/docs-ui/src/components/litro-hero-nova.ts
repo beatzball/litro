@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * THE RECIPE'S OWN MARK, drawn only when a project slots none of its own.
@@ -91,18 +92,9 @@ const EJECTA = svg`
  */
 @customElement('litro-hero-nova')
 export class LitroHeroNova extends LitElement {
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       /* One composition, one screen. The content is centered in whatever
          height is left, so a short hero does not leave a dead band above the
@@ -227,7 +219,8 @@ export class LitroHeroNova extends LitElement {
       position: relative;
       z-index: 2;
     }
-  `;
+  `,
+  ];
 
   override render() {
     return html`

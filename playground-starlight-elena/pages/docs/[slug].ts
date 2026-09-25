@@ -129,8 +129,8 @@ export class DocPage extends LitroPage {
           .doc-body a:hover { text-decoration: underline; }
           /* An inline code span holds unbreakable tokens — a flag, a path, a package
              name — and one longer than the screen takes the whole page sideways. A
-             code BLOCK keeps its own horizontal scroll, so the pre rule below puts
-             wrapping back. */
+             code BLOCK keeps its own horizontal scroll instead, so the pre rule below
+             puts wrapping back. */
           .doc-body code { font-family: var(--sl-font-mono, ui-monospace, monospace); font-size: 0.875em; background-color: var(--sl-color-bg-inline-code, #e8e8e8); border: 1px solid var(--sl-color-border, #e8e8e8); border-radius: 0.25rem; padding: 0.15em 0.4em; overflow-wrap: anywhere; }
           .doc-body pre { background-color: #0d0e11; color: #e2e4e9; border-radius: 0.375rem; padding: 1rem 1.25rem; overflow-x: auto; margin: 1.5rem 0; font-size: var(--sl-text-sm, 0.875rem); line-height: 1.6; }
           .doc-body pre code { background: none; border: none; padding: 0; font-size: inherit; overflow-wrap: normal; }

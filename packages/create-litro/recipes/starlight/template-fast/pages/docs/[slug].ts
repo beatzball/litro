@@ -151,21 +151,6 @@ const template = html<DocPage>`
  * highlight.css) cannot pierce shadow DOM boundaries.
  */
 const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  :host {
-    display: block;
-  }
-
   /* -- Typography for slotted doc content --------------------------------- */
   h1, h2, h3, h4, h5, h6 {
     margin-top: 1.5em; margin-bottom: 0.5em;

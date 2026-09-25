@@ -26,6 +26,12 @@ export { LitroLink } from './LitroLink.js';
 export { getServerData } from './page-data.js';
 export { LitroPage, LitroPageMixin } from './LitroPage.js';
 
+// The shadow-root box model. `LitroPage` already carries it; import it
+// directly to compose it into a component that cannot extend `LitroPage`,
+// or into a page that declares its own `static override styles`.
+export { pageReset } from './page-reset.js';
+export { pageResetCss } from './page-reset-css.js';
+
 // Re-export the Route type so consumers don't need a direct litro-router
 // dependency just to type their route arrays.
 export type { Route, LitroLocation } from '@beatzball/litro-router';

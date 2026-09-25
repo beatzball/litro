@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { getPosts } from 'litro:content';
 import { siteConfig } from '../../server/starlight.config.js';
@@ -80,18 +80,9 @@ export class DocsIndexPage extends LitroPage {
    * Styles live in this page's shadow root so they reach the
    * <div slot="content"> subtree. Global stylesheets cannot pierce it.
    */
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host { display: block; }
 
     .doc-group { margin-bottom: 2.5rem; }
@@ -130,7 +121,8 @@ export class DocsIndexPage extends LitroPage {
       line-height: 1.6;
       color: var(--sl-color-gray-5, #6b7280);
     }
-  `;
+  `,
+  ];
 
   override render() {
     const data = this.serverData as DocsIndexData | null;

@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { getPosts } from 'litro:content';
@@ -71,23 +71,9 @@ export const routeMeta = {
 @customElement('page-why-web-components')
 export class WhyWebComponentsPage extends LitroPage {
   static override styles = [
+    pageReset,
     compareStyles,
     css`
-      /* A document stylesheet stops at this shadow boundary, so the box-sizing
-         reset has to be repeated inside it. Without it a padded full-width box
-         measures its width PLUS its gutters, and a phone scrolls sideways by
-         exactly the gutter.
-         See .agents/rules/adapters-ssr.md (SSR-008). */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-
-      :host {
-        display: block;
-      }
-
       /* ── highlight.js fire theme ─────────────────────────────────────── */
       pre:has(.hljs) { background-color: #0d0d10; color: #cbd5e1; }
       .hljs { color: #cbd5e1; background: transparent; }

@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 type AsideType = 'note' | 'tip' | 'caution' | 'danger';
 
@@ -42,18 +43,7 @@ const template = html<LitroAside>`
   </aside>
 `;
 
-const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
+const styles = [pageReset, css`
   :host { display: block; }
 
   .aside {
@@ -87,7 +77,7 @@ const styles = css`
   .aside.danger  .aside-title { color: var(--sl-color-danger, #b91c1c); }
 
   ::slotted(p:last-child) { margin-bottom: 0; }
-`;
+`];
 
 LitroAside.define({ name: 'litro-aside', template, styles });
 

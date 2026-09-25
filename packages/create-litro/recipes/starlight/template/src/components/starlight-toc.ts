@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { TocEntry } from '../extract-headings.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <starlight-toc .entries=${toc}>
@@ -13,18 +14,9 @@ export class StarlightToc extends LitElement {
     entries: { type: Array },
   };
 
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -82,7 +74,8 @@ export class StarlightToc extends LitElement {
       color: var(--sl-color-accent, #7c3aed);
       border-left-color: var(--sl-color-accent, #7c3aed);
     }
-  `;
+  `,
+  ];
 
   entries: TocEntry[] = [];
 

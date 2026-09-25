@@ -1,4 +1,5 @@
 import { FASTElement, attr, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-tab-item label="Tab Label">
@@ -13,18 +14,7 @@ export class LitroTabItem extends FASTElement {
 
 const template = html<LitroTabItem>`<slot></slot>`;
 
-const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
+const styles = [pageReset, css`
   :host {
     display: block;
   }
@@ -32,7 +22,7 @@ const styles = css`
   :host(:not([selected])) {
     display: none;
   }
-`;
+`];
 
 LitroTabItem.define({ name: 'litro-tab-item', template, styles });
 

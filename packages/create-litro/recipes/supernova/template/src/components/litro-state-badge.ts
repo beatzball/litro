@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** The five states a badge can show, in order of how much they want you. */
 export type BadgeState = 'error' | 'blocked' | 'working' | 'done' | 'idle';
@@ -58,18 +59,9 @@ export class LitroStateBadge extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: inline-flex;
       align-items: center;
@@ -147,7 +139,8 @@ export class LitroStateBadge extends LitElement {
         animation: none;
       }
     }
-  `;
+  `,
+  ];
 
   /** The state the badge ends on. */
   state: BadgeState = 'idle';

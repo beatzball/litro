@@ -11,6 +11,7 @@ import './starlight-sidebar.js';
 import './starlight-toc.js';
 import './litro-status-line.js';
 import type { StatusCell } from './litro-status-line.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <starlight-page
@@ -46,6 +47,7 @@ export class StarlightPage extends LitElement {
   };
 
   static override styles = [
+    pageReset,
     /* THE LINE IS DARK CHROME ON A LIGHT PAGE, on purpose: a status line is
        the same object on both halves of the site, so it does not change color
        with the document. The docs pages define no --nova-* tokens, so the set
@@ -56,17 +58,6 @@ export class StarlightPage extends LitElement {
        here — see status-line-chrome.ts for why. */
     statusLineChrome,
     css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
     /* The two the shell adds on top of that set: a docs page has no --nova-*
        block of its own, so the line has no gutter and no mono stack to
        inherit. They are page dressing, not part of the shared palette. */

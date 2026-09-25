@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 
 // Register the component used in render().
 import '../src/components/litro-hero-video.js';
@@ -39,18 +39,9 @@ export const routeMeta = {
 
 @customElement('page-hero-video')
 export class HeroVideoHarnessPage extends LitroPage {
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     /* The component reads these and defines no colors of its own, the same
        way it does on the landing page. */
     :host {
@@ -81,7 +72,8 @@ export class HeroVideoHarnessPage extends LitroPage {
       color: var(--nova-text-dim);
       margin: 0 0 0.75rem;
     }
-  `;
+  `,
+  ];
 
   /**
    * This page has no server data, and in a STATIC build that is a trap.

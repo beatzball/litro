@@ -6,6 +6,7 @@ import { customElement } from 'lit/decorators.js';
 import './litro-state-badge.js';
 import { DEFAULT_GLYPHS } from './litro-state-badge.js';
 import type { BadgeState, GlyphSet } from './litro-state-badge.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One line of the picture: a state, how long it has been that way, a name. */
 export interface TermRow {
@@ -64,18 +65,9 @@ export class LitroTermWindow extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       /* min-width: 0, and the window does not fit on a phone without it. As a
@@ -147,7 +139,8 @@ export class LitroTermWindow extends LitElement {
         grid-template-columns: 7rem 2.5rem 1fr;
       }
     }
-  `;
+  `,
+  ];
 
   /** The sentence a screen reader gets instead of the picture. */
   label = '';

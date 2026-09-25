@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import type { Post } from 'litro:content';
@@ -95,22 +95,9 @@ export class DocPage extends LitroPage {
    * <div slot="content"> subtree. Global stylesheets (starlight.css,
    * highlight.css) cannot pierce shadow DOM boundaries.
    */
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    :host {
-      display: block;
-    }
-
+  static override styles = [
+    pageReset,
+    css`
     /* ── Typography for slotted doc content ─────────────────────────── */
     h1, h2, h3, h4, h5, h6 {
       margin-top: 1.5em; margin-bottom: 0.5em;
@@ -184,7 +171,8 @@ export class DocPage extends LitroPage {
     .hljs-symbol, .hljs-bullet, .hljs-link { color: #38bdf8; }
     .hljs-emphasis { font-style: italic; }
     .hljs-strong { font-weight: bold; }
-  `;
+  `,
+  ];
 
   override render() {
     const data = this.serverData as DocPageData | null;

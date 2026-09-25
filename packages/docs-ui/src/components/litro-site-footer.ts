@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One link in a footer column. */
 export interface FooterLink {
@@ -50,7 +51,9 @@ export class LitroSiteFooter extends LitElement {
     note: { type: String },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       background: var(--nova-bg);
@@ -61,7 +64,6 @@ export class LitroSiteFooter extends LitElement {
       max-width: var(--nova-measure);
       margin: 0 auto;
       padding: 3rem var(--nova-gutter) 2.5rem;
-      box-sizing: border-box;
     }
 
     .columns {
@@ -130,7 +132,8 @@ export class LitroSiteFooter extends LitElement {
       font-weight: 700;
       color: var(--nova-text);
     }
-  `;
+  `,
+  ];
 
   /** The project's name, in the fine print. */
   siteTitle = '';

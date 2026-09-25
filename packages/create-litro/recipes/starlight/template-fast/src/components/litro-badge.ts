@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 type BadgeVariant = 'note' | 'tip' | 'caution' | 'danger' | 'default';
 
@@ -20,18 +21,7 @@ const template = html<LitroBadge>`
   </span>
 `;
 
-const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
+const styles = [pageReset, css`
   :host {
     display: inline-flex;
   }
@@ -72,7 +62,7 @@ const styles = css`
     background-color: var(--sl-color-accent-low, #ede9fe);
     color: var(--sl-color-accent-high, #5b21b6);
   }
-`;
+`];
 
 LitroBadge.define({ name: 'litro-badge', template, styles });
 

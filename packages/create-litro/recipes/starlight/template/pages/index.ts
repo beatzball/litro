@@ -1,4 +1,4 @@
-import { css, html } from 'lit';
+import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { LitroPage } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
@@ -57,23 +57,6 @@ export const routeMeta = {
 
 @customElement('page-home')
 export class SplashPage extends LitroPage {
-  static override styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    :host {
-      display: block;
-    }
-  `;
-
   override render() {
     const data = this.serverData as SplashData | null;
     const { siteTitle = '{{projectName}}', description = '', nav = [], features = [] } = data ?? {};

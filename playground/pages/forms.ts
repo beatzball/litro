@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { definePageData, LitroPage } from '@beatzball/litro';
+import { definePageData, LitroPage, pageReset } from '@beatzball/litro';
 import { actionUrl } from '@beatzball/litro/actions/client';
 import { enhanceForms } from '@beatzball/litro/actions/form-client';
 import { csrfToken, getFormErrors, type FormErrors } from '@beatzball/litro/actions/server';
@@ -28,21 +28,13 @@ export const pageData = definePageData(async (event) => {
 
 @customElement('page-forms')
 export class FormsPage extends LitroPage {
-  static styles = css`
-    /* A document stylesheet stops at this shadow boundary, so the box-sizing
-       reset has to be repeated inside it. Without it a padded full-width box
-       measures its width PLUS its gutters, and a phone scrolls sideways by
-       exactly the gutter.
-       See .agents/rules/adapters-ssr.md (SSR-008). */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
+  static styles = [
+    pageReset,
+    css`
     :host { display: block; padding: 1rem; font-family: system-ui, sans-serif; }
     #form-errors { color: #b91c1c; }
-  `;
+  `,
+  ];
 
   @state() declare serverData: FormsPageData | null;
   @state() private enhancedResult = '';

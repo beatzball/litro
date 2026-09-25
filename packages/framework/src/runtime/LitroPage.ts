@@ -36,9 +36,10 @@
  *   has zero runtime cost and will not trigger any window/DOM access.
  */
 
-import { LitElement } from 'lit';
+import { LitElement, type CSSResultGroup } from 'lit';
 import { state } from 'lit/decorators.js';
 import { getServerData } from './page-data.js';
+import { pageReset } from './page-reset.js';
 import type { LitroLocation } from '@beatzball/litro-router';
 
 // Generic constructor constraint used by the mixin pattern.
@@ -73,6 +74,21 @@ export interface LitroPageInterface {
  */
 export const LitroPageMixin = <T extends Constructor>(Base: T): (new (...args: any[]) => LitroPageInterface) & T => {
   class LitroPageClass extends Base {
+    /**
+     * The shadow-root box model, inherited by every page.
+     *
+     * Lit reads `static styles` off the prototype chain, so a page that
+     * declares none of its own gets this and needs no change at all. A page
+     * that DOES declare `static override styles` replaces this one, and must
+     * compose instead:
+     *
+     *     static override styles = [pageReset, css`...`];
+     *
+     * `e2e/_shared/mobile-overflow.ts` is what catches a page that forgot.
+     * See `.agents/rules/adapters-ssr.md` (SSR-008).
+     */
+    static styles: CSSResultGroup = pageReset;
+
     /**
      * The page data, populated either from the server-injected script tag
      * (on SSR load) or from `fetchData()` (on client navigation).

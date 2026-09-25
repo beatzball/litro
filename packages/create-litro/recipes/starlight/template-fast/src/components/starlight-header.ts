@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css, repeat, when } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 export interface NavItem {
   label: string;
@@ -154,18 +155,7 @@ const template = html<StarlightHeader>`
   </header>
 `;
 
-const styles = css`
-  /* A document stylesheet stops at this shadow boundary, so the box-sizing
-     reset has to be repeated inside it. Without it a padded full-width box
-     measures its width PLUS its gutters, and a phone scrolls sideways by
-     exactly the gutter.
-     See .agents/rules/adapters-ssr.md (SSR-008). */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
+const styles = [pageReset, css`
   :host {
     display: block;
     position: sticky;
@@ -306,7 +296,7 @@ const styles = css`
   }
 
   .theme-toggle:hover { background-color: var(--sl-color-gray-2, #e8e8e8); }
-`;
+`];
 
 StarlightHeader.define({ name: 'starlight-header', template, styles });
 

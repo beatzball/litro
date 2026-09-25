@@ -1,6 +1,6 @@
-import { css, html } from 'lit';
+import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { previewPosts, isPreview } from '../../server/utils/preview.js';
 import { siteConfig } from '../../server/starlight.config.js';
@@ -66,7 +66,7 @@ export class DocsIndexPage extends LitroPage {
    * Styles live in this page's shadow root so they reach the
    * <div slot="content"> subtree. Global stylesheets cannot pierce it.
    */
-  static override styles = docsIndexStyles;
+  static override styles = [pageReset, docsIndexStyles];
 
   override render() {
     const data = this.serverData as DocsIndexData | null;
