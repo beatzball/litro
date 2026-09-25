@@ -1,6 +1,6 @@
-import { defineEventHandler, setResponseHeader, getRequestURL } from 'h3';
+import { defineEventHandler, setResponseHeader, setResponseStatus, getRequestURL } from 'h3';
 import { createPageHandler } from '@beatzball/litro/runtime/create-page-handler.js';
-import { DEFAULT_SKIP_LINKS } from '@beatzball/litro';
+import { DEFAULT_SKIP_LINKS, normalizePathname } from '@beatzball/litro';
 import type { LitroRoute } from '@beatzball/litro';
 import { routes, pageModules } from '#litro/page-manifest';
 
@@ -32,10 +32,17 @@ function matchRoute(
 }
 
 export default defineEventHandler(async (event) => {
-  const pathname = getRequestURL(event).pathname;
+  // Canonicalize before matching: '/docs/a/' and '/docs/a' are one page.
+  // The client router strips the same trailing slash, so both halves agree
+  // (issue 203). A mismatch renders a blank 200 page, not an error.
+  const pathname = normalizePathname(getRequestURL(event).pathname);
   const result = matchRoute(pathname);
 
   if (!result) {
+    // A miss has to say 404 in the status, not only in the body. Without
+    // this the 404 page goes out 200 OK, so crawlers index it and a
+    // prerender counts it as a real page.
+    setResponseStatus(event, 404);
     setResponseHeader(event, 'content-type', 'text/html; charset=utf-8');
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" /><title>404</title></head>

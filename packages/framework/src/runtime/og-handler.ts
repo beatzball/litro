@@ -19,6 +19,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineEventHandler, setResponseHeader, getRequestURL, getQuery } from 'h3';
 import type { EventHandler } from 'h3';
+import { normalizePathname } from '@beatzball/litro-router/path';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
 import { defaultOgTemplate } from './og-template.js';
@@ -72,9 +73,13 @@ function loadFont(customPath?: string): ArrayBuffer {
  * Same regex logic as the catch-all handler in server/routes/[...].ts.
  */
 function matchRoute(
-  pathname: string,
+  rawPathname: string,
   routes: LitroRoute[],
 ): { route: LitroRoute; params: Record<string, string> } | undefined {
+  // Same canonicalization the catch-all handler and the client router use, so
+  // an OG image resolves the same route as the page it illustrates (issue 203).
+  const pathname = normalizePathname(rawPathname);
+
   for (const route of routes) {
     if (!route.isDynamic && !route.isCatchAll) {
       if (pathname === route.path) return { route, params: {} };
