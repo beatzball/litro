@@ -45,6 +45,12 @@ export default defineTool({
   // tool-capable models (incl. smaller local ones) call it reliably.
   description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
   input: getWeatherSchema,
+  // The packed ui:// document an MCP host renders this tool's result in, named
+  // by its `dist/mcp-apps/manifest.json` entry. `litro mcp serve` resolves it to
+  // `ui://playground/weather-card` and publishes it as `_meta.ui.resourceUri`;
+  // an unresolvable name fails at startup, because the MCP Apps spec requires
+  // the resource to exist on the server. The chat loop ignores the field.
+  app: 'weather-card',
   async execute({ city }) {
     const tempC = 21;
     const summary = 'sunny';

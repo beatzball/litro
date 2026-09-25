@@ -42,12 +42,12 @@ const MANIFEST_STUB_REL = join('server', 'stubs', 'agent-manifest.ts');
 const CONFIG_STUB_REL = join('server', 'stubs', 'agent-config.ts');
 const HANDLER_STUB_REL = join('server', 'stubs', 'agent-handler.ts');
 
-interface ScannedTool {
+export interface ScannedTool {
   name: string;
   file: string;
 }
 
-interface ScannedAgent {
+export interface ScannedAgent {
   name: string;
   agentFile: string;
   instructions: string;
@@ -75,7 +75,16 @@ async function readInstructions(agentDir: string): Promise<string> {
   }
 }
 
-async function scanAgents(rootDir: string): Promise<ScannedAgent[]> {
+/**
+ * Walks `agents/<name>/agent.ts` and each agent's `tools/*.ts`.
+ *
+ * EXPORTED because `litro mcp serve` needs the same walk. The MCP server reads
+ * project source directly rather than the build-time manifest — a fresh
+ * checkout has no `server/stubs/agent-manifest.ts` — and two copies of this
+ * walk would let the chat loop and the MCP server disagree about which tools an
+ * agent has.
+ */
+export async function scanAgents(rootDir: string): Promise<ScannedAgent[]> {
   const agentFiles = await fastGlob(`${AGENTS_DIR}/*/agent.ts`, {
     cwd: rootDir,
     absolute: true,

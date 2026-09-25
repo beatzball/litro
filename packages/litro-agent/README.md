@@ -106,6 +106,60 @@ The renderer follows `LITRO_ADAPTER`: Lit (Declarative Shadow DOM via `@lit-labs
 
 ---
 
+## MCP server
+
+`litro mcp serve` puts one agent's tools, and the `ui://` documents
+`litro mcp-app build` packed, in front of an MCP host over stdio:
+
+```jsonc
+// the host's server configuration
+{ "command": "npx", "args": ["litro", "mcp", "serve"] }
+```
+
+An existing project changes close to nothing. `--agent <name>` picks the agent
+when there is more than one; `--apps-dir <dir>` points at a build output other
+than `dist/mcp-apps`.
+
+| To get | Change needed |
+|---|---|
+| tools over stdio | nothing. `litro mcp serve` |
+| a tool's app linked to it | one field on that tool: `app: '<manifest name>'` |
+| the apps served | nothing, if `litro mcp-app build` has run |
+| the SDK | `pnpm add -D @modelcontextprotocol/sdk` |
+
+```ts
+export default defineTool({
+  description: 'Get the current weather for a city.',
+  input: citySchema,
+  app: 'weather-card', // a dist/mcp-apps/manifest.json entry, or a literal ui:// address
+  async execute({ city }) { /* ... */ },
+});
+```
+
+`tools/list` publishes `_meta.ui.resourceUri` for that tool, and the host reads
+the document with `resources/read`. An `app` name the manifest does not list is a
+**startup** failure, because the MCP Apps specification requires the resource to
+exist on the server. `visibility` is emitted only when you set it —
+`app: { name: 'weather-card', visibility: ['app'] }` hides a tool from the model
+— because the extension already defaults to `['model', 'app']`.
+
+**`inputSchema` is only as good as your schema library.** It comes from
+`~standard.jsonSchema.input`, so zod and arktype convert and a hand-rolled
+schema publishes `{ type: 'object' }`, which tells a host nothing about the
+arguments.
+
+**`ctx.event` is `undefined` over stdio.** There is no request, so a tool that
+reads a cookie or a header has nothing to read.
+
+**`@modelcontextprotocol/sdk` is an optional peer dependency.** Only a project
+that serves MCP installs it; every other project builds and runs without it, and
+`litro mcp serve` says what to add when it is missing.
+
+Streamable HTTP, auth, progress notifications and `outputSchema` are later
+phases of `design/specs/2026-09-24-mcp-server.md` and are not here yet.
+
+---
+
 ## Providers
 
 | Import | Use |

@@ -37,6 +37,10 @@
       "types": "./dist/mcp-app/index.d.ts",
       "import": "./dist/mcp-app/index.js"
     },
+    "./mcp-server": {
+      "types": "./dist/mcp-server/index.d.ts",
+      "import": "./dist/mcp-server/index.js"
+    },
     "./telemetry": {
       "types": "./dist/telemetry/otel.d.ts",
       "import": "./dist/telemetry/otel.js"
@@ -91,6 +95,7 @@
     "@lit-labs/ssr": "^3.3.0",
     "@microsoft/fast-element": "^2.10.0",
     "@microsoft/fast-ssr": "^1.0.0-beta.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "lit": "^3.2.1",
     "nitropack": "^2.13.4"
   },
@@ -104,6 +109,9 @@
     "@microsoft/fast-ssr": {
       "optional": true
     },
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
     "lit": {
       "optional": true
     }
@@ -112,6 +120,7 @@
     "@lit-labs/ssr": "^3.3.0",
     "@microsoft/fast-element": "^2.10.3",
     "@microsoft/fast-ssr": "1.0.0-beta.39",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "jsdom": "^25.0.0",
     "lit": "^3.2.1",
     "nitropack": "^2.13.4",
