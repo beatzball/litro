@@ -301,6 +301,8 @@ Commands:
   litro docs check       Verify pages and sidebar agree (exits 1 on drift)
   litro mcp-app build    Pack mcp-apps/ into MCP Apps ui:// documents
   litro mcp serve        Serve an agent's tools and apps to an MCP host (stdio)
+  litro mcp serve --project <dir>
+                         Serve a project other than the working directory
     `);
     process.exit(0);
 }

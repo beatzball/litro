@@ -30,12 +30,18 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROJECT = resolve(HERE, '..');
 /** The CLI as an installed app resolves it, not a workspace path. */
-const CLI = join('node_modules', '@beatzball', 'litro', 'dist', 'cli', 'index.js');
+const CLI = join(PROJECT, 'node_modules', '@beatzball', 'litro', 'dist', 'cli', 'index.js');
 
 const argv = process.argv.slice(2);
 const purity = argv.includes('--purity');
 const dashdash = argv.indexOf('--');
-const serveArgs = dashdash === -1 ? [] : argv.slice(dashdash + 1);
+/**
+ * `--project` is always passed, because that is the configuration a host
+ * actually uses: a host launches the command with a working directory of its
+ * own, so the project has to be named. Running the probe from anywhere should
+ * behave the same as running it from the playground.
+ */
+const serveArgs = ['--project', PROJECT, ...(dashdash === -1 ? [] : argv.slice(dashdash + 1))];
 
 const out = (label, value) => console.log(`\n### ${label}\n${JSON.stringify(value, null, 2)}`);
 
@@ -53,7 +59,9 @@ async function transcript() {
   const transport = new StdioClientTransport({
     command: 'node',
     args: [CLI, 'mcp', 'serve', ...serveArgs],
-    cwd: PROJECT,
+    // NO cwd. The probe's own working directory is inherited, whatever it is,
+    // because that is a host's situation exactly — `--project` is what has to do
+    // the work. Run this from anywhere and it should behave the same.
     // The server's own startup line and every project log go here. Inherited so
     // a reader can see that they did NOT go to stdout.
     stderr: 'inherit',
@@ -130,8 +138,9 @@ function summarize(result) {
  * parses away.
  */
 async function checkStdoutPurity() {
+  // No cwd, for the same reason as above: `--project` is what locates the
+  // project, not where the probe happens to be run from.
   const child = spawn('node', [CLI, 'mcp', 'serve', ...serveArgs], {
-    cwd: PROJECT,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
 

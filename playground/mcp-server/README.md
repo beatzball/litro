@@ -199,6 +199,10 @@ JSON-RPC to the server by hand and reads the RAW stdout, which a client would
 parse away. The specification says a stdio server MUST NOT write anything else
 there, so a single stray log line is a failure and the probe exits 1 on one.
 
+Both forms pass `--project` and name the CLI by path, which is the configuration
+a real host needs — so the probe runs the same from any working directory, and
+running it from one is itself the check that `--project` does its job.
+
 Pass extra flags to the server after `--`, and pick another tool with `TOOL=` and
 `ARGS=`:
 

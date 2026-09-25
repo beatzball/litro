@@ -7,6 +7,9 @@
  * client, and against a real host by `playground/mcp-server/stdio-probe.mjs`.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'pathe';
 import { mcpCommand } from './mcp-serve.js';
 
 let stderr: string[];
@@ -56,5 +59,75 @@ describe('mcpCommand', () => {
     } finally {
       stdoutSpy.mockRestore();
     }
+  });
+});
+
+/**
+ * `--project`, which exists because a host launches this command with a working
+ * directory of its own choosing — and at least one desktop host ignores a `cwd`
+ * field in its server configuration entirely.
+ *
+ * These stop before Vite starts. The end-to-end proof, a real client driving a
+ * server started from an unrelated directory, is
+ * `playground/mcp-server/stdio-probe.mjs --project <dir>`.
+ */
+describe('--project', () => {
+  let elsewhere: string;
+  let project: string;
+
+  beforeEach(() => {
+    // Somewhere with no package.json and no relationship to a project: what a
+    // host's working directory looks like from here.
+    elsewhere = mkdtempSync(join(tmpdir(), 'litro-elsewhere-'));
+    project = mkdtempSync(join(tmpdir(), 'litro-project-'));
+    writeFileSync(join(project, 'package.json'), JSON.stringify({ name: 'fixture', type: 'module' }));
+    mkdirSync(join(project, 'agents', 'demo', 'tools'), { recursive: true });
+    writeFileSync(join(project, 'agents', 'demo', 'agent.ts'), '// fixture\n');
+  });
+
+  afterEach(() => {
+    rmSync(elsewhere, { recursive: true, force: true });
+    rmSync(project, { recursive: true, force: true });
+  });
+
+  it('refuses a working directory that is not a project, and names the flag', async () => {
+    await expect(mcpCommand(['serve'], elsewhere)).resolves.toBe(1);
+    const said = stderr.join('');
+    expect(said).toContain('has no package.json, so it is not a project directory');
+    expect(said).toContain('Pass --project <dir> when the host launches it somewhere else');
+  });
+
+  it('gets past that check when --project names a real project', async () => {
+    // It must NOT fail on "this is not a project": the fixture has no installed
+    // dependencies, so it fails later, on loading the agent layer. That later
+    // failure is the proof the flag was honored.
+    await expect(mcpCommand(['serve', '--project', project], elsewhere)).resolves.toBe(1);
+    const said = stderr.join('');
+    expect(said).not.toContain('is not a project directory');
+    expect(said).toContain('@beatzball/litro-agent is not installed in this project');
+  });
+
+  it('does not suggest the flag to someone who already passed it', async () => {
+    await expect(mcpCommand(['serve', '--project', join(elsewhere, 'nope')], elsewhere)).resolves.toBe(1);
+    const said = stderr.join('');
+    expect(said).toContain('Check the --project path.');
+    expect(said).not.toContain('Pass --project <dir>');
+  });
+
+  it('resolves a relative --project against the working directory, as a shell would', async () => {
+    await expect(mcpCommand(['serve', '--project', '../nowhere-at-all'], elsewhere)).resolves.toBe(1);
+    // The message names the RESOLVED path, not the relative one, so the reader
+    // can see where it actually looked.
+    expect(stderr.join('')).toMatch(/nowhere-at-all has no package\.json/);
+  });
+
+  it('accepts --project=<dir> as well as --project <dir>', async () => {
+    await expect(mcpCommand(['serve', `--project=${project}`], elsewhere)).resolves.toBe(1);
+    expect(stderr.join('')).not.toContain('is not a project directory');
+  });
+
+  it('names the flag in its usage line', async () => {
+    await mcpCommand(['list'], elsewhere);
+    expect(stderr.join('')).toContain('--project <dir>');
   });
 });

@@ -419,7 +419,20 @@ export interface ServeStdioResult {
   agentName: string;
   toolNames: string[];
   appUris: string[];
-  /** Closes the transport. Only used by tests; a host closes the process. */
+  /**
+   * Resolves when the host goes away — it closes the server's stdin, and the
+   * transport reports that.
+   *
+   * THE CALLER MUST AWAIT THIS AND THEN SHUT DOWN. A stdio server's whole
+   * lifetime is its host's: when the host stops it, the process has no reason to
+   * exist. Nothing ends it on its own, because the Vite server the CLI keeps
+   * open holds the event loop, so a host that starts and stops a server several
+   * times leaves one orphaned process each time — nine of them accumulated in a
+   * single session of testing this, and one held the HMR port against an
+   * unrelated build.
+   */
+  closed: Promise<void>;
+  /** Closes the transport from this side. Used by tests; a host closes stdin. */
   close: () => Promise<void>;
 }
 
@@ -469,6 +482,16 @@ export async function serveMcpStdio(options: ServeStdioOptions): Promise<ServeSt
     log,
   });
 
+  // Registered BEFORE connect, so a host that disconnects immediately cannot
+  // close the transport between the connect and the hook being attached.
+  const closed = new Promise<void>((resolve) => {
+    const prior = server.onclose?.bind(server);
+    server.onclose = () => {
+      prior?.();
+      resolve();
+    };
+  });
+
   await server.connect(transport);
 
   for (const odd of resolved.oddNames) {
@@ -492,6 +515,7 @@ export async function serveMcpStdio(options: ServeStdioOptions): Promise<ServeSt
     agentName: resolved.agent.name,
     toolNames: resolved.tools.map((t) => t.name),
     appUris: resolved.apps.map((a) => a.descriptor.uri),
+    closed,
     close: async () => {
       await transport.close();
       captured?.restore();

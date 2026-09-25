@@ -113,12 +113,35 @@ The renderer follows `LITRO_ADAPTER`: Lit (Declarative Shadow DOM via `@lit-labs
 
 ```jsonc
 // the host's server configuration
-{ "command": "npx", "args": ["litro", "mcp", "serve"] }
+{
+  "command": "<project>/node_modules/.bin/litro",
+  "args": ["mcp", "serve", "--project", "<project>"]
+}
 ```
 
-An existing project changes close to nothing. `--agent <name>` picks the agent
-when there is more than one; `--apps-dir <dir>` points at a build output other
-than `dist/mcp-apps`.
+**Both halves of that are load-bearing, and neither is obvious.** A host starts
+this command with a working directory of its own choosing, and at least one
+desktop host ignores a `cwd` field in its configuration entirely:
+
+- **Name the binary with a path.** `npx litro` resolves the name from the
+  CURRENT directory, so from anywhere else it goes to the public registry and
+  fails with `npm error code ENOVERSIONS / No versions available for litro`,
+  which says nothing about the real cause.
+- **Pass `--project`.** Otherwise the project is the host's working directory,
+  which is not yours.
+
+Verified against Claude Desktop, which rendered the `ui://` card on screen.
+
+`--agent <name>` picks the agent when there is more than one; `--apps-dir <dir>`
+points at a build output other than `dist/mcp-apps`; `--timeout <ms>` and
+`--max-result-bytes <n>` tune the per-call guards.
+
+Several servers run side by side — the command opens no port, and it exits when
+its host disconnects.
+
+**Tool names are global to a host.** Two servers exposing a tool of the same
+name are ambiguous: the host picks one and the reader cannot tell which
+answered. Name a tool for what it does in the world, not just within its project.
 
 | To get | Change needed |
 |---|---|

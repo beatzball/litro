@@ -31,5 +31,8 @@ The pure half of a tool call — look up, validate, execute, drain, split a
 `UIResult` — moves to one function that the chat loop and the server both call.
 Every store append, its order, and every span stay in the loop.
 
+`serveMcpStdio` reports when its host disconnects, so the caller can shut down
+rather than leaving a process behind.
+
 Streamable HTTP, auth, progress notifications and `outputSchema` are later
 phases.
