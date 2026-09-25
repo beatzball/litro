@@ -37,7 +37,7 @@ if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
 delete (globalThis as Record<string, unknown>).URLPattern;
 
 // Import AFTER deleting globalThis.URLPattern so the fallback installs.
-const { LitroRouter, h3ToURLPattern } = await import('../index.js');
+const { LitroRouter, h3ToURLPattern, normalizePathname } = await import('../index.js');
 
 // ---------------------------------------------------------------------------
 // h3ToURLPattern — catch-all syntax conversion
@@ -387,3 +387,100 @@ describe('URLPattern fallback (LitroURLPattern)', () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// Trailing slash — issue 203
+//
+// `/docs/getting-started/` and `/docs/getting-started` are the same page. A
+// static host serving an SSG build answers both (autoSubfolderIndex writes
+// `docs/getting-started/index.html`), so the client router has to agree or the
+// page loads, hydrates nothing, and the `:not(:defined)` rule hides it.
+// ---------------------------------------------------------------------------
+
+describe('normalizePathname', () => {
+  it('leaves a canonical path unchanged', () => {
+    expect(normalizePathname('/')).toBe('/');
+    expect(normalizePathname('/about')).toBe('/about');
+    expect(normalizePathname('/docs/getting-started')).toBe('/docs/getting-started');
+  });
+
+  it('strips one trailing slash', () => {
+    expect(normalizePathname('/about/')).toBe('/about');
+    expect(normalizePathname('/docs/getting-started/')).toBe('/docs/getting-started');
+  });
+
+  it('never strips the root path', () => {
+    expect(normalizePathname('/')).toBe('/');
+  });
+
+  it('strips only the last slash of a repeated run', () => {
+    // '//' is a distinct path, not the root — only the final slash comes off.
+    expect(normalizePathname('/docs//')).toBe('/docs/');
+  });
+
+  it('is a no-op on the empty string', () => {
+    expect(normalizePathname('')).toBe('');
+  });
+});
+
+describe('LitroRouter — trailing slash', () => {
+  let outlet: HTMLDivElement;
+  let router: InstanceType<typeof LitroRouter>;
+
+  beforeEach(() => {
+    outlet = document.createElement('div');
+    document.body.appendChild(outlet);
+    router = new LitroRouter(outlet);
+  });
+
+  afterEach(() => {
+    outlet.remove();
+  });
+
+  it('mounts a static route requested with a trailing slash', async () => {
+    history.replaceState(null, '', '/about/');
+    if (!customElements.get('rr-ts-about')) {
+      customElements.define('rr-ts-about', class extends HTMLElement {});
+    }
+    router.setRoutes([{ path: '/about', component: 'rr-ts-about' }]);
+    await new Promise(r => setTimeout(r, 50));
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-ts-about');
+  });
+
+  it('mounts a dynamic route requested with a trailing slash, with the same params', async () => {
+    history.replaceState(null, '', '/docs/getting-started/');
+    let receivedParams: Record<string, string | undefined> | undefined;
+    customElements.define('rr-ts-docs', class extends HTMLElement {
+      onBeforeEnter(loc: { params: Record<string, string | undefined> }) {
+        receivedParams = loc.params;
+      }
+    });
+    router.setRoutes([{ path: '/docs/:slug', component: 'rr-ts-docs' }]);
+    await new Promise(r => setTimeout(r, 50));
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-ts-docs');
+    expect(receivedParams?.slug).toBe('getting-started');
+  });
+
+  it('reports the canonical pathname to onBeforeEnter', async () => {
+    history.replaceState(null, '', '/guide/');
+    let seen: string | undefined;
+    customElements.define('rr-ts-guide', class extends HTMLElement {
+      onBeforeEnter(loc: { pathname: string }) {
+        seen = loc.pathname;
+      }
+    });
+    router.setRoutes([{ path: '/guide', component: 'rr-ts-guide' }]);
+    await new Promise(r => setTimeout(r, 50));
+    expect(seen).toBe('/guide');
+  });
+
+  it('still mounts the root route at /', async () => {
+    history.replaceState(null, '', '/');
+    if (!customElements.get('rr-ts-root')) {
+      customElements.define('rr-ts-root', class extends HTMLElement {});
+    }
+    router.setRoutes([{ path: '/', component: 'rr-ts-root' }]);
+    await new Promise(r => setTimeout(r, 50));
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-ts-root');
+  });
+});

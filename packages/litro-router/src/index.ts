@@ -97,6 +97,12 @@ if (typeof (globalThis as Record<string, unknown>).URLPattern === 'undefined') {
 
 // ---------------------------------------------------------------------------
 
+// Path canonicalization lives in its own dependency-free module so a server
+// bundle can import it (`@beatzball/litro-router/path`) without evaluating
+// this client-only file. Re-exported here as part of the public API.
+export { normalizePathname } from './path.js';
+import { normalizePathname } from './path.js';
+
 /** Route definition consumed by LitroOutlet and the generated routes file. */
 export interface Route {
   /** Path pattern in h3/Litro format (e.g. '/', '/blog/:slug', '/:all(.*)*'). */
@@ -180,7 +186,7 @@ export class LitroRouter {
     // Compare pathname+search so query string changes (e.g. /search?q=a → /search?q=b)
     // still trigger a re-render.
     window.addEventListener('popstate', () => {
-      if (location.pathname + location.search === this._lastPathAndSearch) return;
+      if (normalizePathname(location.pathname) + location.search === this._lastPathAndSearch) return;
       void this._resolve();
     });
     void this._resolve();
@@ -197,7 +203,12 @@ export class LitroRouter {
 
   private async _resolve(): Promise<void> {
     const token = ++this._resolveToken;
-    const pathname = location.pathname;
+    // Match on the canonical path so '/docs/a/' resolves the same route as
+    // '/docs/a' (issue 203). The address bar is left alone — a static host
+    // already serves both, so rewriting it would make the same app behave
+    // differently under SSG and SSR. `pathname` is what reaches
+    // onBeforeEnter, so a page sees one stable value either way.
+    const pathname = normalizePathname(location.pathname);
     this._lastPathAndSearch = pathname + location.search;
 
     for (const route of this.routes) {
