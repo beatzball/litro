@@ -33,6 +33,7 @@ export const siteConfig = {
         { label: 'Server Actions', slug: 'server-actions' },
         { label: 'Agents', slug: 'agents' },
         { label: 'MCP Apps', slug: 'mcp-apps' },
+        { label: 'MCP Server', slug: 'mcp-server' },
         { label: 'Content Layer', slug: 'content-layer' },
         { label: 'Static Generation', slug: 'ssg' },
         { label: 'OG Images', slug: 'og-images' },

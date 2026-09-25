@@ -293,8 +293,9 @@ An `<a href="https://…">` is **not** flagged. A link is a navigation, not a su
 ## Limitations
 
 - **Elena is not supported** — `ui()` does not support it yet. Its light-DOM output would give the smallest document of the three.
-- **No MCP server.** This produces the artifact a server publishes; serving `resources/list` and `tools/list` is a separate piece of work.
 - `sampling/createMessage` and host-registered tools are not implemented.
+
+Serving these documents, and an agent's tools, to a host is [`litro mcp serve`](/docs/mcp-server).
 
 ## Worked examples
 

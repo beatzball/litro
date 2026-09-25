@@ -1,7 +1,8 @@
 # playground MCP server — a host validation rig
 
 **This is a test rig, not the production MCP server.** It is not published, not
-wired into any recipe, and not the deferred Litro MCP server. Its only job is to
+wired into any recipe, and not `litro mcp serve` (the real one, documented at
+[MCP Server](https://litro.dev/docs/mcp-server)). Its only job is to
 put the packed `ui://` documents in front of a **real** MCP host and record what
 that host actually does.
 
