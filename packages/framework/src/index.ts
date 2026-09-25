@@ -12,6 +12,8 @@
  *   getServerData     — read server-serialized page data on first load
  *   LitroPage         — optional base class with built-in data fetching
  *   LitroPageMixin    — mixin version of LitroPage for multiple inheritance
+ *   pageReset         — the shadow-root box model, for a component that
+ *                       cannot extend LitroPage
  *
  * Build-time plugins:
  *   ssgPlugin  — Nitro build-time plugin for SSG dynamic-route resolution
@@ -40,6 +42,7 @@
 
 export { definePageData, getServerData } from './runtime/page-data.js';
 export { LitroPage, LitroPageMixin } from './runtime/LitroPage.js';
+export { pageReset } from './runtime/page-reset.js';
 
 // Skip links — exported so sites can extend DEFAULT_SKIP_LINKS.
 export { DEFAULT_SKIP_LINKS } from './runtime/shell.js';

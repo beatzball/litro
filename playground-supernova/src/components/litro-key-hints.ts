@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One key, and what it does. `keys` may be several keys pressed in turn. */
 export interface KeyHint {
@@ -29,7 +30,9 @@ export class LitroKeyHints extends LitElement {
     hints: { type: Array },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -68,7 +71,8 @@ export class LitroKeyHints extends LitElement {
       line-height: 1.4;
       white-space: nowrap;
     }
-  `;
+  `,
+  ];
 
   /** The key and meaning pairs, in the order they should be read. */
   hints: KeyHint[] = [];

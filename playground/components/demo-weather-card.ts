@@ -7,10 +7,13 @@
  */
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 @customElement('demo-weather-card')
 export class DemoWeatherCard extends LitElement {
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -41,7 +44,8 @@ export class DemoWeatherCard extends LitElement {
     .summary {
       color: var(--card-muted, #5b5b5b);
     }
-  `;
+  `,
+  ];
 
   @property({ type: String }) city = '';
   /**

@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { siteConfig } from '../../server/starlight.config.js';
 import { starlightHead } from '@beatzball/litro-docs-ui/src/route-meta.js';
@@ -100,6 +100,7 @@ export const routeMeta = {
 @customElement('page-compare')
 export class CompareIndexPage extends LitroPage {
   static override styles = [
+    pageReset,
     compareStyles,
     css`
       /* ── Summary cards ─────────────────────────────────────────────── */

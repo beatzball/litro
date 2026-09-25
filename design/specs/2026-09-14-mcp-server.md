@@ -1,6 +1,6 @@
 # Design: a Litro MCP server (issue 157)
 
-Status: Draft
+Status: Superseded by `2026-09-24-mcp-server.md`
 
 Issue: https://github.com/beatzball/litro/issues/157
 

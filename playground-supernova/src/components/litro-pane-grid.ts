@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-pane-grid>
@@ -29,7 +30,9 @@ import { customElement } from 'lit/decorators.js';
  */
 @customElement('litro-pane-grid')
 export class LitroPaneGrid extends LitElement {
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -56,7 +59,8 @@ export class LitroPaneGrid extends LitElement {
         grid-column: span 1 !important;
       }
     }
-  `;
+  `,
+  ];
 
   override render() {
     return html`<div class="grid"><slot></slot></div>`;

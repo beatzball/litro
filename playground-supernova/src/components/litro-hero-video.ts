@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One encoding of the recording. Give the browser the formats you have. */
 export interface HeroVideoSource {
@@ -74,7 +75,9 @@ export class LitroHeroVideo extends LitElement {
     _trouble: { state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -149,7 +152,8 @@ export class LitroHeroVideo extends LitElement {
       clip-path: inset(50%);
       white-space: nowrap;
     }
-  `;
+  `,
+  ];
 
   /** The image shown before the clip runs. */
   poster = '';

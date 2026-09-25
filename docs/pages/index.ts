@@ -1,7 +1,7 @@
 import { html, css } from "lit";
 import { customElement } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import { LitroPage } from "@beatzball/litro/runtime";
+import { LitroPage, pageReset } from "@beatzball/litro/runtime";
 import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
 import { siteConfig } from "../server/starlight.config.js";
@@ -693,6 +693,7 @@ export const routeMeta = {
 @customElement("page-home")
 export class SplashPage extends LitroPage {
   static override styles = [
+    pageReset,
     statusLineChrome,
     css`
     /* ── The token block ───────────────────────────────────────────────
@@ -805,16 +806,6 @@ export class SplashPage extends LitroPage {
      * values. They used to be typed out in each place and drifted apart. */
 
     /* ── Page frame ────────────────────────────────────────────────────── */
-
-    /* The global stylesheet's box-sizing reset stops at the shadow boundary,
-       so it has to be repeated here. Without it every padded full-width block
-       on this page — .shell most of all — is its width PLUS its gutters, and
-       a phone-sized screen scrolls sideways by exactly the gutter. */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
 
     :host {
       display: block;

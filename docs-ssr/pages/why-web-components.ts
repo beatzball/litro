@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement } from 'lit/decorators.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { createError } from 'h3';
 import { getPosts } from 'litro:content';
@@ -71,6 +71,7 @@ export const routeMeta = {
 @customElement('page-why-web-components')
 export class WhyWebComponentsPage extends LitroPage {
   static override styles = [
+    pageReset,
     compareStyles,
     css`
       /* ── highlight.js fire theme ─────────────────────────────────────── */

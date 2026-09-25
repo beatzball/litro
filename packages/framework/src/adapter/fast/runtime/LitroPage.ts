@@ -18,8 +18,14 @@
 // conditionally imports the shim only on the server (no-op in browser).
 import '../ensure-dom.js';
 
-import { FASTElement, observable } from '@microsoft/fast-element';
+import {
+  FASTElement,
+  observable,
+  type Constructable,
+  type PartialFASTElementDefinition,
+} from '@microsoft/fast-element';
 import { getServerData } from '../../../runtime/page-data.js';
+import { pageReset } from './page-reset.js';
 import type { LitroLocation } from '@beatzball/litro-router';
 
 export interface LitroPageInterface {
@@ -32,6 +38,38 @@ export interface LitroPageInterface {
 export class LitroPage extends FASTElement implements LitroPageInterface {
   @observable serverData: unknown = null;
   @observable loading = false;
+
+  /**
+   * Define the element, with the shadow-root box model already in it.
+   *
+   * FAST has no equivalent of Lit's inherited `static styles`: styles belong
+   * to the DEFINITION, and a subclass's `.define({ styles })` is the only
+   * place they can come from. So the base class injects the reset here rather
+   * than asking every page to remember it, which is the whole point — a page
+   * that writes `styles: css`...`` still gets it, and a page with no styles at
+   * all needs no `styles` key.
+   *
+   * `pageReset` goes FIRST, so a page that wants a different box model on one
+   * of its own elements simply says so and wins on order.
+   *
+   * See `.agents/rules/adapters-ssr.md` (SSR-008).
+   */
+  static override define<TType extends Constructable<HTMLElement>>(
+    this: TType,
+    nameOrDef: string | PartialFASTElementDefinition,
+  ): TType {
+    const given: PartialFASTElementDefinition =
+      typeof nameOrDef === 'string' ? { name: nameOrDef } : nameOrDef;
+
+    const own = given.styles;
+    // `styles` is readonly on the definition, so compose into a new object
+    // rather than assigning through it.
+    return FASTElement.define(this, {
+      ...given,
+      styles:
+        own == null ? [pageReset] : [pageReset, ...(Array.isArray(own) ? own : [own])],
+    });
+  }
 
   override connectedCallback(): void {
     super.connectedCallback();

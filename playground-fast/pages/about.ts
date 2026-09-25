@@ -5,6 +5,7 @@
  */
 
 import { FASTElement, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 export class AboutPage extends FASTElement {}
 
@@ -15,14 +16,14 @@ AboutPage.define({
     <p>This is the FAST Element playground for Litro.</p>
     <p><litro-link href="/">Back to Home</litro-link></p>
   `,
-  styles: css`
+  styles: [pageReset, css`
     :host {
       display: block;
       font-family: system-ui, sans-serif;
       padding: 2rem;
     }
     h1 { color: #1a1a2e; }
-  `,
+  `],
 });
 
 export default AboutPage;

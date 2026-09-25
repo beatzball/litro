@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 type BadgeVariant = 'note' | 'tip' | 'caution' | 'danger' | 'default';
 
@@ -15,7 +16,9 @@ export class LitroBadge extends LitElement {
     text: { type: String },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: inline-flex;
     }
@@ -56,7 +59,8 @@ export class LitroBadge extends LitElement {
       background-color: var(--sl-color-accent-low, #ede9fe);
       color: var(--sl-color-accent-high, #5b21b6);
     }
-  `;
+  `,
+  ];
 
   variant: BadgeVariant = 'default';
   text = '';

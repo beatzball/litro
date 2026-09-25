@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 export interface SidebarItem {
   label: string;
@@ -24,7 +25,9 @@ export class StarlightSidebar extends LitElement {
     currentSlug: { type: String },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -91,7 +94,8 @@ export class StarlightSidebar extends LitElement {
       color: var(--sl-color-accent-high, #5b21b6);
       margin-left: 0.5rem;
     }
-  `;
+  `,
+  ];
 
   groups: SidebarGroup[] = [];
   currentSlug = '';

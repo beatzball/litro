@@ -29,6 +29,7 @@
  */
 import { FASTElement, observable, html, css } from '@microsoft/fast-element';
 import { agentSession, hydrateUIResult } from '@beatzball/litro-agent/client';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 // No import from '@beatzball/litro-agent' (or any of its server-only deep
 // imports) here — only the browser-safe './client' entry point, same
@@ -155,12 +156,12 @@ AgentPage.define({
     <div id="ui-slot"></div>
     <pre id="fallback-data"></pre>
   `,
-  styles: css`
+  styles: [pageReset, css`
     :host { display: block; padding: 1rem; font-family: system-ui, sans-serif; }
     #chat-log { display: flex; flex-direction: column; gap: 0.25rem; margin: 1rem 0; }
     .chat-text { margin: 0; }
     #ui-slot { margin: 1rem 0; }
-  `,
+  `],
 });
 
 export default AgentPage;

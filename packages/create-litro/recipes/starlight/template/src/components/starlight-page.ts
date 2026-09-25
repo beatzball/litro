@@ -9,6 +9,7 @@ import './starlight-header.js';
 import './starlight-sidebar.js';
 import './starlight-toc.js';
 import './litro-footer.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <starlight-page
@@ -40,7 +41,9 @@ export class StarlightPage extends LitElement {
     _navOpen:    { state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -147,7 +150,8 @@ export class StarlightPage extends LitElement {
         display: none;
       }
     }
-  `;
+  `,
+  ];
 
   siteTitle = '';
   pageTitle = '';

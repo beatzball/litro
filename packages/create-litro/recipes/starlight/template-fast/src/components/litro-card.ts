@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css, when } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-card title="Feature" description="Short desc" href="/docs/feature">
@@ -34,7 +35,7 @@ const template = html<LitroCard>`
   ${when(x => !x.href, html<LitroCard>`<div class="card">${inner}</div>`)}
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: flex;
     flex-direction: column;
@@ -102,7 +103,7 @@ const styles = css`
   .card-slot {
     margin-top: 0.75rem;
   }
-`;
+`];
 
 LitroCard.define({ name: 'litro-card', template, styles });
 

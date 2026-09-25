@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { LitroPage } from '@beatzball/litro/runtime';
+import { LitroPage, pageReset } from '@beatzball/litro/runtime';
 import { definePageData } from '@beatzball/litro';
 import { getGlobalData } from 'litro:content';
 import { siteConfig } from '../server/starlight.config.js';
@@ -461,7 +461,9 @@ export const routeMeta = {
 
 @customElement('page-home')
 export class SupernovaPage extends LitroPage {
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     /* ── The token block ───────────────────────────────────────────────
      *
      * EDIT THIS BLOCK TO RETHEME THE WHOLE LANDING PAGE. The page and all of
@@ -550,16 +552,6 @@ export class SupernovaPage extends LitroPage {
 
 
     /* ── Page frame ────────────────────────────────────────────────────── */
-
-    /* The global stylesheet's box-sizing reset stops at the shadow boundary,
-       so it has to be repeated here. Without it every padded full-width block
-       on this page — .shell most of all — is its width PLUS its gutters, and
-       a phone-sized screen scrolls sideways by exactly the gutter. */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
 
     :host {
       display: block;
@@ -1187,7 +1179,8 @@ export class SupernovaPage extends LitroPage {
     .closing .actions {
       justify-content: center;
     }
-  `;
+  `,
+  ];
 
   override render() {
     const data = this.serverData as SupernovaData | null;

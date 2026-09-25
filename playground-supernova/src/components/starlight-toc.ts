@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { TocEntry } from '../extract-headings.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <starlight-toc .entries=${toc}>
@@ -13,7 +14,9 @@ export class StarlightToc extends LitElement {
     entries: { type: Array },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -71,7 +74,8 @@ export class StarlightToc extends LitElement {
       color: var(--sl-color-accent, #7c3aed);
       border-left-color: var(--sl-color-accent, #7c3aed);
     }
-  `;
+  `,
+  ];
 
   entries: TocEntry[] = [];
 

@@ -6,6 +6,7 @@ import { customElement } from 'lit/decorators.js';
 import './litro-state-badge.js';
 import { DEFAULT_GLYPHS } from './litro-state-badge.js';
 import type { BadgeState, GlyphSet } from './litro-state-badge.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One line of the picture: a state, how long it has been that way, a name. */
 export interface TermRow {
@@ -64,7 +65,9 @@ export class LitroTermWindow extends LitElement {
     glyphs: { type: Object },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       /* min-width: 0, and the window does not fit on a phone without it. As a
@@ -136,7 +139,8 @@ export class LitroTermWindow extends LitElement {
         grid-template-columns: 7rem 2.5rem 1fr;
       }
     }
-  `;
+  `,
+  ];
 
   /** The sentence a screen reader gets instead of the picture. */
   label = '';

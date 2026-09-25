@@ -1,4 +1,5 @@
 import { FASTElement, html, css } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-card-grid>
@@ -14,7 +15,7 @@ const template = html<LitroCardGrid>`
   </div>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: block;
     counter-reset: card;
@@ -25,7 +26,7 @@ const styles = css`
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: 1.25rem;
   }
-`;
+`];
 
 LitroCardGrid.define({ name: 'litro-card-grid', template, styles });
 

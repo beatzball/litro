@@ -127,15 +127,23 @@ export class DocPage extends LitroPage {
           .doc-body p { margin-top: 0; margin-bottom: 1rem; line-height: 1.7; }
           .doc-body a { color: var(--sl-color-text-accent, var(--sl-color-accent)); text-decoration: none; }
           .doc-body a:hover { text-decoration: underline; }
-          .doc-body code { font-family: var(--sl-font-mono, ui-monospace, monospace); font-size: 0.875em; background-color: var(--sl-color-bg-inline-code, #e8e8e8); border: 1px solid var(--sl-color-border, #e8e8e8); border-radius: 0.25rem; padding: 0.15em 0.4em; }
+          /* An inline code span holds unbreakable tokens — a flag, a path, a package
+             name — and one longer than the screen takes the whole page sideways. A
+             code BLOCK keeps its own horizontal scroll instead, so the pre rule below
+             puts wrapping back. */
+          .doc-body code { font-family: var(--sl-font-mono, ui-monospace, monospace); font-size: 0.875em; background-color: var(--sl-color-bg-inline-code, #e8e8e8); border: 1px solid var(--sl-color-border, #e8e8e8); border-radius: 0.25rem; padding: 0.15em 0.4em; overflow-wrap: anywhere; }
           .doc-body pre { background-color: #0d0e11; color: #e2e4e9; border-radius: 0.375rem; padding: 1rem 1.25rem; overflow-x: auto; margin: 1.5rem 0; font-size: var(--sl-text-sm, 0.875rem); line-height: 1.6; }
-          .doc-body pre code { background: none; border: none; padding: 0; font-size: inherit; }
+          .doc-body pre code { background: none; border: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
           .doc-body ul, .doc-body ol { padding-left: 1.5rem; margin: 0 0 1rem; }
           .doc-body li { margin-bottom: 0.25rem; line-height: 1.7; }
           .doc-body blockquote { margin: 1.5rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--sl-color-accent, #ea580c); background-color: var(--sl-color-accent-low, #fff7ed); border-radius: 0 0.375rem 0.375rem 0; }
           .doc-body hr { border: none; border-top: 1px solid var(--sl-color-border, #e8e8e8); margin: 2rem 0; }
           .doc-body img { max-width: 100%; height: auto; }
           .doc-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: var(--sl-text-sm, 0.875rem); }
+          /* A table cannot lay out narrower than its widest unbreakable word, so
+             one long token in a cell — an env var, a flag, a path — takes the whole
+             page sideways on a phone. Let the token break instead. */
+          .doc-body th, .doc-body td { overflow-wrap: anywhere; }
           .doc-body th, .doc-body td { border: 1px solid var(--sl-color-border, #e8e8e8); padding: 0.5rem 0.75rem; text-align: left; }
           .doc-body th { background-color: var(--sl-color-gray-1, #f6f6f6); font-weight: 600; }
 

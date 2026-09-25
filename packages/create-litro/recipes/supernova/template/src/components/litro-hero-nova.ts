@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * THE RECIPE'S OWN MARK, drawn only when a project slots none of its own.
@@ -91,7 +92,9 @@ const EJECTA = svg`
  */
 @customElement('litro-hero-nova')
 export class LitroHeroNova extends LitElement {
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       /* One composition, one screen. The content is centered in whatever
          height is left, so a short hero does not leave a dead band above the
@@ -216,7 +219,8 @@ export class LitroHeroNova extends LitElement {
       position: relative;
       z-index: 2;
     }
-  `;
+  `,
+  ];
 
   override render() {
     return html`

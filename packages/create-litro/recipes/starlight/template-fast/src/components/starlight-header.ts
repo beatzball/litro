@@ -1,4 +1,5 @@
 import { FASTElement, Observable, html, css, repeat, when } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 export interface NavItem {
   label: string;
@@ -154,7 +155,7 @@ const template = html<StarlightHeader>`
   </header>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: block;
     position: sticky;
@@ -211,6 +212,12 @@ const styles = css`
     color: var(--sl-color-text, #23262f);
     text-decoration: none;
     white-space: nowrap;
+    /* A flex item will not shrink below its own text, so a long site name
+       pushes the theme toggle past the right edge of a 320px screen. These
+       three let the row give way and end the name in an ellipsis instead. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .site-title:hover { opacity: 0.85; }
@@ -289,7 +296,7 @@ const styles = css`
   }
 
   .theme-toggle:hover { background-color: var(--sl-color-gray-2, #e8e8e8); }
-`;
+`];
 
 StarlightHeader.define({ name: 'starlight-header', template, styles });
 

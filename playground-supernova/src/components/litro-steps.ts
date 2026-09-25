@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /** One numbered step. `description` is optional. */
 export interface StepItem {
@@ -27,7 +28,9 @@ export class LitroSteps extends LitElement {
     steps: { type: Array },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -93,7 +96,8 @@ export class LitroSteps extends LitElement {
       color: var(--nova-text-dim);
       line-height: 1.6;
     }
-  `;
+  `,
+  ];
 
   /** The steps, in order. */
   steps: StepItem[] = [];

@@ -115,3 +115,43 @@ reads `document` while it loads, so it runs before the shim finishes and
 crashes.
 
 **Check:** read the file header. Any `import` or `await` in that file is the bug.
+
+### SSR-008 — The box-sizing reset lives on `LitroPage`, and a subclass composes it
+
+There is one definition of the shadow-root box model:
+`packages/framework/src/runtime/page-reset-css.ts`. Do not write
+`box-sizing: border-box` into a component. Compose `pageReset` instead.
+
+- **Lit** — `LitroPage` carries `static styles = pageReset`. Lit reads
+  `static styles` off the prototype chain, so **a page that declares no styles
+  of its own needs no change at all.** A page that declares
+  `static override styles` REPLACES the parent's and must compose:
+
+  ```ts
+  static override styles = [pageReset, css`...`];
+  ```
+
+- **FAST** — styles belong to the definition, not the class, so nothing is
+  inherited. `LitroPage.define()` is overridden to inject `pageReset` ahead of
+  whatever the page passes, which means a FAST page needs no change either.
+- **Elena** — nothing, on purpose. It server-renders light DOM, so the document
+  stylesheet already reaches its content. A clean Elena scaffold measured
+  exactly 320/360/390 before any of this was written.
+- **A component that extends `LitElement` directly** — `packages/docs-ui` and
+  the recipes' own components — cannot inherit from `LitroPage`. It imports
+  `pageReset` from `@beatzball/litro/runtime` and composes it the same way.
+
+**Why:** a document stylesheet does not cross a shadow boundary. Every recipe
+ships the reset in its global stylesheet and none of it reached the page. So
+`<main>`, sized `width: 100%` with `padding: 4rem 1.5rem 3rem`, computed as
+`content-box`: 438px on a 390px screen, on every scaffolded site. Above ~900px
+`max-width: 56rem` caps the element first, which is why no desktop showed it.
+Writing the reset into each component instead put 173 copies of one rule in the
+tree and still left every already-generated app broken; on the base class, an
+existing app is fixed by upgrading the framework.
+
+**Check:** `e2e/_shared/mobile-overflow.ts` loads each page at 320, 360 and
+390px and fails on any element laid out past the right edge with nothing to
+scroll it. Grepping for the CSS text cannot see this bug — the broken build
+shipped the reset too, it simply could not reach the element. A page that
+declares `static override styles` without composing goes red there.

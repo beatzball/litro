@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { definePageData, LitroPage } from '@beatzball/litro';
+import { definePageData, LitroPage, pageReset } from '@beatzball/litro';
 import { getServerTime, echoUpper } from '../actions/demo.server.js';
 
 interface ActionsPageData {
@@ -21,9 +21,12 @@ export const pageData = definePageData(async () => {
 
 @customElement('page-actions')
 export class ActionsPage extends LitroPage {
-  static styles = css`
+  static styles = [
+    pageReset,
+    css`
     :host { display: block; padding: 1rem; font-family: system-ui, sans-serif; }
-  `;
+  `,
+  ];
 
   // Narrow the type from `unknown` (mixin default) to the concrete data shape.
   @state() declare serverData: ActionsPageData | null;

@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { definePageData, LitroPage } from '@beatzball/litro';
+import { definePageData, LitroPage, pageReset } from '@beatzball/litro';
 import { actionUrl } from '@beatzball/litro/actions/client';
 import { enhanceForms } from '@beatzball/litro/actions/form-client';
 import { csrfToken, getFormErrors, type FormErrors } from '@beatzball/litro/actions/server';
@@ -28,10 +28,13 @@ export const pageData = definePageData(async (event) => {
 
 @customElement('page-forms')
 export class FormsPage extends LitroPage {
-  static styles = css`
+  static styles = [
+    pageReset,
+    css`
     :host { display: block; padding: 1rem; font-family: system-ui, sans-serif; }
     #form-errors { color: #b91c1c; }
-  `;
+  `,
+  ];
 
   @state() declare serverData: FormsPageData | null;
   @state() private enhancedResult = '';

@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-card title="Feature" description="Short desc" href="/docs/feature">
@@ -17,7 +18,9 @@ export class LitroCard extends LitElement {
     href: { type: String },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: flex;
       flex-direction: column;
@@ -86,7 +89,8 @@ export class LitroCard extends LitElement {
     .card-slot {
       margin-top: 0.75rem;
     }
-  `;
+  `,
+  ];
 
   title = '';
   description = '';

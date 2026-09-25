@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-feature-row heading="Name the first thing it does" .commands="${[...]}">
@@ -38,7 +39,9 @@ export class LitroFeatureRow extends LitElement {
     commands: { type: Array },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -108,7 +111,8 @@ export class LitroFeatureRow extends LitElement {
       color: var(--nova-text);
     }
 
-  `;
+  `,
+  ];
 
   /** The row's heading. Rendered as an `h2`. */
   heading = '';

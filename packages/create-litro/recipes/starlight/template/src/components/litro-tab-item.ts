@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-tab-item label="Tab Label">
@@ -14,7 +15,9 @@ export class LitroTabItem extends LitElement {
     selected: { type: Boolean, reflect: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
     }
@@ -22,7 +25,8 @@ export class LitroTabItem extends LitElement {
     :host(:not([selected])) {
       display: none;
     }
-  `;
+  `,
+  ];
 
   label = '';
   selected = false;

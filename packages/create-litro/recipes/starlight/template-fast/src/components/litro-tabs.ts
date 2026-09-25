@@ -1,5 +1,6 @@
 import { FASTElement, Observable, html, css, repeat } from '@microsoft/fast-element';
 import type { LitroTabItem } from './litro-tab-item.js';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-tabs>
@@ -52,7 +53,7 @@ const template = html<LitroTabs>`
   </div>
 `;
 
-const styles = css`
+const styles = [pageReset, css`
   :host { display: block; margin: 1.5rem 0; }
 
   .tab-bar {
@@ -86,7 +87,7 @@ const styles = css`
   }
 
   .tab-content { padding-top: 1rem; }
-`;
+`];
 
 LitroTabs.define({ name: 'litro-tabs', template, styles });
 

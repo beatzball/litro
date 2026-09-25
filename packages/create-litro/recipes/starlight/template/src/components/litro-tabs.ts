@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { LitroTabItem } from './litro-tab-item.js';
+import { pageReset } from '@beatzball/litro/runtime/page-reset.js';
 
 /**
  * <litro-tabs>
@@ -18,7 +19,9 @@ export class LitroTabs extends LitElement {
     _selectedIndex: { type: Number, state: true },
   };
 
-  static override styles = css`
+  static override styles = [
+    pageReset,
+    css`
     :host {
       display: block;
       margin: 1.5rem 0;
@@ -59,7 +62,8 @@ export class LitroTabs extends LitElement {
     .tab-content {
       padding-top: 1rem;
     }
-  `;
+  `,
+  ];
 
   _labels: string[] = [];
   _selectedIndex = 0;

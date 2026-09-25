@@ -1,4 +1,5 @@
 import { FASTElement, html, css, when } from '@microsoft/fast-element';
+import { pageReset } from '@beatzball/litro/adapter/fast/page-reset';
 
 /**
  * <litro-footer recipe="starlight"></litro-footer>
@@ -29,7 +30,7 @@ const template = html<LitroFooter>`
 
 /* Falls back to plain greys so this looks right in a recipe that defines no
    --sl-* design tokens, and picks them up automatically in one that does. */
-const styles = css`
+const styles = [pageReset, css`
   :host {
     display: block;
   }
@@ -55,7 +56,7 @@ const styles = css`
   .recipe {
     white-space: nowrap;
   }
-`;
+`];
 
 // `attributes` declares `recipe` as a real HTML attribute, which also makes it
 // observable — so no separate Observable.defineProperty is needed.
