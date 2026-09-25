@@ -35,8 +35,8 @@ test('home renders every landing page component', async ({ page }) => {
   await expect(root.locator('litro-steps')).toHaveCount(1);
   await expect(root.locator('litro-key-hints')).toHaveCount(1);
   await expect(root.locator('litro-install-command')).toHaveCount(2);
-  await expect(root.locator('litro-pane')).toHaveCount(10);
-  await expect(root.locator('litro-pane-grid')).toHaveCount(3);
+  await expect(root.locator('litro-pane')).toHaveCount(12);
+  await expect(root.locator('litro-pane-grid')).toHaveCount(4);
   await expect(root.locator('litro-site-footer')).toHaveCount(1);
 });
 
@@ -348,4 +348,91 @@ test('the inherited docs index renders', async ({ page }) => {
   await page.goto('/docs');
   await page.waitForSelector('page-docs:not([hidden])');
   await expect(page.locator('page-docs:not([hidden]) .doc-group').first().locator('h2')).toBeVisible();
+});
+
+/**
+ * The band's code is highlighted, so every token sits inside its own span and
+ * `&quot;` stands in for a quote. Reading a claim out of that needs the tags
+ * gone and the entities back — which is also a check in its own right: if the
+ * highlighter returned nothing, there is no text here to find.
+ */
+function plainText(html: string): string {
+  return html
+    .replace(/<!--.*?-->/gs, '')
+    // A component's own CSS rides along inside its shadow template, and a
+    // rule named after a class would otherwise read as page copy.
+    .replace(/<style[\s\S]*?<\/style>/g, '')
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * THE "ONE THING, PROVED" BAND, WHICH IS ALMOST ENTIRELY GENERATED MARKUP.
+ *
+ * The code and the data are highlighted by `highlightBlock()` inside
+ * `definePageData`. A mistake there does not throw — it returns an empty
+ * string, the page still builds, and the band arrives as two empty boxes with
+ * captions over them. This insists the band has content.
+ *
+ * It also pins that the recipe's copy stays GENERIC. A scaffolded site is
+ * somebody else's product, so nothing in this section may name Litro or any
+ * of its features.
+ */
+test('the example band arrives with its code, its data and its card', async ({ request }) => {
+  const html = await (await request.get('/')).text();
+  const text = plainText(html);
+
+  expect(html.match(/class="hljs-keyword"/g)?.length ?? 0, 'highlighted keywords').toBeGreaterThan(1);
+  expect(text, 'the strip names the file').toContain('summary.ts');
+
+  for (const claim of [
+    'Name the thing only you do',
+    'export function summary',
+    'A program gets',
+    '"label": "Open tasks"',
+    '"count": 12',
+    'A reader sees',
+  ]) {
+    expect(text, `example band: ${claim}`).toContain(claim);
+  }
+
+  const card = plainText(
+    html.slice(html.indexOf('class="ai-card"'), html.indexOf('class="ai-card"') + 900),
+  );
+  for (const value of ['Open tasks', '12', '3 due today']) {
+    expect(card, `the card shows ${value}`).toContain(value);
+  }
+});
+
+/**
+ * The recipe is a template for somebody else's product. Its landing page must
+ * not talk about Litro, or about agents, or about anything this scaffold does
+ * not actually ship.
+ */
+test('the example band says nothing about Litro', async ({ request }) => {
+  const html = await (await request.get('/')).text();
+  const start = html.indexOf('aria-label="One thing it does"');
+  expect(start, 'the section is on the page').toBeGreaterThan(-1);
+  const band = plainText(html.slice(start, html.indexOf('</section>', start)));
+  for (const forbidden of ['Litro', 'litro-agent', 'defineTool', 'MCP', 'weather-card']) {
+    expect(band.includes(forbidden), `the generic band must not mention ${forbidden}`).toBe(false);
+  }
+});
+
+/**
+ * The code block scrolls sideways on a phone, so it has to be reachable
+ * without a pointer (WCAG 2.1.1) and it has to say what it is.
+ */
+test('the example code block is a named, reachable scroll region', async ({ page }) => {
+  await page.goto('/');
+  const pre = page.locator('page-home:not([hidden]) .ai-band-src pre');
+  await expect(pre).toHaveAttribute('tabindex', '0');
+  await expect(pre).toHaveAttribute('role', 'img');
+  const label = await pre.getAttribute('aria-label');
+  expect(label ?? '', 'a real sentence, not a word').toContain('summary function');
 });
