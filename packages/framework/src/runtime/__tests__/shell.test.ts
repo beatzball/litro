@@ -360,3 +360,73 @@ describe('buildShell — head + foot concatenation', () => {
     expect(html).toContain('</html>');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Skip links — landmark
+// ---------------------------------------------------------------------------
+
+describe('buildShell — skip links', () => {
+  /**
+   * Bare anchors at the top of <body> sit outside every landmark, which is
+   * what axe-core's `region` rule reports. It reported it on every page a
+   * Litro app served.
+   */
+  it('wraps the skip links in a navigation landmark', () => {
+    const { head } = buildDefault();
+
+    expect(head).toContain('<nav class="skip-links" aria-label="Skip links">');
+    expect(head).toContain('<a class="skip-link" href="#_litro_main">Skip to content</a>');
+    // The anchors are inside the landmark, not beside it.
+    const nav = head.slice(head.indexOf('<nav class="skip-links"'), head.indexOf('</nav>'));
+    expect(nav).toContain('href="#_litro_main"');
+  });
+
+  /**
+   * Nearly every Litro page already has a site <nav>. Two navigation
+   * landmarks with no name are announced identically, so the label is what
+   * lets a reader tell them apart.
+   */
+  it('names the landmark so it is distinct from a site nav', () => {
+    const { head } = buildDefault();
+    expect(head).toMatch(/<nav[^>]*aria-label="Skip links"/);
+  });
+
+  it('keeps every link a site passes, in order, inside the one landmark', () => {
+    const { head } = buildDefault('page-home', {
+      skipLinks: [
+        { label: 'Skip to content', href: '#_litro_main' },
+        { label: 'Skip to navigation', href: '#_litro_nav' },
+        { label: 'Skip to search', href: '#_litro_search' },
+      ],
+    });
+
+    expect(head.match(/<nav class="skip-links"/g)).toHaveLength(1);
+    const nav = head.slice(head.indexOf('<nav class="skip-links"'), head.indexOf('</nav>'));
+    expect(nav.indexOf('#_litro_main')).toBeLessThan(nav.indexOf('#_litro_nav'));
+    expect(nav.indexOf('#_litro_nav')).toBeLessThan(nav.indexOf('#_litro_search'));
+  });
+
+  /**
+   * An empty landmark is announced and leads nowhere, so it is worse than no
+   * landmark at all.
+   */
+  it('emits no landmark when a site asks for no skip links', () => {
+    const { head } = buildDefault('page-home', { skipLinks: [] });
+
+    expect(head).not.toContain('<nav');
+    expect(head).not.toContain('skip-link"');
+  });
+
+  /**
+   * The inline script finds the links with `.skip-link[href^="#"]` and with
+   * `closest('.skip-link')`. Both still work through a wrapper, but the class
+   * has to stay on the anchor for either to match.
+   */
+  it('leaves the class on the anchor so the shell script still finds it', () => {
+    const { head } = buildDefault();
+
+    expect(head).toContain(`querySelectorAll('.skip-link[href^="#"]')`);
+    expect(head).toContain("closest('.skip-link')");
+    expect(head).toMatch(/<a class="skip-link" href="#_litro_main">/);
+  });
+});

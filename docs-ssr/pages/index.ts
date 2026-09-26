@@ -11,20 +11,6 @@ import { getPackageInfo } from "@beatzball/litro-docs-ui/src/packages.js";
 import { applyHighlighting } from "@beatzball/litro-docs-ui/src/highlight.js";
 import { statusLineChrome } from "@beatzball/litro-docs-ui/src/status-line-chrome.js";
 
-// <litro-link> is registered by this import and not by the runtime barrel,
-// and the difference only shows in a production build. The barrel re-exports
-// LitroLink as a NAME; Rollup sees that nothing on this page uses the name,
-// drops the re-export, and then never imports the module at all — so the
-// element is not defined on the server, Lit SSR prints a bare <litro-link>
-// with no shadow root, and the anchor it builds in the browser is missing.
-// With JavaScript turned off the page's calls to action are then not links.
-// `litro dev` hides this: it serves live source and never runs Rollup.
-//
-// The module's own path is listed in the framework's "sideEffects", so an
-// import OF THE MODULE survives where an import of the barrel does not
-// (BUILD-001).
-import "@beatzball/litro/runtime/LitroLink.js";
-
 // Register components used in render(). The landing page's own parts first...
 import "@beatzball/litro-docs-ui/src/components/starlight-header.js";
 import "@beatzball/litro-docs-ui/src/components/litro-status-line.js";

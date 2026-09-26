@@ -43,9 +43,21 @@
  *    The shadow <a> is kept WITHOUT a @click binding — it exists purely for
  *    progressive enhancement (no-JS navigation) and semantics (cursor, a11y).
  *
- * 5. litro-router IS CLIENT-ONLY
- *    This module must NEVER be imported in server-side code paths. LitroRouter
- *    accesses window, history, and document at runtime and will crash Node.js.
+ * 5. THIS MODULE IS SERVER-SAFE, AND THE SERVER MUST IMPORT IT
+ *    An older version of this header said the module must never be imported
+ *    in server-side code paths, because litro-router touches window, history
+ *    and document. That has not been true since the router import was made
+ *    lazy: it is a dynamic import inside _clickHandler(), which only ever
+ *    runs in a browser. Everything left at module scope is `lit`, which ships
+ *    a `node` export condition. `node -e "import('.../LitroLink.js')"` defines
+ *    the element and returns.
+ *
+ *    Keeping the server out was also the bug. The <a href> is built in
+ *    render(), so an unregistered element makes @lit-labs/ssr print a bare
+ *    <litro-link href="/docs"> with no shadow root — the href sits on a custom
+ *    element the browser will not follow, and with JavaScript off the link is
+ *    unclickable text. The Lit adapter's manifestPreamble() now imports this
+ *    module into the server bundle so every Litro app renders a real anchor.
  */
 
 import { LitElement, html, css } from 'lit';

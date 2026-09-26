@@ -114,7 +114,16 @@ export interface FrameworkAdapter {
    * patching). This preamble is injected at the very top of the manifest so
    * it is evaluated first in the Rollup bundle.
    *
-   * Return an empty string if no preamble is needed (Lit only).
+   * It is also where an adapter registers the framework's own custom
+   * elements on the server. `<litro-link>` renders its `<a href>` from
+   * `render()`, so an unregistered element gives SSR output with no anchor
+   * in it. Every adapter imports its own link module here; the manifest is
+   * the one module guaranteed to reach the server bundle.
+   *
+   * Write each side-effect import as a namespace import assigned to
+   * `globalThis` — Rollup deletes a bare one (BUILD-002).
+   *
+   * Return an empty string if no preamble is needed.
    */
   manifestPreamble?(): string;
 

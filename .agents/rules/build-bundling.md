@@ -133,3 +133,30 @@ console.log(await (await m.localFetch('/')).text());
 
 A tag with no `<template shadowrootmode>` there is an unregistered element.
 `scripts/verify-scaffolded-apps.mjs` pins the rendered result.
+
+### BUILD-008 — The framework's own elements are registered from `manifestPreamble()`
+
+Every adapter's `manifestPreamble()` imports its `LitroLink` module, as a
+namespace binding assigned to `globalThis` (BUILD-002). Do not move that
+import into an app, a page or the runtime barrel.
+
+**Why:** `<litro-link>` builds its `<a href>` in `render()`. An element that is
+not in the server's custom element registry renders as a bare
+`<litro-link href="/docs">` with no shadow root, so the href sits on a custom
+element the browser will not follow and the link is unclickable text without
+JavaScript. The runtime barrel cannot fix it: it re-exports `LitroLink` as a
+NAME, and Rollup drops a re-export nothing uses (BUILD-007). `litro dev` never
+shows it, because dev serves live source and never runs Rollup.
+
+`docs-ssr` was held up for a while by one bare side-effect import in
+`pages/index.ts`. The server is a single bundle, so that one line registered
+the element for every other page too — and deleting it took all 96 links on the
+site down at once, silently. The manifest is the one module guaranteed to reach
+the server bundle, so registration belongs there.
+
+**Check:** `node scripts/check-ssr-links.mjs` boots the built `docs-ssr` server
+and fails on any `<litro-link>` served without a shadow root. It runs in the
+Build docs-ssr job. Serve the app from ITS OWN directory — the home page reads
+a path relative to the process cwd, and from the repo root that fetcher throws,
+the handler falls back to the client-only shell, and the page has no
+`<litro-link>` in it to check.

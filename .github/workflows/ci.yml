@@ -144,6 +144,8 @@ jobs:
         run: pnpm --filter @beatzball/litro-docs-ssr build
       - name: Verify server entry exists
         run: test -f docs-ssr/dist/server/server/index.mjs
+      - name: Verify every <litro-link> serves a real anchor
+        run: node scripts/check-ssr-links.mjs
 
   doc-refs:
     name: Doc References

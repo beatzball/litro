@@ -34,6 +34,9 @@ importers:
       '@playwright/test':
         specifier: ^1.48.0
         version: 1.58.2
+      axe-core:
+        specifier: ^4.11.2
+        version: 4.11.2
       portless:
         specifier: ^0.10.2
         version: 0.10.2

@@ -47,30 +47,28 @@ describe('both home pages register every component they place', () => {
 });
 
 /**
- * `<litro-link>` is registered by importing its MODULE, never by importing the
- * runtime barrel.
+ * `<litro-link>` is registered by the FRAMEWORK, not by this page.
  *
- * The barrel re-exports `LitroLink` as a name. Rollup, which builds the Nitro
- * server bundle, sees that nothing on the page uses that name, drops the
- * re-export, and then never imports the module at all — so the element is not
- * defined on the server, Lit SSR prints a bare `<litro-link>` with no shadow
- * root, and the anchor it would have built in the browser is missing. With
- * JavaScript turned off the page's calls to action are then not links.
+ * This page used to carry `import "@beatzball/litro/runtime/LitroLink.js"`
+ * for the side effect, and that one line was the only reason any link on the
+ * site worked: the Nitro server is a single bundle, so importing the element
+ * once registered it for every other page too. Removing it took all 96 links
+ * on the site down at once, and nothing reported it.
  *
- * The module's own path is in the framework's `sideEffects`, so importing the
- * module survives where importing the barrel does not (BUILD-001).
- *
- * `litro dev` cannot show this: it serves live source and never runs Rollup.
+ * The Lit adapter's `manifestPreamble()` now does the import, so every Litro
+ * app gets a server-rendered anchor without knowing to ask. This page is back
+ * to being an ordinary consumer, and `scripts/check-ssr-links.mjs` is what
+ * watches the result — see BUILD-008.
  */
-describe('the server-rendered home page registers litro-link on the server', () => {
-  it('imports the module, not just the barrel', () => {
-    expect(ssrPage).toContain(`import "@beatzball/litro/runtime/LitroLink.js"`);
+describe('the home pages leave litro-link registration to the framework', () => {
+  it('the server-rendered page carries no side-effect import of its own', () => {
+    expect(ssrPage).not.toContain('runtime/LitroLink.js');
   });
 
-  it('is the only one of the two that needs it', () => {
+  it('only the server-rendered page places the element', () => {
     // The static site uses plain anchors (CONTENT-007), so it has no
-    // litro-link to register and must not carry a pointless import.
-    expect(staticPage).not.toContain('runtime/LitroLink.js');
+    // litro-link at all.
+    expect(ssrPage).toContain('</litro-link');
     // A closing tag, not an opening one: the file's own doc comment names the
     // element when it explains the difference between the two sites.
     expect(staticPage).not.toContain('</litro-link');
