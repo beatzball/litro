@@ -29,68 +29,20 @@ import {
 import { deserializeValue, createStreamEncoder } from '@beatzball/litro/stream';
 import { runTurn, type TurnDeps } from './loop.js';
 import { fileSessionStore, validateSessionId } from '../sessions/file.js';
-import { AGENT_CONFIG } from '../index.js';
-import type { AgentConfig, AgentDefinition, AgentRuntimeConfig, ToolDefinition } from '../index.js';
+import type { AgentRuntimeConfig } from '../index.js';
+import { buildAgent } from './agent.js';
+import type { AgentManifestEntry, ResolvedAgent } from './agent.js';
 import { AgentError, errorPayload } from '../errors.js';
 import type { SessionEvent, SessionLease, SessionStore } from '../sessions/types.js';
 import { resolveTelemetry, type Telemetry } from '../telemetry/runtime.js';
 
-export interface AgentManifestEntry {
-  name: string;
-  /** agent.ts namespace: `default` = AgentDefinition, `access?` = guard. */
-  module: Record<string, unknown>;
-  /** instructions.md content, inlined at build time. */
-  instructions: string;
-  tools: Array<{ name: string; module: Record<string, unknown> }>;
-}
-
-type AccessGuard = (event: H3Event) => void | Promise<void>;
-
-interface ResolvedAgent {
-  name: string;
-  config: AgentConfig;
-  tools: Map<string, ToolDefinition>;
-  access?: AccessGuard;
-}
+// Re-exported so `@beatzball/litro-agent/handler` keeps naming the shapes its
+// generated stub passes in, now that the builder is shared with the MCP server
+// (`./agent.ts`).
+export type { AgentManifestEntry, ResolvedAgent } from './agent.js';
 
 function isDev(): boolean {
   return (process as unknown as { dev?: boolean }).dev === true;
-}
-
-/** Manifest instructions override config.instructions only when the config
- *  value LOOKS like a relative path the build was supposed to inline (starts
- *  with './' or '../'). A literal instructions string in the config stands
- *  as-is. */
-function resolveInstructions(config: AgentConfig, manifestInstructions: string): string {
-  const raw = config.instructions;
-  if (typeof raw === 'string' && (raw.startsWith('./') || raw.startsWith('../'))) {
-    return manifestInstructions;
-  }
-  return raw;
-}
-
-function buildAgent(entry: AgentManifestEntry): ResolvedAgent {
-  const def = entry.module.default as AgentDefinition;
-  const config = def[AGENT_CONFIG] as AgentConfig;
-  const access = entry.module.access as AccessGuard | undefined;
-
-  // Tools are the Task 11 scanner's concern -- `defineAgent` rejects a
-  // non-empty `config.tools` at definition time (an explicit ToolDefinition
-  // carries no `name` field to key a Map by), so by the time entries reach
-  // this handler `entry.tools` (scanner-discovered `tools/*.ts`) is the
-  // only source; the handler builds its tool Map from the manifest entries
-  // only.
-  const tools = new Map<string, ToolDefinition>();
-  for (const t of entry.tools) {
-    tools.set(t.name, t.module.default as ToolDefinition);
-  }
-
-  return {
-    name: entry.name,
-    config: { ...config, instructions: resolveInstructions(config, entry.instructions) },
-    tools,
-    access,
-  };
 }
 
 function sendError(event: H3Event, err: unknown): string {

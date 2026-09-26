@@ -400,6 +400,14 @@ Each ships alone.
    `playground/agents/demo/tools/`, and the demo tool rewritten on a schema
    library with a converter so the repo's own example shows a real
    `inputSchema`.
+
+   The docs page must also say plainly that **tool names are global to a host**.
+   The phase 1 desktop check exposed it: the old rig and `litro mcp serve` both
+   register `get-weather`, and with both configured the host silently picked one
+   with no way for the reader to tell which answered. That is not a bug in
+   either server — it is a naming rule a user has to know, and moving the rig's
+   tool into `agents/demo/tools/` in this phase removes this particular clash
+   without removing the rule.
 5. **Track protocol revision 2026-07-28** when the SDK ships it. A version bump
    and a conformance run, not a rewrite — if it is a rewrite, that is a finding
    worth its own spec.
@@ -508,10 +516,17 @@ These could not be settled from reading or from a spike.
    would be the one case for writing protocol code by hand, and it would need
    its own spec.
 2. **Whether a desktop host renders a Litro `ui://` document over stdio.**
-   Verified over HTTP, against a browser-based inspector. Not verified over
-   stdio against a desktop host, and there is an upstream report of a valid
-   document failing in one desktop host while an inspector shows a correct
-   exchange. Phase 1's hand check is where this gets answered.
+   **ANSWERED — yes.** Claude Desktop connected to `litro mcp serve` over stdio
+   and rendered the packed document as a card on screen, attributing the call to
+   `litro-mcp-serve get-weather`. The card read `Lisbon / 70°F / sunny` while the
+   model's own sentence said `21°C and sunny`: **one return value, two
+   audiences**, which is the thesis of the whole design, measured against a host
+   this repo did not write. The upstream report of a desktop host failing where
+   an inspector succeeds does not reproduce here.
+
+   For contrast, Codex connected to the same server and got text and JSON only.
+   So "a host does not render MCP Apps" is a property of that host, not of the
+   document — which is the distinction this question existed to draw.
 3. **Whether a real `inputSchema` improves tool calling in practice, and for
    which providers.** The schema converts, and it reaches the host. Whether a
    given model calls the tool more reliably with it than with the argument named

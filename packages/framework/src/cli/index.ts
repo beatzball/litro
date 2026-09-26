@@ -14,6 +14,9 @@
  * docs:     Keeps a starlight docs site's sidebar in step with its pages.
  *           `sync` rewrites it from frontmatter; `check` reports drift and exits 1.
  *
+ * mcp:      `litro mcp serve` — serves an agent's tools and its packed ui://
+ *           documents to an MCP host over stdio. Keeps stdout for JSON-RPC.
+ *
  * preview:  Runs the production server entry (.output/server/index.mjs) directly.
  *           `nitro preview` was removed in Nitro 2.13.
  *
@@ -30,6 +33,7 @@ import { scanAndWriteClientRoutes } from '../plugins/pages.js';
 import { parsePortArg, resolvePort } from './port.js';
 import { docsCommand } from './docs.js';
 import { mcpAppCommand } from './mcp-app.js';
+import { mcpCommand } from './mcp-serve.js';
 
 const [,, command, ...args] = process.argv;
 const cwd = process.cwd();
@@ -192,6 +196,15 @@ switch (command) {
     break;
   }
 
+  case 'mcp': {
+    // Serves the project's agent tools to an MCP host over stdio. A zero here
+    // means a server is RUNNING and owns the process, so there is nothing to
+    // exit with -- only a startup failure returns non-zero.
+    const code = await mcpCommand(args, cwd);
+    if (code !== 0) process.exit(code);
+    break;
+  }
+
   case 'preview': {
     const portlessUrlPreview = process.env.PORTLESS_URL;
     const { port: rawPort, explicit } = parsePortArg(args);
@@ -287,6 +300,9 @@ Commands:
   litro docs sync        Regenerate the docs sidebar from page frontmatter
   litro docs check       Verify pages and sidebar agree (exits 1 on drift)
   litro mcp-app build    Pack mcp-apps/ into MCP Apps ui:// documents
+  litro mcp serve        Serve an agent's tools and apps to an MCP host (stdio)
+  litro mcp serve --project <dir>
+                         Serve a project other than the working directory
     `);
     process.exit(0);
 }

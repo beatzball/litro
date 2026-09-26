@@ -177,6 +177,40 @@ The probe drives the Inspector headlessly and prints the host↔view wire, the
 shell-before-result timeline, and the refresh round-trip. Every claim above came
 out of it, so a claim here that the probe no longer prints is a regression.
 
+## The other probe: the real server, over stdio
+
+Since `litro mcp serve` exists, this rig is no longer the only Litro MCP server.
+`stdio-probe.mjs` drives **the real one** with the SDK's own client, over the
+transport `inspector-probe.mjs` cannot reach:
+
+```bash
+pnpm --filter playground mcp-app                      # pack first
+node playground/mcp-server/stdio-probe.mjs            # the client-side transcript
+node playground/mcp-server/stdio-probe.mjs --purity   # the stdout check
+```
+
+The transcript covers `tools/list`, `tools/call`, `resources/read` on the
+document a tool names, and an unknown tool. It also asserts, rather than assumes,
+that a `UIResult`'s `html` is not in the `tools/call` answer — AGENT-002, and the
+thing most likely to go wrong quietly.
+
+`--purity` is the check the design spec asks of phase 1 by name: it speaks
+JSON-RPC to the server by hand and reads the RAW stdout, which a client would
+parse away. The specification says a stdio server MUST NOT write anything else
+there, so a single stray log line is a failure and the probe exits 1 on one.
+
+Both forms pass `--project` and name the CLI by path, which is the configuration
+a real host needs — so the probe runs the same from any working directory, and
+running it from one is itself the check that `--project` does its job.
+
+Pass extra flags to the server after `--`, and pick another tool with `TOOL=` and
+`ARGS=`:
+
+```bash
+TOOL=get-weather ARGS='{"city":"Reykjavik"}' node playground/mcp-server/stdio-probe.mjs
+node playground/mcp-server/stdio-probe.mjs -- --timeout 1500
+```
+
 ## Traps a real host exposed
 
 Three protocol defects in the view bridge were found this way and fixed in

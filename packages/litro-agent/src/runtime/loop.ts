@@ -11,11 +11,10 @@
  * event the store handed back (which carries the assigned `seq`).
  */
 import type { H3Event } from 'h3';
-import { isAsyncIterable } from '@beatzball/litro/stream';
 import type { AgentConfig, ToolConfig, ToolDefinition } from '../index.js';
 import { TOOL_CONFIG } from '../index.js';
-import { isUIResult } from '../ui/index.js';
 import { toolInputJSONSchema } from './json-schema.js';
+import { errorMessage, errorType, runTool } from './tool-call.js';
 import type { ChatMessage, ProviderRequest, ToolCallPart, ToolSpec } from '../providers/types.js';
 import type { SessionEvent, SessionEventKind, SessionStore } from '../sessions/types.js';
 import type { AgentSpan } from '../telemetry/types.js';
@@ -75,86 +74,15 @@ async function replayMessages(store: SessionStore, sessionId: string): Promise<C
   return out;
 }
 
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
-
-/** Semconv `error.type`: the exception's class name where there is one,
- *  otherwise a generic marker. Never a stack. */
-function errorType(err: unknown): string {
-  return err instanceof Error ? err.name : 'error';
-}
-
-/** Cycle-safe, depth-capped (~8) walk over a plain object/array result
- *  looking for a UIResult NESTED inside it (e.g. `{ card: await ui(...) }`).
- *  Only descends into the *children* of `value` -- the caller is expected to
- *  have already ruled out `value` itself being a top-level UIResult, since
- *  that is handled (and allowed) separately. */
-function containsNestedUIResult(value: unknown, depth = 0, seen: Set<unknown> = new Set()): boolean {
-  if (depth > 8 || value === null || typeof value !== 'object') return false;
-  if (seen.has(value)) return false;
-  seen.add(value);
-
-  const children = Array.isArray(value) ? value : Object.values(value as Record<string, unknown>);
-  for (const child of children) {
-    if (isUIResult(child)) return true;
-    if (child !== null && typeof child === 'object' && containsNestedUIResult(child, depth + 1, seen)) return true;
-  }
-  return false;
-}
-
-/** The outcome of one tool call: what goes back to the provider, plus the
- *  span-facing facts (did it produce UI, did it fail). `result` is the raw
- *  tool return — telemetry sanitizes it before capture; a UIResult's html
- *  never reaches a span, exactly as it never reaches `content`. */
-interface ToolOutcome {
-  content: string;
-  ui: boolean;
-  result: unknown;
-  error?: { type: string; message: string };
-}
-
-/** Finalizes a tool's (non-progress) result: a direct UIResult, a plain
- *  value with a UIResult nested somewhere inside it, or an ordinary value.
- *  Persists the appropriate event and returns the string to feed back to
- *  the provider. The html half of a UIResult -- wherever it appears in the
- *  result shape -- never reaches that return value. */
-async function finalizeToolResult(deps: TurnDeps, toolName: string, result: unknown): Promise<ToolOutcome> {
-  if (isUIResult(result)) {
-    // The model must NEVER see `html` -- only `data` is fed back into the
-    // conversation. The full UIResult (html included) goes to the wire via
-    // the `ui` event, not into any ChatMessage.
-    await appendEmit(deps, 'ui', result);
-    const data = result.data ?? null;
-    return { content: JSON.stringify(data), ui: true, result };
-  }
-
-  if (containsNestedUIResult(result)) {
-    // A UIResult buried inside a plain object/array would otherwise be
-    // JSON.stringify'd whole (html included) into the provider's tool
-    // message. Reject loudly instead of leaking it -- this is a tool-author
-    // bug, not a session-ending error.
-    const message =
-      `Tool "${toolName}" returned a nested UIResult — return the UIResult directly from ` +
-      `execute() so its html stays out of the model channel.`;
-    await appendEmit(deps, 'tool-result', { error: { message } });
-    return {
-      content: JSON.stringify({ error: { message } }),
-      ui: false,
-      result: { error: { message } },
-      error: { type: 'nested_ui_result', message },
-    };
-  }
-
-  await appendEmit(deps, 'tool-result', result);
-  return { content: JSON.stringify(result), ui: false, result };
-}
-
-/** Runs one tool call to completion: looks the tool up, validates input via
- *  its Standard Schema, executes it, persists the appropriate event(s), and
- *  returns the string to feed back to the provider as the `tool` message's
- *  `content`. The html half of a UIResult -- and any tool's raw internal
- *  error stack -- never reaches this return value.
+/** Runs one tool call to completion and records it: looks the tool up,
+ *  validates input via its Standard Schema, executes it, persists the
+ *  appropriate event(s), and returns the string to feed back to the provider
+ *  as the `tool` message's `content`. The html half of a UIResult -- and any
+ *  tool's raw internal error stack -- never reaches this return value.
+ *
+ *  The steps themselves live in `./tool-call.ts`, which the MCP server calls
+ *  too. Everything that makes this the CHAT loop's version -- the store
+ *  appends, their order, and the span -- stays here.
  *
  *  Emits one `execute_tool` span parented to the TURN span, not to the
  *  `chat` round that happened to dispatch the call: the tool run is a
@@ -187,48 +115,35 @@ async function runToolCall(
   };
 
   try {
-    if (!toolCfg) return await fail('unknown_tool', `Unknown tool: "${call.name}"`);
+    const outcome = await runTool(
+      toolCfg,
+      call.name,
+      call.input,
+      { event: deps.event, session: { id: deps.sessionId, seq: callEvent.seq } },
+      {
+        // `withActiveSpan` makes the tool span ambient where the tracer can
+        // do so, so any instrumentation inside execute() nests under it.
+        around: (fn) => tel.withActiveSpan(span, fn),
+        onProgress: async (value) => void (await appendEmit(deps, 'tool-progress', value)),
+      },
+    );
 
-    const validation = await toolCfg.input['~standard'].validate(call.input);
-    if (validation.issues) {
-      const detail = validation.issues.map((i) => i.message).join('; ');
-      return await fail('validation_error', `Validation failed for tool "${call.name}": ${detail}`);
+    if (outcome.kind === 'ui') {
+      // The model must NEVER see `html` -- only `data` is fed back into the
+      // conversation. The full UIResult (html included) goes to the wire via
+      // the `ui` event, not into any ChatMessage.
+      await appendEmit(deps, 'ui', outcome.result);
+      tel.endTool(span, { ui: true, result: outcome.result });
+      return JSON.stringify(outcome.data);
     }
 
-    let result: unknown;
-    try {
-      // `withActiveSpan` makes the tool span ambient where the tracer can
-      // do so, so any instrumentation inside execute() nests under it.
-      result = await tel.withActiveSpan(span, () =>
-        toolCfg.execute(validation.value, {
-          event: deps.event,
-          session: { id: deps.sessionId, seq: callEvent.seq },
-        }),
-      );
-    } catch (err) {
-      return await fail(errorType(err), errorMessage(err));
+    if (outcome.kind === 'value') {
+      await appendEmit(deps, 'tool-result', outcome.value);
+      tel.endTool(span, { ui: false, result: outcome.value });
+      return JSON.stringify(outcome.value);
     }
 
-    if (isAsyncIterable(result)) {
-      const iterator = result[Symbol.asyncIterator]();
-      let final: unknown;
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const next = await iterator.next();
-        if (next.done) {
-          final = next.value;
-          break;
-        }
-        await appendEmit(deps, 'tool-progress', next.value);
-      }
-      const outcome = await finalizeToolResult(deps, call.name, final ?? null);
-      tel.endTool(span, outcome);
-      return outcome.content;
-    }
-
-    const outcome = await finalizeToolResult(deps, call.name, result);
-    tel.endTool(span, outcome);
-    return outcome.content;
+    return await fail(outcome.type, outcome.message);
   } catch (err) {
     // A store append failing mid-tool would otherwise leave the span open.
     // Close it, then let the error propagate to the turn's own handler.

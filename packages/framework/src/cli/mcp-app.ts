@@ -590,7 +590,14 @@ export async function mcpAppCommand(args: string[], cwd: string): Promise<number
       // as a missing package, which sends the reader to reinstall something
       // they already have.
       const message = (err as Error)?.message ?? String(err);
-      if (/Failed to resolve|Cannot find (module|package)|ERR_MODULE_NOT_FOUND/i.test(message)) {
+      // "Failed to load url ... Does the file exist?" is how VITE 8 words a
+      // missing dependency, and it was absent from this list: a project that had
+      // simply not installed the agent layer was told "could not load", with a
+      // Vite stack, instead of being told to install it. Measured against a
+      // scaffolded app. `@beatzball/litro-agent/mcp-server` carries the same
+      // list for the SDK — keep the two in step by hand, since a package
+      // boundary stops them sharing one constant.
+      if (/Failed to resolve|Failed to load url|Does the file exist\?|Cannot find (module|package)|ERR_MODULE_NOT_FOUND/i.test(message)) {
         console.error(
           'litro mcp-app build: @beatzball/litro-agent is not installed in this project.\n' +
             '  pnpm add @beatzball/litro-agent',

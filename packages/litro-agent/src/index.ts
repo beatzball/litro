@@ -29,9 +29,47 @@ export interface ToolContext {
   session: { id: string; seq: number };
 }
 
+/** Who a tool is callable by, as the MCP Apps extension spells it. */
+export type ToolAppVisibility = 'model' | 'app';
+
+export interface ToolAppRef {
+  /**
+   * A `manifest.json` entry name as `litro mcp-app build` wrote it
+   * (`weather-card`, or `weather/card` for a nested app), or a literal
+   * `ui://` address.
+   *
+   * A packed app usually has no address of its own — the build derives one
+   * from the package name and the file path (AGENT-013) — so naming the
+   * manifest entry is the form that survives a rename of the package.
+   */
+  name: string;
+  /**
+   * Emitted only when set. The extension already defaults to
+   * `['model', 'app']` when the field is absent, so a tool whose app calls it
+   * back needs no annotation; a tool that should be hidden from the model sets
+   * `['app']`.
+   */
+  visibility?: ToolAppVisibility[];
+}
+
+/** The `ui://` document a tool's result is rendered by. A bare string is the
+ *  app name; the object form adds `visibility`. */
+export type ToolApp = string | ToolAppRef;
+
 export interface ToolConfig<In> {
   description: string;
   input: StandardSchemaV1<unknown, In>;
+  /**
+   * MCP Apps only: the packed `ui://` document an MCP host should render this
+   * tool's result in. `litro mcp serve` resolves it against
+   * `dist/mcp-apps/manifest.json` at startup and publishes it as
+   * `_meta.ui.resourceUri`; an unresolvable name is a startup failure, because
+   * the extension requires the resource to exist on the server.
+   *
+   * The chat loop ignores this field entirely — adding it changes nothing
+   * about `/__litro/agent/...`.
+   */
+  app?: ToolApp;
   execute(input: In, ctx: ToolContext): unknown;
 }
 
