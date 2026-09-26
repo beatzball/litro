@@ -46,3 +46,24 @@ describe('elenaAdapter', () => {
     expect(postamble).toBe('');
   });
 });
+
+/**
+ * <litro-link> builds its <a href> in render(). If the element is not in the
+ * server's custom element registry the SSR output is a bare tag with no
+ * anchor, so with JavaScript off the link is unclickable text. Every adapter
+ * registers it from the manifest preamble, which is the one place guaranteed
+ * to reach the server bundle ahead of the pages.
+ *
+ * The namespace binding matters as much as the import: Rollup deletes a bare
+ * side-effect import it cannot prove is used (BUILD-002).
+ */
+describe('elenaAdapter — <litro-link> on the server', () => {
+  it('imports the link element in the manifest preamble', () => {
+    const preamble = elenaAdapter.manifestPreamble!();
+
+    expect(preamble).toContain(
+      "import * as _litroLink from '@beatzball/litro/adapter/elena/runtime/LitroLink.js'",
+    );
+    expect(preamble).toContain('globalThis.__litro_link__ = _litroLink;');
+  });
+});

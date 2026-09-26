@@ -109,6 +109,10 @@
       "types": "./dist/adapter/fast/runtime/client.d.ts",
       "import": "./dist/adapter/fast/runtime/client.js"
     },
+    "./adapter/fast/runtime/*.js": {
+      "types": "./dist/adapter/fast/runtime/*.d.ts",
+      "import": "./dist/adapter/fast/runtime/*.js"
+    },
     "./adapter/fast/ssr-init": {
       "types": "./dist/adapter/fast/ssr-init.d.ts",
       "import": "./dist/adapter/fast/ssr-init.js"
@@ -131,6 +135,10 @@
     "./adapter/elena/runtime": {
       "types": "./dist/adapter/elena/runtime/client.d.ts",
       "import": "./dist/adapter/elena/runtime/client.js"
+    },
+    "./adapter/elena/runtime/*.js": {
+      "types": "./dist/adapter/elena/runtime/*.d.ts",
+      "import": "./dist/adapter/elena/runtime/*.js"
     },
     "./adapter/elena/page": {
       "types": "./dist/adapter/elena/runtime/LitroPage.d.ts",

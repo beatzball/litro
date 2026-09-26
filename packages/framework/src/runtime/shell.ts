@@ -71,7 +71,10 @@ const DSD_POLYFILL =
 const SKIP_LINK_SCRIPT =
   `(function(){function f(r,id){var s='#'+CSS.escape(id),d=r.querySelector(s);if(d)return d;var a=r.querySelectorAll('*');for(var i=0;i<a.length;i++){if(a[i].shadowRoot){var x=f(a[i].shadowRoot,id);if(x)return x}}return null}function u(){var ls=document.querySelectorAll('.skip-link[href^=\"#\"]');for(var i=0;i<ls.length;i++){var id=ls[i].getAttribute('href').slice(1);if(id==='_litro_main')continue;var t=document.getElementById(id)||f(document,id);if(t)ls[i].removeAttribute('hidden');else ls[i].setAttribute('hidden','')}}document.addEventListener('click',function(e){var l=e.target.closest('.skip-link');if(!l||l.hasAttribute('hidden'))return;var h=l.getAttribute('href');if(!h||h[0]!=='#')return;var id=h.slice(1);e.preventDefault();var t=document.getElementById(id)||f(document,id);if(t){if(!t.hasAttribute('tabindex'))t.setAttribute('tabindex','-1');t.focus({preventScroll:true});t.scrollIntoView()}});document.addEventListener('DOMContentLoaded',function(){requestAnimationFrame(u);var o=document.querySelector('litro-outlet');if(o)new MutationObserver(function(){requestAnimationFrame(u)}).observe(o,{childList:true})})})();`;
 
-/** A single skip link rendered at the top of the document body. */
+/**
+ * A single skip link rendered at the top of the document body, inside the
+ * shell's `<nav aria-label="Skip links">` landmark.
+ */
 export interface SkipLink {
   /** Visible text shown when the link is focused (e.g. "Skip to content"). */
   label: string;
@@ -126,9 +129,12 @@ export interface ShellOptions {
    */
   contentDevPolling?: boolean;
   /**
-   * Skip links rendered at the top of `<body>`. Each link is visually hidden
+   * Skip links rendered at the top of `<body>`, inside a
+   * `<nav aria-label="Skip links">` landmark. Each link is visually hidden
    * until focused, allowing keyboard/screen reader users to jump to key
    * landmarks.
+   *
+   * An empty array emits no links and no wrapper.
    *
    * Defaults to `DEFAULT_SKIP_LINKS` (a single "Skip to content" link).
    * Links whose target doesn't exist on the current page are automatically
@@ -200,10 +206,37 @@ export function buildShell(
     ? `\n  <script>(function(){var v=null;setInterval(function(){fetch('/_litro/_litro-version.json?_t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(v===null){v=d.v}else if(v!==d.v){location.reload()}}).catch(function(){})},2500)})();</script>`
     : '';
 
+  // Skip links go inside a labeled navigation landmark.
+  //
+  // WHY A LANDMARK. Bare anchors at the top of <body> sit outside every
+  // landmark, which is exactly what axe-core's `region` rule reports — and it
+  // reported it on every page a Litro app served. The reader who navigates by
+  // landmark is the reader most likely to want a skip link, so the links have
+  // to be reachable that way.
+  //
+  // WHY <nav>. A skip link is in-page navigation, so `navigation` is the
+  // correct role and the native element carries it without an ARIA attribute.
+  //
+  // WHY THE LABEL IS NOT OPTIONAL. Almost every Litro page already has a site
+  // <nav>. Two unlabeled navigation landmarks are announced with the same
+  // name, so a reader cannot tell which one to enter. `aria-label` names this
+  // one. It is plural because the list can hold several links — a site adds
+  // "Skip to navigation" or "Skip to search" to the default.
+  //
+  // WHY THE EMPTY CASE EMITS NOTHING. A site can pass `skipLinks: []`. An
+  // empty landmark is announced and leads nowhere, which is worse than no
+  // landmark, so there is no wrapper when there is nothing to wrap.
+  //
+  // The wrapper does not move anything: every `.skip-link` is taken out of
+  // flow by the stylesheet above (absolute when idle, fixed when focused), so
+  // the <nav> computes to zero height.
   const skipLinks = options?.skipLinks ?? DEFAULT_SKIP_LINKS;
-  const skipLinksHtml = skipLinks
+  const skipLinkAnchors = skipLinks
     .map((link) => `\n<a class="skip-link" href="${link.href}">${link.label}</a>`)
     .join('');
+  const skipLinksHtml = skipLinks.length
+    ? `\n<nav class="skip-links" aria-label="Skip links">${skipLinkAnchors}\n</nav>`
+    : '';
 
   const includeDSD = options?.includeDSDPolyfill !== false;
   const dsdPolyfillBlock = includeDSD

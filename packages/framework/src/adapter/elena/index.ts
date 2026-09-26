@@ -264,6 +264,12 @@ export const elenaAdapter: FrameworkAdapter = {
     return [
       `import * as _elenaShim from '@beatzball/litro/adapter/elena/ssr-shim';`,
       `globalThis.__litro_elena_shim__ = _elenaShim;`,
+      // <litro-link> must reach the server registry, or the element renders
+      // as a bare tag with no <a href> and the link does nothing without
+      // JavaScript. Imported after the shim, which supplies HTMLElement and
+      // customElements. `import * as` + globalThis is BUILD-002.
+      `import * as _litroLink from '@beatzball/litro/adapter/elena/runtime/LitroLink.js';`,
+      `globalThis.__litro_link__ = _litroLink;`,
       `process.env.LITRO_ADAPTER = 'elena';`,
     ].join('\n');
   },

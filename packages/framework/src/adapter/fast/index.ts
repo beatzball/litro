@@ -114,6 +114,15 @@ export const fastAdapter: FrameworkAdapter = {
       `import _fastSSR from '@microsoft/fast-ssr';`,
       `var _ssrResult = _fastSSR({ renderMode: 'async' });`,
       `globalThis.__litro_fast_template_renderer__ = _ssrResult.templateRenderer;`,
+      // 3. <litro-link>: the element has to be in the server registry or FAST
+      //    SSR prints a bare tag with no shadow root and no <a href>, which
+      //    leaves every link dead with JavaScript off. It is imported after
+      //    the DOM shim, so @microsoft/fast-element already has its globals.
+      //    Defining before fastSSR() runs is fine — fastSSR swaps the
+      //    template compiler, which is read at render time, not at define
+      //    time. `import * as` + globalThis is BUILD-002.
+      `import * as _litroLink from '@beatzball/litro/adapter/fast/runtime/LitroLink.js';`,
+      `globalThis.__litro_link__ = _litroLink;`,
       // Ensure the adapter env var is available at runtime — nitro.config.ts
       // sets it at build time, but it's lost in the production bundle.
       `process.env.LITRO_ADAPTER = 'fast';`,

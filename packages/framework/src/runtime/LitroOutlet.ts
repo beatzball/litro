@@ -26,9 +26,18 @@
  *    because it fires after the first render and the element is guaranteed to
  *    be in the DOM.
  *
- * 4. litro-router IS CLIENT-ONLY
- *    This module must NEVER be imported in server-side code paths. LitroRouter
- *    accesses window, history, and document at runtime and will crash Node.js.
+ * 4. THE ROUTER IS CLIENT-ONLY, BUT THIS MODULE IS NOT
+ *    LitroRouter accesses window, history and document, so it is loaded by a
+ *    dynamic import inside firstUpdated(), which never runs on the server.
+ *    Only the TYPE is imported at module scope, and a type is erased. An
+ *    older version of this header said the module must never be imported
+ *    server-side; that stopped being true when the import was made lazy, and
+ *    the same correction applies to LitroLink.
+ *
+ *    The outlet does not need a server-side registration the way LitroLink
+ *    does: the shell writes `<litro-outlet>` into the document itself, and
+ *    the element renders its children into light DOM, so an unregistered tag
+ *    still shows the SSR'd page.
  */
 
 import { LitElement } from 'lit';

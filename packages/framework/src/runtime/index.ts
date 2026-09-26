@@ -3,13 +3,21 @@
  *
  * This is the entry point for `import ... from '@beatzball/litro/runtime'`.
  *
- * NOTE: This barrel re-exports client-side modules that import litro-router.
- * It must NOT be imported in server-side (Nitro/Node.js) code paths.
- * LitroRouter accesses window, history, and document at runtime and will
- * crash Node.js.
+ * NOTE: every module behind this barrel loads in Node. The modules that use
+ * litro-router load it with a dynamic import inside a browser-only lifecycle
+ * method, so nothing here touches window, history or document at module
+ * scope. An older version of this note said the barrel must not be imported
+ * server-side; that stopped being true when those imports were made lazy.
  *
- * Use `litro/runtime/LitroOutlet.js` or `litro/runtime/LitroLink.js` for
- * direct imports if you need finer-grained control.
+ * What the barrel still cannot do is REGISTER an element in the server's
+ * custom element registry. It re-exports `LitroOutlet` and `LitroLink` as
+ * NAMES, and Rollup drops a re-export that nothing uses, so the element is
+ * never defined and SSR prints a bare tag (BUILD-007). Import
+ * `litro/runtime/LitroLink.js` or `litro/runtime/LitroOutlet.js` directly
+ * when you need the side effect — those paths are listed in the package's
+ * `sideEffects` (BUILD-001). The framework's own adapters already import
+ * `LitroLink.js` into the server bundle from `manifestPreamble()`, so a page
+ * does not have to.
  *
  * Data fetching exports:
  *   getServerData  — reads the server-injected data script tag on first load

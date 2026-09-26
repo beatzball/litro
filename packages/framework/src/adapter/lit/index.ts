@@ -78,6 +78,38 @@ export const litAdapter: FrameworkAdapter = {
     return [];
   },
 
+  manifestPreamble() {
+    // Register the framework's own custom elements on the server.
+    //
+    // WHY THIS IS NEEDED. `<litro-link>` builds its `<a href>` in render().
+    // If the element is not in the server's custom element registry,
+    // @lit-labs/ssr prints a bare `<litro-link href="/docs">` with no shadow
+    // root — so with JavaScript off there is no anchor and the link is
+    // unclickable text. Nothing reports it; the build exits 0.
+    //
+    // WHY THE PAGES COULD NOT CARRY IT. Importing the element from a page is
+    // not enough in general: the runtime barrel re-exports it as a NAME, and
+    // Rollup drops a re-export nothing uses (BUILD-007). A site that got it
+    // right did so with one bare side-effect import in one page file, and
+    // because the whole server is a single bundle that one import happened to
+    // register the element for every other page too. Delete that line and all
+    // of them regress at once. Registering here makes it the framework's job.
+    //
+    // WHY IT IS SAFE ON THE SERVER. LitroLink imports only `lit`, which ships
+    // a `node` export condition. `@beatzball/litro-router` — the part that
+    // touches `window` — is loaded by a dynamic import inside the click
+    // handler, which only ever runs in a browser. The module's older header
+    // said it must never be imported server-side; that stopped being true
+    // when the router import was made lazy.
+    //
+    // The namespace binding and globalThis assignment are BUILD-002: Rollup
+    // deletes a bare side-effect import it cannot prove is used.
+    return [
+      `import * as _litroLink from '@beatzball/litro/runtime/LitroLink.js';`,
+      `globalThis.__litro_link__ = _litroLink;`,
+    ].join('\n');
+  },
+
   nitroConfig() {
     return {
       externals: {

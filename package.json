@@ -86,6 +86,7 @@
     "check:doc-refs": "node scripts/check-doc-refs.mjs",
     "check:spelling": "node scripts/check-spelling.mjs",
     "check:e2e-isolation": "node scripts/check-e2e-isolation.mjs",
+    "check:ssr-links": "node scripts/check-ssr-links.mjs",
     "check:doc-refs:self-test": "node scripts/check-doc-refs.mjs --self-test",
     "changeset": "changeset",
     "version-packages": "changeset version",
@@ -94,6 +95,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
     "@playwright/test": "^1.48.0",
+    "axe-core": "^4.11.2",
     "portless": "^0.10.2"
   },
   "engines": {
