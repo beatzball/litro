@@ -30,16 +30,21 @@
 import { expect, type Page, type TestType } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 
 /** A phone and a desktop. Landmarks appear and disappear between the two. */
 export const LANDMARK_WIDTHS = [375, 1280] as const;
 
-const require = createRequire(import.meta.url);
+// Resolved from the repo root, not from this file: Playwright compiles specs
+// to CommonJS, where `import.meta.url` is not defined and the whole module
+// fails to load with "exports is not defined in ES module scope". The root is
+// also where `axe-core` is declared, so resolution finds it either way.
+const resolveFromRoot = createRequire(join(process.cwd(), 'package.json'));
 
 /** axe's bundle, read once per worker and injected into each page. */
 let axeSource: string | undefined;
 function getAxeSource(): string {
-  axeSource ??= readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
+  axeSource ??= readFileSync(resolveFromRoot.resolve('axe-core/axe.min.js'), 'utf8');
   return axeSource;
 }
 
