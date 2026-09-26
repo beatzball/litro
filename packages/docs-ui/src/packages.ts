@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs';
+import { PACKAGES } from './package-list.js';
 import { resolve } from 'pathe';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
@@ -18,14 +19,10 @@ export interface PackageInfo {
   changelogMd: string;
 }
 
-const PACKAGES = [
-  { slug: 'litro',        dir: 'framework',    name: '@beatzball/litro' },
-  { slug: 'litro-router', dir: 'litro-router', name: '@beatzball/litro-router' },
-  { slug: 'create-litro', dir: 'create-litro', name: '@beatzball/create-litro' },
-  { slug: 'litro-agent',  dir: 'litro-agent',  name: '@beatzball/litro-agent' },
-] as const;
-
-export const ALL_PACKAGE_SLUGS = PACKAGES.map(p => p.slug);
+// The list itself lives in package-list.ts, which pulls in nothing Node-only.
+// The browser stub in docs/vite.config.ts replaces THIS module and re-exports
+// the slugs from there, so there is one list, not two (CONTENT-008).
+export { PACKAGES, ALL_PACKAGE_SLUGS } from './package-list.js';
 
 export async function renderMarkdown(md: string): Promise<string> {
   const processor = unified()
