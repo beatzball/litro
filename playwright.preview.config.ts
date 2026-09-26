@@ -50,6 +50,12 @@ export default defineConfig({
       url: 'http://localhost:3030',
       reuseExistingServer: false,
       timeout: 180000,
+      // playground declares the MCP Streamable HTTP route. A BUILT server with
+      // that route refuses to start unless it is told it is local or given a
+      // shared secret — there is no default of "open" (decision 3, part 4 of
+      // design/specs/2026-09-24-mcp-server.md). `litro dev` needs nothing here,
+      // because Nitro marks a dev process and a dev server binds to localhost.
+      env: { LITRO_MCP_LOCAL: '1' },
     },
     {
       name: 'playground-11ty',

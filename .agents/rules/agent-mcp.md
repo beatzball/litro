@@ -170,3 +170,37 @@ shape is an API. If the uri and the file name are derived separately, the
 manifest and the address drift apart.
 
 **Check:** `appSegmentsFromFile` in `packages/framework/src/cli/mcp-app.ts`.
+
+### AGENT-014 — `process.dev` is not how you tell a dev server from a deployment
+
+Code that has to know whether it is running in `litro dev` reads
+`process.env.LITRO_DEV === 'true'`, or `process.env.NITRO_DEV_WORKER_ID` for a
+project driven by `nitro dev` directly. Do not read `process.dev`, and do not
+read `NODE_ENV`.
+
+**Why:** measured on nitropack 2.13.4 — `process.dev` is `undefined` in the dev
+worker and `false` in a built server, so a check for `=== true` calls `litro dev`
+a deployment. The MCP HTTP route refuses to start on a deployment with no token,
+so that mistake made `litro dev` refuse to start. `NODE_ENV` is the opposite
+mistake: `undefined` under `litro dev` and `"production"` in a build, so "not
+production means local" makes a deployment that never set it open by default.
+
+**Check:** `isDevServer` in `packages/litro-agent/src/mcp-server/gates.ts`, and
+the same read in `packages/framework/src/runtime/create-page-handler.ts`. Test a
+change to it in `litro dev` AND in a production build, not only in vitest.
+
+### AGENT-015 — A `source` condition in a vitest config reaches dependencies too
+
+`packages/litro-agent/vitest.config.ts` lists
+`conditions: ['module', 'import', 'default']` with no `source`. The workspace
+packages are read from `src/` by `litroSourceAlias()`, not by a condition.
+
+**Why:** `resolve.conditions` is not scoped to this repo's packages. With
+`source` first, `eventsource-parser` — which the MCP SDK's Streamable HTTP client
+pulls in — resolved to its own `source` export, raw TypeScript inside
+`node_modules`, and Node refused the whole suite with "Stripping types is
+currently unsupported for files under node_modules". `deps.inline` does not fix
+it, because the resolution happens first.
+
+**Check:** `git grep -n "'source'" -- 'packages/*/vitest.config.ts'`. Any test
+that imports an SDK client is where this shows up.

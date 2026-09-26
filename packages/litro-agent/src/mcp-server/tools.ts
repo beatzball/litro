@@ -110,7 +110,8 @@ function appNotFoundMessage(
   if (context.manifestMissing) {
     return (
       `${head}, but there is no ${context.manifestPath}.\n` +
-      '  Run `litro mcp-app build` first, or point --apps-dir at the directory it wrote.'
+      '  Run `litro mcp-app build` first, or point the server at where it wrote: --apps-dir on\n' +
+      '  `litro mcp serve`, or LITRO_MCP_APPS_DIR for the HTTP route.'
     );
   }
   const listed = apps.map((a) => `"${a.name}" (${a.descriptor.uri})`);

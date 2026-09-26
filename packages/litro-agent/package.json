@@ -41,6 +41,10 @@
       "types": "./dist/mcp-server/index.d.ts",
       "import": "./dist/mcp-server/index.js"
     },
+    "./mcp-handler": {
+      "types": "./dist/mcp-server/http.d.ts",
+      "import": "./dist/mcp-server/http.js"
+    },
     "./telemetry": {
       "types": "./dist/telemetry/otel.d.ts",
       "import": "./dist/telemetry/otel.js"
