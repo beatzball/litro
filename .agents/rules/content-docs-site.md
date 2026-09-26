@@ -113,5 +113,38 @@ browser build.
 still follows every top-level import in the page file and fails to bundle
 Node-only code.
 
+A stub replaces a module; it never re-types that module's data. The package
+stub re-exports `ALL_PACKAGE_SLUGS` from
+`packages/docs-ui/src/package-list.ts`, which is dependency-free and safe in a
+browser bundle. Keep the pure data in its own module and let both sides import
+it.
+
+**Why:** the stub used to write the slugs out by hand. The day `litro-agent`
+was added the stub went a package short and nothing failed, because the only
+reader runs at build time against the real module. A copy nobody reads is a
+copy nobody corrects.
+
 **Check:** the `litro:packages-stub` plugin in `docs/vite.config.ts` and
-`docs-ssr/vite.config.ts`.
+`docs-ssr/vite.config.ts`, and `docs/src/__tests__/packages-stub.test.ts`.
+
+### CONTENT-009 — The sitemap derives every URL; it lists none
+
+No file writes out a page URL for the sitemap. `packages/docs-ui/src/sitemap.ts`
+builds the whole document from the sources that create the pages: the page
+scanner's routes for static pages, the content posts for docs, compare and blog
+entries, those posts' tags for the tag pages, and `ALL_PACKAGE_SLUGS` for the
+package pages. A dynamic family is emitted only when the route that serves it
+exists.
+
+Both apps' `server/routes/sitemap.xml.ts` are thin wrappers and must stay
+byte-identical. The only hand-maintained entry is `EXCLUDED_ROUTES`, a policy
+list of pages that exist but must not be advertised — a page not named there is
+included automatically.
+
+**Why:** the sitemap kept a hand-written array of static routes. `/benchmarks`
+and all 27 `/blog/tags/*` pages were live and missing from it, in both apps.
+Appending them would only have reset the clock.
+
+**Check:** `docs/src/__tests__/sitemap-completeness.test.ts` rebuilds the
+expected URL set from the real page files and content files, so a new page, doc
+or tag fails the test until the sitemap carries it.
