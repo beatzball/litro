@@ -4,7 +4,8 @@
  * server-side into a `<demo-weather-card>` DSD fragment via ui().
  */
 import { html } from 'lit';
-import { defineTool, type StandardSchemaV1 } from '@beatzball/litro-agent';
+import { z } from 'zod';
+import { defineTool } from '@beatzball/litro-agent';
 import { ui } from '@beatzball/litro-agent/ui';
 // Registers <demo-weather-card> (@customElement side effect) so @lit-labs/ssr
 // can find and SSR its shadow root. A bare `import '...demo-weather-card.js'`
@@ -17,33 +18,35 @@ import { ui } from '@beatzball/litro-agent/ui';
 import { DemoWeatherCard } from '../../../components/demo-weather-card.js';
 void DemoWeatherCard;
 
-interface GetWeatherInput {
-  city: string;
-}
-
-// Hand-rolled Standard Schema (same pattern as playground/actions/forms.server.ts).
-const getWeatherSchema: StandardSchemaV1<unknown, GetWeatherInput> = {
-  '~standard': {
-    version: 1,
-    vendor: 'litro-playground',
-    validate(value) {
-      const v = value as Record<string, unknown> | null;
-      if (!v || typeof v !== 'object') return { issues: [{ message: 'Expected an object' }] };
-      if (typeof v.city !== 'string' || v.city.trim() === '') {
-        return { issues: [{ message: 'city is required' }] };
-      }
-      return { value: { city: v.city.trim() } };
-    },
-  },
-};
+/**
+ * Zod 4, for its Standard JSON Schema converter.
+ *
+ * `toolInputJSONSchema()` reads `~standard.jsonSchema.input`, the converter
+ * half of the Standard JSON Schema interface. A hand-rolled `~standard` object
+ * can implement `validate` but not that, so it publishes the permissive
+ * `{ type: 'object' }` — which tells a model and an MCP host nothing about the
+ * arguments. With a converter, `tools/list` carries a typed, described,
+ * required `city` instead.
+ *
+ * `.describe()` becomes the property's `description`, and `.max(80)` a
+ * `maxLength`: both reach the host, so the schema itself now carries the
+ * contract the description string used to spell out by hand.
+ *
+ * zod is a `playground` dependency only. `@beatzball/litro-agent` takes no
+ * schema library — any Standard Schema vendor works, and a project that does
+ * not need JSON Schema still needs no dependency at all.
+ */
+const getWeatherSchema = z.object({
+  city: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .describe('The city name, e.g. "Lisbon".'),
+});
 
 export default defineTool({
-  // Name the argument in the description: this hand-rolled validator has no
-  // Standard JSON Schema converter, so the provider receives `{ type: 'object' }`
-  // and the description carries the parameter contract. A vendor with a
-  // converter would send its real schema instead. Naming the argument makes
-  // tool-capable models (incl. smaller local ones) call it reliably.
-  description: 'Get the current weather for a city. Argument: { city: string } — the city name, e.g. "Lisbon".',
+  description: 'Get the current weather for a city.',
   input: getWeatherSchema,
   // The packed ui:// document an MCP host renders this tool's result in, named
   // by its `dist/mcp-apps/manifest.json` entry. `litro mcp serve` resolves it to

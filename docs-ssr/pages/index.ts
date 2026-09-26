@@ -307,9 +307,10 @@ const TRANSCRIPT_LABEL =
  * `data` option; and the card is what <demo-weather-card> renders for it
  * (21C is 70F, which the component converts itself).
  *
- * There is NO Litro MCP server and nothing on this page says there is. The
- * two doors are the two things that ship: the agent endpoints and the MCP
- * Apps packager.
+ * This section shows the two doors a tool's result goes through in an app:
+ * the agent endpoints and the MCP Apps packager. Serving those tools to an
+ * outside host is a third door, `litro mcp serve` — documented at
+ * /docs/mcp-server, and deliberately not on this page.
  */
 
 /**
