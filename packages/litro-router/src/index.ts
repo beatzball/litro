@@ -128,6 +128,60 @@ export interface LitroLocation {
   hash: string;
 }
 
+/**
+ * Why a resolve is running. It decides what happens to the scroll position,
+ * and the three cases want three different things:
+ *
+ * - `load`     the first resolve after a document load. The browser has
+ *              already put the page where it belongs: restored for a reload
+ *              or a back/forward between documents, at the top for a brand
+ *              new entry. The router leaves it there.
+ * - `push`     a link click, via `LitroRouter.go()`. A new page starts at the
+ *              top, or at the hash target.
+ * - `traverse` a real popstate, from back or forward. The browser restores
+ *              the position of the entry it moved to. The router leaves it
+ *              there.
+ *
+ * Before this distinction existed the router scrolled to the top on every
+ * resolve, including the first one after a reload, which wiped the position
+ * the browser had just restored (issue 196).
+ */
+type NavigationKind = 'load' | 'push' | 'traverse';
+
+/**
+ * Set by `LitroRouter.go()` for as long as it takes its synthetic popstate
+ * event to reach the listener in `setRoutes()`. `go()` dispatches the same
+ * event the browser fires for back and forward, so the listener cannot tell a
+ * link click from a history move on its own. `dispatchEvent` is synchronous,
+ * so the flag is set and read inside one task and cannot leak into a later,
+ * genuine popstate.
+ */
+let pushPending = false;
+
+/**
+ * True when the browser restores a scroll position for this document load —
+ * a reload, or a back/forward that left and re-entered the document.
+ *
+ * On such a load the router leaves the scroll position alone even when the URL
+ * carries a hash: the restored position is where the reader was, and the hash
+ * is only where they first entered the page. On a fresh load there is nothing
+ * to restore, so the hash wins.
+ *
+ * Reading the navigation type instead of the current `scrollY` avoids a race:
+ * a page with `scroll-behavior: smooth` animates the restore over several
+ * frames, so the page can still be at the top when this runs.
+ */
+function isRestoredLoad(): boolean {
+  try {
+    if (history.scrollRestoration === 'manual') return false;
+    const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const type = entries[0]?.type;
+    return type === 'reload' || type === 'back_forward';
+  } catch {
+    return false;
+  }
+}
+
 interface InternalRoute {
   pattern: URLPattern;
   component: string;
@@ -148,6 +202,26 @@ export class LitroRouter {
   private _lastPathAndSearch = '';
   /** Screen-reader live region for announcing page changes after SPA navigation. */
   private _announceEl: HTMLElement | null = null;
+  /**
+   * Scroll offset of each page the reader has visited, by pathname+search.
+   *
+   * A same-document back or forward move cannot rely on the browser alone. The
+   * browser restores the offset while the page the reader is leaving is still
+   * on screen, so a move back to a longer page is clamped to the shorter
+   * page's height — measured on the server-rendered docs site as a return to
+   * 866 instead of 1100 (issue 196). The router re-applies the saved offset
+   * once the new page has rendered and the document is its full height again.
+   */
+  private _scrollMemory = new Map<string, number>();
+  /**
+   * True from the moment a navigation starts until its resolve has finished.
+   * While it is set, `_rememberScroll()` ignores scroll events: the ones that
+   * arrive in that window belong to the browser's own restore, or to the
+   * router's scroll to the top, not to the reader.
+   */
+  private _navigating = false;
+  /** Guards against a second scroll listener when setRoutes() runs twice. */
+  private _scrollListenerAdded = false;
 
   constructor(outlet: HTMLElement) {
     this.outlet = outlet;
@@ -181,15 +255,36 @@ export class LitroRouter {
       document.body.appendChild(this._announceEl);
     }
 
+    // Record where the reader is, so a later back or forward can bring them
+    // back to it. setRoutes() can run more than once (LitroOutlet forwards
+    // routes that arrive late), so only the first call adds the listener.
+    if (!this._scrollListenerAdded) {
+      this._scrollListenerAdded = true;
+      window.addEventListener('scroll', () => this._rememberScroll(), { passive: true });
+    }
+
     // Fragment navigations (clicking <a href="#section">) fire popstate per the
     // HTML spec. Guard against re-rendering the same page when only the hash changes.
     // Compare pathname+search so query string changes (e.g. /search?q=a → /search?q=b)
     // still trigger a re-render.
     window.addEventListener('popstate', () => {
-      if (normalizePathname(location.pathname) + location.search === this._lastPathAndSearch) return;
-      void this._resolve();
+      // `go()` clears the flag itself, once dispatchEvent has returned. A
+      // listener must not clear it: several routers, or several listeners on
+      // one router, read the same event in turn and each one needs the answer.
+      const kind: NavigationKind = pushPending ? 'push' : 'traverse';
+      if (normalizePathname(location.pathname) + location.search === this._lastPathAndSearch) {
+        // Same page, hash only. Native fragment scrolling cannot reach a
+        // heading inside a shadow root, so a link click is scrolled here.
+        // A back or forward move is left to the browser, which restores the
+        // position saved for that entry — closer to where the reader was than
+        // the hash target is.
+        if (kind === 'push' && location.hash) this._scrollToHash(location.hash);
+        return;
+      }
+      this._navigating = true;
+      void this._resolve(kind);
     });
-    void this._resolve();
+    void this._resolve('load');
   }
 
   /**
@@ -198,10 +293,17 @@ export class LitroRouter {
    */
   static go(path: string): void {
     history.pushState(null, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    // Mark the event as a link click, so the listener scrolls to the top of
+    // the new page instead of treating it as a back/forward move.
+    pushPending = true;
+    try {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } finally {
+      pushPending = false;
+    }
   }
 
-  private async _resolve(): Promise<void> {
+  private async _resolve(kind: NavigationKind = 'load'): Promise<void> {
     const token = ++this._resolveToken;
     // Match on the canonical path so '/docs/a/' resolves the same route as
     // '/docs/a' (issue 203). The address bar is left alone — a static host
@@ -211,6 +313,21 @@ export class LitroRouter {
     const pathname = normalizePathname(location.pathname);
     this._lastPathAndSearch = pathname + location.search;
 
+    try {
+      await this._render(token, pathname, kind);
+    } finally {
+      // Let `_rememberScroll()` record the reader's scrolling again — unless a
+      // newer navigation has started, which owns the flag now.
+      if (token === this._resolveToken) this._navigating = false;
+    }
+  }
+
+  /**
+   * Matches `pathname`, mounts the page element, and settles the scroll
+   * position. Split out of `_resolve()` so every exit runs through its
+   * `finally` clause.
+   */
+  private async _render(token: number, pathname: string, kind: NavigationKind): Promise<void> {
     for (const route of this.routes) {
       const match = route.pattern.exec({ pathname });
       if (!match) continue;
@@ -310,17 +427,45 @@ export class LitroRouter {
         });
       }
 
-      // Scroll to top of the new page, then override with hash target if present.
+      // Scroll position. See NavigationKind: only a link click moves the page
+      // by itself. A document load and a back/forward move belong to the
+      // browser, which has already restored the reader's position.
+      //
       // Heading elements injected via unsafeHTML live inside shadow roots, so
-      // native fragment scrolling can't reach them — we traverse the shadow tree.
+      // native fragment scrolling can't reach them — we traverse the shadow
+      // tree for the hash target ourselves.
       const hash = location.hash;
-      if (hash) {
+      if (kind === 'push') {
+        if (hash) this._scrollToHash(hash);
+        else window.scrollTo(0, 0);
+      } else if (kind === 'load' && hash && !isRestoredLoad()) {
         this._scrollToHash(hash);
-      } else {
-        window.scrollTo(0, 0);
+      } else if (kind === 'traverse') {
+        this._restoreScroll(pathname + location.search);
       }
       return;
     }
+  }
+
+  /** Saves the reader's own scrolling against the page that is on screen. */
+  private _rememberScroll(): void {
+    if (this._navigating || !this._lastPathAndSearch) return;
+    this._scrollMemory.set(this._lastPathAndSearch, window.scrollY);
+  }
+
+  /**
+   * Puts the reader back where they were on this page, now that it has
+   * rendered and the document is its full height again.
+   *
+   * `behavior: 'instant'` overrides a `scroll-behavior: smooth` stylesheet.
+   * Restoring a position is not a move the reader asked for, so it should not
+   * animate. Nothing happens when the page has no saved offset — the browser
+   * has already put a first-time visit where it belongs.
+   */
+  private _restoreScroll(key: string): void {
+    const saved = this._scrollMemory.get(key);
+    if (saved === undefined) return;
+    window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
   }
 
   /**
