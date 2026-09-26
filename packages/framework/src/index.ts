@@ -47,6 +47,15 @@ export { pageReset } from './runtime/page-reset.js';
 // Skip links — exported so sites can extend DEFAULT_SKIP_LINKS.
 export { DEFAULT_SKIP_LINKS } from './runtime/shell.js';
 
+// Path canonicalization — the one implementation every Litro route matcher
+// shares (issue 203). It lives in @beatzball/litro-router because that package
+// is standalone and dependency-free, and is re-exported here because a
+// scaffolded app depends on @beatzball/litro alone: its catch-all handler must
+// strip a trailing slash exactly the way the client router does, or the two
+// halves disagree and a page renders blank at '/docs/a/'. The module is pure
+// string work, so it is safe in both the server and the browser bundle.
+export { normalizePathname } from '@beatzball/litro-router/path';
+
 // Type-only exports — erased at runtime, never cause module graph issues.
 export type { LitroRoute, LitroRouteMeta } from './types/route.js';
 export type { PageHandlerOptions } from './runtime/create-page-handler.js';
