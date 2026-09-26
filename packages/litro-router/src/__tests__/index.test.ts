@@ -26,6 +26,13 @@ declare class URLPattern {
 if (typeof window.scrollTo !== 'function' || (window.scrollTo as unknown) === undefined) {
   window.scrollTo = (() => {}) as typeof window.scrollTo;
 }
+// jsdom has no layout engine, so scrollIntoView does nothing. Record its
+// targets instead, so a test can assert which element the router scrolled to.
+const scrollIntoViewTargets: Element[] = [];
+Element.prototype.scrollIntoView = function (this: Element) {
+  scrollIntoViewTargets.push(this);
+};
+
 if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
   (globalThis as Record<string, unknown>).CSS = {
     escape: (s: string) => s.replace(/([^\w-])/g, '\\$1'),
@@ -272,30 +279,178 @@ describe('LitroRouter — setRoutes and resolve', () => {
     expect(outlet.children.length).toBe(0);
   });
 
-  it('scrolls to top after mounting a new page', async () => {
+  it('does not scroll to top on the first resolve after a document load', async () => {
+    // Issue 196. The browser restores the scroll position of a reloaded page
+    // before any script runs. A scrollTo(0, 0) here throws that away, and the
+    // reader lands back at the top of the page.
     history.replaceState(null, '', '/');
-    if (!customElements.get('rr-scroll-top')) {
-      customElements.define('rr-scroll-top', class extends HTMLElement {});
+    if (!customElements.get('rr-scroll-load')) {
+      customElements.define('rr-scroll-load', class extends HTMLElement {});
     }
     const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    router.setRoutes([{ path: '/', component: 'rr-scroll-top' }]);
+    router.setRoutes([{ path: '/', component: 'rr-scroll-load' }]);
     await new Promise(r => setTimeout(r, 50));
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-scroll-load');
+    expect(scrollSpy).not.toHaveBeenCalled();
+    scrollSpy.mockRestore();
+  });
+
+  it('scrolls to top when a link click navigates to a new page', async () => {
+    history.replaceState(null, '', '/');
+    if (!customElements.get('rr-scroll-push')) {
+      customElements.define('rr-scroll-push', class extends HTMLElement {});
+    }
+    router.setRoutes([{ path: '/scroll-push', component: 'rr-scroll-push' }]);
+    await new Promise(r => setTimeout(r, 20)); // initial resolve, no match
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    LitroRouter.go('/scroll-push');
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-scroll-push');
     expect(scrollSpy).toHaveBeenCalledWith(0, 0);
     scrollSpy.mockRestore();
   });
 
-  it('does not scroll to top when URL has a hash fragment', async () => {
-    // Navigate to a path with a hash fragment
-    history.replaceState(null, '', '/#section');
+  it('leaves the scroll position alone on a back or forward move', async () => {
+    // A genuine popstate. The browser restores the position saved for the
+    // entry it moved to, so the router must not scroll to the top.
+    history.replaceState(null, '', '/');
+    if (!customElements.get('rr-scroll-back')) {
+      customElements.define('rr-scroll-back', class extends HTMLElement {});
+    }
+    router.setRoutes([{ path: '/scroll-back', component: 'rr-scroll-back' }]);
+    await new Promise(r => setTimeout(r, 20)); // initial resolve, no match
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    // What the browser does for back/forward: change the URL, then fire
+    // popstate. No pushState, and no flag set by LitroRouter.go().
+    history.replaceState(null, '', '/scroll-back');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-scroll-back');
+    expect(scrollSpy).not.toHaveBeenCalled();
+    scrollSpy.mockRestore();
+  });
+
+  it('puts the reader back where they were on a back or forward move', async () => {
+    // The browser restores the offset while the page being left is still on
+    // screen, so a move back to a longer page is clamped to the shorter page's
+    // height. The router re-applies the saved offset after the new page has
+    // rendered. jsdom reports scrollY as 0, so drive it directly.
+    history.replaceState(null, '', '/mem-one');
+    for (const tag of ['rr-mem-one', 'rr-mem-two']) {
+      if (!customElements.get(tag)) customElements.define(tag, class extends HTMLElement {});
+    }
+    router.setRoutes([
+      { path: '/mem-one', component: 'rr-mem-one' },
+      { path: '/mem-two', component: 'rr-mem-two' },
+    ]);
+    await new Promise(r => setTimeout(r, 50));
+
+    // The reader scrolls down page one.
+    Object.defineProperty(window, 'scrollY', { value: 940, writable: true, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+
+    // A link click to page two, then back to page one.
+    LitroRouter.go('/mem-two');
+    await new Promise(r => setTimeout(r, 50));
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    history.replaceState(null, '', '/mem-one');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-mem-one');
+    expect(scrollSpy).toHaveBeenCalledWith({ top: 940, left: 0, behavior: 'instant' });
+    scrollSpy.mockRestore();
+  });
+
+  it('does not invent a position for a page it has never seen', async () => {
+    history.replaceState(null, '', '/mem-fresh');
+    for (const tag of ['rr-fresh-one', 'rr-fresh-two']) {
+      if (!customElements.get(tag)) customElements.define(tag, class extends HTMLElement {});
+    }
+    router.setRoutes([
+      { path: '/mem-fresh', component: 'rr-fresh-one' },
+      { path: '/mem-unseen', component: 'rr-fresh-two' },
+    ]);
+    await new Promise(r => setTimeout(r, 50));
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    // A back move to a page with no saved offset: the browser owns it.
+    history.replaceState(null, '', '/mem-unseen');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-fresh-two');
+    expect(scrollSpy).not.toHaveBeenCalled();
+    scrollSpy.mockRestore();
+  });
+
+  it('does not scroll to top when the URL has a hash fragment', async () => {
+    history.replaceState(null, '', '/');
     if (!customElements.get('rr-scroll-hash')) {
       customElements.define('rr-scroll-hash', class extends HTMLElement {});
     }
+    router.setRoutes([{ path: '/scroll-hash', component: 'rr-scroll-hash' }]);
+    await new Promise(r => setTimeout(r, 20));
     const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    router.setRoutes([{ path: '/', component: 'rr-scroll-hash' }]);
+
+    LitroRouter.go('/scroll-hash#section');
     await new Promise(r => setTimeout(r, 50));
-    // scrollTo(0, 0) should NOT be called — _scrollToHash runs instead
+
+    // scrollTo(0, 0) must NOT be called — _scrollToHash runs instead.
     expect(scrollSpy).not.toHaveBeenCalledWith(0, 0);
     scrollSpy.mockRestore();
+  });
+
+  it('scrolls to a hash target inside a shadow root on a fresh load', async () => {
+    history.replaceState(null, '', '/hash-deep#deep-heading');
+    if (!customElements.get('rr-hash-deep')) {
+      customElements.define('rr-hash-deep', class extends HTMLElement {
+        connectedCallback() {
+          const root = this.attachShadow({ mode: 'open' });
+          const h = document.createElement('h2');
+          h.id = 'deep-heading';
+          root.appendChild(h);
+        }
+      });
+    }
+    router.setRoutes([{ path: '/hash-deep', component: 'rr-hash-deep' }]);
+    await new Promise(r => setTimeout(r, 50));
+
+    const heading = outlet.firstElementChild?.shadowRoot?.getElementById('deep-heading');
+    expect(heading).toBeTruthy();
+    // jsdom has no layout, so scrollIntoView is a no-op stub we can spy on.
+    expect(scrollIntoViewTargets).toContain(heading);
+  });
+
+  it('ignores the hash on a reloaded page, leaving the restored position', async () => {
+    // A reload already has the reader's position restored by the browser. The
+    // hash is only where they first entered the page, so it must not win.
+    const navSpy = vi.spyOn(performance, 'getEntriesByType').mockImplementation(
+      ((type: string) =>
+        (type === 'navigation' ? [{ type: 'reload' }] : [])) as unknown as typeof performance.getEntriesByType,
+    );
+    history.replaceState(null, '', '/hash-reload#deep-heading');
+    if (!customElements.get('rr-hash-reload')) {
+      customElements.define('rr-hash-reload', class extends HTMLElement {
+        connectedCallback() {
+          const root = this.attachShadow({ mode: 'open' });
+          const h = document.createElement('h2');
+          h.id = 'deep-heading';
+          root.appendChild(h);
+        }
+      });
+    }
+    scrollIntoViewTargets.length = 0;
+    router.setRoutes([{ path: '/hash-reload', component: 'rr-hash-reload' }]);
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('rr-hash-reload');
+    expect(scrollIntoViewTargets).toHaveLength(0);
+    navSpy.mockRestore();
   });
 
   it('re-resolves when LitroRouter.go() triggers popstate', async () => {
