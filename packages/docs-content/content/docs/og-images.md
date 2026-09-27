@@ -174,6 +174,9 @@ When query params are present, the handler uses them directly instead of looking
 
 ### Satori CSS limitations
 
+These are template-authoring rules. For what the OG image generator does not do,
+see [Known Gaps](/docs/known-gaps#building-pages).
+
 Satori only supports flexbox layout. Every `<div>` with children must have `display: 'flex'` or `display: 'none'`. Grid, `position: absolute`, and `text-overflow: ellipsis` are not supported or unreliable. Design templates using only flexbox and manual string truncation.
 
 ### Font loading

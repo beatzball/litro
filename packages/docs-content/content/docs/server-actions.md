@@ -490,6 +490,9 @@ All three reach Nitro/H3 handlers at the end. The distinction is the authoring m
 
 ## Limitations
 
+These are authoring rules — things you meet while writing an action. For what
+Server Actions do not do at all, see [Known Gaps](/docs/known-gaps#building-pages).
+
 - POST only. There is no GET action or cache-semantic variant yet.
 - The `.server.ts` filename is the only server-module marker. A `'use server'` directive may be added in a future version without breaking existing code.
 - There is no author-time lint rule guarding action authoring; the build-time guards below are the only static checks.

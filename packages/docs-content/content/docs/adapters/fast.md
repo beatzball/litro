@@ -121,6 +121,9 @@ When using Nitro's `crawlLinks: true` for SSG, FAST pages may discover fewer lin
 
 ## Limitations
 
+These are authoring rules for writing a FAST component. For what choosing FAST
+costs you, see [Known Gaps](/docs/known-gaps#choosing-an-adapter).
+
 - **No `@observable` with jiti** — Nitro's jiti loader cannot process `@observable` decorators. Use `Observable.defineProperty()` for properties that need to work during SSR. Client-side `@observable` works fine.
 - **FAST packages must stay external** — inlining them into the server bundle creates duplicate copies of `@microsoft/fast-element`, breaking SSR's element registry.
 - **ESM top-level await** — does not block sibling modules. The adapter uses synchronous code for DOM shims instead.
