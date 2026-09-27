@@ -15,6 +15,7 @@ export const siteConfig = {
         { label: 'Getting Started', slug: 'getting-started' },
         { label: 'Configuration', slug: 'configuration' },
         { label: 'Upgrading', slug: 'upgrading' },
+        { label: 'Known Gaps', slug: 'known-gaps' },
       ],
     },
     {

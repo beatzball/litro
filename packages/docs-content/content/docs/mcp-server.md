@@ -251,11 +251,13 @@ A deployment of `.output`/`dist/server` **alone** also needs the SDK to be resol
 
 ## Not built yet
 
-These are later phases of the MCP server work, not gaps in the design:
+A deployed route is protected by one static bearer token, not OAuth 2.1. A long
+tool call sends no progress and is bounded only by the per-call timeout. A tool
+describes its input, not its output. Lists are never paginated, and tools carry
+no annotations, so a host cannot tell a read-only tool from a destructive one.
 
-- **OAuth 2.1.** A static bearer token is what ships; the full profile needs an authorization server Litro does not have.
-- **Progress notifications.** A long tool call is bounded by the per-call timeout.
-- **`outputSchema`.** A tool describes its input, not yet its output.
+Each of those, with what it costs you, is on
+**[Known Gaps](/docs/known-gaps#serving-tools-to-an-mcp-host)**.
 
 ## Try it
 

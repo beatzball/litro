@@ -91,6 +91,9 @@ These are handled automatically when using `--adapter lit`.
 
 ## Limitations
 
+These are authoring rules for writing a Lit component. For how Lit compares
+with the other two adapters, see [Known Gaps](/docs/known-gaps#choosing-an-adapter).
+
 - **Shadow DOM boundary** — global CSS cannot style component internals. Use CSS custom properties or `::part()` for cross-boundary styling.
 - **Decorator compatibility** — use `static override properties = { ... }` instead of `@property()` on plain fields to avoid TC39 Stage 3 decorator issues with Vite/esbuild. See the [Decisions log](/docs/contributing) for details.
 - **SSR safety** — avoid accessing `window`, `document`, or `localStorage` at module evaluation time. Guard browser-only code in lifecycle methods.

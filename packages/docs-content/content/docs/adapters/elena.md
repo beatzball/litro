@@ -152,6 +152,10 @@ connectedCallback() {
 
 ## Limitations
 
+These are authoring rules for writing an Elena component. For what choosing
+Elena costs you against Lit — no hydration, no property binding during SSR, and
+no agent UI — see [Known Gaps](/docs/known-gaps#choosing-an-adapter).
+
 - **No Shadow DOM** — global CSS affects component internals. This is a feature for content sites but may be unwanted for complex widget libraries.
 - **Props must be lowercase** — `myProp` in HTML becomes `myprop` after parsing. Use `myprop` in the `props` declaration.
 - **`html` tag escapes interpolations** — use `unsafeHTML()` from `@elenajs/core` when you need to render raw HTML (e.g. Markdown content).
