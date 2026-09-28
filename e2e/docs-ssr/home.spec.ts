@@ -89,11 +89,13 @@ test('the home page copy is in the server HTML', async ({ request }) => {
 
   for (const claim of [
     // The eyebrow, the headline and the lede — the three strings the
-    // repositioning turned over. "Tool → screen" is thirteen characters
-    // because the hero h1 is monospace and holds about thirteen per line.
-    'Web and Agent Framework',
-    'Tool → screen',
-    'The model reads the data',
+    // repositioning turned over. The headline's own contract (one complete
+    // sentence served, one stable accessible name, no movement under a
+    // reduced-motion preference) is asserted in its own suite below.
+    'Built on web components',
+    'One framework',
+    'for building sites.',
+    'Pages, agents and an MCP server on one Nitro server',
     'return ui()',
     'How Litro Compares',
     'Web Components',
@@ -153,6 +155,135 @@ test('the pictures on the page each carry one description', async ({ page }) => 
     'aria-label',
     /shell session/,
   );
+});
+
+
+/**
+ * THE ROTATING HEADLINE'S CONTRACT.
+ *
+ * The rotation is an ENHANCEMENT. What the server sends has to stand on its
+ * own, because a crawler, a language model and a reader with JavaScript off
+ * all get exactly that and nothing else. These read the first response for
+ * the same reason the rest of this file does.
+ *
+ * The headline used to be "Tool → screen", which was one complete thought in
+ * thirteen characters and needed none of this. The tests did not go away with
+ * it — they assert the same user-visible fact the old one got for free: the
+ * heading a reader meets first is a finished sentence.
+ */
+test.describe('the rotating headline', () => {
+  test('the served heading is one complete sentence', async ({ request }) => {
+    const html = await (await request.get('/')).text();
+    const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? '';
+    expect(h1, 'an h1 was found').not.toBe('');
+
+    const text = h1
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Not a fragment waiting for a script, and not a bare noun.
+    expect(text).toBe('One framework for building sites.');
+  });
+
+  test('the heading has one stable accessible name carrying every phrase', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/')).text();
+    const label = /<h1[^>]*aria-label="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    // It opens with the visible sentence, so a screen-reader user and a
+    // sighted user are reading the same heading.
+    expect(label.startsWith('One framework for building sites')).toBe(true);
+    for (const phrase of [
+      'creating agents',
+      'building MCP servers',
+      'UI inside an MCP host',
+      'all four at once',
+    ]) {
+      expect(label, `the accessible name carries "${phrase}"`).toContain(phrase);
+    }
+
+    // The part that changes must never be read, or it is announced twice.
+    expect(html).toMatch(/<span class="hero-rot" aria-hidden="true"/);
+  });
+
+  test('it rotates, and the block never changes height', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('page-home:not([hidden])');
+    const read = () =>
+      page.evaluate(() => {
+        const r = document.querySelector('page-home')?.shadowRoot;
+        const h1 = r?.querySelector('h1');
+        return {
+          phrase: r?.querySelector('.hero-rot')?.textContent?.trim() ?? '',
+          height: Math.round(h1?.getBoundingClientRect().height ?? 0),
+        };
+      });
+
+    // A FULL CYCLE IS FIVE PHRASES AT 2.8 SECONDS, SO FOURTEEN SECONDS. The
+    // first version sampled ten times a second apart, saw four phrases and
+    // failed on a headline that was working correctly. Sample past one cycle.
+    const phrases = new Set<string>();
+    const heights = new Set<number>();
+    for (let i = 0; i < 24 && phrases.size < 5; i++) {
+      const m = await read();
+      phrases.add(m.phrase);
+      heights.add(m.height);
+      await page.waitForTimeout(700);
+    }
+
+    expect(phrases.size, 'every phrase is shown').toBe(5);
+    // THE WHOLE POINT OF THE RESERVED HEIGHT. A headline that grows and
+    // shrinks every 2.8 seconds is layout shift nobody asked for.
+    expect(heights.size, 'the headline never changes height').toBe(1);
+  });
+});
+
+/**
+ * NON-NEGOTIABLE. A reader who has asked for less motion gets none: the timer
+ * never starts, and the phrase they are left on is the one the server sent.
+ *
+ * THE PREFERENCE IS SET WITH page.emulateMedia(), NOT test.use(). A first
+ * version used `test.use({ reducedMotion: 'reduce' })` at describe level and
+ * the test failed — not because the headline moved, but because the page saw
+ * `matchMedia('(prefers-reduced-motion: reduce)').matches === false`. The
+ * fixture option did not reach this project's context, so the test was
+ * measuring a browser that had never been told. emulateMedia() sets it on the
+ * page, and the assertion below now reads the preference it claims to read.
+ */
+test.describe('with a reduced-motion preference', () => {
+  test('the headline does not move at all', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.waitForSelector('page-home:not([hidden])');
+
+    // The test is worthless if the page never got the preference, so it says
+    // so rather than passing quietly.
+    expect(
+      await page.evaluate(
+        () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      ),
+      'the browser was actually told',
+    ).toBe(true);
+    const read = () =>
+      page.evaluate(
+        () =>
+          document
+            .querySelector('page-home')
+            ?.shadowRoot?.querySelector('.hero-rot')
+            ?.textContent?.trim() ?? '',
+      );
+
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      seen.add(await read());
+      await page.waitForTimeout(1000);
+    }
+
+    expect([...seen]).toEqual(['for building sites.']);
+  });
 });
 
 /**

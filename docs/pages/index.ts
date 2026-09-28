@@ -61,6 +61,47 @@ const INSTALL_COMMAND = "pnpm create @beatzball/litro my-app";
  */
 const NODE_REQUIREMENT = "20.19+";
 
+/* ── The rotating hero ──────────────────────────────────────
+ *
+ * EVERY PHRASE IS A THING LITRO DOES TODAY, checked against the capability
+ * audit. In order: routing, SSR, SSG and the content layer; the agent package,
+ * shipped; `litro mcp serve` over stdio and a Nitro route over Streamable
+ * HTTP; and ui(), whose packed ui:// document a real desktop host rendered as
+ * a card. The last line is the position itself — it is the only one that is
+ * not a capability, and it earns its place by being what the other four add up
+ * to in ONE project on ONE server.
+ *
+ * "for" LIVES IN THE PHRASE, not the stem. It never changes, so it costs
+ * nothing visually, and it keeps every phrase breaking into the same two lines
+ * of the monospace h1 — which is what lets the block reserve its height and
+ * never move while it rotates.
+ *
+ * Each phrase is at most 26 characters, because the h1 holds about thirteen
+ * per line. The breaks, measured:
+ *   for building / sites.          for creating / agents.
+ *   for building / MCP servers.    for UI inside / an MCP host.
+ *   for all four / at once.
+ */
+const HERO_PHRASES = [
+  "for building sites.",
+  "for creating agents.",
+  "for building MCP servers.",
+  "for UI inside an MCP host.",
+  "for all four at once.",
+] as const;
+
+/** How long each phrase holds. There is no transition, so this is the timing. */
+const HERO_PHRASE_MS = 2800;
+
+/**
+ * The heading's accessible name: stable, complete, and never re-announced.
+ *
+ * It OPENS WITH THE VISIBLE SENTENCE, so a screen-reader user and a sighted
+ * user are reading the same heading rather than two different ones.
+ */
+const HERO_ARIA =
+  "One framework for building sites, for creating agents, for building MCP servers, for UI inside an MCP host — and for all four at once.";
+
 /**
  * The adapters a new project should choose between.
  *
@@ -719,6 +760,72 @@ export const routeMeta = {
 
 @customElement("page-home")
 export class SplashPage extends LitroPage {
+  /**
+   * Which phrase the headline is showing.
+   *
+   * NOT A DECORATOR. Field decorators break under jiti, which is what loads a
+   * page module on the dev server, so this is declared the long way.
+   *
+   * It defaults to 0, which is what the server renders and what the client
+   * renders first — so the hydrated DOM matches the streamed DOM and there is
+   * no mismatch to repair.
+   */
+  static override properties = {
+    heroPhrase: { state: true },
+  };
+
+  heroPhrase = 0;
+
+  #heroTimer: ReturnType<typeof setInterval> | undefined;
+
+  #reduceMotion: MediaQueryList | undefined;
+
+  /**
+   * Starts the rotation, unless the reader has asked for less motion.
+   *
+   * `typeof window` is the SSR guard: Lit SSR never calls this, but a page
+   * module is also imported in Node by the scanner and by tests, and a timer
+   * started there would keep a process alive.
+   */
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (typeof window === "undefined") return;
+
+    this.#reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // A change of preference after load has to take effect immediately, in
+    // both directions, so this listens rather than reading the value once.
+    this.#reduceMotion.addEventListener("change", this.#syncMotion);
+    this.#syncMotion();
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#stopHero();
+    this.#reduceMotion?.removeEventListener("change", this.#syncMotion);
+    this.#reduceMotion = undefined;
+  }
+
+  /** Runs the rotation, or stops it dead, per the current preference. */
+  #syncMotion = (): void => {
+    if (this.#reduceMotion?.matches) {
+      this.#stopHero();
+      // Back to the first phrase, so a reader who turns the preference on
+      // mid-rotation is left on the sentence the served HTML carried rather
+      // than on whichever one happened to be up.
+      this.heroPhrase = 0;
+      return;
+    }
+    if (this.#heroTimer !== undefined) return;
+    this.#heroTimer = setInterval(() => {
+      this.heroPhrase = (this.heroPhrase + 1) % HERO_PHRASES.length;
+    }, HERO_PHRASE_MS);
+  };
+
+  #stopHero(): void {
+    if (this.#heroTimer !== undefined) clearInterval(this.#heroTimer);
+    this.#heroTimer = undefined;
+  }
+
   static override styles = [
     pageReset,
     statusLineChrome,
@@ -952,6 +1059,39 @@ export class SplashPage extends LitroPage {
       margin: 0 0 1.5rem;
       color: var(--nova-text);
     }
+
+    /* ── The rotating headline ─────────────────────────────────
+     *
+     * TWO BLOCKS, NOT AN INLINE SPAN. The stem takes its own line and the
+     * phrase takes the two below it, which is what makes the reserved height
+     * possible: min-height on a block can hold two lines open, and an inline
+     * run cannot.
+     *
+     * THE HEIGHT IS RESERVED so the page never moves. 2.04em is two lines at
+     * the h1's own 1.02 line-height. Without it the block would grow and
+     * shrink under the lede every 2.8 seconds, which is layout shift the
+     * reader did not ask for.
+     *
+     * THERE IS NO TRANSITION, and that is a choice rather than an omission. A
+     * typewriter is the cliche and a fade or a slide is the generator default;
+     * this page states in its own source that it "speaks in one voice, and the
+     * voice is the terminal's", and a terminal does not animate a line in — it
+     * prints it. So the phrase is reprinted on a steady beat, in the same
+     * color and the same face as the stem, with nothing about it that says
+     * widget. */
+    .hero-stem,
+    .hero-rot {
+      display: block;
+    }
+
+    .hero-rot {
+      min-height: 2.04em;
+    }
+
+    /* NON-NEGOTIABLE, AND HANDLED IN THE SCRIPT. The rotation is stopped when
+       this query matches, so the timer never runs and one phrase stays up. The
+       component listens for the query changing, so turning the preference on
+       mid-rotation stops it immediately and returns to the served sentence. */
 
     /* The lede keeps its own, narrower measure. The slab below it does not:
        a command has to be read in one piece, so it takes the whole column. */
@@ -1746,24 +1886,59 @@ export class SplashPage extends LitroPage {
 
             <section class="hero shell">
               <div class="hero-copy">
-                <p class="eyebrow-pill">Web and Agent Framework</p>
-                <!-- THIRTEEN CHARACTERS, AND THAT IS THE WHOLE IDEA.
-                     .hero h1 is the mono face at clamp(2.75rem, 7vw, 5.5rem)
-                     in a 46rem column, and every face in the stack has a 0.6em
-                     advance — so the line holds about thirteen characters at
-                     every width, because the clamp scales the type with the
-                     viewport while the column stays capped. A sentence here is
-                     a three or four line wall of 88px monospace. Four rounds of
-                     sentence-length headlines were exactly that.
+                <!-- THE PILL SAYS WHAT THE HEADLINE CANNOT FIT.
+                     It read "Web and Agent Framework" while the h1 underneath
+                     read "One framework for…", which is the same sentence
+                     twice in the most valuable space on the page.
 
-                     The arrow is the literal → character, not -> and not an
-                     entity, so the string is the same in the HTML, in the og
-                     title and in anything that reads the text out. -->
-                <h1>Tool → screen</h1>
+                     What the hero does NOT say anywhere else is what a
+                     component here actually is. The headline claims breadth,
+                     the lede names the server and the per-call render, and
+                     neither has room for the substrate — which is the one
+                     thing that separates Litro from every framework in the
+                     field at once: Next is React, Nuxt is Vue, and the agent
+                     frameworks have no component model at all. So the pill
+                     carries it.
+
+                     It is the same 23 characters as the string it replaced,
+                     so the pill keeps its width, its wrap behavior at 390px
+                     and the 1.5rem it holds open above the headline. -->
+                <p class="eyebrow-pill">Built on web components</p>
+                <!-- THE H1 IS THE MONO FACE at clamp(2.75rem, 7vw, 5.5rem) in
+                     a 46rem column, and every face in the stack has a 0.6em
+                     advance — so a line holds about thirteen characters at
+                     every width, because the clamp scales the type with the
+                     viewport while the column stays capped. That budget is why
+                     the stem is exactly one line and every phrase is exactly
+                     two: see HERO_PHRASES. -->
+                <!-- THE SERVED HTML IS ONE COMPLETE SENTENCE. With
+                     JavaScript off, and to a crawler, this h1 reads "One
+                     framework for building sites." — sensible on its own and
+                     not a fragment waiting for a script. The rotation is an
+                     enhancement layered on top of it and never the content.
+
+                     THE ACCESSIBLE NAME IS STATIC. aria-label gives the
+                     heading one stable name that carries all five phrases, so
+                     nothing changes under a screen reader; the rotating block
+                     is aria-hidden so it cannot be read twice. The label opens
+                     with the visible sentence, so the two readings are the
+                     same heading rather than two different ones. -->
+                <h1 aria-label="${HERO_ARIA}">
+                  <span class="hero-stem">One framework</span>
+                  <span class="hero-rot" aria-hidden="true"
+                    >${HERO_PHRASES[this.heroPhrase] ?? HERO_PHRASES[0]}</span
+                  >
+                </h1>
+                <!-- THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
+                     so the first clause names the three things on one server
+                     and the rest spends itself on "per call" — which is the
+                     phrase no shipped competitor can copy, because Nuxt's MCP
+                     Apps bundle at build time and CopilotKit renders in the
+                     client. Breadth then depth, in that order. -->
                 <p class="lede">
-                  The model reads the data. The person sees the component —
-                  rendered on your server every time the tool runs, from the
-                  code your pages already use. One <code>return ui()</code>, no
+                  Pages, agents and an MCP server on one Nitro server. A tool
+                  returns a real component — rendered per call, from the code
+                  your pages already use. One <code>return ui()</code>, no
                   second frontend.
                 </p>
                 <litro-install-command command="${INSTALL_COMMAND}">

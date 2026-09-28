@@ -1,6 +1,6 @@
 export const siteConfig = {
   title: 'Litro',
-  description: 'One framework for your pages and your agents — SSR, static generation and web components, with agents, tools and an MCP server on the same Nitro server.',
+  description: 'One framework for building sites, creating agents and serving them over MCP — web components, a Nitro server, and tools that return a real rendered component.',
   nav: [
     { label: 'Docs', href: '/docs' },
     { label: 'Blog', href: '/blog' },
