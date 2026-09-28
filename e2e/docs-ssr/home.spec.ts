@@ -95,7 +95,7 @@ test('the home page copy is in the server HTML', async ({ request }) => {
     'Built on web components',
     'One framework',
     'for building sites.',
-    'Pages, agents and an MCP server on one Nitro server',
+    'One app serves your pages, your agents, and any MCP host',
     'return ui()',
     'How Litro Compares',
     'Web Components',
@@ -157,6 +157,72 @@ test('the pictures on the page each carry one description', async ({ page }) => 
   );
 });
 
+
+/**
+ * THE DOCUMENT TITLE, WHICH IS THE ONE STRING A SEARCH RESULT SHOWS.
+ *
+ * It read "Litro — Fullstack Web Framework and Agent Framework" — the same
+ * noun twice, and 50 characters, which a result truncates. Both facts are
+ * asserted below rather than just the text, so a future edit that reintroduces
+ * either fails here.
+ *
+ * It is also checked for an ampersand. "Web & Agent Framework" was considered
+ * and rejected: this string is interpolated into <title> raw by the framework
+ * shell and drawn as text by the OG image generator, so an ampersand would
+ * have had to be correct in both. "and" costs two characters and removes the
+ * question.
+ */
+test('the document title says Framework once and fits a search result', async ({
+  request,
+}) => {
+  const html = await (await request.get('/')).text();
+  const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '';
+
+  expect(title).toBe('Litro — Fullstack Web and Agent Framework');
+  expect(title.length, 'inside what a search result shows').toBeLessThanOrEqual(60);
+  expect(
+    title.match(/Framework/g)?.length,
+    'the noun is not repeated',
+  ).toBe(1);
+  expect(title, 'no ampersand to escape').not.toContain('&');
+});
+
+/**
+ * NITRO IS NAMED WHERE SOMEBODY EVALUATING THE STACK LOOKS, AND NOWHERE ELSE
+ * IN THE HERO.
+ *
+ * It is a dependency rather than a benefit, and it is Nuxt's engine too, so
+ * naming it in the headline area tells an informed reader the two share a
+ * foundation — in the one place the page is trying to look like itself. The
+ * capability pane still names it, and that is the point of this pair.
+ */
+test('the hero does not name the server engine, and the capability pane does', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+
+  const heroText = await page.evaluate(
+    () =>
+      document
+        .querySelector('page-home')
+        ?.shadowRoot?.querySelector('.hero')
+        ?.textContent ?? '',
+  );
+  expect(heroText, 'the hero names no engine').not.toMatch(/nitro/i);
+
+  const paneText = await page.evaluate(
+    () =>
+      [
+        ...(document
+          .querySelector('page-home')
+          ?.shadowRoot?.querySelectorAll('litro-pane') ?? []),
+      ]
+        .map((p) => p.getAttribute('name'))
+        .join(' '),
+  );
+  expect(paneText, 'the capability pane still does').toMatch(/Nitro Server/);
+});
 
 /**
  * THE ROTATING HEADLINE'S CONTRACT.

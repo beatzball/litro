@@ -753,9 +753,20 @@ export const routeMeta = {
   head: starlightHead,
   // Both category phrases, spelled the way somebody searching for them types
   // them. "Web Component" came out to make room: it is still in the meta
-  // description, the hero's own section below, the full-width capability pane
-  // and the JSON-LD, so the term is not lost — it is no longer first.
-  title: "Litro — Fullstack Web Framework and Agent Framework",
+  // description, the hero's eyebrow, the full-width capability pane and the
+  // JSON-LD, so the term is not lost — it is no longer first.
+  //
+  // "FRAMEWORK" SAYS ITSELF ONCE. It read "Fullstack Web Framework and Agent
+  // Framework" — the same noun twice, and 50 characters, which a search result
+  // truncates. This is 41.
+  //
+  // IT IS "and", NOT "&", AND THAT IS THE POINT. An ampersand would have to
+  // survive every emitter this string reaches: the document <title>, which the
+  // framework's shell interpolates raw with no escaping; the OG image, which
+  // draws it as text through Satori, so an entity would be PAINTED as "&amp;";
+  // and the JSON-LD block. Two extra characters remove the whole class of
+  // problem rather than managing it.
+  title: "Litro — Fullstack Web and Agent Framework",
 };
 
 @customElement("page-home")
@@ -1930,15 +1941,25 @@ export class SplashPage extends LitroPage {
                   >
                 </h1>
                 <!-- THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
-                     so the first clause names the three things on one server
-                     and the rest spends itself on "per call" — which is the
+                     so the first sentence names the three audiences one app
+                     serves and the rest spends itself on "per call" — the
                      phrase no shipped competitor can copy, because Nuxt's MCP
                      Apps bundle at build time and CopilotKit renders in the
-                     client. Breadth then depth, in that order. -->
+                     client. Breadth then depth, in that order.
+
+                     NITRO IS NOT NAMED HERE, ON PURPOSE. It is a dependency
+                     rather than a benefit, most readers do not know the word,
+                     and it is Nuxt's engine too — so naming it in the hero
+                     tells an informed reader we share a foundation with a
+                     competitor, in the one place the page is trying to look
+                     like itself. It said "server" twice in six words as well.
+                     Somebody evaluating the stack still gets it by name, in
+                     the Nitro Server capability pane, which is where they
+                     look. -->
                 <p class="lede">
-                  Pages, agents and an MCP server on one Nitro server. A tool
-                  returns a real component — rendered per call, from the code
-                  your pages already use. One <code>return ui()</code>, no
+                  One app serves your pages, your agents, and any MCP host. A
+                  tool returns a real component — rendered per call, from the
+                  code your pages already use. One <code>return ui()</code>, no
                   second frontend.
                 </p>
                 <litro-install-command command="${INSTALL_COMMAND}">
