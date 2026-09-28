@@ -10,7 +10,7 @@
  *
  * It is one test, and it is slow on purpose: the build is what makes it real.
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, rm, readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -21,12 +21,8 @@ import { fileURLToPath } from 'node:url';
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)));
 const CLI = join(PKG, 'dist', 'src', 'index.js');
 
-// The CI test job does not build this package before `pnpm -r test`, so the
-// spec builds it. `pnpm run build` also copies `recipes/` into `dist/`, which
-// the scaffolder reads — `tsc` alone is not enough.
-beforeAll(() => {
-  execFileSync('pnpm', ['run', 'build'], { cwd: PKG, stdio: 'pipe' });
-}, 300_000);
+// `dist/` is built once by the globalSetup in vitest.config.ts — never here:
+// two specs building in parallel workers delete each other's dist/.
 
 describe('the CLI writes an absolute project path where it was asked for', () => {
   it('lands at the absolute path and writes nothing under the current directory', async () => {

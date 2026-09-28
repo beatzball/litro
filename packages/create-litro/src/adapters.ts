@@ -15,11 +15,24 @@ import type { LitroAdapter, LitroRecipe } from './types.js';
 /** Every adapter the CLI knows, in the order the prompt offers them. */
 export const ADAPTERS: readonly LitroAdapter[] = ['lit', 'fast', 'elena'];
 
+/**
+ * Adapters that still work but are no longer offered.
+ *
+ * Deprecated is not removed. `--adapter elena` still resolves through
+ * `supportedAdapters()`, still scaffolds, and still builds — a project someone
+ * already has must not change. What deprecation costs is the prompt: a user
+ * who has not asked for it is never offered it.
+ */
+export const DEPRECATED_ADAPTERS: readonly LitroAdapter[] = ['elena'];
+
+/** The release that removes the adapters in `DEPRECATED_ADAPTERS`. */
+export const REMOVED_IN = 'v1';
+
 /** How each adapter is described in the interactive prompt. */
 const ADAPTER_LABELS: Record<LitroAdapter, string> = {
   lit: 'lit — Lit (default)',
   fast: 'fast — Microsoft FAST Element',
-  elena: 'elena — Elena (light DOM)',
+  elena: 'elena — Elena (light DOM, deprecated)',
 };
 
 /**
@@ -41,9 +54,47 @@ export function supportsAdapter(recipe: LitroRecipe, adapter: LitroAdapter): boo
   return supportedAdapters(recipe).includes(adapter);
 }
 
+/** True when `adapter` is deprecated. */
+export function isDeprecatedAdapter(adapter: LitroAdapter): boolean {
+  return DEPRECATED_ADAPTERS.includes(adapter);
+}
+
+/**
+ * The adapters `recipe` OFFERS — what it supports, minus what is deprecated.
+ *
+ * Separate from `supportedAdapters()` on purpose. That function answers "can
+ * this recipe produce it", which a deprecated adapter still can, and
+ * `assertAdapterSupported()` reads it so `--adapter elena` keeps working. This
+ * one answers "should we suggest it", which is the only thing deprecation
+ * changes.
+ *
+ * A recipe whose every adapter is deprecated falls back to the supported list:
+ * an empty prompt is worse than a deprecated default.
+ */
+export function offeredAdapters(recipe: LitroRecipe): LitroAdapter[] {
+  const supported = supportedAdapters(recipe);
+  const offered = supported.filter((a) => !isDeprecatedAdapter(a));
+  return offered.length > 0 ? offered : supported;
+}
+
 /** The prompt choices for `recipe`, in the order `ADAPTERS` lists them. */
 export function adapterChoices(recipe: LitroRecipe): string[] {
-  return supportedAdapters(recipe).map((a) => ADAPTER_LABELS[a]);
+  return offeredAdapters(recipe).map((a) => ADAPTER_LABELS[a]);
+}
+
+/**
+ * The one-line notice for a deprecated adapter, or `null` for a live one.
+ *
+ * Printed on stdout, not stderr, and worded as information rather than a
+ * failure: the scaffold succeeded, and the app it wrote works.
+ */
+export function deprecationNotice(adapter: LitroAdapter): string | null {
+  if (!isDeprecatedAdapter(adapter)) return null;
+  const live = ADAPTERS.filter((a) => !isDeprecatedAdapter(a));
+  return (
+    `Note: the '${adapter}' adapter is deprecated and will be removed at ${REMOVED_IN}. ` +
+    `It still works and existing projects keep working — ${quoteList(live)} are the supported choices.`
+  );
 }
 
 /** Turn a choice line from `adapterChoices` back into its adapter name. */

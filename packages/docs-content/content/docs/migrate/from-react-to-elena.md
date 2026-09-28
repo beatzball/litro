@@ -1,10 +1,19 @@
 ---
 title: From React to ElenaJS — A Component Migration Guide
-description: A practical guide to migrating React components to ElenaJS web components. Covers state, lifecycle, light DOM rendering, @scope CSS, and progressive enhancement.
+description: Migrating React components to ElenaJS. The Elena adapter is deprecated and removed in Litro v1 — start a new migration on Lit or FAST instead.
 date: 2026-04-10
 ---
 
 # From React to ElenaJS — A Component Migration Guide
+
+> **Do not start here.** The Elena adapter is
+> [deprecated and removed in Litro v1](/docs/adapters/elena). A React migration
+> begun today should land on [Lit](/docs/migrate/from-react) or
+> [FAST Element](/docs/migrate/from-react-to-fast), both of which hydrate and
+> both of which support `ui()`.
+>
+> The guide stays published, and accurate, for the projects already on Elena —
+> the adapter works until v1, and a half-finished migration needs its reference.
 
 This guide covers the component authoring shift from React to [ElenaJS](https://elenajs.com/). Elena uses **light DOM** rendering — no Shadow DOM boundary, global CSS reaches component internals, and components upgrade via progressive enhancement instead of hydration.
 

@@ -27,9 +27,6 @@ Follow the interactive prompts to choose a recipe, rendering mode, and framework
 # Fullstack SSR app with Lit (default)
 npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr
 
-# Fullstack SSR app with Elena (light DOM)
-npm create @beatzball/litro@latest my-app -- --recipe fullstack --mode ssr --adapter elena
-
 # Starlight docs + blog with FAST Element
 npm create @beatzball/litro@latest my-docs -- --recipe starlight --adapter fast
 
@@ -47,22 +44,29 @@ npm create @beatzball/litro@latest -- --list-recipes
 
 Choose the web component framework for your project:
 
-| Value | Framework | DOM Model | SSR |
-|---|---|---|---|
-| `lit` (default) | Lit 3 | Shadow DOM | Declarative Shadow DOM |
-| `fast` | FAST Element 2 | Shadow DOM | Declarative Shadow DOM |
-| `elena` | Elena | Light DOM | Direct rendering |
+| Value | Framework | DOM Model | SSR | Status |
+|---|---|---|---|---|
+| `lit` (default) | Lit 3 | Shadow DOM | Declarative Shadow DOM | Supported |
+| `fast` | FAST Element 2 | Shadow DOM | Declarative Shadow DOM | Supported |
+| `elena` | Elena | Light DOM | Direct rendering | **Deprecated — removed in v1** |
 
 Omitting `--adapter` defaults to `lit`.
+
+**`elena` is deprecated and will be removed at v1.** The interactive prompt no
+longer offers it, and `--adapter elena` prints a notice before it scaffolds.
+Nothing else changes: the adapter, the recipe templates and the generated app all
+still work, so a project already on Elena keeps building. `ui()` — an agent tool
+that returns a server-rendered component — throws on Elena, which is the reason.
+New projects should use `lit` or `fast`.
 
 Not every recipe supports every adapter. A recipe declares what it can really
 produce, and asking for anything else fails before a single file is written:
 
 | Recipe | Adapters |
 |---|---|
-| `fullstack` | `lit`, `elena` |
+| `fullstack` | `lit`, `elena` (deprecated) |
 | `11ty-blog` | `lit` |
-| `starlight` | `lit`, `fast`, `elena` |
+| `starlight` | `lit`, `fast`, `elena` (deprecated) |
 | `supernova` | `lit` |
 
 ```

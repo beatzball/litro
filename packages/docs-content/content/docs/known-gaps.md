@@ -52,7 +52,9 @@ The Lit build of the same recipe wires Server Actions correctly. Elena is the
 only adapter where the file is scaffolded without the plumbing that runs it.
 
 **Workaround:** delete `actions/demo.server.ts`, or add the action plugin to
-both config files yourself by copying the Lit template's versions.
+both config files yourself by copying the Lit template's versions. This will not
+be wired up — the Elena adapter is
+[deprecated](#elena-is-deprecated-and-is-removed-in-v1).
 
 ### No recipe scaffolds a sitemap, OG images or an agent
 
@@ -87,11 +89,27 @@ Each adapter page carries its own authoring rules —
 [Elena](/docs/adapters/elena#limitations). This section is the part those pages
 cannot tell you: **what you give up by choosing one over another.**
 
-### Elena gives up hydration, properties and the whole AI half
+### Elena is deprecated, and is removed in v1
+
+**This is not a gap waiting to be filled. It is an adapter being retired.** The
+`create-litro` prompt no longer offers Elena. `--adapter elena` still works, the
+adapter still ships, both recipe overlays and both end-to-end suites still run,
+and a project that already uses it keeps building until Litro v1 — at which
+point the adapter and the `./adapter/elena` export path are removed.
+
+The reason is the list below, and the first item is the whole of it: **`ui()`
+throws on Elena**, so the one thing Litro leads with — an agent tool that returns
+a server-rendered component — cannot reach the adapter at all. Everything an
+Elena project needs is documented and stays documented; nothing here gets fixed.
+
+**If you are choosing today:** pick [Lit](/docs/adapters/lit) or
+[FAST](/docs/adapters/fast). **If you already run Elena:** you have until v1, and
+[switching adapters](/docs/adapters/switching) is the path.
 
 Elena renders light DOM with no Shadow DOM and no hydration step. That is the
 point of it — the smallest document of the three, and no framework JavaScript
-needed to see content. These are the consequences.
+needed to see content. These are the consequences, and the reason the adapter is
+being retired rather than finished.
 
 - **No hydration at all.** `getHeadScripts()` returns an empty string. A
   component whose behavior needs a framework-driven re-render after load does
@@ -101,10 +119,11 @@ needed to see content. These are the consequences.
   is the single largest cost: picking Elena for its light-DOM speed removes
   Litro's most distinctive AI capability. The error is
   `ui(): the "elena" renderer is deferred past v0.`
-  ([issue 155](https://github.com/beatzball/litro/issues/155))
+  An Elena renderer will not be built
+  ([issue 219](https://github.com/beatzball/litro/issues/219)).
 - **MCP Apps does not support Elena**, for the same reason — a `ui://` document
-  is packed from a rendered component.
-  ([issue 160](https://github.com/beatzball/litro/issues/160))
+  is packed from a rendered component. This will not be added
+  ([issue 219](https://github.com/beatzball/litro/issues/219)).
 - **Server-side rendering is string rewriting, not a renderer.** The adapter
   matches custom-element tags with a regular expression and expands them by
   replacement. Four things follow that a renderer would not do:
@@ -124,9 +143,10 @@ needed to see content. These are the consequences.
 All of the above is in `packages/framework/src/adapter/elena/index.ts` and
 `packages/framework/src/adapter/elena/runtime/LitroLink.ts`.
 
-**Workaround:** use Elena for content-shaped pages and Lit or FAST for anything
-that needs hydration, property binding or an agent UI.
-[Switching adapters](/docs/adapters/switching) is a per-project choice, not a
+**Workaround:** move to Lit or FAST. Until v1, Elena is fine for content-shaped
+pages and nothing else — anything that needs hydration, property binding or an
+agent UI has to be on another adapter, and
+[switching adapters](/docs/adapters/switching) is a per-project choice, not a
 per-page one.
 
 ### FAST reaches the fewest recipes
@@ -378,7 +398,7 @@ complete lists:
 | Server Actions | [12 authoring rules](/docs/server-actions#limitations) |
 | Lit adapter | [Shadow DOM, decorators, SSR safety](/docs/adapters/lit#limitations) |
 | FAST adapter | [jiti decorators, external packages, `:innerHTML`](/docs/adapters/fast#limitations) |
-| Elena adapter | [Lowercase props, escaping, SSR registry](/docs/adapters/elena#limitations) |
+| Elena adapter (deprecated) | [Lowercase props, escaping, SSR registry](/docs/adapters/elena#limitations) |
 | OG images | [Satori CSS](/docs/og-images#satori-css-limitations) |
 | Agents | [Security notes](/docs/agents#security) |
 | MCP Apps | [Packaging and CSP notes](/docs/mcp-apps#security-notes) |
