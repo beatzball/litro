@@ -14,6 +14,9 @@
  * A recipe declares which adapters it can produce. Asking for one it cannot is
  * refused before anything is written, and the prompt offers only what it can.
  *
+ * A DEPRECATED adapter is off the prompt but still resolves from --adapter, and
+ * prints a notice saying when it is removed.
+ *
  * Documentation site for an existing repository:
  *   npx @beatzball/create-litro site --recipe starlight --for-repo . \
  *     --site-url https://example.dev
@@ -49,7 +52,8 @@ import {
   adapterChoices,
   adapterFromChoice,
   assertAdapterSupported,
-  supportedAdapters,
+  deprecationNotice,
+  offeredAdapters,
 } from './adapters.js';
 import {
   applyRecipeOptions,
@@ -223,11 +227,17 @@ async function main(): Promise<void> {
     adapter = args.adapter;
   } else if (choices.length === 1) {
     // Nothing to choose from — asking a one-answer question wastes a keystroke.
-    adapter = supportedAdapters(chosenRecipe)[0];
+    adapter = offeredAdapters(chosenRecipe)[0];
   } else {
     const selected = await promptSelect('Component framework:', choices, choices[0]);
     adapter = adapterFromChoice(selected);
   }
+
+  // A deprecated adapter is still scaffolded, and the app it writes works. The
+  // notice goes to stdout for that reason: it is not a failure, and a user who
+  // typed --adapter deliberately is owed the end date rather than silence.
+  const notice = deprecationNotice(adapter);
+  if (notice) console.log(`\n  ${notice}`);
 
   // 5. Recipe-specific options.
   //

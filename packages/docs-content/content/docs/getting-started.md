@@ -24,7 +24,7 @@ This launches the interactive scaffolding wizard. Choose a recipe, rendering mod
 - **starlight** — Documentation site with sidebar + TOC
 - **supernova** — A product landing page in front of the starlight docs site
 
-You can also pass `--adapter lit|fast|elena` to select the web component framework (default: `lit`). See [Adapters](/docs/adapters/overview) for details.
+You can also pass `--adapter lit|fast` to select the web component framework (default: `lit`). See [Adapters](/docs/adapters/overview) for details. A third adapter, `elena`, is [deprecated and removed in v1](/docs/adapters/elena) — it still scaffolds if you name it, but the prompt no longer offers it.
 
 ## Start the Dev Server
 

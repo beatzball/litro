@@ -1,12 +1,18 @@
 ---
 title: "Framework Adapters"
-description: "Litro supports three web component frameworks — Lit, FAST Element, and Elena — through a pluggable adapter system. Choose the one that fits your project."
+description: "Litro supports Lit and FAST Element through a pluggable adapter system. A third adapter, Elena, is deprecated and removed in v1."
 date: 2026-04-10
 ---
 
 # Framework Adapters
 
-Litro's adapter system lets you choose which web component framework powers your project. All three adapters share the same infrastructure — file-based routing, `definePageData()`, `LitroRouter`, content layer, SSG, deployment adapters — only the component authoring model differs.
+Litro's adapter system lets you choose which web component framework powers your project. Every adapter shares the same infrastructure — file-based routing, `definePageData()`, `LitroRouter`, content layer, SSG, deployment adapters — only the component authoring model differs.
+
+**Two adapters are supported: `lit` and `fast`.** A third, `elena`, is
+**deprecated and removed in Litro v1** — see
+[the Elena adapter](/docs/adapters/elena) for why and what to do about it. It
+still works, and it is still on the pages below, because projects that already
+use it must keep building until v1. It is not a choice for a new project.
 
 ## Available Adapters
 
@@ -18,7 +24,7 @@ Litro's adapter system lets you choose which web component framework powers your
 <tbody>
 <tr><td><strong>lit</strong> (default)</td><td>Lit 3</td><td>Shadow DOM</td><td>@lit-labs/ssr (DSD)</td><td>Yes</td><td>Shadow DOM</td></tr>
 <tr><td><strong>fast</strong></td><td>FAST Element 2</td><td>Shadow DOM</td><td>@microsoft/fast-ssr (DSD)</td><td>Yes</td><td>Shadow DOM</td></tr>
-<tr><td><strong>elena</strong></td><td>Elena</td><td>Light DOM</td><td>Direct rendering</td><td>No (progressive enhancement)</td><td>@scope CSS</td></tr>
+<tr><td><strong>elena</strong> (deprecated, removed in v1)</td><td>Elena</td><td>Light DOM</td><td>Direct rendering</td><td>No (progressive enhancement)</td><td>@scope CSS</td></tr>
 </tbody>
 </table>
 </div>
@@ -29,7 +35,7 @@ Litro's adapter system lets you choose which web component framework powers your
 
 **Use FAST Element** if you prefer Microsoft's observable-based reactivity model, auto-generated attributes, or need compatibility with Fluent UI Web Components.
 
-**Use Elena** if you want light DOM rendering — no Shadow DOM boundaries, global CSS reaches component internals, smaller HTML payloads, and no hydration overhead. Best for content-heavy sites where progressive enhancement is preferred over client-side hydration.
+**Do not start a new project on Elena.** It is deprecated and removed in v1. Its light DOM rendering is genuinely the smallest payload of the three, but `ui()` throws on it, so no agent tool can return a component — and that is the feature Litro leads with. If light DOM with no hydration is what you need, say so in [an issue](https://github.com/beatzball/litro/issues) rather than building on a surface with an end date.
 
 ## Creating a Project
 
@@ -42,11 +48,12 @@ pnpm create @beatzball/litro my-app --adapter lit
 # FAST Element
 pnpm create @beatzball/litro my-app --adapter fast
 
-# Elena
+# Elena — deprecated, removed in v1, prints a notice
 pnpm create @beatzball/litro my-app --adapter elena
 ```
 
-Or omit `--adapter` and choose interactively during scaffolding.
+Or omit `--adapter` and choose interactively during scaffolding. The prompt
+offers `lit` and `fast`; Elena has to be named on the command line.
 
 Each recipe declares which adapters it can produce, and asking for one it cannot
 fails before anything is written:
@@ -58,7 +65,7 @@ fails before anything is written:
 | `starlight` | `lit`, `fast`, `elena` |
 | `supernova` | `lit` |
 
-The interactive prompt offers only the adapters the chosen recipe supports.
+The interactive prompt offers only the adapters the chosen recipe supports, minus the deprecated ones. `--adapter` still resolves every adapter in the table above, so a recipe that lists `elena` keeps producing it.
 
 ## What Stays the Same
 
@@ -125,7 +132,7 @@ Where an adapter limitation requires a workaround, it currently lives in the **a
 
 - [Lit Adapter](/docs/adapters/lit) — Shadow DOM, DSD SSR, decorator API
 - [FAST Element Adapter](/docs/adapters/fast) — Shadow DOM, DSD SSR, observable API
-- [Elena Adapter](/docs/adapters/elena) — Light DOM, direct SSR, mixin API
+- [Elena Adapter](/docs/adapters/elena) — Light DOM, direct SSR, mixin API. **Deprecated, removed in v1.**
 - [Switching Adapters](/docs/adapters/switching) — migration guide for existing projects
 
 ## Adapter Benchmarks

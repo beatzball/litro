@@ -8,6 +8,8 @@ date: 2026-04-10
 
 This guide walks through migrating an existing Litro project from one adapter to another. The adapter is a per-project choice — you pick one framework for the entire project.
 
+**Elena is [deprecated and removed in Litro v1](/docs/adapters/elena).** The two sections that switch *to* Elena are kept for the projects already on it, and read in reverse they are the route *off* it. A new switch should land on Lit or FAST.
+
 ## What Changes
 
 When switching adapters, you need to update:
@@ -102,6 +104,11 @@ FAST packages stay external by default (no `externals` config needed).
 
 ## Lit to Elena
 
+> **Switching TO Elena is not recommended.** The adapter is
+> [deprecated and removed in Litro v1](/docs/adapters/elena). These steps stay
+> here because they are also the map for reading a switch in reverse — an Elena
+> project moving to Lit reverses every one of them.
+
 ### 1. Update dependencies
 
 ```bash
@@ -178,6 +185,9 @@ static styles = css`
 Remove all Lit-specific settings (externals, esbuild decorator config). Elena has no special Nitro requirements.
 
 ## FAST to Elena
+
+> Same caveat: Elena is [deprecated and removed in v1](/docs/adapters/elena).
+> Read this section in reverse to move an Elena project onto FAST.
 
 Follow the same pattern as Lit to Elena, but replace FAST-specific code:
 

@@ -8,7 +8,7 @@ date: 2026-01-01
 
 Litro is a greenfield fullstack web framework built on three pillars:
 
-- **Web Components** — choose your framework: [Lit](/docs/adapters/lit) (default), [FAST Element](/docs/adapters/fast), or [Elena](/docs/adapters/elena)
+- **Web Components** — choose your framework: [Lit](/docs/adapters/lit) (default) or [FAST Element](/docs/adapters/fast)
 - **Nitro** — the server engine (same server powering Nuxt). Handles routing, API routes, SSR, and deployment adapters.
 - **Vite** — client-side bundling and HMR during development.
 
@@ -33,12 +33,14 @@ Litro's adapter system lets you pick the web component framework that fits your 
 <tbody>
 <tr><td><strong>Lit</strong> (default)</td><td>Shadow DOM</td><td>DSD streaming</td><td>General-purpose apps, largest ecosystem</td></tr>
 <tr><td><strong>FAST Element</strong></td><td>Shadow DOM</td><td>DSD streaming</td><td>Fluent UI integration, observable reactivity</td></tr>
-<tr><td><strong>Elena</strong></td><td>Light DOM</td><td>Direct rendering</td><td>Content sites, global CSS, smallest payloads</td></tr>
+<tr><td><strong>Elena</strong> (deprecated)</td><td>Light DOM</td><td>Direct rendering</td><td><strong>Removed in v1</strong> — see <a href="/docs/adapters/elena">the Elena adapter</a></td></tr>
 </tbody>
 </table>
 </div>
 
-The adapter is selected at project creation via `--adapter lit|fast|elena`. Everything else — routing, data fetching, content, deployment — stays the same. See the [Adapter overview](/docs/adapters/overview) for details.
+The adapter is selected at project creation via `--adapter lit|fast`. Everything else — routing, data fetching, content, deployment — stays the same. See the [Adapter overview](/docs/adapters/overview) for details.
+
+A third adapter, `elena`, is **deprecated and removed in v1**. It still scaffolds if you name it, so an existing Elena project keeps building, but it is not a choice for a new one — `ui()` throws on it, and that is the feature Litro leads with.
 
 ## Architecture
 
@@ -70,7 +72,7 @@ Nitro Server
 - [Adapter Overview](/docs/adapters/overview) — how the adapter system works, what stays the same
 - [Lit Adapter](/docs/adapters/lit) — Shadow DOM, DSD SSR, decorator API
 - [FAST Element Adapter](/docs/adapters/fast) — Shadow DOM, DSD SSR, observable API
-- [Elena Adapter](/docs/adapters/elena) — Light DOM, direct SSR, mixin API
+- [Elena Adapter](/docs/adapters/elena) — Light DOM, direct SSR, mixin API. **Deprecated, removed in v1.**
 - [Switching Adapters](/docs/adapters/switching) — migration guide
 
 ## Coming from Another Framework?
@@ -88,4 +90,4 @@ Migration guides with step-by-step code walkthroughs:
 - [Migrating from Nuxt.js](/docs/migrate/from-nuxt)
 - [From React to Lit](/docs/migrate/from-react)
 - [From React to FAST Element](/docs/migrate/from-react-to-fast)
-- [From React to ElenaJS](/docs/migrate/from-react-to-elena)
+- [From React to ElenaJS](/docs/migrate/from-react-to-elena) — for projects already on the deprecated Elena adapter

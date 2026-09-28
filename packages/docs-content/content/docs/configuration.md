@@ -62,7 +62,7 @@ export default defineConfig({
 
 | Variable | Description | Default |
 |---|---|---|
-| `LITRO_ADAPTER` | Selects the framework adapter: `lit`, `fast`, or `elena`. Typically set at the top of `nitro.config.ts`. | `lit` |
+| `LITRO_ADAPTER` | Selects the framework adapter: `lit` or `fast`. Also accepts `elena`, which is [deprecated and removed in v1](/docs/adapters/elena). Typically set at the top of `nitro.config.ts`. | `lit` |
 | `LITRO_MODE` | Build mode: `server` (SSR) or `static` (SSG). Set by the CLI when you pass `--mode static`. | `server` |
 | `LITRO_BASE_PATH` | Sub-path prefix for GitHub Pages project sites (e.g. `/litro`) | `''` |
 | `SITE_URL` | Canonical base URL for SEO meta tags | `https://litro.dev` |

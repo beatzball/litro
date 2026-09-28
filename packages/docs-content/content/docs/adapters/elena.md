@@ -1,18 +1,45 @@
 ---
 title: "ElenaJS Adapter"
-description: "Build Litro pages with ElenaJS — light DOM rendering, no Shadow DOM, no hydration, progressive enhancement with @scope CSS encapsulation."
+description: "The Elena adapter is deprecated and will be removed in Litro v1. Existing projects keep working; new projects should choose Lit or FAST Element."
 date: 2026-04-10
 ---
 
 # ElenaJS Adapter
 
+> **Deprecated. Removed in Litro v1.**
+>
+> **Nothing breaks today.** The adapter, the `./adapter/elena` export path, both
+> recipe overlays, both playgrounds and their end-to-end suites all stay until
+> v1, and `--adapter elena` still scaffolds a working app. What changed is that
+> the `create-litro` prompt no longer offers Elena, so a new project has to ask
+> for it by name.
+>
+> **Why.** `ui()` — the agent tool call that returns a server-rendered
+> component, and the most distinctive thing Litro does — throws on Elena, so the
+> whole AI half of the framework is out of reach. Elena also trails on Server
+> Actions in the `fullstack` recipe, and upstream has been quiet since its first
+> release. Advertising it beside Lit and FAST promised a peer it is not.
+>
+> **What to use instead.** [Lit](/docs/adapters/lit) is the default and the most
+> complete. [FAST Element](/docs/adapters/fast) also server-renders, hydrates and
+> supports `ui()`. [Switching adapters](/docs/adapters/switching) is the migration
+> path, and [Known Gaps](/docs/known-gaps#choosing-an-adapter) records exactly
+> what Elena gives up.
+>
+> **If you already run Elena,** you have until Litro v1. Keep shipping; plan the
+> move.
+
 The Elena adapter uses [Elena](https://elenajs.com/) for **light DOM** rendering. Components render directly into the document — no Shadow DOM wrapper, no Declarative Shadow DOM, no hydration step. CSS encapsulation uses the `@scope` CSS at-rule instead.
 
 ## Setup
 
+Elena is no longer on the interactive prompt, so it has to be named:
+
 ```bash
 pnpm create @beatzball/litro my-app --adapter elena
 ```
+
+The command prints a one-line deprecation notice and then scaffolds the app.
 
 The client entry (`app.ts`) is the simplest of all three adapters — no hydration script needed:
 

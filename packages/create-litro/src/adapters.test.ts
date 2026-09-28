@@ -19,9 +19,14 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   ADAPTERS,
+  DEPRECATED_ADAPTERS,
+  REMOVED_IN,
   adapterChoices,
   adapterFromChoice,
   assertAdapterSupported,
+  deprecationNotice,
+  isDeprecatedAdapter,
+  offeredAdapters,
   supportedAdapters,
   supportsAdapter,
 } from './adapters.js';
@@ -195,14 +200,25 @@ describe('the refusal message', () => {
 });
 
 describe('the interactive prompt', () => {
-  it('offers only the adapters the chosen recipe supports', () => {
+  it('offers only the adapters the chosen recipe supports, minus the deprecated ones', () => {
     expect(adapterChoices(supernova)).toEqual(['lit — Lit (default)']);
-    expect(adapterChoices(fullstack)).toEqual(['lit — Lit (default)', 'elena — Elena (light DOM)']);
+    // fullstack declares lit and elena. Elena is deprecated, so one choice is
+    // left and the prompt is not asked at all.
+    expect(adapterChoices(fullstack)).toEqual(['lit — Lit (default)']);
     expect(adapterChoices(starlight)).toEqual([
       'lit — Lit (default)',
       'fast — Microsoft FAST Element',
-      'elena — Elena (light DOM)',
     ]);
+  });
+
+  it('never offers a deprecated adapter, for any shipped recipe', () => {
+    for (const r of SHIPPED) {
+      for (const deprecated of DEPRECATED_ADAPTERS) {
+        expect(adapterChoices(r).join('\n'), `'${r.name}' prompt`)
+          .not.toContain(`${deprecated} —`);
+        expect(offeredAdapters(r), `'${r.name}' offers`).not.toContain(deprecated);
+      }
+    }
   });
 
   it('turns a chosen line back into its adapter name', () => {
@@ -212,6 +228,52 @@ describe('the interactive prompt', () => {
     expect(adapterFromChoice('elena — Elena (light DOM)')).toBe('elena');
     expect(adapterFromChoice('fast — Microsoft FAST Element')).toBe('fast');
     expect(adapterFromChoice('lit — Lit (default)')).toBe('lit');
+  });
+});
+
+describe('a deprecated adapter is off the prompt and still resolves', () => {
+  it("names 'elena' as deprecated, and lit and fast as live", () => {
+    expect(DEPRECATED_ADAPTERS).toEqual(['elena']);
+    expect(isDeprecatedAdapter('elena')).toBe(true);
+    expect(isDeprecatedAdapter('lit')).toBe(false);
+    expect(isDeprecatedAdapter('fast')).toBe(false);
+  });
+
+  it('keeps resolving through supportedAdapters, so --adapter elena still works', () => {
+    // The whole point of deprecating rather than removing: every existing user
+    // must be untouched. `assertAdapterSupported` reads `supportedAdapters`,
+    // never `offeredAdapters`.
+    expect(supportedAdapters(fullstack)).toContain('elena');
+    expect(supportedAdapters(starlight)).toContain('elena');
+    expect(supportsAdapter(fullstack, 'elena')).toBe(true);
+    expect(() => assertAdapterSupported(fullstack, 'elena')).not.toThrow();
+    expect(() => assertAdapterSupported(starlight, 'elena')).not.toThrow();
+  });
+
+  it('writes a notice that says it is deprecated, when it goes, and what to use', () => {
+    const notice = deprecationNotice('elena');
+    expect(notice).not.toBeNull();
+    expect(notice).toContain("'elena'");
+    expect(notice).toContain('deprecated');
+    expect(notice).toContain(REMOVED_IN);
+    expect(notice).toContain("'lit'");
+    expect(notice).toContain("'fast'");
+    // Information, not a failure. A scaffold that worked must not read as one.
+    expect(notice).not.toMatch(/error|warning|failed/i);
+    // One line on stdout.
+    expect(notice).not.toContain('\n');
+  });
+
+  it('writes no notice for a live adapter', () => {
+    expect(deprecationNotice('lit')).toBeNull();
+    expect(deprecationNotice('fast')).toBeNull();
+  });
+
+  it('falls back to the supported list when every adapter is deprecated', () => {
+    // No shipped recipe is in this shape. An empty prompt would be worse than
+    // a deprecated default, so the fallback is pinned here rather than left to
+    // whichever recipe first reaches it.
+    expect(offeredAdapters(recipe('elena-only', ['elena']))).toEqual(['elena']);
   });
 });
 
