@@ -21,9 +21,15 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
   ['litro-pane-grid', 3],
-  ['litro-pane', 12],
+  // 13, not 12: six capability panes, FOUR showcase panes, and THREE doors in
+  // the agent section. The third door is the MCP server, which shipped after
+  // this page was written — see the test below that used to assert it away.
+  ['litro-pane', 13],
   ['litro-site-footer', 1],
-  ['litro-feature-row', 1],
+  // litro-feature-row is gone with the "Why Web Components?" section. Its
+  // paragraph was the full-width Web Components pane's first sentence almost
+  // word for word, and that pane now links to /why-web-components itself —
+  // which the calls-to-action test below still pins.
   ['litro-steps', 1],
   ['litro-term-window', 1],
 ];
@@ -83,14 +89,23 @@ test('the home page copy is in the server HTML', async ({ request }) => {
   const text = html.replace(/<!--.*?-->/gs, '');
 
   for (const claim of [
-    'Fullstack Web Framework',
-    'Built on the Web Platform',
-    'Why Web Components?',
-    'Learn more about web standards longevity',
+    // The eyebrow, the headline and the lede — the three strings the
+    // repositioning turned over. "Tool → screen" is thirteen characters
+    // because the hero h1 is monospace and holds about thirteen per line.
+    'Web and Agent Framework',
+    'Tool → screen',
+    'The model reads the data',
+    'return ui()',
     'How Litro Compares',
     'Web Components',
     'Nitro Server',
-    'Streaming SSR',
+    // "Streaming SSR" is no longer a pane of its own: the claim moved into the
+    // full-width Web Components pane, which already named Declarative Shadow
+    // DOM, and its slot went to Server Actions. Assert the claim, not the card.
+    'Declarative Shadow DOM or light-DOM SSR',
+    // Server Actions shipped in @beatzball/litro 0.11.0 and this page had
+    // never named it.
+    'Server Actions',
     'File-System Routing',
     // "Static Generation" is no longer a pane of its own: prerendering is
     // named in the Content Layer pane and again in the deploy section, which
@@ -363,19 +378,38 @@ test('the agent section arrives with its code, its data and its card', async ({ 
     expect(card, `the card shows ${value}`).toContain(value);
   }
 
-  // Both doors.
+  // All three doors.
   expect(html, 'the agents door').toContain('href="/docs/agents"');
+  expect(html, 'the MCP server door').toContain('href="/docs/mcp-server"');
   expect(html, 'the MCP Apps door').toContain('href="/docs/mcp-apps"');
 });
 
 /**
- * There is no Litro MCP server. It is open issue 157, and an unbuilt thing has
- * no place on a landing page — not as a claim, not as a "coming soon".
+ * THIS TEST USED TO ASSERT THE OPPOSITE, and it was right to.
+ *
+ * It read: "There is no Litro MCP server. It is open issue 157, and an unbuilt
+ * thing has no place on a landing page — not as a claim, not as a 'coming
+ * soon'." Then `litro mcp serve` shipped over stdio in framework 0.17.0 and
+ * over Streamable HTTP in litro-agent 0.7.0, so the page names it.
+ *
+ * The rule the old test was really defending is the one kept below: the page
+ * claims nothing it has not built. So the claim now has to be SPECIFIC — the
+ * two transports, by name, behind a link to the page that documents them —
+ * and "coming soon" is still banned outright.
  */
-test('the page does not claim an MCP server', async ({ request }) => {
-  const text = plainText(await (await request.get('/')).text());
-  expect(text).not.toMatch(/MCP server/i);
-  expect(text).not.toMatch(/coming soon/i);
+test('the page claims the MCP server accurately, and promises nothing else', async ({
+  request,
+}) => {
+  const html = await (await request.get('/')).text();
+  const text = plainText(html);
+
+  expect(text, 'the MCP server is named').toMatch(/MCP Server/);
+  expect(text, 'the stdio transport').toMatch(/stdio/);
+  expect(text, 'the Streamable HTTP transport').toMatch(/Streamable HTTP/);
+  expect(html, 'and it links to the docs page').toContain('href="/docs/mcp-server"');
+
+  // Unchanged, and the point of the original test.
+  expect(text, 'nothing is promised for later').not.toMatch(/coming soon/i);
 });
 
 /**
