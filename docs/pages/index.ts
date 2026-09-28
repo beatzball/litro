@@ -61,8 +61,17 @@ const INSTALL_COMMAND = "pnpm create @beatzball/litro my-app";
  */
 const NODE_REQUIREMENT = "20.19+";
 
-/** The three framework adapters, in the order the docs list them. */
-const ADAPTERS = "lit \u00b7 fast \u00b7 elena";
+/**
+ * The adapters a new project should choose between.
+ *
+ * ELENA IS NOT HERE, AND IT IS NOT DELETED EITHER. It is deprecated and removed
+ * in v1 (issue 219): `--adapter elena` still scaffolds and an existing project
+ * still builds, so its docs page, its migration guide and its sidebar entries
+ * all stay. What deprecation costs is the advertising, and this line is
+ * advertising — it sits in the status bar under every screen of the landing
+ * page. The notice itself is the docs' job, not this page's.
+ */
+const ADAPTERS = "lit \u00b7 fast";
 
 /**
 /**
@@ -213,7 +222,6 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Overview", href: "/docs/adapters/overview" },
       { label: "Lit", href: "/docs/adapters/lit" },
       { label: "FAST Element", href: "/docs/adapters/fast" },
-      { label: "Elena", href: "/docs/adapters/elena" },
     ],
   },
   {
@@ -634,7 +642,7 @@ export const pageData = definePageData(async (_event) => {
         // the page still sends a reader who wants the long argument.
         href: "/why-web-components",
         description:
-          "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit, FAST or Elena on top; the components underneath work anywhere the browser does, and each adapter streams the fastest first paint it can — Declarative Shadow DOM or light-DOM SSR.",
+          "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit or FAST on top; the components underneath work anywhere the browser does, and each adapter streams the fastest first paint it can — Declarative Shadow DOM or light-DOM SSR.",
       },
       {
         iconSrc: "/logos/nitro.svg",
@@ -646,7 +654,7 @@ export const pageData = definePageData(async (_event) => {
       {
         iconSrc: "/logos/lit-flame.svg",
         title: "Adapters",
-        meta: "lit · fast · elena",
+        meta: "lit · fast",
         description:
           "Same routing, same data layer, same deployment. Choose the component model and change nothing else.",
       },

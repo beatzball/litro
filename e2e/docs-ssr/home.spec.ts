@@ -188,6 +188,35 @@ test('the status line at the foot states facts about the project', async ({ page
  * textContent runs the words together either way. Only what a browser lays
  * out can tell the difference.
  */
+/**
+ * ELENA IS DEPRECATED, AND THE LANDING PAGE SIMPLY STOPS ADVERTISING IT.
+ *
+ * Deprecated is not removed (issue 219): `--adapter elena` still scaffolds, an
+ * existing project still builds, and the adapter's docs page, migration guide
+ * and sidebar entries all stay where a reader on Elena can find them. The word
+ * "deprecated" is the docs' to say. What this page owes is that it never
+ * offers Elena to somebody choosing for the first time — and this page is
+ * where a first-time reader chooses, in the status bar under every screen and
+ * in the adapters pane.
+ *
+ * So the assertion is the absence, not a notice. A landing page that says
+ * nothing is the correct state, and the failure this catches is somebody
+ * putting the third name back.
+ */
+test('the landing page offers only the adapters a new project should pick', async ({
+  request,
+}) => {
+  const text = plainText(await (await request.get('/')).text());
+
+  expect(text, 'lit is offered').toMatch(/lit/i);
+  expect(text, 'fast is offered').toMatch(/fast/i);
+  expect(text, 'the deprecated adapter is not advertised').not.toMatch(/elena/i);
+  // And no notice about it either: the page is quiet, not apologetic.
+  expect(text, 'no deprecation notice on the landing page').not.toMatch(
+    /deprecat/i,
+  );
+});
+
 test('the words in a status cell are separated', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
