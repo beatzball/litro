@@ -18,6 +18,10 @@ export default defineConfig({
     },
   },
   test: {
+    // `dist/src/index.js` is built ONCE here, not in each spec's beforeAll:
+    // `pnpm run build` cleans dist/ first, and spec files run in parallel
+    // workers. See src/__setup__/build-cli.ts.
+    globalSetup: ['./src/__setup__/build-cli.ts'],
     exclude: [
       '**/node_modules/**',
       '**/recipes/**/template/**',

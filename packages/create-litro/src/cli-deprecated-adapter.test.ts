@@ -15,7 +15,7 @@
  * It also asserts the other half of deprecation, which matters more: the app is
  * still scaffolded, and it is still an Elena app. Deprecated is not removed.
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -26,12 +26,8 @@ import { fileURLToPath } from 'node:url';
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)));
 const CLI = join(PKG, 'dist', 'src', 'index.js');
 
-// The CI test job does not build this package before `pnpm -r test`, so the
-// spec builds it. `pnpm run build` also copies `recipes/` into `dist/`, which
-// the scaffolder reads — `tsc` alone is not enough.
-beforeAll(() => {
-  execFileSync('pnpm', ['run', 'build'], { cwd: PKG, stdio: 'pipe' });
-}, 300_000);
+// `dist/` is built once by the globalSetup in vitest.config.ts — never here:
+// two specs building in parallel workers delete each other's dist/.
 
 /** Run the CLI and return its stdout. stdin is not a TTY, so nothing prompts. */
 function run(args: string[], cwd: string): string {
