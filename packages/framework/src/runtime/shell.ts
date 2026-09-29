@@ -176,16 +176,17 @@ export interface ShellOptions {
  *   // stream SSR chunks
  *   response.write(shell.foot);
  *
- * @param componentTag  - The custom element tag name, e.g. 'page-home'.
- *                        Used in shell.foot's closing tag comment only; the
- *                        actual opening tag is produced by the SSR template.
+ * @param _componentTag - The custom element tag name, e.g. 'page-home'. It
+ *                        named the shell's closing HTML comment, which no
+ *                        longer ships (see the note above `foot` below). The
+ *                        parameter stays so callers do not have to change.
  * @param _ssrContent   - Reserved for future use (static build path). The
  *                        streaming path does not use this parameter — the SSR
  *                        output is piped between head and foot externally.
  * @param options       - Optional shell configuration (title, extra head, etc.)
  */
 export function buildShell(
-  componentTag: string,
+  _componentTag: string,
   _ssrContent: string,
   options?: ShellOptions,
 ): { head: string; foot: string } {
@@ -238,18 +239,18 @@ export function buildShell(
     ? `\n<nav class="skip-links" aria-label="Skip links">${skipLinkAnchors}\n</nav>`
     : '';
 
+  // THE DSD POLYFILL is required for ~4% of browsers (pre-Firefox 119,
+  // pre-Safari 16.4) that do not natively support Declarative Shadow DOM (the
+  // shadowrootmode attribute).
+  //
+  // It must be a plain synchronous inline <script>. A type="module" script is
+  // deferred by the browser and arrives after the parser has already processed
+  // the DSD templates, which is too late to upgrade them.
+  //
+  // The rationale is a TypeScript comment, not an HTML comment in the emitted
+  // string: every byte here ships on every page of every Litro app.
   const includeDSD = options?.includeDSDPolyfill !== false;
-  const dsdPolyfillBlock = includeDSD
-    ? `
-  <!--
-    DSD polyfill — required for ~4% of browsers (pre-Firefox 119, pre-Safari 16.4)
-    that do not natively support Declarative Shadow DOM (shadowrootmode attribute).
-    Must be a plain synchronous inline <script> — a type="module" script is deferred
-    by the browser and arrives after the parser has already processed the DSD templates,
-    making it too late to upgrade them.
-  -->
-  <script>${DSD_POLYFILL}</script>`
-    : '';
+  const dsdPolyfillBlock = includeDSD ? `\n  <script>${DSD_POLYFILL}</script>` : '';
 
   const head = `<!DOCTYPE html>
 <html lang="en">
@@ -269,16 +270,18 @@ export function buildShell(
   // deferred module bundle executes.
   const bodyScript = options?.bodyScript ?? '';
 
+  // THE APP BUNDLE is the framework adapter bootstrap plus the page components.
+  // `/_litro/` maps to `dist/client/` (the Vite output) through `publicAssets`
+  // in `nitro.config.ts`.
+  //
+  // The foot used to close with `<!-- /${componentTag} -->`, a name for whoever
+  // read the served source. Nothing reads it, and it shipped on every page, so
+  // the page component's name now lives only here and in the manifest.
   const foot = `</litro-outlet>
 ${bodyScript}
-  <!--
-    App bundle — framework adapter bootstrap + page components.
-    /_litro/ maps to dist/client/ (Vite output) via publicAssets in nitro.config.ts.
-  -->
   <script type="module" src="${appScriptUrl}"></script>
 </body>
 </html>
-<!-- /${componentTag} -->
 `;
 
   return { head, foot };

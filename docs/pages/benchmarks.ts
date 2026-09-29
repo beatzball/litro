@@ -353,6 +353,20 @@ export class BenchmarksPage extends LitroPage {
     const hasHn = hn.length > 0;
     const hasInternals = r.buildTime.ssg.runs.length > 0;
 
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // ${hasCross ? this._crossFrameworkSection(fw) : this._crossFrameworkPlaceholder()}
+    //     ═══════ Section 1: Cross-Framework (minimal) ═══════
+    //
+    // ${hasHn ? this._hnBenchmarkSection(hn) : this._hnBenchmarkPlaceholder()}
+    //     ═══════ Section 2: HN Benchmark (realistic) ═══════
+    //
+    // ${hasInternals ? this._litroInternalsSection(r) : this._litroInternalsPlaceholder()}
+    //     ═══════ Section 3: Litro SSG vs SSR ═══════
     return html`
       <div class="page">
         <starlight-header
@@ -375,17 +389,14 @@ export class BenchmarksPage extends LitroPage {
             </p>
           ` : ''}
 
-          <!-- ═══════ Section 1: Cross-Framework (minimal) ═══════ -->
           ${hasCross ? this._crossFrameworkSection(fw) : this._crossFrameworkPlaceholder()}
 
           <hr class="section-divider" />
 
-          <!-- ═══════ Section 2: HN Benchmark (realistic) ═══════ -->
           ${hasHn ? this._hnBenchmarkSection(hn) : this._hnBenchmarkPlaceholder()}
 
           <hr class="section-divider" />
 
-          <!-- ═══════ Section 3: Litro SSG vs SSR ═══════ -->
           ${hasInternals ? this._litroInternalsSection(r) : this._litroInternalsPlaceholder()}
         </main>
       </div>
@@ -408,6 +419,17 @@ export class BenchmarksPage extends LitroPage {
     });
     const weightWinnerIdx = this._fwWinnerIdx(avgGzips, true);
 
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // <section class="summary-section" aria-label="Cross-framework summary">
+    //     Summary cards
+    //
+    // <litro-tabs>
+    //     Detail tabs
     return html`
       <h2>Framework Comparison</h2>
       <p class="note">
@@ -418,7 +440,6 @@ export class BenchmarksPage extends LitroPage {
         three do the same work.
       </p>
 
-      <!-- Summary cards -->
       <section class="summary-section" aria-label="Cross-framework summary">
         <litro-card-grid>
           ${this._fwSummaryCard('Build Time', frameworks, fw => this._formatMs(fw.buildTime.mean), buildWinnerIdx)}
@@ -427,7 +448,6 @@ export class BenchmarksPage extends LitroPage {
         </litro-card-grid>
       </section>
 
-      <!-- Detail tabs -->
       <litro-tabs>
         ${this._fwBuildTab(frameworks, buildWinnerIdx)}
         ${this._fwOutputSizeTab(frameworks, sizeWinnerIdx)}
@@ -782,6 +802,17 @@ export class BenchmarksPage extends LitroPage {
     const sizeWinner = this._winner(r.bundleSize.ssg.totalOutput, r.bundleSize.ssr.totalOutput, true);
     const ttfbWinner = this._winner(avgTtfbSsg, avgTtfbSsr, true);
 
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // <section class="summary-section" aria-label="SSG vs SSR summary">
+    //     Summary cards
+    //
+    // <litro-tabs>
+    //     Detail tabs
     return html`
       <h2>Litro Internals: SSG vs SSR</h2>
       <p class="note">
@@ -789,7 +820,6 @@ export class BenchmarksPage extends LitroPage {
         Rendering modes on the docs site. Useful for choosing a deployment strategy.
       </p>
 
-      <!-- Summary cards -->
       <section class="summary-section" aria-label="SSG vs SSR summary">
         <litro-card-grid>
           ${this._ssgSsrCard('Build Time', this._formatMs(r.buildTime.ssg.mean), this._formatMs(r.buildTime.ssr.mean), buildWinner)}
@@ -798,7 +828,6 @@ export class BenchmarksPage extends LitroPage {
         </litro-card-grid>
       </section>
 
-      <!-- Detail tabs -->
       <litro-tabs>
         ${this._buildTab(r, buildWinner, sizeWinner)}
         ${this._responseTimeTab(r, routes)}

@@ -40,6 +40,12 @@ export class BlogPostPage extends LitroPage {
 
   render() {
     const data = this.serverData as PostData | null;
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <article>
         <h1>${data?.title ?? 'Loading…'}</h1>
@@ -48,7 +54,6 @@ export class BlogPostPage extends LitroPage {
         &nbsp;|&nbsp;
         <litro-link href="/">← Home</litro-link>
       </article>
-      <!-- Credit line. Delete this element if you would rather not carry it. -->
       <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }

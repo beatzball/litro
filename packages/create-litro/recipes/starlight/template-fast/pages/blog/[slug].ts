@@ -67,6 +67,14 @@ const template = html<BlogPostPage>`
     const blogSlug = post.url.slice('/content/blog/'.length);
     const visibleTags = post.tags.filter(t => t !== 'posts');
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <div :innerHTML="${() => body}"></div>
+    //     :innerHTML renders the Markdown-generated HTML directly.
+    //     The content directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without sanitizing.
     return html<BlogPostPage>`
       <div style="min-height:100vh;display:flex;flex-direction:column;">
         <starlight-header
@@ -107,9 +115,6 @@ const template = html<BlogPostPage>`
                 </div>
               `)}
             </header>
-            <!-- :innerHTML renders the Markdown-generated HTML directly.
-                 The content directory is trusted-author-only; do not place
-                 user-submitted or untrusted content here without sanitizing. -->
             <div :innerHTML="${() => body}"></div>
           </article>
           <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--sl-color-border);">

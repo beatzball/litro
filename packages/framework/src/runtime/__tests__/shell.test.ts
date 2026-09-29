@@ -51,6 +51,13 @@ describe('buildShell — return shape', () => {
 // ---------------------------------------------------------------------------
 
 describe('buildShell — head: DSD polyfill', () => {
+  it('ships no HTML comment around the polyfill', () => {
+    const { head } = buildDefault();
+    // The rationale for the plain synchronous script lives in shell.ts as a
+    // TypeScript comment. The shell must not put it on the wire.
+    expect(head).not.toContain('<!--');
+  });
+
   it('contains an inline <script> tag with the DSD polyfill', () => {
     const { head } = buildDefault();
     // The polyfill checks for shadowRootMode on HTMLTemplateElement
@@ -284,10 +291,12 @@ describe('buildShell — foot: document closing', () => {
     expect(foot).toContain('</html>');
   });
 
-  it('includes the componentTag in a closing comment', () => {
+  it('ships no HTML comment', () => {
     const { foot } = buildDefault('page-about');
-    // shell.ts adds `<!-- /page-about -->` at the very end
-    expect(foot).toContain('<!-- /page-about -->');
+    // The foot used to close with `<!-- /page-about -->`. Nothing read it and
+    // it shipped on every page, so the shell now emits no comment at all.
+    expect(foot).not.toContain('<!--');
+    expect(foot).not.toContain('page-about');
   });
 });
 

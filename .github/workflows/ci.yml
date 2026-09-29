@@ -168,6 +168,13 @@ jobs:
         run: node scripts/check-spelling.mjs --self-test
       - name: Check spelling
         run: node scripts/check-spelling.mjs
+      # Same shape again: fails when an HTML comment sits inside an html``
+      # template, because every byte of one is served to every reader. The
+      # prose belongs in a TypeScript comment beside the template.
+      - name: Self-test the HTML comment check
+        run: node scripts/check-html-comments.mjs --self-test
+      - name: Check for HTML comments in templates
+        run: node scripts/check-html-comments.mjs
       # Guards the e2e suite against one spec deleting state a concurrently
       # running dev server is using -- the issue #118 failure mode. Pure Node
       # like the checker above, so it belongs in this install-free job.

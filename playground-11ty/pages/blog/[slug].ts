@@ -34,6 +34,15 @@ export class BlogPostPage extends LitroPage {
   render() {
     const { post } = this.serverData ?? {};
     if (!post) return html`<p>Loading…</p>`;
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // ${unsafeHTML(post.body)}
+    //     unsafeHTML renders the Markdown-generated HTML directly.
+    //     The content directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without first
+    //     sanitizing with a library such as rehype-sanitize.
     return html`
       <article>
         <header>
@@ -48,10 +57,6 @@ export class BlogPostPage extends LitroPage {
           ` : ''}
         </header>
         <div class="post-body">
-          <!-- unsafeHTML renders the Markdown-generated HTML directly.
-               The content directory is trusted-author-only; do not place
-               user-submitted or untrusted content here without first
-               sanitizing with a library such as rehype-sanitize. -->
           ${unsafeHTML(post.body)}
         </div>
         <footer>

@@ -179,6 +179,12 @@ export class StarlightPage extends LitElement {
 
   override render() {
     const hasSidebar = !this.noSidebar;
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <div class="page-wrap">
         <starlight-header
@@ -213,7 +219,6 @@ export class StarlightPage extends LitElement {
             </aside>
           ` : ''}
         </div>
-        <!-- Credit line. Delete this element if you would rather not carry it. -->
         <litro-footer recipe="{{recipe}}"></litro-footer>
       </div>
     `;

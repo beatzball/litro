@@ -64,6 +64,14 @@ const template = html<SplashPage>`
     const description = data?.description ?? '';
     const nav = data?.nav ?? [];
     const features = data?.features ?? [];
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer :recipe="${() => '{{recipe}}'}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
+    //     A property binding, not a plain attribute: fast-ssr does not map
+    //     attributes onto properties, so recipe="..." renders as empty.
     return html<SplashPage>`
       <div style="min-height:100vh;display:flex;flex-direction:column;">
         <starlight-header
@@ -94,9 +102,6 @@ const template = html<SplashPage>`
             </litro-card-grid>
           </section>
         </main>
-        <!-- Credit line. Delete this element if you would rather not carry it.
-         A property binding, not a plain attribute: fast-ssr does not map
-         attributes onto properties, so recipe="..." renders as empty. -->
         <litro-footer :recipe="${() => '{{recipe}}'}"></litro-footer>
       </div>
     `;

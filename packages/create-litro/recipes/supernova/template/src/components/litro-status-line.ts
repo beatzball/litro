@@ -266,18 +266,23 @@ export class LitroStatusLine extends LitElement {
 
     const glyphs = this.glyphs ?? DEFAULT_GLYPHS;
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <aside class="line" aria-label="${this.label || 'Status'}">
+    //     An aside, so the line sits inside a landmark rather than leaving
+    //     content outside one — and an aside rather than a footer, because a
+    //     page may already have a footer and two contentinfo landmarks is a
+    //     violation in itself. A status line is complementary to the page it
+    //     describes, which is what an aside is for.
+    //
+    //     The label property names the landmark, so a reader can tell what
+    //     they have reached before they hear the cells, and so this landmark
+    //     is distinguishable from any other aside on the page. The glyphs are
+    //     the only thing hidden, because a bracket and a plus sign read aloud
+    //     say nothing.
     return html`
-      <!-- An aside, so the line sits inside a landmark rather than leaving
-           content outside one — and an aside rather than a footer, because a
-           page may already have a footer and two contentinfo landmarks is a
-           violation in itself. A status line is complementary to the page it
-           describes, which is what an aside is for.
-
-           The label property names the landmark, so a reader can tell what
-           they have reached before they hear the cells, and so this landmark
-           is distinguishable from any other aside on the page. The glyphs are
-           the only thing hidden, because a bracket and a plus sign read aloud
-           say nothing. -->
       <aside class="line" aria-label="${this.label || 'Status'}">
         ${this.siteTitle
           ? html`<a class="cell mode" href="${this.homeHref}"

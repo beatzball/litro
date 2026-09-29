@@ -32,6 +32,12 @@ export class HomePage extends LitroPage {
 
   render() {
     const { recentPosts = [], siteTitle = '{{projectName}}', siteDescription = '' } = this.serverData ?? {};
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <main>
         <header>
@@ -52,7 +58,6 @@ export class HomePage extends LitroPage {
           <p><a href="/blog">All Posts →</a></p>
         </section>
       </main>
-      <!-- Credit line. Delete this element if you would rather not carry it. -->
       <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }

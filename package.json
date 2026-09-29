@@ -85,9 +85,11 @@
     "lint": "pnpm --filter @beatzball/litro exec tsc --noEmit -p tsconfig.json && pnpm --filter playground typecheck",
     "check:doc-refs": "node scripts/check-doc-refs.mjs",
     "check:spelling": "node scripts/check-spelling.mjs",
+    "check:html-comments": "node scripts/check-html-comments.mjs",
     "check:e2e-isolation": "node scripts/check-e2e-isolation.mjs",
     "check:ssr-links": "node scripts/check-ssr-links.mjs",
     "check:doc-refs:self-test": "node scripts/check-doc-refs.mjs --self-test",
+    "check:html-comments:self-test": "node scripts/check-html-comments.mjs --self-test",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm -r --filter \"./packages/*\" build && changeset publish"
