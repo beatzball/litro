@@ -84,9 +84,11 @@ test('the home page keeps every call to action and link it had', async ({ reques
 
 test('the home page copy is in the server HTML', async ({ request }) => {
   const html = await (await request.get('/')).text();
-  // Lit SSR writes comment markers between static text and a binding, which
-  // splits a sentence in two. Strip them so these assertions test the text.
-  const text = html.replace(/<!--.*?-->/gs, '');
+  // Lit SSR writes comment markers between static text and a binding, and the
+  // headline's two lines are two elements — so a sentence is broken up by
+  // markup as well as by markers. Strip both, so these assertions test the
+  // copy a reader sees and not the shape of the tags around it.
+  const text = html.replace(/<!--.*?-->/gs, '').replace(/<[^>]+>/g, '');
 
   for (const claim of [
     // The eyebrow, the headline and the lede — the three strings the
