@@ -112,11 +112,47 @@ const HERO_PHRASE_MS = 2800;
  * How long one line takes to wipe.
  *
  * CHOSEN AGAINST THE ALTERNATIVES RUNNING SIDE BY SIDE, not from a curve. A
- * wipe is a reading gesture -- the eye follows the edge -- and past roughly
- * 550ms the edge moves slower than the eye does and stops leading it. This
- * value is interpolated into the stylesheet below, so it is written once.
+ * wipe is a reading gesture -- the eye follows the edge -- and the edge has
+ * to be on screen long enough to be followed. At 420ms it was not: sampled
+ * live, the wipe was 96% finished by 250ms and spent its last third crawling
+ * the final 4%, so the eye read a swap rather than a wipe.
+ *
+ * This value is interpolated into the stylesheet below, so it is written
+ * once.
  */
-const HERO_WIPE_MS = 420;
+const HERO_WIPE_MS = 700;
+
+/**
+ * The second speed, on offer beside the first.
+ *
+ * TEMPORARY, AND ONLY ONE OF THE TWO SURVIVES. The wipe's duration is a
+ * judgment that has to be made on the real page at the real size, so both
+ * speeds are built and the losing one is deleted -- constant, override rule
+ * and query parameter together. Neither is a setting; the page has one wipe.
+ */
+const HERO_WIPE_B_MS = 550;
+
+/**
+ * How far the clip region reaches past the line box, top and bottom.
+ *
+ * clip-path DOES NOT RESPECT overflow: visible. The h1 is set at a 1.02
+ * line-height, which is 89.8px at the 88px desktop size against the 101px
+ * the face itself asks for, so every descender already hangs below the line
+ * box and is drawn anyway -- until a clip-path is added, at which point the
+ * bottom edge shaves the g, y, p, j and q flat.
+ *
+ * MEASURED, NOT GUESSED. Clipping the line to inset(0 ...) and diffing the
+ * render against the unclipped one loses ink at 1280 and at 390; the top
+ * edge loses none. Any negative bleed from -0.01em up is already clean at
+ * both widths. -0.15em is the comfortable version of that number and it is
+ * written in em, so it scales with the clamp() from 88px down to 44px.
+ *
+ * IT IS APPLIED ON BOTH EDGES even though only the bottom one cuts today.
+ * The bleed then describes the line's own box rather than one face's
+ * descender depth, and a fallback face with taller ascenders cannot
+ * reintroduce the defect at the other edge.
+ */
+const HERO_CLIP_BLEED = css`-0.15em`;
 
 /**
  * How far the second line trails the first.
@@ -128,8 +164,17 @@ const HERO_WIPE_MS = 420;
  */
 const HERO_LINE_LAG_MS = 90;
 
-/** The wipe's curve. A CSSResult so the two rules below share one literal. */
-const HERO_WIPE_EASE = css`cubic-bezier(0.2, 0.7, 0.3, 1)`;
+/**
+ * The wipe's curve. A CSSResult so the two rules below share one literal.
+ *
+ * THE CURVE MATTERED MORE THAN THE DURATION. cubic-bezier(0.2, 0.7, 0.3, 1)
+ * sprints and then coasts: sampled live it was half done in the first
+ * 100ms, which left the moving edge visible for about two frames and the
+ * remaining two thirds of the animation spent finishing a wipe the eye had
+ * already read as a swap. This curve travels at a much more even rate, so
+ * the edge is on screen and moving for most of the duration.
+ */
+const HERO_WIPE_EASE = css`cubic-bezier(0.4, 0, 0.2, 1)`;
 
 /**
  * One phrase, as the two blocks the wipe clips.
@@ -873,6 +918,16 @@ export class SplashPage extends LitroPage {
   #reduceMotion: MediaQueryList | undefined;
 
   /**
+   * The wipe duration in force, for the clear timer below.
+   *
+   * IT IS NOT WHAT DRIVES THE WIPE -- the stylesheet is. It only has to
+   * agree with the stylesheet about when the outgoing phrase has finished
+   * being clipped away, so that phrase leaves the DOM on time in both
+   * variants. It goes with the comparison.
+   */
+  #wipeMs = HERO_WIPE_MS;
+
+  /**
    * Starts the rotation, unless the reader has asked for less motion.
    *
    * `typeof window` is the SSR guard: Lit SSR never calls this, but a page
@@ -882,6 +937,8 @@ export class SplashPage extends LitroPage {
   override connectedCallback(): void {
     super.connectedCallback();
     if (typeof window === "undefined") return;
+
+    this.#applyWipeVariant();
 
     this.#reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     // A change of preference after load has to take effect immediately, in
@@ -895,6 +952,32 @@ export class SplashPage extends LitroPage {
     this.#stopHero();
     this.#reduceMotion?.removeEventListener("change", this.#syncMotion);
     this.#reduceMotion = undefined;
+  }
+
+  /**
+   * Reads ?wipe= and marks the host with the speed it names.
+   *
+   * TEMPORARY, AND IT GOES WITH THE LOSING VARIANT. It exists so the two
+   * speeds can be compared on a real built page rather than argued about,
+   * and it is the least invasive way to do that: one data- attribute, read
+   * once, that no other rule and no other component looks at. The page's
+   * default is the plain URL, so a reader who is not comparing sees one
+   * wipe and no setting.
+   *
+   * IT RUNS AFTER HYDRATION, NEVER ON THE SERVER. The attribute is not in
+   * the served markup, so the streamed DOM and the first client render
+   * agree; the attribute only ever changes which animation-duration the
+   * next rotation picks up.
+   */
+  #applyWipeVariant(): void {
+    const wipe = new URLSearchParams(window.location.search).get("wipe");
+    if (wipe === "b") {
+      this.setAttribute("data-wipe", "b");
+      this.#wipeMs = HERO_WIPE_B_MS;
+    } else {
+      this.removeAttribute("data-wipe");
+      this.#wipeMs = HERO_WIPE_MS;
+    }
   }
 
   /** Runs the rotation, or stops it dead, per the current preference. */
@@ -925,7 +1008,7 @@ export class SplashPage extends LitroPage {
         () => {
           this.heroOut = undefined;
         },
-        HERO_WIPE_MS + HERO_LINE_LAG_MS,
+        this.#wipeMs + HERO_LINE_LAG_MS,
       );
     }, HERO_PHRASE_MS);
   };
@@ -1273,21 +1356,36 @@ export class SplashPage extends LitroPage {
       animation-delay: ${HERO_LINE_LAG_MS}ms;
     }
 
+    /* THE SECOND SPEED, AND THE WHOLE OF IT. It is the duration longhand and
+       nothing else, so it cannot reset the delay the way the shorthand above
+       would, and the lag survives in both variants. When the owner picks a
+       speed this rule and the constant behind it are deleted. */
+    :host([data-wipe="b"]) .hero-out .hero-line,
+    :host([data-wipe="b"]) .hero-in .hero-line {
+      animation-duration: ${HERO_WIPE_B_MS}ms;
+    }
+
+    /* EVERY CLIP HERE CARRIES THE BLEED, on both keyframes and both ends of
+       each one, so the clip's top and bottom edges never move across the
+       whole transition -- only its left or right edge does. The resting
+       state is the "both" fill of these same animations, so it carries the
+       bleed too; the first paint has no animation at all and so is not
+       clipped. */
     @keyframes hero-wipe-out {
       from {
-        clip-path: inset(0 0 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 0);
       }
       to {
-        clip-path: inset(0 0 0 100%);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 100%);
       }
     }
 
     @keyframes hero-wipe-in {
       from {
-        clip-path: inset(0 100% 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 100% ${HERO_CLIP_BLEED} 0);
       }
       to {
-        clip-path: inset(0 0 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 0);
       }
     }
 
