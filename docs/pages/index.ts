@@ -19,7 +19,6 @@ import "@beatzball/litro-docs-ui/src/components/litro-pane-grid.js";
 import "@beatzball/litro-docs-ui/src/components/litro-site-footer.js";
 import "@beatzball/litro-docs-ui/src/components/litro-hero-nova.js";
 import "@beatzball/litro-docs-ui/src/components/litro-install-command.js";
-import "@beatzball/litro-docs-ui/src/components/litro-feature-row.js";
 import "@beatzball/litro-docs-ui/src/components/litro-steps.js";
 import "@beatzball/litro-docs-ui/src/components/litro-term-window.js";
 
@@ -62,8 +61,58 @@ const INSTALL_COMMAND = "pnpm create @beatzball/litro my-app";
  */
 const NODE_REQUIREMENT = "20.19+";
 
-/** The three framework adapters, in the order the docs list them. */
-const ADAPTERS = "lit \u00b7 fast \u00b7 elena";
+/* ── The rotating hero ──────────────────────────────────────
+ *
+ * EVERY PHRASE IS A THING LITRO DOES TODAY, checked against the capability
+ * audit. In order: routing, SSR, SSG and the content layer; the agent package,
+ * shipped; `litro mcp serve` over stdio and a Nitro route over Streamable
+ * HTTP; and ui(), whose packed ui:// document a real desktop host rendered as
+ * a card. The last line is the position itself — it is the only one that is
+ * not a capability, and it earns its place by being what the other four add up
+ * to in ONE project on ONE server.
+ *
+ * "for" LIVES IN THE PHRASE, not the stem. It never changes, so it costs
+ * nothing visually, and it keeps every phrase breaking into the same two lines
+ * of the monospace h1 — which is what lets the block reserve its height and
+ * never move while it rotates.
+ *
+ * Each phrase is at most 26 characters, because the h1 holds about thirteen
+ * per line. The breaks, measured:
+ *   for building / sites.          for creating / agents.
+ *   for building / MCP servers.    for UI inside / an MCP host.
+ *   for all four / at once.
+ */
+const HERO_PHRASES = [
+  "for building sites.",
+  "for creating agents.",
+  "for building MCP servers.",
+  "for UI inside an MCP host.",
+  "for all four at once.",
+] as const;
+
+/** How long each phrase holds. There is no transition, so this is the timing. */
+const HERO_PHRASE_MS = 2800;
+
+/**
+ * The heading's accessible name: stable, complete, and never re-announced.
+ *
+ * It OPENS WITH THE VISIBLE SENTENCE, so a screen-reader user and a sighted
+ * user are reading the same heading rather than two different ones.
+ */
+const HERO_ARIA =
+  "One framework for building sites, for creating agents, for building MCP servers, for UI inside an MCP host — and for all four at once.";
+
+/**
+ * The adapters a new project should choose between.
+ *
+ * ELENA IS NOT HERE, AND IT IS NOT DELETED EITHER. It is deprecated and removed
+ * in v1 (issue 219): `--adapter elena` still scaffolds and an existing project
+ * still builds, so its docs page, its migration guide and its sidebar entries
+ * all stay. What deprecation costs is the advertising, and this line is
+ * advertising — it sits in the status bar under every screen of the landing
+ * page. The notice itself is the docs' job, not this page's.
+ */
+const ADAPTERS = "lit \u00b7 fast";
 
 /**
 /**
@@ -161,31 +210,6 @@ const SHOWCASE: Array<{
 
 
 /**
- * ── SECTION 7 · Deploy anywhere ────────────────────────────────────────
- *
- * Nitro's deployment presets, which litro inherits whole. Every one of these
- * is a target Nitro documents, not a target litro wrote an adapter for — that
- * is the claim, and it is why the list is this long.
- */
-const DEPLOY_TARGETS: Array<{ name: string; icon?: string }> = [
-  // A MARK ONLY WHERE A REAL ONE EXISTS. These three come from the icon set
-  // the site already serves at /shoelace/assets/icons/ — no new file and no
-  // new dependency. The other seven have no mark in anything this site ships,
-  // so they are text, because a stand-in glyph would say less than the name
-  // already does.
-  { name: "Node.js" },
-  { name: "Cloudflare Workers" },
-  { name: "Vercel" },
-  { name: "Netlify" },
-  { name: "Deno Deploy" },
-  { name: "AWS Lambda", icon: "/shoelace/assets/icons/amazon.svg" },
-  { name: "Azure", icon: "/shoelace/assets/icons/microsoft.svg" },
-  { name: "Docker" },
-  { name: "GitHub Pages", icon: "/shoelace/assets/icons/github.svg" },
-  { name: "any static CDN" },
-];
-
-/**
  * ── SECTION · Performance ──────────────────────────────────────────────
  *
  * Build time and output size, against Next and Nuxt.
@@ -239,7 +263,6 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Overview", href: "/docs/adapters/overview" },
       { label: "Lit", href: "/docs/adapters/lit" },
       { label: "FAST Element", href: "/docs/adapters/fast" },
-      { label: "Elena", href: "/docs/adapters/elena" },
     ],
   },
   {
@@ -248,6 +271,7 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Blog", href: "/blog" },
       { label: "Compare", href: "/compare" },
       { label: "Benchmarks", href: "/benchmarks" },
+      { label: "Known gaps", href: "/docs/known-gaps" },
       { label: "GitHub", href: "https://github.com/beatzball/litro" },
     ],
   },
@@ -290,10 +314,12 @@ const TRANSCRIPT_LABEL =
  * `data` option; and the card is what <demo-weather-card> renders for it
  * (21C is 70F, which the component converts itself).
  *
- * This section shows the two doors a tool's result goes through in an app:
- * the agent endpoints and the MCP Apps packager. Serving those tools to an
- * outside host is a third door, `litro mcp serve` — documented at
- * /docs/mcp-server, and deliberately not on this page.
+ * This section shows the THREE doors a tool's result goes through: the agent
+ * endpoints inside your own app, the MCP Apps packager, and the MCP server
+ * that serves the same tools to an outside host. The third door used to be
+ * left off this page deliberately, because it did not exist yet; `litro mcp
+ * serve` shipped over stdio in framework 0.17.0 and over Streamable HTTP in
+ * litro-agent 0.7.0, and it is the door that makes the other two matter.
  */
 
 /**
@@ -345,7 +371,13 @@ const AGENT_TOOL_DATA = `{
 const AGENT_CARD_LABEL =
   "The rendered weather card: Lisbon, 70 degrees Fahrenheit, sunny.";
 
-/** The two doors. Both are shipped and both have a docs page. */
+/**
+ * The three doors. All three are shipped and all three have a docs page.
+ *
+ * There were two here until the MCP server shipped. Three panes at span 2 are
+ * the grid's own row of thirds — the same shape row 3 of the capability grid
+ * uses — so the block needed no new layout to hold the third one.
+ */
 const AGENT_DOORS = [
   {
     name: "Agents",
@@ -353,6 +385,13 @@ const AGENT_DOORS = [
     href: "/docs/agents",
     description:
       "An agent is a folder. Tools are files beside it. Sessions are durable and resume after a disconnect, on disk or in SQLite, and the provider is Anthropic, any OpenAI-compatible API, or a scripted stub for tests.",
+  },
+  {
+    name: "MCP Server",
+    meta: "stdio · http",
+    href: "/docs/mcp-server",
+    description:
+      "Serve the same tools to any MCP host. litro mcp serve speaks stdio; a Nitro route speaks Streamable HTTP, with Origin checks, a bearer token and localhost binding.",
   },
   {
     name: "MCP Apps",
@@ -400,8 +439,8 @@ const GRID: Array<[string, number]> = [
   ["Nitro Server", 3],
   ["Adapters", 3],
   ["Content Layer", 2],
-  ["Streaming SSR", 2],
   ["File-System Routing", 2],
+  ["Server Actions", 2],
 ];
 
 /** Puts the cards in the grid's order and spans. */
@@ -454,6 +493,8 @@ export interface SplashData {
     iconSrc?: string;
     /** The short note at the right end of the pane's strip. */
     meta?: string;
+    /** Makes the whole pane a link, where the card has somewhere to send a reader. */
+    href?: string;
   }>;
   /** Highlighted server-side; see highlightBlock(). */
   code: { tool: string; data: string };
@@ -575,7 +616,11 @@ export const pageData = definePageData(async (_event) => {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Litro",
-    "description": "A fullstack web framework combining web components, Nitro server, and Vite. File-based routing, streaming SSR, SSG, and Declarative Shadow DOM.",
+    // THE CANONICAL SUMMARY. This is what a search engine and a language model
+    // read as the description of the project, so it has to carry both halves.
+    // It used to stop at "Declarative Shadow DOM" and never mention an agent,
+    // a tool, an MCP server or server actions — all of which had shipped.
+    "description": "A fullstack web framework and an agent framework in one. File-based routing, streaming SSR with Declarative Shadow DOM, static generation, a Markdown content layer and server actions, all on standard web components. Its agents run on the same Nitro server: a tool returns a server-rendered component, and the same tools are served to any MCP host over stdio or Streamable HTTP.",
     "url": "https://litro.dev",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Node.js",
@@ -593,8 +638,17 @@ export const pageData = definePageData(async (_event) => {
     // ── Capabilities ────────────────────────────────────────────────
     //
     // Six panes. The seventh was "AI Agents", and it is gone: its words were
-    // the headline of the agent section immediately below this block, so the
-    // card summarized something a reader met two inches later.
+    // the headline of the agent section, so the card summarized something a
+    // reader met two inches away. That section is now ABOVE this block, which
+    // is the cheaper fix for the same problem — a reader skimming the grid has
+    // already been shown the AI half rather than reading a card about it.
+    //
+    // "STREAMING SSR" CAME OUT AND "SERVER ACTIONS" WENT IN. Its one sentence
+    // is the last clause of the full-width Web Components pane, which had the
+    // room and already named Declarative Shadow DOM. Server Actions shipped in
+    // @beatzball/litro 0.11.0 and this page had never named it — the largest
+    // feature the page did not mention. Six panes either way, same spans, same
+    // three rows: see GRID.
     //
     // The emoji went with the card kit, and the [+] glyph went
     // with them: it reports a STATE, which is what it does in the status line
@@ -620,8 +674,16 @@ export const pageData = definePageData(async (_event) => {
         iconSrc: "/logos/webcomponents.svg",
         title: "Web Components",
         meta: "the standard",
+        // THIS PANE ABSORBED TWO THINGS. The "Streaming SSR" pane's one
+        // sentence is its last clause now — Declarative Shadow DOM was
+        // already named here, so the pane restated a card it sat beside — and
+        // the "Why Web Components?" section that used to run below the
+        // comparison is gone, because its paragraph was this pane's first
+        // sentence almost word for word. The href is that section's link, so
+        // the page still sends a reader who wants the long argument.
+        href: "/why-web-components",
         description:
-          "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit, FAST or Elena on top; the components underneath work anywhere the browser does.",
+          "Custom Elements, Shadow DOM and slots are W3C specifications native to every major browser — the same layer as video, CSS Grid and Fetch. Pick Lit or FAST on top; the components underneath work anywhere the browser does, and each adapter streams the fastest first paint it can — Declarative Shadow DOM or light-DOM SSR.",
       },
       {
         iconSrc: "/logos/nitro.svg",
@@ -633,15 +695,16 @@ export const pageData = definePageData(async (_event) => {
       {
         iconSrc: "/logos/lit-flame.svg",
         title: "Adapters",
-        meta: "lit · fast · elena",
+        meta: "lit · fast",
         description:
           "Same routing, same data layer, same deployment. Choose the component model and change nothing else.",
       },
       {
-        title: "Streaming SSR",
-        meta: "dsd",
+        title: "Server Actions",
+        meta: "typed rpc",
+        href: "/docs/server-actions",
         description:
-          "Declarative Shadow DOM or light-DOM SSR — each adapter picks the fastest path to first paint.",
+          "Call a server function from a component with types intact. Forms work without JavaScript, and a result can stream.",
       },
       {
         title: "File-System Routing",
@@ -688,11 +751,92 @@ export const pageData = definePageData(async (_event) => {
 
 export const routeMeta = {
   head: starlightHead,
-  title: "Litro — Fullstack Web Component Framework",
+  // Both category phrases, spelled the way somebody searching for them types
+  // them. "Web Component" came out to make room: it is still in the meta
+  // description, the hero's eyebrow, the full-width capability pane and the
+  // JSON-LD, so the term is not lost — it is no longer first.
+  //
+  // "FRAMEWORK" SAYS ITSELF ONCE. It read "Fullstack Web Framework and Agent
+  // Framework" — the same noun twice, and 50 characters, which a search result
+  // truncates. This is 41.
+  //
+  // IT IS "and", NOT "&", AND THAT IS THE POINT. An ampersand would have to
+  // survive every emitter this string reaches: the document <title>, which the
+  // framework's shell interpolates raw with no escaping; the OG image, which
+  // draws it as text through Satori, so an entity would be PAINTED as "&amp;";
+  // and the JSON-LD block. Two extra characters remove the whole class of
+  // problem rather than managing it.
+  title: "Litro — Fullstack Web and Agent Framework",
 };
 
 @customElement("page-home")
 export class SplashPage extends LitroPage {
+  /**
+   * Which phrase the headline is showing.
+   *
+   * NOT A DECORATOR. Field decorators break under jiti, which is what loads a
+   * page module on the dev server, so this is declared the long way.
+   *
+   * It defaults to 0, which is what the server renders and what the client
+   * renders first — so the hydrated DOM matches the streamed DOM and there is
+   * no mismatch to repair.
+   */
+  static override properties = {
+    heroPhrase: { state: true },
+  };
+
+  heroPhrase = 0;
+
+  #heroTimer: ReturnType<typeof setInterval> | undefined;
+
+  #reduceMotion: MediaQueryList | undefined;
+
+  /**
+   * Starts the rotation, unless the reader has asked for less motion.
+   *
+   * `typeof window` is the SSR guard: Lit SSR never calls this, but a page
+   * module is also imported in Node by the scanner and by tests, and a timer
+   * started there would keep a process alive.
+   */
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (typeof window === "undefined") return;
+
+    this.#reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // A change of preference after load has to take effect immediately, in
+    // both directions, so this listens rather than reading the value once.
+    this.#reduceMotion.addEventListener("change", this.#syncMotion);
+    this.#syncMotion();
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#stopHero();
+    this.#reduceMotion?.removeEventListener("change", this.#syncMotion);
+    this.#reduceMotion = undefined;
+  }
+
+  /** Runs the rotation, or stops it dead, per the current preference. */
+  #syncMotion = (): void => {
+    if (this.#reduceMotion?.matches) {
+      this.#stopHero();
+      // Back to the first phrase, so a reader who turns the preference on
+      // mid-rotation is left on the sentence the served HTML carried rather
+      // than on whichever one happened to be up.
+      this.heroPhrase = 0;
+      return;
+    }
+    if (this.#heroTimer !== undefined) return;
+    this.#heroTimer = setInterval(() => {
+      this.heroPhrase = (this.heroPhrase + 1) % HERO_PHRASES.length;
+    }, HERO_PHRASE_MS);
+  };
+
+  #stopHero(): void {
+    if (this.#heroTimer !== undefined) clearInterval(this.#heroTimer);
+    this.#heroTimer = undefined;
+  }
+
   static override styles = [
     pageReset,
     statusLineChrome,
@@ -927,6 +1071,39 @@ export class SplashPage extends LitroPage {
       color: var(--nova-text);
     }
 
+    /* ── The rotating headline ─────────────────────────────────
+     *
+     * TWO BLOCKS, NOT AN INLINE SPAN. The stem takes its own line and the
+     * phrase takes the two below it, which is what makes the reserved height
+     * possible: min-height on a block can hold two lines open, and an inline
+     * run cannot.
+     *
+     * THE HEIGHT IS RESERVED so the page never moves. 2.04em is two lines at
+     * the h1's own 1.02 line-height. Without it the block would grow and
+     * shrink under the lede every 2.8 seconds, which is layout shift the
+     * reader did not ask for.
+     *
+     * THERE IS NO TRANSITION, and that is a choice rather than an omission. A
+     * typewriter is the cliche and a fade or a slide is the generator default;
+     * this page states in its own source that it "speaks in one voice, and the
+     * voice is the terminal's", and a terminal does not animate a line in — it
+     * prints it. So the phrase is reprinted on a steady beat, in the same
+     * color and the same face as the stem, with nothing about it that says
+     * widget. */
+    .hero-stem,
+    .hero-rot {
+      display: block;
+    }
+
+    .hero-rot {
+      min-height: 2.04em;
+    }
+
+    /* NON-NEGOTIABLE, AND HANDLED IN THE SCRIPT. The rotation is stopped when
+       this query matches, so the timer never runs and one phrase stays up. The
+       component listens for the query changing, so turning the preference on
+       mid-rotation stops it immediately and returns to the served sentence. */
+
     /* The lede keeps its own, narrower measure. The slab below it does not:
        a command has to be read in one piece, so it takes the whole column. */
     .lede {
@@ -935,6 +1112,15 @@ export class SplashPage extends LitroPage {
       max-width: 34rem;
       margin: 0 0 2.5rem;
       line-height: 1.75;
+    }
+
+    /* The return ui() call is the one piece of code in the lede, and it is set in the
+       page's mono at 0.9em — the same treatment the "Why Web Components?" row
+       gave its inline code before that section came out. It is a real call
+       signature, so it reads as code or it misleads. */
+    .lede code {
+      font-family: var(--nova-font-mono);
+      font-size: 0.9em;
     }
 
     /* Each adapter's name carries its own logo, so the three choices read as
@@ -1229,42 +1415,12 @@ export class SplashPage extends LitroPage {
       line-height: 1.7;
     }
 
-    .targets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .targets li {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.75rem;
-      border: 1px solid var(--nova-border);
-      border-radius: var(--nova-radius);
-      background: var(--nova-surface);
-      font-family: var(--nova-font-mono);
-      font-size: 0.8125rem;
-      color: var(--nova-text);
-    }
-
-    /* A MASK, NOT AN IMAGE. These marks are single-path SVGs whose fill is
-       currentColor, and an image element gives an external SVG no context to
-       resolve that against — it paints black, which on a dark page is
-       nothing at all. Painted as a mask over the chip's own color, each mark
-       is the chip's text color in either theme and stays one file. */
-    .targets .mark {
-      width: 0.9rem;
-      height: 0.9rem;
-      flex-shrink: 0;
-      background: currentColor;
-      opacity: 0.75;
-      -webkit-mask: var(--mark) center / contain no-repeat;
-      mask: var(--mark) center / contain no-repeat;
-    }
+    /* THE WALL OF TEN CHIPS IS GONE, and .targets with it. Ten marked chips
+       read as ten targets this project builds and tests; two of them are.
+       Litro writes two Nitro presets, ships two deployment guides, and no e2e
+       project exercises Cloudflare, Vercel, Netlify, Deno Deploy, AWS Lambda
+       or Azure. The claim was Nitro's and was true; the picture was not. It is
+       a sentence now, and it names the two that are covered. */
 
     /* ── SECTION 9 · The footer ────────────────────────────────────────── */
 
@@ -1272,56 +1428,15 @@ export class SplashPage extends LitroPage {
       margin-top: 4rem;
     }
 
-    /* ── Feature rows ──────────────────────────────────────────────────── */
-
-    .rows {
-      display: flex;
-      flex-direction: column;
-      gap: 3.5rem;
-      padding-top: 3rem;
-      padding-bottom: 1rem;
-    }
-
-    /* Shadow DOM styles stop at a slot, so everything handed to a row is
-       styled here, by the page, and not inside litro-feature-row. */
-    .rows p {
-      color: var(--nova-text-dim);
-      line-height: 1.7;
-      margin: 0 0 1rem;
-    }
-
-    .rows .eyebrow {
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--nova-accent-text);
-      margin: 0 0 0.75rem;
-    }
-
-    .rows code {
-      font-family: var(--nova-font-mono);
-      font-size: 0.9em;
-    }
-
-    .learn-more {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--nova-accent-text);
-      text-decoration: none;
-    }
-
-    .learn-more:hover {
-      text-decoration: underline;
-    }
-
-    .learn-more:focus-visible {
-      outline: 2px solid var(--nova-accent);
-      outline-offset: 2px;
-    }
+    /* THE "WHY WEB COMPONENTS?" ROW IS GONE, and .rows, .learn-more and
+       the whole litro-feature-row import with it. Its paragraph opened
+       "Custom Elements, Shadow DOM, and slots are W3C specifications native to
+       every major browser — the same layer as video, CSS Grid, and Fetch",
+       which is the first sentence of the full-width Web Components pane three
+       sections above it. The same sentence twice on one page was defensible
+       while web components were this page's thesis; they are its foundation
+       now, and a foundation does not get a section to restate a card. The
+       /why-web-components page is unchanged and that pane links to it. */
 
     /* ── The agent section ─────────────────────────────────────────────
      *
@@ -1568,6 +1683,21 @@ export class SplashPage extends LitroPage {
       color: var(--nova-text);
     }
 
+    /* The three commands give a reader a web app and not an agent, and a
+       reader who arrived from a hero about tools would reasonably expect
+       otherwise. This says so under the steps rather than letting them find
+       out. Same treatment as the performance section's note. */
+    .start-note {
+      margin: 1.5rem 0 0;
+      color: var(--nova-text-dim);
+      font-size: 0.875rem;
+      line-height: 1.7;
+    }
+
+    .start-note a {
+      color: var(--nova-accent-text);
+    }
+
     .section-title {
       font-size: 1.5rem;
       font-weight: 700;
@@ -1767,37 +1897,71 @@ export class SplashPage extends LitroPage {
 
             <section class="hero shell">
               <div class="hero-copy">
-                <p class="eyebrow-pill">Fullstack Web Framework</p>
-                <h1>${siteTitle}</h1>
-                ${description
-                  ? html`
-                      <p class="lede">
-                        The fullstack web component framework — SSR, static
-                        generation, and your choice of
-                        <span class="adapter"
-                          ><img
-                            src="/logos/lit-flame.svg"
-                            alt=""
-                            aria-hidden="true"
-                          />Lit</span
-                        >,
-                        <span class="adapter"
-                          ><img
-                            src="/logos/fast.svg"
-                            alt=""
-                            aria-hidden="true"
-                          />FAST</span
-                        >, or
-                        <span class="adapter"
-                          ><img
-                            src="/logos/elena.svg"
-                            alt=""
-                            aria-hidden="true"
-                          />Elena</span
-                        >.
-                      </p>
-                    `
-                  : ""}
+                <!-- THE PILL SAYS WHAT THE HEADLINE CANNOT FIT.
+                     It read "Web and Agent Framework" while the h1 underneath
+                     read "One framework for…", which is the same sentence
+                     twice in the most valuable space on the page.
+
+                     What the hero does NOT say anywhere else is what a
+                     component here actually is. The headline claims breadth,
+                     the lede names the server and the per-call render, and
+                     neither has room for the substrate — which is the one
+                     thing that separates Litro from every framework in the
+                     field at once: Next is React, Nuxt is Vue, and the agent
+                     frameworks have no component model at all. So the pill
+                     carries it.
+
+                     It is the same 23 characters as the string it replaced,
+                     so the pill keeps its width, its wrap behavior at 390px
+                     and the 1.5rem it holds open above the headline. -->
+                <p class="eyebrow-pill">Built on web components</p>
+                <!-- THE H1 IS THE MONO FACE at clamp(2.75rem, 7vw, 5.5rem) in
+                     a 46rem column, and every face in the stack has a 0.6em
+                     advance — so a line holds about thirteen characters at
+                     every width, because the clamp scales the type with the
+                     viewport while the column stays capped. That budget is why
+                     the stem is exactly one line and every phrase is exactly
+                     two: see HERO_PHRASES. -->
+                <!-- THE SERVED HTML IS ONE COMPLETE SENTENCE. With
+                     JavaScript off, and to a crawler, this h1 reads "One
+                     framework for building sites." — sensible on its own and
+                     not a fragment waiting for a script. The rotation is an
+                     enhancement layered on top of it and never the content.
+
+                     THE ACCESSIBLE NAME IS STATIC. aria-label gives the
+                     heading one stable name that carries all five phrases, so
+                     nothing changes under a screen reader; the rotating block
+                     is aria-hidden so it cannot be read twice. The label opens
+                     with the visible sentence, so the two readings are the
+                     same heading rather than two different ones. -->
+                <h1 aria-label="${HERO_ARIA}">
+                  <span class="hero-stem">One framework</span>
+                  <span class="hero-rot" aria-hidden="true"
+                    >${HERO_PHRASES[this.heroPhrase] ?? HERO_PHRASES[0]}</span
+                  >
+                </h1>
+                <!-- THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
+                     so the first sentence names the three audiences one app
+                     serves and the rest spends itself on "per call" — the
+                     phrase no shipped competitor can copy, because Nuxt's MCP
+                     Apps bundle at build time and CopilotKit renders in the
+                     client. Breadth then depth, in that order.
+
+                     NITRO IS NOT NAMED HERE, ON PURPOSE. It is a dependency
+                     rather than a benefit, most readers do not know the word,
+                     and it is Nuxt's engine too — so naming it in the hero
+                     tells an informed reader we share a foundation with a
+                     competitor, in the one place the page is trying to look
+                     like itself. It said "server" twice in six words as well.
+                     Somebody evaluating the stack still gets it by name, in
+                     the Nitro Server capability pane, which is where they
+                     look. -->
+                <p class="lede">
+                  One app serves your pages, your agents, and any MCP host. A
+                  tool returns a real component — rendered per call, from the
+                  code your pages already use. One <code>return ui()</code>, no
+                  second frontend.
+                </p>
                 <litro-install-command command="${INSTALL_COMMAND}">
                   <span slot="note"
                     >Needs Node 20.19 or newer. Pick a recipe, a rendering mode
@@ -1808,57 +1972,15 @@ export class SplashPage extends LitroPage {
                   <a href="/docs/introduction" class="button primary"
                     >Get Started</a
                   >
-                  <a href="/blog" class="button ghost">Blog</a>
+                  <!-- The second slot was Blog, which is in the header nav and
+                       in the footer already. After the reposition it is worth
+                       more as the front door to the half the hero now leads
+                       with. Still two buttons. -->
+                  <a href="/docs/agents" class="button ghost">Agents and MCP</a>
                 </div>
               </div>
             </section>
           </litro-hero-nova>
-
-          <!-- ── Capabilities ─────────────────────────────────────────
-               The block opens with a CLAIM, not a label, because a reader who
-               has just read the hero wants to know what they are looking at
-               before they look at it.
-
-               The panes carry a mark where litro has a real one and nothing
-               where it does not — no placeholder glyph. They used to lead with
-               [+], which earns its place in the status line and the terminal
-               windows, where it reports a state; on a wall of capabilities it
-               reported nothing.
-
-               The separate "Built on" row was folded in here: what litro
-               stands on and why that matters is a capability, not a footnote,
-               and it was too thin to hold a section of its own. -->
-          <section class="panes shell" aria-label="What you get">
-            <div class="section-head">
-              <h2 class="section-title">The web platform, with a server attached.</h2>
-              <p>
-                Standard custom elements on the front, Nitro on the back, and a
-                build that stays out of the way. Nothing here is a Litro
-                invention you would have to unlearn somewhere else.
-              </p>
-            </div>
-            <litro-pane-grid>
-              ${arrange(features, GRID).map(
-                (f) => html`
-                  <litro-pane
-                    name="${f.title}"
-                    meta="${f.meta ?? ""}"
-                    span="${f.span}"
-                  >
-                    ${f.iconSrc
-                      ? html`<img
-                          slot="icon"
-                          src="${f.iconSrc}"
-                          alt=""
-                          aria-hidden="true"
-                        />`
-                      : ""}
-                    ${f.description}
-                  </litro-pane>
-                `,
-              )}
-            </litro-pane-grid>
-          </section>
 
           <!-- ══ THE AGENT SECTION ════════════════════════════════════
                Option C, with the accent rule along the top removed.
@@ -1888,9 +2010,19 @@ export class SplashPage extends LitroPage {
           <section class="ai shell" aria-label="Agents">
             <div class="section-head">
               <h2 class="section-title">A tool call comes back as a component.</h2>
+              <!-- "GENERATIVE UI" IS IN HERE ON PURPOSE, ONCE. It is the
+                   field's own name for this — CopilotKit's product name, A2UI's,
+                   the OpenUI survey's — and the page used it nowhere, so a
+                   reader searching the space could not find Litro on the one
+                   axis it wants. The heading keeps its own plainer words; the
+                   phrase goes in the lede, where it costs the heading nothing.
+                   -->
               <p>
-                One return value, two audiences. Litro agents run on the same
-                server as your pages, so a tool can render one and hand it back.
+                One return value, two audiences. This is generative UI, rendered
+                on the server: Litro agents run on the same server as your
+                pages, so a tool can render a real component and hand it back.
+                <a href="/docs/known-gaps">What Litro does not do yet</a> is
+                written down.
               </p>
             </div>
             <div class="ai-band">
@@ -1918,10 +2050,67 @@ export class SplashPage extends LitroPage {
                   <litro-pane
                     name="${d.name}"
                     meta="${d.meta}"
-                    span="3"
+                    span="2"
                     href="${d.href}"
                     >${d.description}</litro-pane
                   >
+                `,
+              )}
+            </litro-pane-grid>
+          </section>
+
+          <!-- ── Capabilities ─────────────────────────────────────────
+               THIS BLOCK USED TO COME SECOND, ABOVE THE AGENT SECTION. It comes
+               after it now, and the swap is the whole structural change on the
+               page: a reader who arrived for an agent framework had to scroll
+               past six cards of table stakes before the page said anything they
+               came for. The block now reads as the second half of the argument
+               — and it is a real web framework underneath — which is also why it
+               no longer needs an AI card of its own. The one that was removed
+               here was removed for duplicating the section heading below; that
+               section is now above.
+
+               The block opens with a CLAIM, not a label, because a reader who
+               has just read the hero and the band wants to know what they are
+               looking at before they look at it.
+
+               The panes carry a mark where litro has a real one and nothing
+               where it does not — no placeholder glyph. They used to lead with
+               [+], which earns its place in the status line and the terminal
+               windows, where it reports a state; on a wall of capabilities it
+               reported nothing.
+
+               The separate "Built on" row was folded in here: what litro
+               stands on and why that matters is a capability, not a footnote,
+               and it was too thin to hold a section of its own. -->
+          <section class="panes shell" aria-label="What you get">
+            <div class="section-head">
+              <h2 class="section-title">The web platform, with a server attached.</h2>
+              <p>
+                Standard custom elements on the front, Nitro on the back, and a
+                build that stays out of the way. Nothing here is a Litro
+                invention you would have to unlearn somewhere else.
+              </p>
+            </div>
+            <litro-pane-grid>
+              ${arrange(features, GRID).map(
+                (f) => html`
+                  <litro-pane
+                    name="${f.title}"
+                    meta="${f.meta ?? ""}"
+                    span="${f.span}"
+                    href="${f.href ?? ""}"
+                  >
+                    ${f.iconSrc
+                      ? html`<img
+                          slot="icon"
+                          src="${f.iconSrc}"
+                          alt=""
+                          aria-hidden="true"
+                        />`
+                      : ""}
+                    ${f.description}
+                  </litro-pane>
                 `,
               )}
             </litro-pane-grid>
@@ -2037,33 +2226,6 @@ export class SplashPage extends LitroPage {
             </div>
           </section>
 
-          <section class="rows shell" aria-label="Why Litro">
-            <litro-feature-row heading="Why Web Components?">
-              <p class="eyebrow">Built on the Web Platform</p>
-              <p>
-                Custom Elements, Shadow DOM, and slots are W3C specifications
-                native to every major browser — the same layer as
-                <code>&lt;video&gt;</code>, CSS Grid, and Fetch. Standards that
-                get added to the platform stay there.
-              </p>
-              <a href="/why-web-components" class="learn-more">
-                Learn more about web standards longevity
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"
-                  />
-                </svg>
-              </a>
-            </litro-feature-row>
-          </section>
-
 
           <!-- ── The showcase ─────────────────────────────────────────
                Each row is a STARTING POINT and the pictures show the shape it
@@ -2141,26 +2303,25 @@ export class SplashPage extends LitroPage {
               one with a single preset, or prerender the whole site and put it
               on a CDN.
             </p>
-            <ul class="targets">
-              ${DEPLOY_TARGETS.map(
-                (target) => html`
-                  <li>
-                    ${target.icon
-                      ? html`<span
-                          class="mark"
-                          style="--mark: url('${target.icon}')"
-                          aria-hidden="true"
-                        ></span>`
-                      : ""}${target.name}
-                  </li>
-                `,
-              )}
-            </ul>
+            <p>
+              Node and static are the two this project builds and tests on
+              every commit. Everything else is Nitro's own preset, unchanged and
+              untried by us —
+              <a href="/docs/known-gaps">what Litro does not do yet</a> names
+              them.
+            </p>
           </section>
           <section class="start shell" aria-label="Get running">
             <div>
               <h2 class="section-title">Get running</h2>
               <litro-steps .steps="${STEPS}"></litro-steps>
+              <p class="start-note">
+                These three commands give you a web app. Wiring an agent is
+                still by hand today — the steps are in
+                <a href="/docs/agents">the agents guide</a>, and
+                <a href="/docs/known-gaps">what Litro does not do yet</a> lists
+                the rest.
+              </p>
             </div>
             <litro-term-window label="${TRANSCRIPT_LABEL}">
               <pre>${TRANSCRIPT}</pre>

@@ -21,9 +21,15 @@ const COMPONENTS: Array<[tag: string, count: number]> = [
   ['litro-hero-nova', 1],
   ['litro-install-command', 2],
   ['litro-pane-grid', 3],
-  ['litro-pane', 12],
+  // 13, not 12: six capability panes, FOUR showcase panes, and THREE doors in
+  // the agent section. The third door is the MCP server, which shipped after
+  // this page was written — see the test below that used to assert it away.
+  ['litro-pane', 13],
   ['litro-site-footer', 1],
-  ['litro-feature-row', 1],
+  // litro-feature-row is gone with the "Why Web Components?" section. Its
+  // paragraph was the full-width Web Components pane's first sentence almost
+  // word for word, and that pane now links to /why-web-components itself —
+  // which the calls-to-action test below still pins.
   ['litro-steps', 1],
   ['litro-term-window', 1],
 ];
@@ -83,14 +89,25 @@ test('the home page copy is in the server HTML', async ({ request }) => {
   const text = html.replace(/<!--.*?-->/gs, '');
 
   for (const claim of [
-    'Fullstack Web Framework',
-    'Built on the Web Platform',
-    'Why Web Components?',
-    'Learn more about web standards longevity',
+    // The eyebrow, the headline and the lede — the three strings the
+    // repositioning turned over. The headline's own contract (one complete
+    // sentence served, one stable accessible name, no movement under a
+    // reduced-motion preference) is asserted in its own suite below.
+    'Built on web components',
+    'One framework',
+    'for building sites.',
+    'One app serves your pages, your agents, and any MCP host',
+    'return ui()',
     'How Litro Compares',
     'Web Components',
     'Nitro Server',
-    'Streaming SSR',
+    // "Streaming SSR" is no longer a pane of its own: the claim moved into the
+    // full-width Web Components pane, which already named Declarative Shadow
+    // DOM, and its slot went to Server Actions. Assert the claim, not the card.
+    'Declarative Shadow DOM or light-DOM SSR',
+    // Server Actions shipped in @beatzball/litro 0.11.0 and this page had
+    // never named it.
+    'Server Actions',
     'File-System Routing',
     // "Static Generation" is no longer a pane of its own: prerendering is
     // named in the Content Layer pane and again in the deploy section, which
@@ -119,6 +136,201 @@ test('the pictures on the page each carry one description', async ({ page }) => 
     'aria-label',
     /shell session/,
   );
+});
+
+
+/**
+ * THE DOCUMENT TITLE, WHICH IS THE ONE STRING A SEARCH RESULT SHOWS.
+ *
+ * It read "Litro — Fullstack Web Framework and Agent Framework" — the same
+ * noun twice, and 50 characters, which a result truncates. Both facts are
+ * asserted below rather than just the text, so a future edit that reintroduces
+ * either fails here.
+ *
+ * It is also checked for an ampersand. "Web & Agent Framework" was considered
+ * and rejected: this string is interpolated into <title> raw by the framework
+ * shell and drawn as text by the OG image generator, so an ampersand would
+ * have had to be correct in both. "and" costs two characters and removes the
+ * question.
+ */
+test('the document title says Framework once and fits a search result', async ({
+  request,
+}) => {
+  const html = await (await request.get('/')).text();
+  const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '';
+
+  expect(title).toBe('Litro — Fullstack Web and Agent Framework');
+  expect(title.length, 'inside what a search result shows').toBeLessThanOrEqual(60);
+  expect(
+    title.match(/Framework/g)?.length,
+    'the noun is not repeated',
+  ).toBe(1);
+  expect(title, 'no ampersand to escape').not.toContain('&');
+});
+
+/**
+ * NITRO IS NAMED WHERE SOMEBODY EVALUATING THE STACK LOOKS, AND NOWHERE ELSE
+ * IN THE HERO.
+ *
+ * It is a dependency rather than a benefit, and it is Nuxt's engine too, so
+ * naming it in the headline area tells an informed reader the two share a
+ * foundation — in the one place the page is trying to look like itself. The
+ * capability pane still names it, and that is the point of this pair.
+ */
+test('the hero does not name the server engine, and the capability pane does', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.waitForSelector('page-home:not([hidden])');
+
+  const heroText = await page.evaluate(
+    () =>
+      document
+        .querySelector('page-home')
+        ?.shadowRoot?.querySelector('.hero')
+        ?.textContent ?? '',
+  );
+  expect(heroText, 'the hero names no engine').not.toMatch(/nitro/i);
+
+  const paneText = await page.evaluate(
+    () =>
+      [
+        ...(document
+          .querySelector('page-home')
+          ?.shadowRoot?.querySelectorAll('litro-pane') ?? []),
+      ]
+        .map((p) => p.getAttribute('name'))
+        .join(' '),
+  );
+  expect(paneText, 'the capability pane still does').toMatch(/Nitro Server/);
+});
+
+/**
+ * THE ROTATING HEADLINE'S CONTRACT.
+ *
+ * The rotation is an ENHANCEMENT. What the server sends has to stand on its
+ * own, because a crawler, a language model and a reader with JavaScript off
+ * all get exactly that and nothing else. These read the first response for
+ * the same reason the rest of this file does.
+ *
+ * The headline used to be "Tool → screen", which was one complete thought in
+ * thirteen characters and needed none of this. The tests did not go away with
+ * it — they assert the same user-visible fact the old one got for free: the
+ * heading a reader meets first is a finished sentence.
+ */
+test.describe('the rotating headline', () => {
+  test('the served heading is one complete sentence', async ({ request }) => {
+    const html = await (await request.get('/')).text();
+    const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? '';
+    expect(h1, 'an h1 was found').not.toBe('');
+
+    const text = h1
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Not a fragment waiting for a script, and not a bare noun.
+    expect(text).toBe('One framework for building sites.');
+  });
+
+  test('the heading has one stable accessible name carrying every phrase', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/')).text();
+    const label = /<h1[^>]*aria-label="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    // It opens with the visible sentence, so a screen-reader user and a
+    // sighted user are reading the same heading.
+    expect(label.startsWith('One framework for building sites')).toBe(true);
+    for (const phrase of [
+      'creating agents',
+      'building MCP servers',
+      'UI inside an MCP host',
+      'all four at once',
+    ]) {
+      expect(label, `the accessible name carries "${phrase}"`).toContain(phrase);
+    }
+
+    // The part that changes must never be read, or it is announced twice.
+    expect(html).toMatch(/<span class="hero-rot" aria-hidden="true"/);
+  });
+
+  test('it rotates, and the block never changes height', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('page-home:not([hidden])');
+    const read = () =>
+      page.evaluate(() => {
+        const r = document.querySelector('page-home')?.shadowRoot;
+        const h1 = r?.querySelector('h1');
+        return {
+          phrase: r?.querySelector('.hero-rot')?.textContent?.trim() ?? '',
+          height: Math.round(h1?.getBoundingClientRect().height ?? 0),
+        };
+      });
+
+    // A FULL CYCLE IS FIVE PHRASES AT 2.8 SECONDS, SO FOURTEEN SECONDS. The
+    // first version sampled ten times a second apart, saw four phrases and
+    // failed on a headline that was working correctly. Sample past one cycle.
+    const phrases = new Set<string>();
+    const heights = new Set<number>();
+    for (let i = 0; i < 24 && phrases.size < 5; i++) {
+      const m = await read();
+      phrases.add(m.phrase);
+      heights.add(m.height);
+      await page.waitForTimeout(700);
+    }
+
+    expect(phrases.size, 'every phrase is shown').toBe(5);
+    // THE WHOLE POINT OF THE RESERVED HEIGHT. A headline that grows and
+    // shrinks every 2.8 seconds is layout shift nobody asked for.
+    expect(heights.size, 'the headline never changes height').toBe(1);
+  });
+});
+
+/**
+ * NON-NEGOTIABLE. A reader who has asked for less motion gets none: the timer
+ * never starts, and the phrase they are left on is the one the server sent.
+ *
+ * THE PREFERENCE IS SET WITH page.emulateMedia(), NOT test.use(). A first
+ * version used `test.use({ reducedMotion: 'reduce' })` at describe level and
+ * the test failed — not because the headline moved, but because the page saw
+ * `matchMedia('(prefers-reduced-motion: reduce)').matches === false`. The
+ * fixture option did not reach this project's context, so the test was
+ * measuring a browser that had never been told. emulateMedia() sets it on the
+ * page, and the assertion below now reads the preference it claims to read.
+ */
+test.describe('with a reduced-motion preference', () => {
+  test('the headline does not move at all', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.waitForSelector('page-home:not([hidden])');
+
+    // The test is worthless if the page never got the preference, so it says
+    // so rather than passing quietly.
+    expect(
+      await page.evaluate(
+        () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      ),
+      'the browser was actually told',
+    ).toBe(true);
+    const read = () =>
+      page.evaluate(
+        () =>
+          document
+            .querySelector('page-home')
+            ?.shadowRoot?.querySelector('.hero-rot')
+            ?.textContent?.trim() ?? '',
+      );
+
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      seen.add(await read());
+      await page.waitForTimeout(1000);
+    }
+
+    expect([...seen]).toEqual(['for building sites.']);
+  });
 });
 
 /**
@@ -154,6 +366,35 @@ test('the status line at the foot states facts about the project', async ({ page
  * textContent runs the words together either way. Only what a browser lays
  * out can tell the difference.
  */
+/**
+ * ELENA IS DEPRECATED, AND THE LANDING PAGE SIMPLY STOPS ADVERTISING IT.
+ *
+ * Deprecated is not removed (issue 219): `--adapter elena` still scaffolds, an
+ * existing project still builds, and the adapter's docs page, migration guide
+ * and sidebar entries all stay where a reader on Elena can find them. The word
+ * "deprecated" is the docs' to say. What this page owes is that it never
+ * offers Elena to somebody choosing for the first time — and this page is
+ * where a first-time reader chooses, in the status bar under every screen and
+ * in the adapters pane.
+ *
+ * So the assertion is the absence, not a notice. A landing page that says
+ * nothing is the correct state, and the failure this catches is somebody
+ * putting the third name back.
+ */
+test('the landing page offers only the adapters a new project should pick', async ({
+  request,
+}) => {
+  const text = plainText(await (await request.get('/')).text());
+
+  expect(text, 'lit is offered').toMatch(/lit/i);
+  expect(text, 'fast is offered').toMatch(/fast/i);
+  expect(text, 'the deprecated adapter is not advertised').not.toMatch(/elena/i);
+  // And no notice about it either: the page is quiet, not apologetic.
+  expect(text, 'no deprecation notice on the landing page').not.toMatch(
+    /deprecat/i,
+  );
+});
+
 test('the words in a status cell are separated', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('page-home:not([hidden])');
@@ -363,19 +604,38 @@ test('the agent section arrives with its code, its data and its card', async ({ 
     expect(card, `the card shows ${value}`).toContain(value);
   }
 
-  // Both doors.
+  // All three doors.
   expect(html, 'the agents door').toContain('href="/docs/agents"');
+  expect(html, 'the MCP server door').toContain('href="/docs/mcp-server"');
   expect(html, 'the MCP Apps door').toContain('href="/docs/mcp-apps"');
 });
 
 /**
- * There is no Litro MCP server. It is open issue 157, and an unbuilt thing has
- * no place on a landing page — not as a claim, not as a "coming soon".
+ * THIS TEST USED TO ASSERT THE OPPOSITE, and it was right to.
+ *
+ * It read: "There is no Litro MCP server. It is open issue 157, and an unbuilt
+ * thing has no place on a landing page — not as a claim, not as a 'coming
+ * soon'." Then `litro mcp serve` shipped over stdio in framework 0.17.0 and
+ * over Streamable HTTP in litro-agent 0.7.0, so the page names it.
+ *
+ * The rule the old test was really defending is the one kept below: the page
+ * claims nothing it has not built. So the claim now has to be SPECIFIC — the
+ * two transports, by name, behind a link to the page that documents them —
+ * and "coming soon" is still banned outright.
  */
-test('the page does not claim an MCP server', async ({ request }) => {
-  const text = plainText(await (await request.get('/')).text());
-  expect(text).not.toMatch(/MCP server/i);
-  expect(text).not.toMatch(/coming soon/i);
+test('the page claims the MCP server accurately, and promises nothing else', async ({
+  request,
+}) => {
+  const html = await (await request.get('/')).text();
+  const text = plainText(html);
+
+  expect(text, 'the MCP server is named').toMatch(/MCP Server/);
+  expect(text, 'the stdio transport').toMatch(/stdio/);
+  expect(text, 'the Streamable HTTP transport').toMatch(/Streamable HTTP/);
+  expect(html, 'and it links to the docs page').toContain('href="/docs/mcp-server"');
+
+  // Unchanged, and the point of the original test.
+  expect(text, 'nothing is promised for later').not.toMatch(/coming soon/i);
 });
 
 /**

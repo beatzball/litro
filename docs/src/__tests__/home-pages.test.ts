@@ -14,19 +14,44 @@ import { describe, it, expect, beforeAll } from 'vitest';
 const STATIC_PAGE = new URL('../../pages/index.ts', import.meta.url);
 const SSR_PAGE = new URL('../../../docs-ssr/pages/index.ts', import.meta.url);
 
-/** The components the rebuilt page places, and therefore must register. */
+/**
+ * The components the rebuilt page places, and therefore must register.
+ *
+ * `litro-feature-row` came off this list when the "Why Web Components?" section
+ * came off the page — it was the only thing that placed one. The list and the
+ * page now have to agree in BOTH directions, which the second suite below
+ * enforces, so a section removed without its import (or an import added without
+ * a section) fails here rather than shipping.
+ */
 const COMPONENTS = [
   'litro-status-line',
   'starlight-header',
   'litro-hero-nova',
   'litro-install-command',
-  'litro-feature-row',
   'litro-steps',
   'litro-term-window',
   'litro-pane',
   'litro-pane-grid',
   'litro-site-footer',
 ];
+
+/**
+ * Every docs-ui component either page names in an import.
+ *
+ * Deduplicated, because a module can legitimately be named twice — the page
+ * imports `litro-steps.js` for the side effect AND again as `import type
+ * { StepItem }` from the same path.
+ */
+function importedComponents(source: string): string[] {
+  const tags = [
+    ...source.matchAll(
+      /@beatzball\/litro-docs-ui\/src\/components\/([a-z-]+)\.js/g,
+    ),
+  ]
+    .map((m) => m[1]!)
+    .filter((tag) => tag.includes('-'));
+  return [...new Set(tags)];
+}
 
 let staticPage = '';
 let ssrPage = '';
@@ -44,6 +69,41 @@ describe('both home pages register every component they place', () => {
       expect(ssrPage, 'the server-rendered site').toContain(importLine);
     });
   }
+});
+
+/**
+ * THE OTHER DIRECTION, which is the one that let a stale import sit on the page.
+ *
+ * An import with no element left to register is dead weight a tree-shaker
+ * cannot drop, because it is there for its side effect: registering a custom
+ * element is exactly what a bundler must not remove. So nothing fails, the
+ * bundle carries a component the page never places, and the only way to notice
+ * is to read the file. `litro-feature-row` was that import the day the
+ * "Why Web Components?" section came out.
+ */
+describe('neither home page imports a component it does not place', () => {
+  const pages = () => [
+    ['the static site', staticPage] as const,
+    ['the server-rendered site', ssrPage] as const,
+  ];
+
+  it('every imported docs-ui component appears in the template', () => {
+    for (const [label, source] of pages()) {
+      for (const tag of importedComponents(source)) {
+        expect(source, `${label} imports <${tag}> but never places it`).toContain(
+          `<${tag}`,
+        );
+      }
+    }
+  });
+
+  it('the import list and COMPONENTS agree', () => {
+    for (const [label, source] of pages()) {
+      expect(importedComponents(source).sort(), label).toEqual(
+        [...COMPONENTS].sort(),
+      );
+    }
+  });
 });
 
 /**

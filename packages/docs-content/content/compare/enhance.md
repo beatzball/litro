@@ -26,8 +26,8 @@ significantly in how they get there.
 <tr><th>Feature</th><th>Enhance</th><th>Litro</th></tr>
 </thead>
 <tbody>
-<tr><td>Component format</td><td>HTML-first SFCs</td><td>Lit / FAST / Elena (pluggable)</td></tr>
-<tr><td>Server rendering</td><td class="check">✓</td><td class="check">✓ DSD (Lit/FAST) or light DOM (Elena)</td></tr>
+<tr><td>Component format</td><td>HTML-first SFCs</td><td>Lit / FAST (pluggable)</td></tr>
+<tr><td>Server rendering</td><td class="check">✓</td><td class="check">✓ Declarative Shadow DOM, streaming</td></tr>
 <tr><td>Client-side routing</td><td class="dash">— (MPA by default)</td><td class="check">✓ LitroRouter</td></tr>
 <tr><td>Server engine</td><td>Begin cloud / Arc</td><td>Nitro (Vercel, Cloudflare, AWS…)</td></tr>
 <tr><td>Deployment flexibility</td><td>Begin-centric</td><td>All Nitro presets</td></tr>
@@ -46,7 +46,7 @@ Enhance uses its own HTML-first Single File Component format. Components are pur
 functions that return HTML strings, with optional client-side enhancement via
 `<script>` tags. This is intentionally minimal — no library layer.
 
-Litro supports three web component frameworks via its adapter system: [Lit](https://lit.dev) (default), [FAST Element](https://www.fast.design/), and [Elena](https://elenajs.com/). Lit and FAST use Shadow DOM with Declarative Shadow DOM SSR; Elena uses light DOM with direct rendering — closer to Enhance's philosophy but with a full framework runtime. All three use the same routing, data fetching, and deployment infrastructure.
+Litro supports two web component frameworks via its adapter system: [Lit](https://lit.dev) (default) and [FAST Element](https://www.fast.design/). Both use Shadow DOM with Declarative Shadow DOM SSR, and both use the same routing, data fetching, and deployment infrastructure. (A third adapter, Elena, rendered into the light DOM; it is [deprecated and removed in v1](/docs/adapters/elena).)
 
 <div class="code-compare">
 <div>
@@ -125,10 +125,9 @@ Enhance is worth considering if you want:
 
 Litro is a better fit if you want:
 
-- Framework choice — Lit, FAST Element, or Elena via the `--adapter` flag
+- Framework choice — Lit or FAST Element via the `--adapter` flag
 - Client-side routing (SPA-style navigation without full page reloads)
 - The Lit ecosystem — Shoelace, `@lit/context`, community components
-- Light DOM SSR via the Elena adapter — similar to Enhance's philosophy, with Nitro's deployment story
 - Nitro's deployment flexibility (Vercel, Cloudflare Workers, and more)
 - Migrating from Nuxt.js — the server layer is identical
 - Full TypeScript across the component model
