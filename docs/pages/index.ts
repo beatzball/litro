@@ -1,6 +1,7 @@
-import { html, css } from "lit";
+import { html, css, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { keyed } from "lit/directives/keyed.js";
 import { LitroPage, pageReset } from "@beatzball/litro/runtime";
 import { definePageData } from "@beatzball/litro";
 import { getGlobalData } from "litro:content";
@@ -81,17 +82,66 @@ const NODE_REQUIREMENT = "20.19+";
  *   for building / sites.          for creating / agents.
  *   for building / MCP servers.    for UI inside / an MCP host.
  *   for all four / at once.
+ *
+ * THE BREAK IS NOW WRITTEN DOWN rather than left to the wrap. Each phrase is
+ * a pair of lines instead of one string, because the wipe below needs both:
+ * the second line carries the accent on its own, and the two lines are
+ * clipped on their own timings. The measured breaks above became the shipped
+ * breaks, so the reserved height can no longer be wrong at a width nobody
+ * happened to test.
+ *
+ * THE SERVED SENTENCE DID NOT CHANGE. The first line ends in a space, so the
+ * two blocks still read "for building sites." to a crawler and to anything
+ * else that takes the heading's text.
  */
 const HERO_PHRASES = [
-  "for building sites.",
-  "for creating agents.",
-  "for building MCP servers.",
-  "for UI inside an MCP host.",
-  "for all four at once.",
+  ["for building", "sites."],
+  ["for creating", "agents."],
+  ["for building", "MCP servers."],
+  ["for UI inside", "an MCP host."],
+  ["for all four", "at once."],
 ] as const;
 
-/** How long each phrase holds. There is no transition, so this is the timing. */
+/** How long each phrase holds, measured from the first frame of its wipe. */
 const HERO_PHRASE_MS = 2800;
+
+/**
+ * How long one line takes to wipe.
+ *
+ * CHOSEN AGAINST THE ALTERNATIVES RUNNING SIDE BY SIDE, not from a curve. A
+ * wipe is a reading gesture -- the eye follows the edge -- and past roughly
+ * 550ms the edge moves slower than the eye does and stops leading it. This
+ * value is interpolated into the stylesheet below, so it is written once.
+ */
+const HERO_WIPE_MS = 420;
+
+/**
+ * How far the second line trails the first.
+ *
+ * WITHOUT IT THE TWO LINES ARE ONE SWIPE. With it they are two lines being
+ * read in order, which is the difference between the headline changing and
+ * the headline being re-read. It is the largest single effect in the whole
+ * transition and it costs 90 milliseconds.
+ */
+const HERO_LINE_LAG_MS = 90;
+
+/** The wipe's curve. A CSSResult so the two rules below share one literal. */
+const HERO_WIPE_EASE = css`cubic-bezier(0.2, 0.7, 0.3, 1)`;
+
+/**
+ * One phrase, as the two blocks the wipe clips.
+ *
+ * THE TRAILING SPACE IS LOAD-BEARING. Two block spans with nothing between
+ * them give "for buildingsites." to anything reading the heading's text, so
+ * the first line carries the space that keeps the sentence a sentence. The
+ * `</span\n  ><span` breaks are the same reason: whitespace written between
+ * the tags would land in the text.
+ */
+function heroLines(phrase: readonly [string, string]) {
+  return html`<span class="hero-line">${phrase[0]} </span
+    ><span class="hero-line hero-landing">${phrase[1]}</span
+  >`;
+}
 
 /**
  * The heading's accessible name: stable, complete, and never re-announced.
@@ -783,11 +833,39 @@ export class SplashPage extends LitroPage {
    */
   static override properties = {
     heroPhrase: { state: true },
+    heroOut: { state: true },
+    heroTick: { state: true },
   };
 
   heroPhrase = 0;
 
+  /**
+   * The phrase being wiped away, or undefined once its wipe has finished.
+   *
+   * IT IS CLEARED RATHER THAN LEFT IN PLACE. A phrase whose wipe has ended is
+   * clipped to nothing and cannot be seen, but it can still be read out of
+   * the DOM -- so the rotating block's text would name two phrases for the
+   * whole 2.8 seconds and mean neither.
+   */
+  heroOut: number | undefined = undefined;
+
+  /**
+   * Counts rotations. It exists only to force a fresh layer element.
+   *
+   * A CSS ANIMATION RUNS ONCE PER ELEMENT. Lit reuses the DOM node and
+   * rewrites the text inside it, so the wipe would play on the first rotation
+   * and never again. Keying the layer on this counter makes every rotation a
+   * new element, and a new element runs the animation from the start.
+   *
+   * It begins at 0, which is what the server renders and what the client
+   * hydrates -- and 0 is also what leaves the wipe off the first paint, so a
+   * page load is not an animation.
+   */
+  heroTick = 0;
+
   #heroTimer: ReturnType<typeof setInterval> | undefined;
+
+  #heroClear: ReturnType<typeof setTimeout> | undefined;
 
   #reduceMotion: MediaQueryList | undefined;
 
@@ -822,19 +900,62 @@ export class SplashPage extends LitroPage {
       this.#stopHero();
       // Back to the first phrase, so a reader who turns the preference on
       // mid-rotation is left on the sentence the served HTML carried rather
-      // than on whichever one happened to be up.
+      // than on whichever one happened to be up. The tick goes back with it,
+      // which takes the wipe off the layer entirely rather than leaving a
+      // stopped animation on it.
       this.heroPhrase = 0;
+      this.heroOut = undefined;
+      this.heroTick = 0;
       return;
     }
     if (this.#heroTimer !== undefined) return;
     this.#heroTimer = setInterval(() => {
+      this.heroOut = this.heroPhrase;
       this.heroPhrase = (this.heroPhrase + 1) % HERO_PHRASES.length;
+      this.heroTick += 1;
+      // THIS DOES NOT DRIVE THE WIPE. The wipe is the stylesheet's, start to
+      // finish; this only takes away the phrase the wipe has finished with.
+      // If it never runs, the outgoing line stays clipped to nothing and the
+      // incoming one stays fully revealed -- the headline still reads.
+      clearTimeout(this.#heroClear);
+      this.#heroClear = setTimeout(
+        () => {
+          this.heroOut = undefined;
+        },
+        HERO_WIPE_MS + HERO_LINE_LAG_MS,
+      );
     }, HERO_PHRASE_MS);
   };
 
   #stopHero(): void {
     if (this.#heroTimer !== undefined) clearInterval(this.#heroTimer);
     this.#heroTimer = undefined;
+    if (this.#heroClear !== undefined) clearTimeout(this.#heroClear);
+    this.#heroClear = undefined;
+  }
+
+  /** The phrase on its way out, for as long as it is being wiped away. */
+  #heroOutLayer() {
+    if (this.heroOut === undefined) return nothing;
+    const phrase = HERO_PHRASES[this.heroOut];
+    if (phrase === undefined) return nothing;
+    return html`<span class="hero-layer hero-out">${heroLines(phrase)}</span>`;
+  }
+
+  /**
+   * The phrase on screen.
+   *
+   * At tick 0 it carries no `hero-in` class, so the served markup and the
+   * first paint have no animation on them at all.
+   */
+  #heroInLayer() {
+    const phrase = HERO_PHRASES[this.heroPhrase] ?? HERO_PHRASES[0];
+    return keyed(
+      this.heroTick,
+      html`<span class="hero-layer${this.heroTick === 0 ? "" : " hero-in"}"
+        >${heroLines(phrase)}</span
+      >`,
+    );
   }
 
   static override styles = [
@@ -1083,26 +1204,101 @@ export class SplashPage extends LitroPage {
      * shrink under the lede every 2.8 seconds, which is layout shift the
      * reader did not ask for.
      *
-     * THERE IS NO TRANSITION, and that is a choice rather than an omission. A
-     * typewriter is the cliche and a fade or a slide is the generator default;
-     * this page states in its own source that it "speaks in one voice, and the
-     * voice is the terminal's", and a terminal does not animate a line in — it
-     * prints it. So the phrase is reprinted on a steady beat, in the same
-     * color and the same face as the stem, with nothing about it that says
-     * widget. */
+     * THE TRANSITION IS A MASK WIPE, a line at a time, with the accent on the
+     * second line. The phrase used to be reprinted with no transition at all,
+     * on the argument that a terminal does not animate a line in — it prints
+     * it. What that missed is that a terminal prints a line SOMEWHERE, and
+     * this one reprinted in place with nothing to say a change had happened.
+     * A wipe keeps the argument and fixes the miss: one edge crosses the
+     * line, the old text is clipped away behind it as the new is revealed in
+     * front of it, and nothing fades, slides or bounces.
+     *
+     * THE ACCENT FALLS ON THE SECOND LINE ONLY. It is the line that carries
+     * the payload word — sites, agents, MCP servers, an MCP host, at once —
+     * and half a headline of color is enough to mark it. The whole phrase in
+     * the accent re-opens a decision this file already made once: the h1 is a
+     * flat --nova-text because the gradient it used to carry needed a
+     * drop-shadow to stay legible.
+     *
+     * TWO LAYERS, STACKED, NOT ONE. The outgoing and incoming phrases are
+     * different text, so they cannot share an element. They are absolutely
+     * placed and their clips are complementary, so they tile either side of
+     * one moving edge and the box below can never move. */
     .hero-stem,
-    .hero-rot {
+    .hero-rot,
+    .hero-line {
       display: block;
     }
 
     .hero-rot {
+      position: relative;
       min-height: 2.04em;
     }
 
-    /* NON-NEGOTIABLE, AND HANDLED IN THE SCRIPT. The rotation is stopped when
-       this query matches, so the timer never runs and one phrase stays up. The
+    .hero-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* The accent this page sets large type in. --nova-accent is the brighter
+       orange for marks and rules; --nova-accent-text is the one that keeps
+       its contrast on the light ground as well as the dark. */
+    .hero-landing {
+      color: var(--nova-accent-text);
+    }
+
+    .hero-out .hero-line {
+      animation: hero-wipe-out ${HERO_WIPE_MS}ms ${HERO_WIPE_EASE} both;
+    }
+
+    .hero-in .hero-line {
+      animation: hero-wipe-in ${HERO_WIPE_MS}ms ${HERO_WIPE_EASE} both;
+    }
+
+    /* THE LAG HAS TO BE AT LEAST AS SPECIFIC AS THE SHORTHAND ABOVE. The
+       animation shorthand resets animation-delay, so a less specific rule
+       setting the lag is thrown away silently and the two lines move as one
+       swipe. */
+    .hero-out .hero-line:nth-child(2),
+    .hero-in .hero-line:nth-child(2) {
+      animation-delay: ${HERO_LINE_LAG_MS}ms;
+    }
+
+    @keyframes hero-wipe-out {
+      from {
+        clip-path: inset(0 0 0 0);
+      }
+      to {
+        clip-path: inset(0 0 0 100%);
+      }
+    }
+
+    @keyframes hero-wipe-in {
+      from {
+        clip-path: inset(0 100% 0 0);
+      }
+      to {
+        clip-path: inset(0 0 0 0);
+      }
+    }
+
+    /* NON-NEGOTIABLE, AND HELD IN TWO PLACES. The script stops the timer when
+       this query matches, so no rotation starts and one phrase stays up; the
        component listens for the query changing, so turning the preference on
-       mid-rotation stops it immediately and returns to the served sentence. */
+       mid-rotation stops it immediately and returns to the served sentence.
+       The rules below are the same answer written where a failed script
+       cannot lose it. Neither the phrase nor its accent is carried BY an
+       animation, so removing the animations leaves the phrase printed — which
+       is exactly the state the page shipped before the wipe existed. */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-out {
+        display: none;
+      }
+
+      .hero-line {
+        animation: none;
+      }
+    }
 
     /* The lede keeps its own, narrower measure. The slab below it does not:
        a command has to be read in one piece, so it takes the whole column. */
@@ -1935,6 +2131,13 @@ export class SplashPage extends LitroPage {
     //     with the visible sentence, so the two readings are the
     //     same heading rather than two different ones.
     //
+    //     THE WIPE IS THE STYLESHEET'S, not this script's. The two
+    //     layers below are a text swap; every frame between them is
+    //     a CSS animation. If the bundle never arrives the heading
+    //     is the served sentence, printed, and if it dies mid-
+    //     rotation the incoming line is already fully revealed.
+    //     Nothing here can leave a half-wiped line on screen.
+    //
     // <p class="lede">
     //     THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
     //     so the first sentence names the three audiences one app
@@ -2078,7 +2281,7 @@ export class SplashPage extends LitroPage {
                 <h1 aria-label="${HERO_ARIA}">
                   <span class="hero-stem">One framework</span>
                   <span class="hero-rot" aria-hidden="true"
-                    >${HERO_PHRASES[this.heroPhrase] ?? HERO_PHRASES[0]}</span
+                    >${this.#heroOutLayer()}${this.#heroInLayer()}</span
                   >
                 </h1>
                 <p class="lede">
