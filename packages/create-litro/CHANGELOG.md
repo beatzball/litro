@@ -1,5 +1,16 @@
 # create-litro
 
+## 0.15.1
+
+### Patch Changes
+
+- 12c9a22: Recipe templates no longer ship design notes to the reader. The HTML comments in
+  the fullstack, 11ty-blog, starlight and supernova templates — including the
+  supernova landing page's 13 blocks of design rationale — are now TypeScript
+  comments beside the markup they explain. A scaffolded site served ours as its
+  own page weight; the supernova landing page carried the most of it. Nothing is
+  lost: the prose is still there, above the template, where a developer reads it.
+
 ## 0.15.0
 
 ### Minor Changes
