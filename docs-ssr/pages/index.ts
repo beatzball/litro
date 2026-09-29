@@ -111,12 +111,38 @@ const HERO_PHRASE_MS = 2800;
 /**
  * How long one line takes to wipe.
  *
- * CHOSEN AGAINST THE ALTERNATIVES RUNNING SIDE BY SIDE, not from a curve. A
- * wipe is a reading gesture -- the eye follows the edge -- and past roughly
- * 550ms the edge moves slower than the eye does and stops leading it. This
- * value is interpolated into the stylesheet below, so it is written once.
+ * A WIPE IS A READING GESTURE -- the eye follows the edge -- so the edge has
+ * to be on screen long enough to be followed. Measured on the built page,
+ * this duration keeps it moving for 325ms, between 10% and 90% of its
+ * travel. Shorter than that and the eye stops reading a wipe and starts
+ * reading a swap.
+ *
+ * This value is interpolated into the stylesheet below, so it is written
+ * once.
  */
-const HERO_WIPE_MS = 420;
+const HERO_WIPE_MS = 700;
+
+/**
+ * How far the clip region reaches past the line box, top and bottom.
+ *
+ * clip-path DOES NOT RESPECT overflow: visible. The h1 is set at a 1.02
+ * line-height, which is 89.8px at the 88px desktop size against the 101px
+ * the face itself asks for, so every descender already hangs below the line
+ * box and is drawn anyway -- until a clip-path is added, at which point the
+ * bottom edge shaves the g, y, p, j and q flat.
+ *
+ * MEASURED, NOT GUESSED. Clipping the line to inset(0 ...) and diffing the
+ * render against the unclipped one loses ink at 1280 and at 390; the top
+ * edge loses none. Any negative bleed from -0.01em up is already clean at
+ * both widths. -0.15em is the comfortable version of that number and it is
+ * written in em, so it scales with the clamp() from 88px down to 44px.
+ *
+ * IT IS APPLIED ON BOTH EDGES even though only the bottom one cuts today.
+ * The bleed then describes the line's own box rather than one face's
+ * descender depth, and a fallback face with taller ascenders cannot
+ * reintroduce the defect at the other edge.
+ */
+const HERO_CLIP_BLEED = css`-0.15em`;
 
 /**
  * How far the second line trails the first.
@@ -128,8 +154,17 @@ const HERO_WIPE_MS = 420;
  */
 const HERO_LINE_LAG_MS = 90;
 
-/** The wipe's curve. A CSSResult so the two rules below share one literal. */
-const HERO_WIPE_EASE = css`cubic-bezier(0.2, 0.7, 0.3, 1)`;
+/**
+ * The wipe's curve. A CSSResult so the two rules below share one literal.
+ *
+ * THE CURVE MATTERED MORE THAN THE DURATION. cubic-bezier(0.2, 0.7, 0.3, 1)
+ * sprints and then coasts: sampled live it was half done in the first
+ * 100ms, which left the moving edge visible for about two frames and the
+ * remaining two thirds of the animation spent finishing a wipe the eye had
+ * already read as a swap. This curve travels at a much more even rate, so
+ * the edge is on screen and moving for most of the duration.
+ */
+const HERO_WIPE_EASE = css`cubic-bezier(0.4, 0, 0.2, 1)`;
 
 /**
  * One phrase, as the two blocks the wipe clips.
@@ -1273,21 +1308,27 @@ export class SplashPage extends LitroPage {
       animation-delay: ${HERO_LINE_LAG_MS}ms;
     }
 
+    /* EVERY CLIP HERE CARRIES THE BLEED, on both keyframes and both ends of
+       each one, so the clip's top and bottom edges never move across the
+       whole transition -- only its left or right edge does. The resting
+       state is the "both" fill of these same animations, so it carries the
+       bleed too; the first paint has no animation at all and so is not
+       clipped. */
     @keyframes hero-wipe-out {
       from {
-        clip-path: inset(0 0 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 0);
       }
       to {
-        clip-path: inset(0 0 0 100%);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 100%);
       }
     }
 
     @keyframes hero-wipe-in {
       from {
-        clip-path: inset(0 100% 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 100% ${HERO_CLIP_BLEED} 0);
       }
       to {
-        clip-path: inset(0 0 0 0);
+        clip-path: inset(${HERO_CLIP_BLEED} 0 ${HERO_CLIP_BLEED} 0);
       }
     }
 
