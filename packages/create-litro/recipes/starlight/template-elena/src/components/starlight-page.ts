@@ -138,6 +138,12 @@ export class StarlightPage extends Elena(HTMLElement) {
 
     const bodyClass = this.nosidebar ? 'body no-sidebar' : 'body';
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <style>
         @scope (starlight-page) {
@@ -250,7 +256,6 @@ export class StarlightPage extends Elena(HTMLElement) {
           </main>
           ${unsafeHTML(tocHtml)}
         </div>
-        <!-- Credit line. Delete this element if you would rather not carry it. -->
         <litro-footer recipe="{{recipe}}"></litro-footer>
       </div>
     `;

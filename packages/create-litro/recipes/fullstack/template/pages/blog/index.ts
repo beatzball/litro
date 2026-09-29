@@ -5,6 +5,12 @@ import '../../src/components/litro-footer.js';
 @customElement('page-blog')
 export class BlogPage extends LitElement {
   render() {
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <main>
         <h1>Blog</h1>
@@ -16,7 +22,6 @@ export class BlogPage extends LitElement {
         </ul>
         <litro-link href="/">← Back Home</litro-link>
       </main>
-      <!-- Credit line. Delete this element if you would rather not carry it. -->
       <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }

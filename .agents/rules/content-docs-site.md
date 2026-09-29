@@ -148,3 +148,32 @@ Appending them would only have reset the clock.
 **Check:** `docs/src/__tests__/sitemap-completeness.test.ts` rebuilds the
 expected URL set from the real page files and content files, so a new page, doc
 or tag fails the test until the sitemap carries it.
+
+### CONTENT-010 — Design rationale goes beside a template, never inside it
+
+An `html` tagged template carries no HTML comment. The prose that explains why the
+markup is shaped the way it is goes in a TypeScript comment above the statement
+that opens the template — a `TEMPLATE NOTES` block above `return html`.
+
+**Why:** every byte of an HTML comment is served to every reader of every page
+that renders it. The docs landing page carried 22 authored comments, 11,601
+bytes, 6.2% of its served HTML; the longest single one was 1,521 bytes. The same
+comments were in the supernova recipe, so a scaffolded site shipped our design
+notes as its own bloat.
+
+Stripping them from the emitted HTML instead is the wrong fix. Lit's
+`<!--lit-part-->`, `<!--/lit-part-->` and `<!--lit-node n-->` are hydration
+markers, not comments — the client runtime reads them to find where each binding
+lives in the server-rendered DOM. A transform over emitted HTML has to tell
+those apart from prose byte for byte, forever, and a mistake breaks hydration
+silently, in a way no unit test catches. A comment that is never written cannot
+be stripped wrongly.
+
+Keep the reasoning. Moving it is the fix; deleting it is not.
+
+**Check:** `node scripts/check-html-comments.mjs` walks every tagged template in
+tracked sources — nesting included — and fails on any HTML comment inside one.
+It runs in the Doc References job and self-tests first. The HTML shell in
+`packages/framework/src/runtime/shell.ts` is a plain template literal, outside
+that scanner's reach, so `shell.test.ts` asserts that neither `head` nor `foot`
+contains `<!--`.

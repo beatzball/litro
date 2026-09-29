@@ -178,6 +178,14 @@ export class DocPage extends LitroPage {
     const data = this.serverData as DocPageData | null;
     if (!data?.doc) return html`<p>Loading&hellip;</p>`;
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // ${unsafeHTML(data.body)}
+    //     unsafeHTML renders the Markdown-generated HTML directly.
+    //     The content/docs directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without sanitizing.
     return html`
       <starlight-page
         siteTitle="${data.siteTitle}"
@@ -189,9 +197,6 @@ export class DocPage extends LitroPage {
         currentPath="/docs/${data.currentSlug}"
       >
         <div slot="content">
-          <!-- unsafeHTML renders the Markdown-generated HTML directly.
-               The content/docs directory is trusted-author-only; do not place
-               user-submitted or untrusted content here without sanitizing. -->
           ${unsafeHTML(data.body)}
 
           ${data.prevDoc || data.nextDoc ? html`

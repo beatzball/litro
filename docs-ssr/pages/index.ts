@@ -1881,20 +1881,200 @@ export class SplashPage extends LitroPage {
       code = { tool: "", data: "" },
     } = data ?? {};
 
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // <starlight-header
+    //     THE SAME HEADER THE DOCS PAGES HAVE. The landing page used to
+    //     carry a terminal bar of its own here, which meant a reader met
+    //     two different headers on one site. The terminal character did not
+    //     go away: it moved to the status line at the foot of the window,
+    //     where a status line belongs and where it has a page to describe.
+    //
+    //     The wordmark and the links are set in the mono through
+    //     --sl-font-brand, set in the token block above.
+    //
+    //     spaNav is this site's one difference (CONTENT-007): it turns on
+    //     the client router for the header's links and shows the search
+    //     control, which the static site has no backend for.
+    //
+    // <img slot="mark" src="/logo.png" alt="" aria-hidden="true" />
+    //     Litro's flame, cropped by the hero's right edge and drawn
+    //     dark. It is atmosphere, not a badge: the page already says
+    //     the name in the status bar and in the headline.
+    //
+    // <p class="eyebrow-pill">Built on web components</p>
+    //     THE PILL SAYS WHAT THE HEADLINE CANNOT FIT.
+    //     It read "Web and Agent Framework" while the h1 underneath
+    //     read "One framework for…", which is the same sentence
+    //     twice in the most valuable space on the page.
+    //
+    //     What the hero does NOT say anywhere else is what a
+    //     component here actually is. The headline claims breadth,
+    //     the lede names the server and the per-call render, and
+    //     neither has room for the substrate — which is the one
+    //     thing that separates Litro from every framework in the
+    //     field at once: Next is React, Nuxt is Vue, and the agent
+    //     frameworks have no component model at all. So the pill
+    //     carries it.
+    //
+    //     It is the same 23 characters as the string it replaced,
+    //     so the pill keeps its width, its wrap behavior at 390px
+    //     and the 1.5rem it holds open above the headline.
+    //
+    // <h1 aria-label="${HERO_ARIA}"> — the type budget
+    //     THE H1 IS THE MONO FACE at clamp(2.75rem, 7vw, 5.5rem) in
+    //     a 46rem column, and every face in the stack has a 0.6em
+    //     advance — so a line holds about thirteen characters at
+    //     every width, because the clamp scales the type with the
+    //     viewport while the column stays capped. That budget is why
+    //     the stem is exactly one line and every phrase is exactly
+    //     two: see HERO_PHRASES.
+    //
+    // <h1 aria-label="${HERO_ARIA}"> — what it says without JavaScript
+    //     THE SERVED HTML IS ONE COMPLETE SENTENCE. With
+    //     JavaScript off, and to a crawler, this h1 reads "One
+    //     framework for building sites." — sensible on its own and
+    //     not a fragment waiting for a script. The rotation is an
+    //     enhancement layered on top of it and never the content.
+    //
+    //     THE ACCESSIBLE NAME IS STATIC. aria-label gives the
+    //     heading one stable name that carries all five phrases, so
+    //     nothing changes under a screen reader; the rotating block
+    //     is aria-hidden so it cannot be read twice. The label opens
+    //     with the visible sentence, so the two readings are the
+    //     same heading rather than two different ones.
+    //
+    // <p class="lede">
+    //     THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
+    //     so the first sentence names the three audiences one app
+    //     serves and the rest spends itself on "per call" — the
+    //     phrase no shipped competitor can copy, because Nuxt's MCP
+    //     Apps bundle at build time and CopilotKit renders in the
+    //     client. Breadth then depth, in that order.
+    //
+    //     NITRO IS NOT NAMED HERE, ON PURPOSE. It is a dependency
+    //     rather than a benefit, most readers do not know the word,
+    //     and it is Nuxt's engine too — so naming it in the hero
+    //     tells an informed reader we share a foundation with a
+    //     competitor, in the one place the page is trying to look
+    //     like itself. It said "server" twice in six words as well.
+    //     Somebody evaluating the stack still gets it by name, in
+    //     the Nitro Server capability pane, which is where they
+    //     look.
+    //
+    // <litro-link href="/docs/agents" class="button ghost"
+    //     The second slot was Blog, which is in the header nav and
+    //     in the footer already. After the reposition it is worth
+    //     more as the front door to the half the hero now leads
+    //     with. Still two buttons.
+    //
+    // <section class="ai shell" aria-label="Agents">
+    //     ══ THE AGENT SECTION ════════════════════════════════════
+    //     Option C, with the accent rule along the top removed.
+    //
+    //     A near-black panel with one bright rule across it is a shape a
+    //     generator reaches for, and it was doing a job the page can do
+    //     with its own vocabulary instead. What now says "this is ONE
+    //     object, not three boxes":
+    //
+    //       · the cells SHARE hairlines and the block carries a single
+    //         outer rule, the way litro-pane-grid draws a wall of panes;
+    //       · the source cell sits on the raised surface and the two
+    //         output cells on the page ground, so the band reads as one
+    //         thing with a lit side and a quiet side;
+    //       · the two outputs differ in their OWN right — the data is
+    //         monospace and dim, the card is real, in the body face, on
+    //         its own surface — so the fork is legible with no stripe
+    //         pointing at it.
+    //
+    //     There is no accent anywhere in this section.
+    //
+    //     THE STRIP IS INSIDE THE BAND, not above it. It carries the file
+    //     name, which is why the source does not repeat it as a comment,
+    //     and it gives the band a head so the whole thing reads as one
+    //     object from across the page rather than only up close. It is
+    //     litro-pane's own title strip.
+    //
+    // <p>
+    //     "GENERATIVE UI" IS IN HERE ON PURPOSE, ONCE. It is the
+    //     field's own name for this — CopilotKit's product name, A2UI's,
+    //     the OpenUI survey's — and the page used it nowhere, so a
+    //     reader searching the space could not find Litro on the one
+    //     axis it wants. The heading keeps its own plainer words; the
+    //     phrase goes in the lede, where it costs the heading nothing.
+    //
+    // <section class="panes shell" aria-label="What you get">
+    //     ── Capabilities ─────────────────────────────────────────
+    //     THIS BLOCK USED TO COME SECOND, ABOVE THE AGENT SECTION. It comes
+    //     after it now, and the swap is the whole structural change on the
+    //     page: a reader who arrived for an agent framework had to scroll
+    //     past six cards of table stakes before the page said anything they
+    //     came for. The block now reads as the second half of the argument
+    //     — and it is a real web framework underneath — which is also why it
+    //     no longer needs an AI card of its own. The one that was removed
+    //     here was removed for duplicating the section heading below; that
+    //     section is now above.
+    //
+    //     The block opens with a CLAIM, not a label, because a reader who
+    //     has just read the hero and the band wants to know what they are
+    //     looking at before they look at it.
+    //
+    //     The panes carry a mark where litro has a real one and nothing
+    //     where it does not — no placeholder glyph. They used to lead with
+    //     [+], which earns its place in the status line and the terminal
+    //     windows, where it reports a state; on a wall of capabilities it
+    //     reported nothing.
+    //
+    //     The separate "Built on" row was folded in here: what litro
+    //     stands on and why that matters is a capability, not a footnote,
+    //     and it was too thin to hold a section of its own.
+    //
+    // ${benchmark.frameworks.length > 0
+    //     ── Performance ──────────────────────────────────────────
+    //     Build time and output size against Next and Nuxt, every figure
+    //     read from benchmarks/results/latest.json. See the note beside
+    //     the loader in pageData: nothing is typed in, a missing figure is
+    //     left out, and with no figures at all the section is not
+    //     rendered.
+    //
+    // <section class="showcase shell" aria-label="Recipes">
+    //     ── The showcase ─────────────────────────────────────────
+    //     Each row is a STARTING POINT and the pictures show the shape it
+    //     gives you, taken from real sites built with Litro. It is not a
+    //     per-site claim about which recipe each one runs — see the note
+    //     beside SHOWCASE for why that distinction is the whole point.
+    //
+    //     Every picture is lazy-loaded and carries a real description, so
+    //     the section costs nothing above the fold and reads the same to
+    //     somebody who cannot see it.
+    //
+    // <p>
+    //     ONE LINE AT 1280px, and it has to stay one: the column is
+    //     capped at 42rem, so a wider screen never rescues it. Every
+    //     word here is load-bearing — "real Litro sites" is what says
+    //     the pictures are genuine without claiming which recipe any
+    //     one of them runs.
+    //
+    // <section class="deploy shell" aria-label="Where it runs">
+    //     ── Deploy anywhere ──────────────────────────────────────
+    //     Nitro's deployment presets, which litro inherits whole. A chip
+    //     carries a mark only where a real one exists; see the note beside
+    //     DEPLOY_TARGETS.
+    //
+    // <litro-site-footer
+    //     ── SECTION 9 · Footer ───────────────────────────────────────
+    //     The map of everything the page did not cover.
+    //
+    // <litro-status-line
+    //     The status line. It is fixed to the foot of the window, so it is
+    //     the last thing in the page and the page carries the padding that
+    //     keeps the closing section clear of it.
     return html`
       <div class="page">
-        <!-- THE SAME HEADER THE DOCS PAGES HAVE. The landing page used to
-             carry a terminal bar of its own here, which meant a reader met
-             two different headers on one site. The terminal character did not
-             go away: it moved to the status line at the foot of the window,
-             where a status line belongs and where it has a page to describe.
-
-             The wordmark and the links are set in the mono through
-             --sl-font-brand, set in the token block above.
-
-             spaNav is this site's one difference (CONTENT-007): it turns on
-             the client router for the header's links and shows the search
-             control, which the static site has no backend for. -->
         <starlight-header
           siteTitle="${siteTitle}"
           .nav="${nav}"
@@ -1904,72 +2084,17 @@ export class SplashPage extends LitroPage {
 
         <main>
           <litro-hero-nova>
-            <!-- Litro's flame, cropped by the hero's right edge and drawn
-                 dark. It is atmosphere, not a badge: the page already says
-                 the name in the status bar and in the headline. -->
             <img slot="mark" src="/logo.png" alt="" aria-hidden="true" />
 
             <section class="hero shell">
               <div class="hero-copy">
-                <!-- THE PILL SAYS WHAT THE HEADLINE CANNOT FIT.
-                     It read "Web and Agent Framework" while the h1 underneath
-                     read "One framework for…", which is the same sentence
-                     twice in the most valuable space on the page.
-
-                     What the hero does NOT say anywhere else is what a
-                     component here actually is. The headline claims breadth,
-                     the lede names the server and the per-call render, and
-                     neither has room for the substrate — which is the one
-                     thing that separates Litro from every framework in the
-                     field at once: Next is React, Nuxt is Vue, and the agent
-                     frameworks have no component model at all. So the pill
-                     carries it.
-
-                     It is the same 23 characters as the string it replaced,
-                     so the pill keeps its width, its wrap behavior at 390px
-                     and the 1.5rem it holds open above the headline. -->
                 <p class="eyebrow-pill">Built on web components</p>
-                <!-- THE H1 IS THE MONO FACE at clamp(2.75rem, 7vw, 5.5rem) in
-                     a 46rem column, and every face in the stack has a 0.6em
-                     advance — so a line holds about thirteen characters at
-                     every width, because the clamp scales the type with the
-                     viewport while the column stays capped. That budget is why
-                     the stem is exactly one line and every phrase is exactly
-                     two: see HERO_PHRASES. -->
-                <!-- THE SERVED HTML IS ONE COMPLETE SENTENCE. With
-                     JavaScript off, and to a crawler, this h1 reads "One
-                     framework for building sites." — sensible on its own and
-                     not a fragment waiting for a script. The rotation is an
-                     enhancement layered on top of it and never the content.
-
-                     THE ACCESSIBLE NAME IS STATIC. aria-label gives the
-                     heading one stable name that carries all five phrases, so
-                     nothing changes under a screen reader; the rotating block
-                     is aria-hidden so it cannot be read twice. The label opens
-                     with the visible sentence, so the two readings are the
-                     same heading rather than two different ones. -->
                 <h1 aria-label="${HERO_ARIA}">
                   <span class="hero-stem">One framework</span>
                   <span class="hero-rot" aria-hidden="true"
                     >${HERO_PHRASES[this.heroPhrase] ?? HERO_PHRASES[0]}</span
                   >
                 </h1>
-                <!-- THE LEDE ANSWERS THE HEADLINE. The h1 claims breadth,
-                     so the first sentence names the three audiences one app
-                     serves and the rest spends itself on "per call" — the
-                     phrase no shipped competitor can copy, because Nuxt's MCP
-                     Apps bundle at build time and CopilotKit renders in the
-                     client. Breadth then depth, in that order.
-
-                     NITRO IS NOT NAMED HERE, ON PURPOSE. It is a dependency
-                     rather than a benefit, most readers do not know the word,
-                     and it is Nuxt's engine too — so naming it in the hero
-                     tells an informed reader we share a foundation with a
-                     competitor, in the one place the page is trying to look
-                     like itself. It said "server" twice in six words as well.
-                     Somebody evaluating the stack still gets it by name, in
-                     the Nitro Server capability pane, which is where they
-                     look. -->
                 <p class="lede">
                   One app serves your pages, your agents, and any MCP host. A
                   tool returns a real component — rendered per call, from the
@@ -1986,10 +2111,6 @@ export class SplashPage extends LitroPage {
                   <litro-link href="/docs/introduction" class="button primary"
                     >Get Started</litro-link
                   >
-                  <!-- The second slot was Blog, which is in the header nav and
-                       in the footer already. After the reposition it is worth
-                       more as the front door to the half the hero now leads
-                       with. Still two buttons. -->
                   <litro-link href="/docs/agents" class="button ghost"
                     >Agents and MCP</litro-link
                   >
@@ -1998,41 +2119,9 @@ export class SplashPage extends LitroPage {
             </section>
           </litro-hero-nova>
 
-          <!-- ══ THE AGENT SECTION ════════════════════════════════════
-               Option C, with the accent rule along the top removed.
-
-               A near-black panel with one bright rule across it is a shape a
-               generator reaches for, and it was doing a job the page can do
-               with its own vocabulary instead. What now says "this is ONE
-               object, not three boxes":
-
-                 · the cells SHARE hairlines and the block carries a single
-                   outer rule, the way litro-pane-grid draws a wall of panes;
-                 · the source cell sits on the raised surface and the two
-                   output cells on the page ground, so the band reads as one
-                   thing with a lit side and a quiet side;
-                 · the two outputs differ in their OWN right — the data is
-                   monospace and dim, the card is real, in the body face, on
-                   its own surface — so the fork is legible with no stripe
-                   pointing at it.
-
-               There is no accent anywhere in this section.
-
-               THE STRIP IS INSIDE THE BAND, not above it. It carries the file
-               name, which is why the source does not repeat it as a comment,
-               and it gives the band a head so the whole thing reads as one
-               object from across the page rather than only up close. It is
-               litro-pane's own title strip. -->
           <section class="ai shell" aria-label="Agents">
             <div class="section-head">
               <h2 class="section-title">A tool call comes back as a component.</h2>
-              <!-- "GENERATIVE UI" IS IN HERE ON PURPOSE, ONCE. It is the
-                   field's own name for this — CopilotKit's product name, A2UI's,
-                   the OpenUI survey's — and the page used it nowhere, so a
-                   reader searching the space could not find Litro on the one
-                   axis it wants. The heading keeps its own plainer words; the
-                   phrase goes in the lede, where it costs the heading nothing.
-                   -->
               <p>
                 One return value, two audiences. This is generative UI, rendered
                 on the server: Litro agents run on the same server as your
@@ -2077,30 +2166,6 @@ export class SplashPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── Capabilities ─────────────────────────────────────────
-               THIS BLOCK USED TO COME SECOND, ABOVE THE AGENT SECTION. It comes
-               after it now, and the swap is the whole structural change on the
-               page: a reader who arrived for an agent framework had to scroll
-               past six cards of table stakes before the page said anything they
-               came for. The block now reads as the second half of the argument
-               — and it is a real web framework underneath — which is also why it
-               no longer needs an AI card of its own. The one that was removed
-               here was removed for duplicating the section heading below; that
-               section is now above.
-
-               The block opens with a CLAIM, not a label, because a reader who
-               has just read the hero and the band wants to know what they are
-               looking at before they look at it.
-
-               The panes carry a mark where litro has a real one and nothing
-               where it does not — no placeholder glyph. They used to lead with
-               [+], which earns its place in the status line and the terminal
-               windows, where it reports a state; on a wall of capabilities it
-               reported nothing.
-
-               The separate "Built on" row was folded in here: what litro
-               stands on and why that matters is a capability, not a footnote,
-               and it was too thin to hold a section of its own. -->
           <section class="panes shell" aria-label="What you get">
             <div class="section-head">
               <h2 class="section-title">The web platform, with a server attached.</h2>
@@ -2134,12 +2199,6 @@ export class SplashPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── Performance ──────────────────────────────────────────
-               Build time and output size against Next and Nuxt, every figure
-               read from benchmarks/results/latest.json. See the note beside
-               the loader in pageData: nothing is typed in, a missing figure is
-               left out, and with no figures at all the section is not
-               rendered. -->
           ${benchmark.frameworks.length > 0
             ? html`
                 <section class="stats shell" aria-label="How Litro performs">
@@ -2245,23 +2304,9 @@ export class SplashPage extends LitroPage {
           </section>
 
 
-          <!-- ── The showcase ─────────────────────────────────────────
-               Each row is a STARTING POINT and the pictures show the shape it
-               gives you, taken from real sites built with Litro. It is not a
-               per-site claim about which recipe each one runs — see the note
-               beside SHOWCASE for why that distinction is the whole point.
-
-               Every picture is lazy-loaded and carries a real description, so
-               the section costs nothing above the fold and reads the same to
-               somebody who cannot see it. -->
           <section class="showcase shell" aria-label="Recipes">
             <div class="section-head">
               <h2 class="section-title">Start from a recipe.</h2>
-              <!-- ONE LINE AT 1280px, and it has to stay one: the column is
-                   capped at 42rem, so a wider screen never rescues it. Every
-                   word here is load-bearing — "real Litro sites" is what says
-                   the pictures are genuine without claiming which recipe any
-                   one of them runs. -->
               <p>
                 Four starting points. Screenshots of real Litro sites show each
                 shape.
@@ -2309,10 +2354,6 @@ export class SplashPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── Deploy anywhere ──────────────────────────────────────
-               Nitro's deployment presets, which litro inherits whole. A chip
-               carries a mark only where a real one exists; see the note beside
-               DEPLOY_TARGETS. -->
           <section class="deploy shell" aria-label="Where it runs">
             <h2 class="section-title">Deploy anywhere</h2>
             <p>
@@ -2364,8 +2405,6 @@ export class SplashPage extends LitroPage {
           </section>
         </main>
 
-        <!-- ── SECTION 9 · Footer ───────────────────────────────────────
-             The map of everything the page did not cover. -->
         <litro-site-footer
           siteTitle="${siteTitle}"
           .columns="${FOOTER_COLUMNS}"
@@ -2374,9 +2413,6 @@ export class SplashPage extends LitroPage {
           note="— a beatzball project"
         ></litro-site-footer>
 
-        <!-- The status line. It is fixed to the foot of the window, so it is
-             the last thing in the page and the page carries the padding that
-             keeps the closing section clear of it. -->
         <litro-status-line
           siteTitle="${siteTitle}"
           .cells="${statusCells}"

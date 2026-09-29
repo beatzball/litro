@@ -315,6 +315,15 @@ export class StarlightPage extends LitElement {
   override render() {
     const hasSidebar = !this.noSidebar;
     const cells = this._cells;
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-status-line
+    //     The status line is fixed to the foot of the window, so it sits
+    //     OUTSIDE .page-wrap: inside it, the sidebar's own scrolling and the
+    //     sticky header would both have to reason about it. The padding that
+    //     keeps the last line of content clear of it is on .page-wrap.
     return html`
       <div class="page-wrap">
         <starlight-header
@@ -354,10 +363,6 @@ export class StarlightPage extends LitElement {
           </aside>
         </div>
       </div>
-      <!-- The status line is fixed to the foot of the window, so it sits
-           OUTSIDE .page-wrap: inside it, the sidebar's own scrolling and the
-           sticky header would both have to reason about it. The padding that
-           keeps the last line of content clear of it is on .page-wrap. -->
       <litro-status-line
         siteTitle="${this.siteTitle}"
         .cells="${cells}"

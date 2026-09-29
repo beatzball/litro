@@ -1210,17 +1210,140 @@ export class SupernovaPage extends LitroPage {
     // by hand.
     const blogButton = html`<a href="/blog" class="button ghost">Blog</a>`;
 
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // <starlight-header
+    //     THE SAME HEADER THE DOCS HALF OF THIS SITE HAS. This page used
+    //     to carry a terminal bar of its own here, and a reader met two
+    //     different headers on one site. The terminal character did not go
+    //     away: it moved to the status line at the foot of the window,
+    //     where a status line belongs and where it has a page to describe.
+    //
+    //     The wordmark and the links are set in the mono through
+    //     --sl-font-brand, in the token block above. That is the whole of
+    //     the difference between this header and the docs pages' one.
+    //
+    // <section class="hero shell">
+    //     YOUR MARK GOES HERE. Put an element with slot="mark" on
+    //     this line — an inline SVG, or an image from public/ — and the
+    //     hero crops it against its right edge. Mark it aria-hidden:
+    //     it is atmosphere, and the page already says your project's
+    //     name in the status bar and in the headline. The component's
+    //     own file has the details.
+    //
+    //     Until you do, the hero draws the recipe's own mark: the
+    //     ejecta, a spray of shards thrown out of a point off the
+    //     right edge, in your accent. It is the slot's fallback, so
+    //     the moment you slot a mark of your own it goes away by
+    //     itself. There is nothing to delete here.
+    //
+    // <span slot="note"
+    //     One line of small print: what the command needs first,
+    //     or what it will not do. Delete it and the line goes.
+    //
+    // <section class="logos shell" aria-label="Who uses it">
+    //     ── SECTION 2 · Proof ────────────────────────────────────
+    //     The people already using your project, as a row of marks.
+    //
+    //     IT SHIPS EMPTY, and the slots say so. Put real logos in — an
+    //     image or an inline vector per slot — or DELETE THIS SECTION.
+    //     Never put a name in here that did not agree to be here; a wall
+    //     of borrowed logos is the one mistake a reader does not forgive.
+    //
+    //     A COMMENT IN A LIT TEMPLATE IS RENDERED INTO THE PAGE, so this
+    //     text ships to every visitor. That is why it names no tags: the
+    //     words "less than i m g" in here would have made the recipe's
+    //     own "asks for no image" test fail, which is how this was
+    //     found.
+    //
+    // ${row.figure
+    //     The picture goes in the "figure" slot. A row whose
+    //     HIGHLIGHTS entry has no figure of its own gets none,
+    //     and lays itself out across the full width.
+    //
+    // <section class="panes shell" aria-label="What you get">
+    //     ── SECTION 3 · Capabilities ─────────────────────────────
+    //     What the project does. Panes sharing hairlines, not cards: a
+    //     block that reads as one object with divisions rather than a
+    //     scatter of floating boxes.
+    //
+    //     The panes are two per row on a wide screen and one per row on a
+    //     phone. Change the span attribute to 3 for halves, 2 for thirds;
+    //     the grid is six columns wide.
+    //
+    // <section class="ai shell" aria-label="One thing it does">
+    //     ── SECTION 3b · One thing, proved ───────────────────────
+    //     ONE BAND, NOT THREE BOXES. The cells share hairlines and the
+    //     block carries a single outer rule, the way litro-pane-grid
+    //     draws a wall of panes; the source cell sits on the raised
+    //     surface and the two output cells on the page ground, so the
+    //     band has a lit side and a quiet side. There is no accent stripe
+    //     and no eyebrow: a panel crossed by one bright rule is a shape
+    //     every generated page reaches for, and the structure already
+    //     says what it was saying.
+    //
+    //     The strip is INSIDE the band and carries the file name, which
+    //     is why the source does not repeat it as a comment.
+    //
+    //     DELETE THIS SECTION if you have no small true example to put in
+    //     it. An invented one costs more than an empty space.
+    //
+    // <section class="panes shell" aria-label="What it is built on">
+    //     ── SECTION 4 · Built on ─────────────────────────────────
+    //     What the project stands on. Every project can fill this on the
+    //     day it is scaffolded, which is why it ships with real structure
+    //     and placeholder names rather than empty slots.
+    //
+    //     DELETE THIS SECTION if you would rather not name your
+    //     dependencies.
+    //
+    // <section class="stats shell" aria-label="The project in numbers">
+    //     ── SECTION 5 · Proof by number ──────────────────────────
+    //     Downloads, stars, contributors. The values are DASHES until you
+    //     measure them — see the note beside STATS.
+    //
+    //     DELETE THIS SECTION until you have numbers. A row of dashes on
+    //     a live site says less than no row at all.
+    //
+    // <section class="showcase shell" aria-label="The ecosystem">
+    //     ── SECTION 6 · Ecosystem, and the showcase ──────────────
+    //     What the project extends with, and what each one looks like.
+    //
+    //     THE PICTURE SLOTS SHIP EMPTY, like the logo wall above. Drop a
+    //     screenshot of a real site into each one — anything under
+    //     public/ — or delete the list and keep the text. An empty frame
+    //     on a live site says less than no frame at all.
+    //
+    //     WHAT A ROW CLAIMS: it is a starting point, and the pictures
+    //     show the shape it gives you. Keep it that way and you never
+    //     have to argue about which site runs which version of what.
+    //
+    //     DELETE THIS SECTION if your project has no extensions yet.
+    //
+    // <section class="deploy shell" aria-label="Where it runs">
+    //     ── SECTION 7 · Deploy anywhere ──────────────────────────
+    //     Where it runs. One claim and a list, because "where does this
+    //     have to live" is the objection that stops an evaluation dead.
+    //
+    //     DELETE THIS SECTION if your project is not something a reader
+    //     deploys.
+    //
+    // <litro-site-footer
+    //     ── SECTION 9 · Footer ───────────────────────────────────────
+    //     The map of everything the page did not cover. Pass no columns and
+    //     only the fine print is drawn, which is where this started: one
+    //     credit line.
+    //
+    // <litro-status-line
+    //     The status line. It is fixed to the foot of the window, so it is
+    //     the last thing in the page and .page carries the padding that
+    //     keeps the credit line clear of it.
     return html`
       <div class="page">
-        <!-- THE SAME HEADER THE DOCS HALF OF THIS SITE HAS. This page used
-             to carry a terminal bar of its own here, and a reader met two
-             different headers on one site. The terminal character did not go
-             away: it moved to the status line at the foot of the window,
-             where a status line belongs and where it has a page to describe.
-
-             The wordmark and the links are set in the mono through
-             --sl-font-brand, in the token block above. That is the whole of
-             the difference between this header and the docs pages' one. -->
         <starlight-header
           siteTitle="${siteTitle}"
           .nav="${nav}"
@@ -1229,18 +1352,6 @@ export class SupernovaPage extends LitroPage {
 
         <main>
           <litro-hero-nova>
-            <!-- YOUR MARK GOES HERE. Put an element with slot="mark" on
-                 this line — an inline SVG, or an image from public/ — and the
-                 hero crops it against its right edge. Mark it aria-hidden:
-                 it is atmosphere, and the page already says your project's
-                 name in the status bar and in the headline. The component's
-                 own file has the details.
-
-                 Until you do, the hero draws the recipe's own mark: the
-                 ejecta, a spray of shards thrown out of a point off the
-                 right edge, in your accent. It is the slot's fallback, so
-                 the moment you slot a mark of your own it goes away by
-                 itself. There is nothing to delete here. -->
 
             <section class="hero shell">
               <div class="hero-copy">
@@ -1251,8 +1362,6 @@ export class SupernovaPage extends LitroPage {
                     'Keep it concrete: this is the only paragraph most readers finish.'}
                 </p>
                 <litro-install-command command="${INSTALL_COMMAND}">
-                  <!-- One line of small print: what the command needs first,
-                       or what it will not do. Delete it and the line goes. -->
                   <span slot="note"
                     >Say what it needs before it will run — a runtime, a
                     version, an account.</span
@@ -1295,19 +1404,6 @@ export class SupernovaPage extends LitroPage {
             ''
           }
 
-          <!-- ── SECTION 2 · Proof ────────────────────────────────────
-               The people already using your project, as a row of marks.
-
-               IT SHIPS EMPTY, and the slots say so. Put real logos in — an
-               image or an inline vector per slot — or DELETE THIS SECTION.
-               Never put a name in here that did not agree to be here; a wall
-               of borrowed logos is the one mistake a reader does not forgive.
-
-               A COMMENT IN A LIT TEMPLATE IS RENDERED INTO THE PAGE, so this
-               text ships to every visitor. That is why it names no tags: the
-               words "less than i m g" in here would have made the recipe's
-               own "asks for no image" test fail, which is how this was
-               found. -->
           <section class="logos shell" aria-label="Who uses it">
             <p class="eyebrow">Used by</p>
             <ul class="logo-wall">
@@ -1324,9 +1420,6 @@ export class SupernovaPage extends LitroPage {
                   .commands="${row.commands}"
                 >
                   <p>${row.description}</p>
-                  <!-- The picture goes in the "figure" slot. A row whose
-                       HIGHLIGHTS entry has no figure of its own gets none,
-                       and lays itself out across the full width. -->
                   ${row.figure
                     ? html`
                         <litro-term-window
@@ -1356,14 +1449,6 @@ export class SupernovaPage extends LitroPage {
             </div>
           </section>
 
-          <!-- ── SECTION 3 · Capabilities ─────────────────────────────
-               What the project does. Panes sharing hairlines, not cards: a
-               block that reads as one object with divisions rather than a
-               scatter of floating boxes.
-
-               The panes are two per row on a wide screen and one per row on a
-               phone. Change the span attribute to 3 for halves, 2 for thirds;
-               the grid is six columns wide. -->
           <section class="panes shell" aria-label="What you get">
             <h2 class="section-title">What ${siteTitle} ships with</h2>
             <litro-pane-grid>
@@ -1384,21 +1469,6 @@ export class SupernovaPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── SECTION 3b · One thing, proved ───────────────────────
-               ONE BAND, NOT THREE BOXES. The cells share hairlines and the
-               block carries a single outer rule, the way litro-pane-grid
-               draws a wall of panes; the source cell sits on the raised
-               surface and the two output cells on the page ground, so the
-               band has a lit side and a quiet side. There is no accent stripe
-               and no eyebrow: a panel crossed by one bright rule is a shape
-               every generated page reaches for, and the structure already
-               says what it was saying.
-
-               The strip is INSIDE the band and carries the file name, which
-               is why the source does not repeat it as a comment.
-
-               DELETE THIS SECTION if you have no small true example to put in
-               it. An invented one costs more than an empty space. -->
           <section class="ai shell" aria-label="One thing it does">
             <div class="section-head">
               <h2 class="section-title">Name the thing only you do.</h2>
@@ -1442,13 +1512,6 @@ export class SupernovaPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── SECTION 4 · Built on ─────────────────────────────────
-               What the project stands on. Every project can fill this on the
-               day it is scaffolded, which is why it ships with real structure
-               and placeholder names rather than empty slots.
-
-               DELETE THIS SECTION if you would rather not name your
-               dependencies. -->
           <section class="panes shell" aria-label="What it is built on">
             <h2 class="section-title">Built on</h2>
             <litro-pane-grid>
@@ -1465,12 +1528,6 @@ export class SupernovaPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── SECTION 5 · Proof by number ──────────────────────────
-               Downloads, stars, contributors. The values are DASHES until you
-               measure them — see the note beside STATS.
-
-               DELETE THIS SECTION until you have numbers. A row of dashes on
-               a live site says less than no row at all. -->
           <section class="stats shell" aria-label="The project in numbers">
             <dl>
               ${STATS.map(
@@ -1484,19 +1541,6 @@ export class SupernovaPage extends LitroPage {
             </dl>
           </section>
 
-          <!-- ── SECTION 6 · Ecosystem, and the showcase ──────────────
-               What the project extends with, and what each one looks like.
-
-               THE PICTURE SLOTS SHIP EMPTY, like the logo wall above. Drop a
-               screenshot of a real site into each one — anything under
-               public/ — or delete the list and keep the text. An empty frame
-               on a live site says less than no frame at all.
-
-               WHAT A ROW CLAIMS: it is a starting point, and the pictures
-               show the shape it gives you. Keep it that way and you never
-               have to argue about which site runs which version of what.
-
-               DELETE THIS SECTION if your project has no extensions yet. -->
           <section class="showcase shell" aria-label="The ecosystem">
             <h2 class="section-title">Extend it</h2>
             <litro-pane-grid>
@@ -1516,12 +1560,6 @@ export class SupernovaPage extends LitroPage {
             </litro-pane-grid>
           </section>
 
-          <!-- ── SECTION 7 · Deploy anywhere ──────────────────────────
-               Where it runs. One claim and a list, because "where does this
-               have to live" is the objection that stops an evaluation dead.
-
-               DELETE THIS SECTION if your project is not something a reader
-               deploys. -->
           <section class="deploy shell" aria-label="Where it runs">
             <h2 class="section-title">Deploy anywhere</h2>
             <p>
@@ -1544,10 +1582,6 @@ export class SupernovaPage extends LitroPage {
           </section>
         </main>
 
-        <!-- ── SECTION 9 · Footer ───────────────────────────────────────
-             The map of everything the page did not cover. Pass no columns and
-             only the fine print is drawn, which is where this started: one
-             credit line. -->
         <litro-site-footer
           siteTitle="${siteTitle}"
           .columns="${FOOTER_COLUMNS}"
@@ -1556,9 +1590,6 @@ export class SupernovaPage extends LitroPage {
           note="— the supernova recipe"
         ></litro-site-footer>
 
-        <!-- The status line. It is fixed to the foot of the window, so it is
-             the last thing in the page and .page carries the padding that
-             keeps the credit line clear of it. -->
         <litro-status-line
           siteTitle="${siteTitle}"
           .cells="${STATUS_CELLS}"

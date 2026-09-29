@@ -94,6 +94,14 @@ const template = html<DocPage>`
     const data = x.serverData as DocPageData | null;
     if (!data?.doc) return html`<p>Loading&hellip;</p>`;
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <div :innerHTML="${() => data.body}"></div>
+    //     :innerHTML renders the Markdown-generated HTML directly.
+    //     The content/docs directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without sanitizing.
     return html<DocPage>`
       <starlight-page
         :siteTitle="${() => data.siteTitle}"
@@ -105,9 +113,6 @@ const template = html<DocPage>`
         :currentPath="${() => '/docs/' + data.currentSlug}"
       >
         <div slot="content">
-          <!-- :innerHTML renders the Markdown-generated HTML directly.
-               The content/docs directory is trusted-author-only; do not place
-               user-submitted or untrusted content here without sanitizing. -->
           <div :innerHTML="${() => data.body}"></div>
 
           ${when(() => !!(data.prevDoc || data.nextDoc), html<DocPage>`

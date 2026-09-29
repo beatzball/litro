@@ -35,6 +35,20 @@ export class BlogPostPage extends LitroPage {
   render() {
     const { post } = this.serverData ?? {};
     if (!post) return html`<p>Loading…</p>`;
+    // TEMPLATE NOTES — why the markup below is shaped the way it is.
+    //
+    // These were HTML comments inside the template. An HTML comment is served
+    // to every reader, so the prose lives here instead. Each note names the
+    // element it belongs to, in markup order.
+    //
+    // ${unsafeHTML(post.body)}
+    //     unsafeHTML renders the Markdown-generated HTML directly.
+    //     The content directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without first
+    //     sanitizing with a library such as rehype-sanitize.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <article>
         <header>
@@ -49,17 +63,12 @@ export class BlogPostPage extends LitroPage {
           ` : ''}
         </header>
         <div class="post-body">
-          <!-- unsafeHTML renders the Markdown-generated HTML directly.
-               The content directory is trusted-author-only; do not place
-               user-submitted or untrusted content here without first
-               sanitizing with a library such as rehype-sanitize. -->
           ${unsafeHTML(post.body)}
         </div>
         <footer>
           <a href="/blog">← Back to Blog</a>
         </footer>
       </article>
-      <!-- Credit line. Delete this element if you would rather not carry it. -->
       <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }

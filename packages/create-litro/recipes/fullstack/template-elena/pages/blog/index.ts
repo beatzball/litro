@@ -7,6 +7,12 @@ export class BlogPage extends Elena(HTMLElement) {
   static tagName = 'page-blog';
 
   render() {
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <litro-footer recipe="{{recipe}}"></litro-footer>
+    //     Credit line. Delete this element if you would rather not carry it.
     return html`
       <main>
         <h1>Blog</h1>
@@ -18,7 +24,6 @@ export class BlogPage extends Elena(HTMLElement) {
         </ul>
         <litro-link href="/">\u2190 Back Home</litro-link>
       </main>
-      <!-- Credit line. Delete this element if you would rather not carry it. -->
       <litro-footer recipe="{{recipe}}"></litro-footer>
     `;
   }

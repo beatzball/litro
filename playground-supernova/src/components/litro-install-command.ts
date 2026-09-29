@@ -245,14 +245,19 @@ export class LitroInstallCommand extends LitElement {
           ? 'Selected'
           : this.label;
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <code
+    //     role and aria-label, because a focusable box with no name is
+    //     announced as nothing. "group" rather than "region": a region is
+    //     a landmark, and a landmark per install command would crowd the
+    //     page's landmark list for no gain.
     return html`
       <p class="box">
         <span class="line">
           <span class="prompt" aria-hidden="true">$</span>
-          <!-- role and aria-label, because a focusable box with no name is
-               announced as nothing. "group" rather than "region": a region is
-               a landmark, and a landmark per install command would crowd the
-               page's landmark list for no gain. -->
           <code
             class="command"
             role="group"

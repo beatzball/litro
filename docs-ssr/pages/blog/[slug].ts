@@ -175,6 +175,14 @@ export class BlogPostPage extends LitroPage {
     const { post, body, siteTitle, nav, preview } = data;
     const blogSlug = post.url.slice('/content/blog/'.length);
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // ${unsafeHTML(body)}
+    //     unsafeHTML renders the Markdown-generated HTML directly.
+    //     The content directory is trusted-author-only; do not place
+    //     user-submitted or untrusted content here without sanitizing.
     return html`
       <div style="min-height:100vh;display:flex;flex-direction:column;">
         <starlight-header
@@ -216,9 +224,6 @@ export class BlogPostPage extends LitroPage {
                 </div>
               ` : ''}
             </header>
-            <!-- unsafeHTML renders the Markdown-generated HTML directly.
-                 The content directory is trusted-author-only; do not place
-                 user-submitted or untrusted content here without sanitizing. -->
             ${unsafeHTML(body)}
           </article>
           <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--sl-color-border);">

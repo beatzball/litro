@@ -235,6 +235,12 @@ export class PkgPage extends LitroPage {
 
     const { pkg } = data;
 
+    // TEMPLATE NOTE — the note below was an HTML comment in the template. An
+    // HTML comment is served to every reader, so the prose lives here, named by
+    // the element it belongs to.
+    //
+    // <div class="pkg-meta">
+    //     Version badge + icon links, visually grouped with the title above
     return html`
       <starlight-page
         siteTitle="${data.siteTitle}"
@@ -246,7 +252,6 @@ export class PkgPage extends LitroPage {
         currentPath="/docs/${data.currentSlug}"
       >
         <div slot="content">
-          <!-- Version badge + icon links, visually grouped with the title above -->
           <div class="pkg-meta">
             <span class="pkg-version">v${pkg.version}</span>
             <a
