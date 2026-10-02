@@ -48,16 +48,42 @@ for this spec, which is why this is a scaffolding design and not a runtime one.
 ## 3. The walk-through: wiring an agent by hand
 
 This is the strongest evidence the spec carries, because it is the thing a reader
-of the docs cannot see. Everything below was run on 2026-10-02 against packed
-tarballs, not workspace symlinks (TEST-005) — the path a real user is on.
+of the docs cannot see. It was run on 2026-10-02 against packed tarballs, not
+workspace symlinks (TEST-005) — the path a real user is on.
 
 ```
 scaffold   fullstack, Lit, SSR, from the packed @beatzball/create-litro tarball
 install    pnpm install --ignore-workspace, against the packed tarballs
 wire       by hand, following the Setup section of the agents guide
-build      litro build
-drive      POST /__litro/agent/demo/<session>
+build      litro build  (and litro generate, for the static result in 3.2)
+drive      POST /__litro/agent/demo/<session>, with a seroval body
 ```
+
+**What the walk-through did NOT do, stated up front** so nothing downstream
+reads as measured when it was reasoned:
+
+- **No browser.** The turn was driven by POST against the production server. No
+  `litro dev`, no page, no click.
+- **No chat page.** The spike wrote four files and none of them is a page, so
+  `pages/agent.ts` — the piece section 5 calls not optional — is the one v1
+  piece with no spike evidence behind it. `playground/pages/agent.ts` does run,
+  but over a workspace symlink, which is the case TEST-005 exists to distrust.
+  Section 14 carries this as the gap it is.
+- **No client-side measurement.** Section 3.4 measures `dist/server` only. The
+  cost of `@beatzball/litro-agent/client` in a client bundle is unmeasured.
+
+### 3.0 Reproducing it
+
+The spike project is not kept in the repository. What it was:
+
+| | |
+|---|---|
+| packages, packed with `pnpm pack` | `@beatzball/litro` 0.17.2, `@beatzball/litro-router` 0.3.1, `@beatzball/litro-agent` 0.7.0, `@beatzball/create-litro` 0.15.1 |
+| scaffolded with | the unpacked `create-litro` tarball, `--recipe fullstack --adapter lit --mode ssr` |
+| installed with | `pnpm install --ignore-workspace`, `pnpm.overrides` pointing every Litro package at its tarball |
+| zod | 4.6.5 |
+| Node / pnpm | 24.7.0 / 10.28.0 |
+| size command | `du -sk dist/server` |
 
 ### 3.1 What the hand wiring actually is
 
@@ -65,26 +91,37 @@ drive      POST /__litro/agent/demo/<session>
 
 | File | What it is | Lines |
 |---|---|---|
-| `agents/demo/agent.ts` | `defineAgent` plus a provider | 7 |
+| `agents/demo/agent.ts` | `defineAgent` plus a provider | 7 first, then 28 |
 | `agents/demo/instructions.md` | the system prompt | 2 |
 | `agents/demo/tools/get-weather.ts` | `defineTool` plus a `ui()` return | 35 |
 | `src/components/weather-card.ts` | the component `ui()` renders | 20 |
+
+**`agent.ts` was written twice, and which one is which matters**, because
+sections 3.2 and 3.3 report opposite outcomes from the same filename:
+
+- **First, 7 lines**, copied from the guide: `defineAgent` plus
+  `openaiCompatible`. This is the one that fails in section 3.2.
+- **Then 28 lines**, after that failure: the scripted provider with an env
+  switch to a live one, shortened from `playground/agents/demo/agent.ts` (86
+  lines; the `slowly` delay branch was dropped). This is the one that produces
+  the successful turn in section 3.3, and the shape decision 5 adopts.
 
 The walk-through named its tool `get-weather`, following the guide's own example.
 Every quotation of a measured run below keeps that name, because that is what was
 run. **The tool the scaffolder generates is `example-weather`** — decision 7.
 
-**Eight edits across three files that already exist:**
+**Nine edits across three files that already exist:**
 
-| File | Edits |
-|---|---|
-| `nitro.config.ts` | import the plugin; a POST handler entry; a GET handler entry; call the plugin in `build:before`; a `routeRules` entry — five |
-| `package.json` | `#litro/agent-manifest`; `#litro/agent-config`; the dependency — three |
-| `.gitignore` | `.litro/` — one |
+| File | Edits | Count |
+|---|---|---|
+| `nitro.config.ts` | import the plugin; a POST handler entry; a GET handler entry; call the plugin in `build:before`; a `routeRules` entry | 5 |
+| `package.json` | `#litro/agent-manifest`; `#litro/agent-config`; the dependency | 3 |
+| `.gitignore` | `.litro/` | 1 |
 
 The guide gets all of this right. The cost is not that it is wrong; it is that
-there are twelve places to be right, four of them in a build configuration, and
-nothing checks the result until a turn either runs or does not.
+**there are thirteen places to be right** — four new files and nine edits — five
+of the edits inside a build configuration, and nothing checks the result until a
+turn either runs or does not.
 
 ### 3.2 Three things the guide does not warn about, found by doing it
 
@@ -110,8 +147,15 @@ wired project has no way to see the thing it just built.
 
 **The agent is silently dead in a static build.** `litro generate` on the same
 project exits 0, logs `[litro] Registered 1 agent`, and emits a `dist/static/`
-with no agent endpoint in it. No warning anywhere. This decides which recipes may
-offer the option (decision 1).
+holding `index.html`, `blog/`, `_litro/` and `nitro.json` — no agent endpoint.
+No warning anywhere. The build's own log says the opposite of what shipped.
+
+**This is a bug in the framework, not a fact to design around, and it is now
+filed as [issue 228](https://github.com/beatzball/litro/issues/228).** The spec
+routes around it — decision 1.3 keeps the option off `ssg` recipes, and decision
+1.5 handles the `--mode ssg` path — but routing around a silent exit-0 failure is
+not fixing it, and it must not survive only as a justification for a recipe
+choice. Nothing in this spec's phases fixes it; issue 228 owns it.
 
 ### 3.3 What the hand wiring produces, once it is right
 
@@ -130,22 +174,32 @@ the first byte. That is the capability this spec exists to put one command away.
 
 ### 3.4 What it costs, measured
 
-Four builds of the same project, `du -sk dist/server`:
+Five builds of the same project, `du -sk dist/server`, conditions in section 3.0:
 
-| What the project has | `dist/server` | Delta |
+| What the project has | `dist/server` | Delta on the row above |
 |---|---|---|
 | `fullstack`, no agent at all | 2096 KB | — |
 | the agent wiring, with `agents/` deleted | 2200 KB | +104 KB |
-| an agent and a `ui()` tool, hand-rolled schema | 2216 KB | +120 KB |
-| the same, with a zod schema | 3388 KB | +1292 KB |
+| an agent and a `ui()` tool, hand-rolled schema | 2216 KB | +16 KB |
+| the same, with a `zod/mini` schema | 3320 KB | +1104 KB |
+| the same, with a full `zod` schema | 3388 KB | +68 KB |
 
 Two facts fall out, and both are load-bearing later:
 
-- **`ui()` is nearly free.** The renderer is already in a `fullstack` server
-  graph, because the recipe server-renders its pages with it. An agent that
-  returns a component costs 16 KB more than one that returns a plain object.
-- **The schema library is the expensive choice.** zod traces 1172 KB into the
-  server output. That is nine tenths of the whole cost of scaffolding an agent.
+- **The whole `agents/` directory costs 16 KB** over the inert wiring — agent,
+  tool, component and the `ui()` call together. The `ui()` renderer is already in
+  a `fullstack` server graph, because the recipe server-renders its pages with it,
+  so returning a component adds a call site rather than a dependency.
+
+  **This is an upper bound on `ui()`, not a measurement of it.** No
+  plain-object-tool build was made, so "`ui()` costs 16 KB" would be a claim the
+  table cannot support; what the table supports is that **everything the agent
+  adds, `ui()` included, fits in 16 KB.** That is enough for decision 3 and the
+  spec claims no more. Building a sixth variant with a plain-object tool would
+  pin it exactly, and is not worth a build to split 16 KB.
+- **The schema library is the expensive choice.** Full zod traces 1172 KB into
+  the server output — nine tenths of the whole cost of scaffolding an agent.
+  Section 9.1 reports what happened when that was attacked.
 
 Installed sizes, for the same reason: `@beatzball/litro-agent` is a 408 KB
 tarball and 2.5 MB installed; `@modelcontextprotocol/sdk` is 6.0 MB installed;
@@ -167,19 +221,14 @@ options: [
 ],
 ```
 
-The reason is the thing the measurement in section 3.4 made possible. A recipe of
-its own, or an additive template layer, can only **overwrite** a file — the layer
-system copies whole trees, later layers winning. An agent needs five changes
-*inside* `nitro.config.ts`, so either route means shipping a second complete copy
-of that file, which then has to be kept in step with the base's by hand, forever.
+A recipe of its own cannot work here. An agent needs five changes *inside*
+`nitro.config.ts`, and the layer system copies whole trees with later layers
+winning — so a recipe, or any layer, that wants different config ships a second
+complete copy of that file, to be kept in step with the base's by hand, forever.
 This repository has already paid that bill twice and written both down: the
 supernova template re-ships `pages/index.ts`, and `--for-repo` writes its own
 `starlight.config.js`, where the scaffolding check records that "every navigation
 fix has to be made twice". A silent drift is worse than a loud assertion.
-
-The option route has the opposite failure mode. Removal is an anchored edit that
-asserts its target exists, exactly as `blog.ts` does, so a reshaped template
-fails the scaffold instead of emitting a half-wired app.
 
 Rejected:
 
@@ -188,11 +237,94 @@ Rejected:
   `extends` level the scaffolder allows, which `supernova` has already spent on
   `starlight` — so the same idea could never reach the docs recipes. And it makes
   the headline `--recipe agent` rather than the bare create command.
-- **A new additive layer keyed on an option (`template-agent/`).** Small to build
-  — about ten lines in the layer loop in `scaffold.ts` — but it inherits the same
-  overwrite-only limit, so it buys nothing an option does not, and it adds a
-  third override axis to a system whose own types say "ONE LEVEL ONLY, because a
-  three-deep override order is a thing nobody can hold in their head".
+
+### 4.1.1 The option ADDS the agent; it does not remove it
+
+The direction matters more than it looks, and getting it wrong breaks a live
+recipe variant. The first draft of this spec had the agent in the shared
+`template/` with a `removeAgent()` for `--no-agent`, mirroring `removeBlog`.
+**That design is broken, and `fullstack` is the recipe that breaks it.**
+
+`fullstack` is two layers. `template-elena/` carries its own complete
+`nitro.config.ts`, `package.json` and `pages/index.ts`, and the layer loop in
+`scaffold.ts` copies it **last**, so the overlay's copies win. Put the agent
+wiring in the base template and scaffold with `--adapter elena` and you get: the
+base layer's `agents/` and `pages/agent.ts` on disk, the overlay's config with no
+agent wiring, and the overlay's `package.json` with no `imports` keys. A
+`removeAgent()` that asserts its anchors exist — which is the entire reason to
+prefer removal — then **fails at scaffold time on a variant that works today.**
+
+And the obvious repair, adding the wiring to the Elena overlay so the anchors are
+there, is exactly the second complete copy that 4.1 just rejected. The two
+options are a crash and a drift.
+
+**Decided: invert it. The option is additive.**
+
+| | |
+|---|---|
+| `recipes/fullstack/options/agent/` | a new option-keyed layer, copied only when the answer is yes. It holds the six new files of section 5 — and **only files no other layer holds** |
+| `addAgent(projectDir)` | the twelve in-file edits of section 5, each anchored and each asserting its target exists |
+| `--no-agent` | the absence of both. Nothing to undo |
+
+Three things this buys, and the first is the one that decides it:
+
+1. **Elena cannot break, because nothing on Elena's path changes.** The option is
+   unavailable for Elena (decision 1.4), so the layer is never copied and
+   `addAgent` never runs. An Elena scaffold is byte-identical to today's.
+2. **No layer precedence to reason about.** `addAgent` patches the
+   `nitro.config.ts` that is actually on disk, whichever layer wrote it. A
+   missing anchor is a genuine fault in either case, so asserting is correct
+   unconditionally — where a remover had to ask "did an overlay legitimately
+   remove this, or did the template reshape?" and cannot tell.
+3. **Zero overwrite, so zero drift.** The layer contains no file any other layer
+   contains. The objection that killed a layer in 4.1 was about `nitro.config.ts`;
+   this layer does not contain it, because the edits are a code step instead.
+
+This does **not** reopen 4.1. It is still an option on `fullstack`, prompted the
+same way, with the same default. What changed is the direction of its effect.
+
+**Rejected: the agent in `template/` with `removeAgent()`.** It crashes
+`fullstack:elena`, as above. Even setting Elena aside, the undo list ran to seven
+anchored edits across five files, against `addAgent`'s equivalent additions —
+same work, but every removal also has to be correct about what each layer left
+behind.
+
+**Rejected: the agent in `template/`, with `removeAgent()` tolerant of missing
+anchors.** It makes the Elena case pass by making every case silent. A tolerant
+remover cannot distinguish "the overlay never had this" from "the template moved
+and the anchor no longer matches", which is the failure `blog.ts` was written
+against.
+
+### 4.1.2 What has to change in `create-litro` for this to work
+
+Three changes, all small and declarative. Named because "the default depends on
+the adapter" is **not expressible today** and a plan must not assume it is.
+
+1. **An option-keyed layer in the copy loop.** `scaffold()` resolves layers as
+   base `template/`, base `template-<adapter>/`, own `template/`, own
+   `template-<adapter>/`. It gains, last: `options/<key>/` for each option whose
+   resolved answer is truthy. About ten lines.
+
+   **Not named `template-agent/`.** The loop already probes
+   `template-<adapter>`, so a directory called `template-agent` reads as an
+   adapter named "agent" — a trap for the next person. `options/<key>/` cannot be
+   mistaken for one and extends to a second option without a new convention.
+
+2. **`RecipeOption` gains an optional `adapters?: LitroAdapter[]`.** Omitted
+   means every adapter the recipe declares. Present, it is the subset the option
+   can be answered yes for. This mirrors `LitroRecipe.adapters`, whose own
+   comment says support is "DECLARED, NEVER INFERRED" — inferring it from which
+   directories exist is the bug that field was added for.
+
+3. **`resolveRecipeOptions` takes the chosen adapter.** Its signature is
+   `(recipe, flags, prompts)` today and the adapter is already resolved in
+   `index.ts` before options are asked, so this is a parameter, not a redesign.
+   With it: an option whose `adapters` excludes the chosen one is not prompted,
+   resolves to `false`, and refuses an explicit flag.
+
+`applyRecipeOptions` keeps its shape; `addAgent` joins `removeBlog` as a second
+branch. A plan should land item 2 and item 3 together, since item 2 is inert
+without item 3.
 
 ### 4.2 Default true
 
@@ -201,9 +333,22 @@ Rejected:
 agent. A default of `false` turns the sentence into *an agent is a command and a
 flag away*, which is a smaller claim and not the one the landing page wants.
 
-The cost is honest and small: a project that wants no AI carries a 2.5 MB
-development dependency and 120 KB of server output until it answers `n`, or
-passes `--no-agent`, or deletes `agents/`.
+**What the default actually costs, with decision 6's zod in it.** The first draft
+priced this at "a 2.5 MB development dependency and 120 KB of server output",
+which was the pre-zod number and is roughly ten times off:
+
+| | |
+|---|---|
+| server output | **+1292 KB** (2096 KB to 3388 KB), of which zod is 1172 KB |
+| on disk | `@beatzball/litro-agent` 2.5 MB plus zod 8.0 MB |
+| in a client bundle | the chat page's import of `@beatzball/litro-agent/client` — **unmeasured**, section 3.4 measures the server only |
+
+That is a real cost and it is worth stating at full size rather than at the
+flattering one. It does not change the decision: both are server-side or
+on-disk, no visitor downloads either, and a project that wants neither answers
+`n`, passes `--no-agent`, or deletes `agents/` — measured in section 13 to leave
+a working build. But a reader deciding whether to accept the default is owed the
+1292 KB, not the 120 KB.
 
 ### 4.3 Which recipes offer it: one
 
@@ -215,9 +360,12 @@ passes `--no-agent`, or deletes `agents/`.
 | `11ty-blog` | **no** | `mode: 'both'`, so it *could*. But it is a blog: nothing on it wants a tool, and a second recipe doubles the scaffolding-check matrix for no story a reader would recognize. |
 
 A docs site that wants an agent is not blocked by this. It is a one-line change
-to a recipe's config once `mode: 'ssg'` is no longer the shape of the site, and
-`litro mcp serve` works on a static project regardless — it loads project source
-through Vite and never touches the build.
+to a recipe's config once `mode: 'ssg'` is no longer the shape of the site. And
+`litro mcp serve` should work on a static project regardless, because it loads
+project source through Vite and never touches the build — that is what the CLI's
+own source says it does, and **it was not measured on a static project**; every
+row of the section 7 table came from the server-mode spike. Treat it as read, not
+as run.
 
 ### 4.4 Lit only, inside a recipe that also reaches Elena
 
@@ -226,25 +374,68 @@ through Vite and never touches the build.
 (issue 219, which also deprecates the adapter). A scaffolded Elena agent whose
 one tool returns a component would therefore throw on its first tool call.
 
-**Decided: with `--adapter elena`, the agent option defaults to `false`
-and is not prompted; an explicit `--agent` is refused before anything is
-written.** The refusal names the adapter and the issue, in the style of
-`assertAdapterSupported`, which already refuses an adapter a recipe does not
+**Decided: the option declares `adapters: ['lit']`. With `--adapter elena` it is
+not prompted and resolves to `false`; an explicit `--agent` is refused before
+anything is written.** The refusal names the adapter and the issue, in the style
+of `assertAdapterSupported`, which already refuses an adapter a recipe does not
 declare and does it before the target directory exists.
+
+Because the option is additive (4.1.1), resolving to `false` means **nothing is
+written and nothing is undone**: the `options/agent/` layer is not copied and
+`addAgent` does not run. The existing `fullstack:elena` scaffold is unchanged,
+byte for byte. That is the property that makes this safe, and it is the reason
+the direction of the option had to be settled before this decision could be.
 
 Rejected: **scaffolding an Elena agent with a plain-object tool instead of a
 `ui()` one.** It would make the one scaffolded example of Litro's most
 distinctive capability conditional on an adapter that is being removed, and it
 would add a second tool file to maintain for an adapter with no future.
 
+Rejected: **dropping `elena` from `fullstack`'s `adapters`.** It would make the
+option's gate unnecessary, and it would delete a live scaffolding variant that
+has its own end-to-end suite. Elena is deprecated, not removed; v1 is where it
+goes (issue 219), and that is not this spec's call to make early.
+
 FAST needs nothing here: it is not on `fullstack` at all, so there is no FAST
-agent to write in v1. When FAST reaches `fullstack` (issue 172), the tool's
-template gains a FAST variant — a string template with kebab-case attributes, per
-the authoring rule on the agents page.
+agent to write in v1. If FAST reaches `fullstack`, the layer gains a FAST
+sibling — a string template with kebab-case attributes, per the authoring rule on
+the agents page. (`fullstack` declares `['lit', 'elena']`; FAST reaches
+`starlight` only, which the Known Gaps page records.)
+
+### 4.5 `--mode ssg` is refused too, for the same reason
+
+`fullstack` is `mode: 'both'`, so the scaffolder asks "Deployment mode" and
+accepts `--mode ssg`. A user who picks it would get the agent by default and then
+build the silent failure of section 3.2 — the one now filed as issue 228. Elena
+got a rule; this path had none, which was a hole.
+
+**Decided: the agent option and `--mode ssg` are mutually exclusive, handled
+exactly like the adapter gate.** With `ssg` chosen the option is not prompted and
+resolves to `false`; an explicit `--agent --mode ssg` is refused before anything
+is written, naming issue 228 so the reader learns the real reason.
+
+Two things make this the right shape rather than a warning:
+
+- A warning at create time is read once and then lives in scrollback. The failure
+  arrives later, from a browser, as a 404.
+- The mode answer does not bind the build. `fullstack` interpolates `{{mode}}`
+  nowhere — verified, it has no `litro.recipe.json` — so a scaffolded project can
+  run `litro build` or `litro generate` whatever it answered. **So the refusal
+  does not prevent the failure; it only stops the scaffolder from writing the
+  combination on purpose.** Closing it properly is issue 228's job, which is
+  precisely why that issue exists and why this spec does not pretend to fix it.
+
+This is the mechanism gap worth naming for a plan: a mode-gated option needs the
+same plumbing as an adapter-gated one — `resolveRecipeOptions` has to see the
+resolved mode as well as the adapter. Both are known in `index.ts` before options
+are asked, so it is a second parameter, not a second design.
 
 ## 5. Decision 2 — what it produces, named exactly
 
-In a `fullstack` + Lit project called `my-app`, answering yes:
+In a `fullstack` + Lit project called `my-app`, answering yes.
+
+**Six new files**, all from `recipes/fullstack/options/agent/` (4.1.1), none of
+which any other layer also holds:
 
 ```
 my-app/
@@ -258,21 +449,59 @@ my-app/
     agent.ts                    the chat page, route /agent
   src/components/
     weather-card.ts             the component ui() renders
+  AGENT.md                      what was scaffolded, and the four things to know
 ```
 
 The tool is `example-weather`, not `get-weather`. Decision 7 is the reason: a
 tool's name is global to an MCP host, and a name that says "example" both
 collides less and tells a reader it is scaffolding to replace.
 
-And these edits to files the recipe already ships:
+**`AGENT.md` is a real file, and it exists because four places in this spec
+needed somewhere to put a sentence.** The first draft sent them all to "the
+generated project" and two to "the generated README" — and there is no README:
+`find packages/create-litro/recipes -iname 'README*'` prints nothing, and
+`create-litro` writes one only under `--for-repo`. Rather than add a README to a
+recipe that has never had one, the agent's own layer carries its own page, which
+keeps it inside the thing the option adds and removes. It holds exactly four
+things, each of which is a finding from this spec:
 
-| File | Change |
-|---|---|
-| `nitro.config.ts` | `import agentsPlugin from '@beatzball/litro-agent/plugin'`; two static handler entries for `/__litro/agent/:agent/:session` (POST and GET); `await agentsPlugin(nitro)` in `build:before`, after the actions plugin; a `no-store` rule for `/__litro/agent/**` |
-| `package.json` | `imports` gains `#litro/agent-manifest` and `#litro/agent-config`; `dependencies` gains `@beatzball/litro-agent` |
-| `.gitignore` | `.litro/` — session logs are conversation data |
-| `pages/index.ts` | one `<litro-link href="/agent">` beside the existing Blog link |
-| `e2e/index.spec.ts` | one test that drives a turn on `/agent` |
+1. **MCP is one install away** — `pnpm add -D @modelcontextprotocol/sdk`, then
+   `litro mcp serve` (section 7.1).
+2. **A static build drops the agent endpoint** — issue 228, with the symptom, so
+   a reader who runs `litro generate` later is not debugging a 404 blind.
+3. **Tool names are global to an MCP host** — so the first rename is informed
+   (decision 7).
+4. **How to reach a real model, completely** — every variable, not a gesture
+   (section 8), and that deleting `agents/` is the safe way to turn it all off.
+
+The name is `AGENT.md`, singular, deliberately: `AGENTS.md` is the convention for
+instructions *to* a coding agent, `--for-repo` already writes one, and two files
+one letter apart in one directory is a trap.
+
+And these edits to files the recipe already ships, applied by `addAgent`:
+
+| File | Change | Edits |
+|---|---|---|
+| `nitro.config.ts` | `import agentsPlugin from '@beatzball/litro-agent/plugin'`; two static handler entries for `/__litro/agent/:agent/:session` (POST and GET); `await agentsPlugin(nitro)` in `build:before`, after the actions plugin; a `no-store` rule for `/__litro/agent/**` | 5 |
+| `package.json` | `imports` gains `#litro/agent-manifest` and `#litro/agent-config`; `dependencies` gains **both `@beatzball/litro-agent` and `zod`** | 4 |
+| `.gitignore` | `.litro/` — session logs are conversation data | 1 |
+| `pages/index.ts` | one `<litro-link href="/agent">` beside the existing Blog link | 1 |
+| `e2e/index.spec.ts` | one test that drives a turn on `/agent` | 1 |
+
+**Twelve edits across five files, plus six new files.** The counts are in the
+table so a plan copies them from one place.
+
+**`zod` is a dependency of the generated project, and that is easy to miss.**
+Decision 6 makes the tool `import { z } from 'zod'`, and nothing else supplies
+it: `@beatzball/litro-agent`'s own dependencies are `@beatzball/litro`,
+`fast-glob`, `h3`, `parse5` and `pathe` — no schema library, deliberately, because
+any Standard Schema vendor works. The playground carries zod in its own
+`package.json` for the same reason. An implementer who adds only
+`@beatzball/litro-agent` ships a tool whose import does not resolve under pnpm's
+strict layout, and the failure is at build time in a freshly created project.
+
+It goes in `dependencies`, not `devDependencies`: the tool runs on the server at
+run time.
 
 `server/stubs/` is already ignored by the recipe's `gitignore`, and its comment
 already anticipates this: "the scanners also emit litro-content.js, action-*.ts
@@ -296,11 +525,15 @@ measurement in section 3.4 settles it rather than taste.
 
 **Decided: ship the `ui()` tool and its component.**
 
-- **It costs 16 KB.** An agent whose tool returns a plain object is 2200 KB of
-  server output; the same agent returning `ui(html\`<weather-card ...>\`)` is
-  2216 KB. The `@lit-labs/ssr` renderer is already in a `fullstack` server graph
-  because the recipe server-renders its pages with it, so `ui()` adds a call site
-  and not a dependency. The "more to generate" worry is one 20-line component.
+- **It costs at most 16 KB, and probably much less.** Bare agent wiring with no
+  `agents/` is 2200 KB of server output; the agent, its tool, the component and
+  the `ui()` call together are 2216 KB. So **16 KB is the ceiling on everything
+  the agent adds**, `ui()` included — not a measurement of `ui()` alone, because
+  no plain-object-tool build was made (section 3.4 is explicit about this). The
+  ceiling is enough: the `@lit-labs/ssr` renderer is already in a `fullstack`
+  server graph because the recipe server-renders its pages with it, so `ui()`
+  adds a call site and not a dependency. The "more to generate" worry is one
+  20-line component.
 - **Without it the scaffold is indistinguishable.** A tool that returns JSON is a
   tool every framework scaffolds. The reason to use Litro is the sentence on the
   agents page — the model reasons over `data`, the human sees a component,
@@ -314,7 +547,8 @@ measurement in section 3.4 settles it rather than taste.
 - **The Elena problem is a refusal, not a compromise.** Decision 1.4.
 
 Rejected: **a minimal tool returning a plain object, with `ui()` as a later
-phase.** It saves 16 KB and one file, and it removes the only reason the feature
+phase.** It saves at most 16 KB and one file, and it removes the only reason the
+feature
 is interesting. "Minimal" would be the right instinct if `ui()` were expensive;
 it is not.
 
@@ -323,7 +557,7 @@ host's view of the same component, and it is a different cost. Decision 4.
 
 ## 7. Decision 4 — `litro mcp serve` in the scaffolded project
 
-Measured, in the hand-wired project, in three states.
+Measured, in the hand-wired project, in four states.
 
 | State of the project | `litro mcp serve` |
 |---|---|
@@ -363,56 +597,132 @@ So the question was never whether the SDK is needed eventually. It is whether
 not use.** It should not. That is the whole of this decision, and it is a default,
 not a limitation.
 
-The second reason is that the MCP pieces are all-or-nothing, and any three of the
-four produce a broken project:
+### 7.2 Three pieces go together; the SDK is a fourth and separate one
 
-- Ship `app:` without `mcp-apps/` → startup failure out of the box.
-- Ship `mcp-apps/` and `app:` without packing → startup failure until someone
-  runs a build.
-- Pack at create time → a scaffolder that runs a bundler, which nothing in
-  `create-litro` does and which would need the project's dependencies installed
-  first.
+The first draft called the MCP half "all-or-nothing" and said "any three of the
+four produce a broken project". **Its own table refutes that**, and the softened
+claim is the accurate one.
 
-**Phase 2 ships all four together** and takes the count to zero:
+**Three pieces are genuinely inseparable** — `app:` on the tool, the
+`mcp-apps/` source, and a pack step:
+
+- `app:` without `mcp-apps/` → startup failure out of the box (row three,
+  measured).
+- `mcp-apps/` and `app:` without packing → the same failure until someone builds.
+
+(Packing at create time is not a fourth combination, it is the reason the pack
+step cannot be one: nothing in `create-litro` runs a bundler, and it would need
+the project's dependencies installed first.)
+
+**The SDK is separable, and row two proves it.** With the SDK installed and no
+`app:` field, the server works: tools list, tools call, `resources/list` empty.
+So the SDK is left out of v1 on **install cost alone** — section 7.1 — which is a
+sufficient reason and the only one. Saying it is part of an indivisible bundle
+would be tidier and false.
+
+**What phase 2 ships, stated without overclaiming:**
 `mcp-apps/weather-card.ts`, the `app:` field, `@modelcontextprotocol/sdk` as a
 `devDependency`, and `litro mcp-app build` folded into the project's `build`
-script so a `pnpm build` packs the document. A fresh clone that has not built
-still meets the measured startup message, which names the command — that is the
-acceptable residue, and it is why phase 2 is a phase rather than part of v1.
+script.
+
+Two corrections to how the first draft described it:
+
+- It said phase 2 "does not add a capability v1 lacked". **It does.** By rows two
+  and four, `resources/list` goes from empty to carrying the `ui://` document —
+  which is the component rendered inside a host, and that is a capability, not a
+  convenience. What is true is narrower: **v1 can already serve tools over MCP**,
+  one install away.
+- It said phase 2 "takes the count to zero". **Not quite**: a fresh clone that
+  has not built still meets the measured startup message. Phase 2 removes the
+  install step; the build step remains and is the acceptable residue.
 
 Until then the generated project must say the one command out loud, somewhere a
-reader meets it — a comment in the tool file and a line in the generated README.
-A capability that is one documented install away is not a gap; a capability
-nobody is told about is.
+reader meets it — a comment in the tool file and item 1 of the generated
+`AGENT.md` (section 5). A capability that is one documented install away is not a
+gap; a capability nobody is told about is.
 
 Rejected: **a `--mcp` flag in v1.** It is a second option, a second removal path
 and two more scaffolding-check variants, for an audience of one. Phase 2 can make
 it the default, or add the flag then, with the measured first-run behavior in
 hand.
 
-## 8. Decision 5 — the scripted provider, with a two-line switch
+## 8. Decision 5 — the scripted provider, with an environment switch
 
 A new project has no API key. Measured, in section 3.2: the guide's own
 `openaiCompatible` example with no `LLM_URL` set fails on the first turn with a
 raw `TypeError` and a 500, streamed to the browser.
 
-**Decided: the scripted provider is the default, and a live one is two
-lines away.** This is what `playground/agents/demo/agent.ts` already does, and
-the generated file is a shortened version of it:
+**Decided: the scripted provider is the default, and a live one needs no code
+change — only environment variables.** This is what
+`playground/agents/demo/agent.ts` already does, in 86 lines; the generated file
+is a shortened version, with that file's `slowly` delay branch dropped and its
+tool name changed to `example-weather`. The whole of it:
 
 ```ts
-// A new project has no API key, so the default provider is the scripted one:
-// the agent answers, calls its tool and renders a card with no network and no
-// key. Set LLM_URL (and LLM_MODEL) to point it at a real model instead.
+import { defineAgent } from '@beatzball/litro-agent';
+import { scriptedProvider } from '@beatzball/litro-agent/providers/scripted';
+import { openaiCompatible } from '@beatzball/litro-agent/providers/openai-compatible';
+
+// A new project has no API key, so the default provider is the scripted one
+// below: the agent answers, calls its tool and renders a card with no network
+// and no key.
+//
+// TO USE A REAL MODEL, set these in your environment — no code change needed:
+//   LLM_URL         the base URL, e.g. https://api.openai.com/v1
+//   LLM_MODEL       optional; defaults to gpt-4o-mini
+//   OPENAI_API_KEY  the key. Omit it for a keyless local runtime
+//                   (Ollama, LM Studio, vLLM), which needs no auth header.
+// For Anthropic instead, swap this import for
+// '@beatzball/litro-agent/providers/anthropic', call anthropic({ model }), and
+// set ANTHROPIC_API_KEY.
 const live = process.env.LLM_URL
   ? openaiCompatible({ baseURL: process.env.LLM_URL, model: process.env.LLM_MODEL ?? 'gpt-4o-mini' })
   : null;
+
+const demo = scriptedProvider((req) => {
+  const last = req.messages[req.messages.length - 1];
+  const text = String(last?.content ?? '');
+  if (last?.role === 'tool') {
+    return [{ type: 'text-delta', text: 'Here is the weather card.' }, { type: 'done' }];
+  }
+  if (last?.role === 'user' && /weather/i.test(text)) {
+    return [
+      { type: 'text-delta', text: 'Checking the weather' },
+      { type: 'tool-call', id: 'call_1', name: 'example-weather', input: { city: 'Lisbon' } },
+      { type: 'done' },
+    ];
+  }
+  return [{ type: 'text-delta', text: 'How can I help?' }, { type: 'done' }];
+});
+
+export default defineAgent({ model: live ?? demo, instructions: './instructions.md' });
 ```
 
+Three things the first draft left for the reader to discover, each of which would
+have stopped them:
+
+- **`OPENAI_API_KEY` was never named.** `providers/openai-compatible.ts` reads it,
+  and the auth header is only sent when a key resolves — which is why a local
+  runtime needs none. "Set LLM_URL" alone is not the path to a hosted model.
+- **The snippet stopped at `const live = ... : null`** and never showed the
+  scripted branch or the `defineAgent` line, so it was not copyable.
+- **Anthropic is shipped and reachable**, and getting there is an import swap. One
+  sentence, in the file, beats a reader concluding it is not supported.
+
+So "two lines away" was wrong in both directions: reaching a hosted model is
+**zero lines of code and two or three environment variables**, and reaching the
+other shipped provider is a small edit the file now names.
+
+**Whether `litro dev` loads a `.env` file is not something this spec can assert.**
+The `litro` CLI has no loader of its own; Nitro may provide one. An implementer
+must check before `AGENT.md` tells anyone to put these in a `.env` rather than in
+their shell.
+
 What happens on first run, measured end to end in a production build: the user
-asks about the weather, the agent narrates, calls `get-weather`, and a
-server-rendered `<weather-card>` reading `Lisbon / 21°C / sunny` arrives on the
-session stream. No key, no network, no configuration.
+asks about the weather, the agent narrates, calls `get-weather` — the spike's
+name for what the scaffold calls `example-weather` — and a server-rendered
+`<weather-card>` reading `Lisbon / 21°C / sunny` arrives on the session stream.
+No key, no network, no configuration.
 
 **What the scripted provider is for**, stated plainly in the generated file so it
 is not mistaken for a toy: it is the deterministic stand-in that makes the demo
@@ -433,6 +743,14 @@ Rejected:
 - **No provider at all, with a `TODO`.** The scaffold would not run, which is the
   state this spec exists to end.
 
+**One thing the generated file must also say, because a default that ships is a
+default that deploys.** A `fullstack` project is deployable from the first
+commit, and a deployed project with the scripted provider untouched answers every
+weather question with Lisbon, 21°C, sunny, forever, with no error and no warning.
+That is the right default for a first run and the wrong one for a site with
+users, so the comment says so in a line: this provider is for development and
+tests; set `LLM_URL` before you deploy, or delete `agents/`.
+
 ## 9. Decision 6 — the schema library in the scaffolded tool
 
 Not in the issue, but it cannot be avoided: the tool needs an `input` schema, and
@@ -443,6 +761,7 @@ Measured in the scaffolded project, through `tools/list`:
 | The tool's `input` | Published `inputSchema` | Server output |
 |---|---|---|
 | a hand-rolled Standard Schema | `{ "type": "object" }` | 2216 KB |
+| `zod/mini`, as written | `{ "type": "object" }` | 3320 KB |
 | `z.object({ city: z.string().trim().min(1).max(80).describe(...) })` | full: `properties.city` with `type`, `minLength`, `maxLength`, `description`, and `required: ["city"]` | 3388 KB |
 
 **Decided: zod.** A scaffold is an example before it is a feature, and the
@@ -455,74 +774,107 @@ Rejected: **a hand-rolled Standard Schema**, as the agents page's example writes
 it. It adds no dependency and it is the pattern this repo spent a phase moving
 away from. The scaffolded example would model the weaker path.
 
-### 9.1 The follow-up: trim zod to what the tool uses
+### 9.1 The follow-up was tried. `zod/mini` is not the lever.
 
-The 1172 KB is accepted, not endorsed. It is nine tenths of the whole cost of
-scaffolding an agent, and the generated tool uses roughly six functions —
-`object`, `string`, `trim`, `min`, `max`, `describe`. That ratio is worth
-revisiting with a measurement rather than from memory, so the baseline and the
-candidate are both recorded here.
+The 1172 KB is accepted, not endorsed — it is nine tenths of the whole cost of
+scaffolding an agent for roughly six functions (`object`, `string`, `trim`,
+`min`, `max`, `describe`). The obvious candidate was `zod/mini`, the
+tree-shakable subset that ships inside the same package (verified: zod 4.6.5's
+export map carries `./mini`, `./v4/mini` and `./v4-mini`).
 
-**The candidate exists already.** `zod/mini` is the tree-shakable subset built
-for exactly this complaint, and it ships inside the same package rather than
-being a separate dependency. Verified against zod 4.6.5 in this repository: the
-export map carries `./mini`, `./v4/mini` and `./v4-mini`.
+**It was built and measured, not reasoned about.** Two independent results, and
+each one alone is disqualifying.
 
-**The baseline to beat is 1172 KB of traced server output** (`dist/server`
-3388 KB with zod against 2216 KB with the hand-rolled schema, measured in section
-3.4).
+**Result 1 — it publishes nothing useful.** Run through the real
+`toolInputJSONSchema`, on zod 4.6.5:
 
-**Deliberately not attempted now.** Two things have to be checked before a swap
-is honest, and each is its own piece of work:
+| Schema | `~standard.validate` | `~standard.jsonSchema` | Published |
+|---|---|---|---|
+| `zod/mini` | `function` | `undefined` | `{"type":"object"}` |
+| `zod` | `function` | `{input, output}` | the full typed schema |
 
-- whether `zod/mini` exposes the Standard Schema surface `defineTool` requires,
-  `~standard.validate`;
-- whether it carries the Standard JSON Schema converter half,
-  `~standard.jsonSchema.input`, which is what `toolInputJSONSchema` reads and the
-  entire reason zod was chosen. A subset that validates but does not convert
-  would publish `{ "type": "object" }` and lose the argument.
+`zod/mini` validates and does not convert, so it publishes exactly the
+permissive shape zod was chosen to avoid. The conversion is not unavailable —
+`zod/mini` does export `toJSONSchema` — and hand-attaching it works:
 
-If both hold and the number moves, it is a one-line change in a template with a
-measured justification. If the converter is absent, zod proper stays and this
-section records why.
+```ts
+schema['~standard'].jsonSchema = { input: () => zm.toJSONSchema(schema) };
+// → {"type":"object","properties":{"city":{"type":"string","minLength":1,"maxLength":80}},...}
+```
+
+But note what is missing from that output: **no `description`.** `zod/mini`'s
+`.check()` chain has no `.describe()`, so the one thing the description was
+carrying — the argument contract for a model — is gone. And four lines of glue in
+a scaffolded tool defeats "a scaffold is an example first", which is the whole of
+decision 6.
+
+**Result 2 — and this is the one that closes it. The saving is 68 KB of 1172 KB,
+under 6%.** With the glue attached and the project built: `dist/server` is
+3320 KB against 3388 KB. The traced `zod` directory goes from 1172 KB to
+1104 KB.
+
+**Because tree-shaking never applies.** Nitro traces `zod` as an external and
+copies the package directory; it is not bundled, so a narrower import graph buys
+almost nothing. `zod/mini` is a solution to a bundling problem, and this is not
+one.
+
+**So the follow-up is answered: no, on this version.** The lever, if anyone wants
+the 1172 KB back, is Nitro's externals handling — `externals: { inline: [...] }`
+or trace configuration — not a library swap. That is a different piece of work,
+on a different package, and nobody has asked for it. Recorded here so it is not
+re-attempted from the same wrong end.
 
 ## 10. What a new user sees and does
 
-**The target, after v1.** Measured as achievable — every step below was executed
-in the walk-through, with the hand wiring standing in for what the scaffolder
-would write.
+**The target, after v1.** Steps 1, 2 and 5 were executed in the walk-through;
+steps 3 and 4 were not. Marked per step, because the first draft claimed all five
+were run and that is not what section 3 describes.
 
-1. `pnpm create @beatzball/litro my-app` — accept the defaults
-2. `cd my-app && pnpm install`
-3. `pnpm dev`
-4. open `/agent`, type *what is the weather in lisbon?*
-5. the agent narrates, calls `example-weather`, and a server-rendered card
-   appears
+| | Step | Evidence |
+|---|---|---|
+| 1 | `pnpm create @beatzball/litro my-app` — accept the defaults | **run**, from the packed tarball |
+| 2 | `cd my-app && pnpm install` | **run**, `--ignore-workspace` against the tarballs |
+| 3 | `pnpm dev` | **not run.** The spike built and served a production bundle instead |
+| 4 | open `/agent`, type *what is the weather in lisbon?* | **not run.** No chat page was written and no browser was opened |
+| 5 | the agent narrates, calls the tool, a server-rendered card appears | **run**, as a POST to the session endpoint: the full event sequence and the card's DSD are quoted in section 3.3 |
+
+**What that means for the plan.** The agent, the tool, `ui()` and the turn are
+measured end to end. The two unmeasured steps are both the chat page — the
+browser path, under `litro dev`, with `@beatzball/litro-agent/client` in a client
+bundle built from a tarball install. That is the one v1 piece carrying no spike
+evidence, and section 14 names it as the gap rather than burying it.
 
 Three commands and one sentence typed into a page. No key, no network, nothing
 read first.
 
-**Today, for the same result:** four files written from the guide, eight edits
-across three existing files, five of them inside a build configuration — and the
-first run fails with a raw `TypeError` unless the reader also knows to swap the
-provider the guide's example names.
+**Today, for the same result:** four files written from the guide and nine edits
+across three existing files, five of them inside a build configuration — thirteen
+places to be right — and the first run fails with a raw `TypeError` unless the
+reader also knows to swap the provider the guide's example names.
 
-**On v1, to reach a model in an MCP host** — three more steps, all documented in
-the generated project:
+**On v1, to reach a model in an MCP host** — two more steps, both in the
+generated `AGENT.md`:
 
 6. `pnpm add -D @modelcontextprotocol/sdk`
-7. `pnpm build` (phase 2 makes this pack the `ui://` document too)
-8. one entry in the host's configuration naming `litro mcp serve --project`
+7. one entry in the host's configuration naming `litro mcp serve --project`
+
+**No build step on v1.** The first draft listed one here, and that was wrong:
+the v1 tool names no app, so nothing has to be packed, and `litro mcp serve`
+loads project source through Vite and never touches the build. An implementer
+copying that list into the tool's comment would have told users to run a build
+they do not need.
 
 **After phase 2** step 6 goes away, because the SDK is already a `devDependency`
-and the build already packs. Step 8 remains and always will: no script can edit
-somebody's host configuration for them.
+— but a build step appears, because the tool then names a packed app. So the
+count stays at two for a fresh clone; what changes is that the second thing is
+`pnpm build`, which a project runs anyway, instead of an install. Step 7 remains
+and always will: no script can edit somebody's host configuration.
 
-**That v1 is five steps and MCP adds three is the finding.** The brief asks
-whether more than a few steps is itself a result. v1 is three commands and a
-sentence typed into a page; the count grows only at the MCP boundary, and only by
-an install and a build — which is exactly why that half is a phase of its own and
-not a gap.
+**The shape of the result: v1 is five steps, and MCP adds two.** The question
+worth asking of any scaffold is whether the path to a working result is short
+enough to follow without a guide. v1 is three commands and a sentence typed into
+a page; the count grows only at the MCP boundary, and only by an install and a
+host entry — which is why that half is a phase of its own rather than a gap.
 
 ## 11. What this interacts with
 
@@ -540,51 +892,70 @@ One thing worth stating because somebody will ask: `--for-repo` writes an
 verified on a case-insensitive filesystem, where they are two different names.
 (`agents/` and `Agents/` would collide there, but nothing writes the second.)
 
-**`--no-blog`-style removal: a new `removeAgent()`, built the way `removeBlog`
-is.** `applyRecipeOptions` is the single place that acts on an answer, and a new
-branch for `agent === false` calls into a new `src/agent.ts`. What it must undo:
+**`--no-blog`-style removal: there is none, and that is the point.** Decision
+4.1.1 inverts the option, so `applyRecipeOptions` gains an `addAgent` branch
+beside `removeBlog` rather than a `removeAgent` one. `--no-agent` copies no layer
+and runs no step; there is nothing to undo and nothing to assert about what a
+layer left behind.
 
-| Undo | Tolerant of absence? |
+What `addAgent(projectDir)` applies, every edit anchored and asserting its target
+exists, in the style `blog.ts` established:
+
+| Edit | If the anchor is missing |
 |---|---|
-| delete `agents/` | no — assert it existed |
-| delete `pages/agent.ts` and `src/components/weather-card.ts` | no |
-| remove the `/agent` link from `pages/index.ts` | no |
-| remove the agent test from `e2e/index.spec.ts` | yes, as `dropBlogRoutesFromSpec` is |
-| remove the five `nitro.config.ts` changes | no — and each anchored, not a regex over the file |
-| remove the two `imports` keys and the dependency from `package.json` | no |
-| leave `.gitignore` alone | — a stray `.litro/` rule is harmless |
+| the five `nitro.config.ts` changes | throw, naming the file and the anchor |
+| the two `imports` keys and the two dependencies in `package.json` | throw |
+| the `.litro/` rule in `.gitignore` | append; no anchor needed |
+| the `/agent` link in `pages/index.ts`, beside the Blog link | throw |
+| the agent test in `e2e/index.spec.ts` | throw |
 
-The rule `blog.ts` already carries applies here and is the one most likely to be
-missed: **Nitro's prerenderer crawls the links it finds.** A `/agent` link left
-in `pages/index.ts` after `--no-agent` makes a static build render a page that
-was deleted, and the scaffolding check is what caught the same mistake for the
-blog.
+**Every one of them throws, and that is simpler than the removal design could
+be.** A remover had to decide, per edit, whether a missing anchor meant "an
+overlay legitimately removed this" or "the template was reshaped" — and it cannot
+tell the two apart. An adder never faces the question: it runs only on the
+adapter and mode where the base template is known to be on disk, so a missing
+anchor is always a genuine fault.
 
-**The alternative that was considered and rejected:** leaving the
-`nitro.config.ts` wiring in place on `--no-agent`, since measurement shows it is
-inert — a build with the wiring and no `agents/` exits 0 and the route answers a
-clean 404 `Unknown agent: demo`. It is tempting because it removes the riskiest
-part of the removal. It is wrong because the wiring imports
-`@beatzball/litro-agent/plugin`, so the dependency has to stay too, and a project
-that answered "no" would carry 2.5 MB and 104 KB it was promised it would not.
+One precision, because the first draft got it wrong by analogy:
+`dropBlogRoutesFromSpec` is **not** simply tolerant. It returns early when the
+spec file is absent and **throws** when `PRERENDERED_ROUTES` is absent. The
+agent's `e2e/index.spec.ts` edit copies that exact pair — tolerate a missing
+file, throw on a present file with no anchor — and the spec says so rather than
+leaving an implementer to read the wrong half.
 
-That same measurement is useful elsewhere, though, and the generated project
-should say so: **deleting `agents/` is a safe way to turn the agent off later.**
+The rule `blog.ts` carries still applies, inverted: **Nitro's prerenderer crawls
+the links it finds.** Here the risk is adding a `/agent` link in a project where
+the page was not written — which cannot happen under 4.1.1, since the link and
+the page come from the same answer. It is named because it is the failure a
+future refactor would reintroduce by splitting them.
+
+**Why the wiring is not left in place unconditionally**, which was considered:
+measurement shows it is inert — a build with the wiring and no `agents/` exits 0
+and the route answers a clean 404 `Unknown agent: demo`. Tempting, because it
+would remove the config edits entirely. Rejected because the wiring imports
+`@beatzball/litro-agent/plugin`, so the dependency must stay too, and a project
+that answered "no" would carry 2.5 MB on disk and 104 KB of server output it was
+promised it would not.
+
+That measurement is still useful, and `AGENT.md` says so: **deleting `agents/` is
+a safe way to turn the agent off later** — the build stays green and the endpoint
+answers a clean 404 rather than breaking.
 
 ## 12. The smallest useful first version
 
 **v1: the `agent` option on `fullstack`, Lit only, default true — an agent, one
 `ui()` tool, a chat page, and a turn that works with no key.**
 
-- `agents/demo/` with the scripted-provider agent, its instructions, and one
-  `example-weather` tool returning `ui()`, its `input` written with zod
-- `src/components/weather-card.ts` and `pages/agent.ts`
-- the twelve edits of section 5, written by the template rather than by hand
-- `removeAgent()` for `--no-agent`, and the Elena refusal
+- `recipes/fullstack/options/agent/` holding the six new files of section 5
+- `addAgent()` applying the twelve edits of section 5; the Elena gate (1.4) and
+  the `ssg` gate (1.5)
+- the three `create-litro` changes of section 4.1.2 — the option-keyed layer, the
+  `adapters` field on `RecipeOption`, and the adapter and mode reaching
+  `resolveRecipeOptions`
+- `zod` and `@beatzball/litro-agent` in the generated `dependencies`
 - two new variants in `scripts/verify-scaffolded-apps.mjs`, and one new test in
   the template's own `e2e/index.spec.ts`
-- one line in the tool file and one in the generated README naming
-  `pnpm add -D @modelcontextprotocol/sdk` as the single step to MCP (section 7.1)
+- `AGENT.md`, carrying the four things of section 5
 
 **No `app:` field, no `mcp-apps/`, no SDK in the dependency list.** The chat path
 is where `ui()` is already visible, and it needs no SDK, no packed document and
@@ -592,25 +963,52 @@ no host. MCP is one documented install away, not absent.
 
 ### Phases after it
 
-Each ships alone, and each carries one `@beatzball/create-litro` changeset.
+Each ships alone.
 
-1. **v1, as above.**
-2. **The MCP half, all four pieces together** (decisions 4 and 8):
-   `mcp-apps/weather-card.ts`, `app: 'weather-card'` on the tool,
-   `@modelcontextprotocol/sdk` as a `devDependency`, and `litro mcp-app build`
-   folded into the project's `build` script. Plus a host-configuration snippet in
-   the generated project, naming `litro mcp serve --project`. This takes the
-   install count from one to zero; it does not add a capability v1 lacked.
+1. **v1, as above.** `@beatzball/create-litro` changeset.
+2. **The MCP half, the three inseparable pieces plus the SDK** (decision 4 and
+   section 7.2): `mcp-apps/weather-card.ts`, `app: 'weather-card'` on the tool,
+   `litro mcp-app build` folded into the project's `build` script, and
+   `@modelcontextprotocol/sdk` as a `devDependency`. Plus a host-configuration
+   snippet in `AGENT.md`. It removes the install step, adds a build step, and
+   **does add a capability** — the `ui://` document in a host (section 7.2).
+   `@beatzball/create-litro` changeset.
 3. **An add path for an existing project.** `create-litro` refuses a directory
    that already exists, so there is no way to give an agent to a project someone
-   already has — the only path is to scaffold a new one and move files. This is
-   what the issue's "the wire-it-by-hand section becomes the manual alternative,
-   not the only path" really requires, and it is the largest piece of the four. It
-   would carry a `@beatzball/litro` changeset if it lands as `litro add agent`.
+   already has — the only path is to scaffold a new one and move files.
+   `@beatzball/litro` changeset if it lands as `litro add agent`; otherwise
+   `@beatzball/create-litro`.
 4. **Docs.** The agents page's Setup section rewritten so scaffolding is the first
    path and the hand wiring is the second; the Known Gaps entries for "does not
    scaffold an agent" and the agent row of the recipe table removed; the sequence
    of section 10 on Getting Started.
+
+   **No changeset.** Phase 4 touches `packages/docs-content/` and the docs sites,
+   and every docs package is on the changesets ignore list. The first draft said
+   each phase carries one `@beatzball/create-litro` changeset, which would have
+   made this phase name an ignored package or invent a change it did not make.
+
+### Which phase closes issue 216
+
+**Phase 4 closes it. v1 does not, and the spec should not pretend otherwise.**
+
+The issue's "done when" has three lines, and v1 satisfies one and a half:
+
+| "Done when" | v1 |
+|---|---|
+| a new project reaches a working agent and a model-callable tool without reading the agents guide | **yes** |
+| `verify-scaffolded-apps.mjs` covers the new variant | **yes**, two variants (section 14) |
+| the agents guide's "wire it by hand" section becomes the manual alternative, not the only path | **no** — that is a docs change, and it is phase 4 |
+
+So phases 1 and 4 together close the issue, and phases 2 and 3 are beyond it.
+
+**Phase 3 is not required by the issue.** The first draft claimed the third
+"done when" line "really requires" an add path. Reading it again: the line is
+literally about the guide's framing, which phase 4 does, and the issue says
+nothing about existing projects. Phase 3 is a good idea that this issue did not
+ask for, so it should be its own issue rather than a reason to hold 216 open.
+The first draft also called it "the largest piece of the four" with no sizing
+behind it; it is unsized, and that is all that can honestly be said.
 
 ## 13. What could go wrong
 
@@ -618,17 +1016,21 @@ Every row marked *measured* was run on 2026-10-02, in the scaffolded project.
 
 | Case | What happens | What the design must do |
 |---|---|---|
-| **An agent in a static build** | *measured:* `litro generate` exits 0, logs `Registered 1 agent`, emits no endpoint, warns nothing | keep the option off `ssg` recipes (decision 1.3). If `fullstack` is built with `LITRO_MODE=static`, the agent is dead the same way — the generated project must say so where the user will read it |
-| **`agents/` deleted, wiring left behind** | *measured:* build exits 0; the route answers `{"name":"AgentError","message":"Unknown agent: demo","status":404}` | nothing to fix. Document it as the supported way to turn the agent off |
-| **A tool that needs a key** | *measured:* raw `TypeError`, status 500, on the session stream to the browser | the scripted default (decision 5). A live provider is opt-in through the environment |
-| **`app:` with nothing packed** | *measured:* clear startup failure naming `litro mcp-app build` | why the MCP pieces ship together or not at all (decision 4) |
+| **An agent in a static build** | *measured:* `litro generate` exits 0, logs `Registered 1 agent`, emits no endpoint, warns nothing | **three things, because there are three ways in.** Keep the option off `ssg` recipes (1.3); refuse `--agent --mode ssg` (1.5); and for a project that later runs `litro generate` anyway, say so in `AGENT.md`. The underlying bug is [issue 228](https://github.com/beatzball/litro/issues/228) and no phase here fixes it |
+| **`agents/` deleted, wiring left behind** | *measured:* build exits 0; the route answers `{"name":"AgentError","message":"Unknown agent: demo","status":404}` | nothing to fix. `AGENT.md` documents it as the supported way to turn the agent off |
+| **A provider that needs a key** | *measured:* raw `TypeError`, status 500, on the session stream to the browser | the scripted default (decision 5). A live provider is opt-in through the environment, and section 8 names every variable. It is the *provider* that needs the key, not the tool — the tool has no network call at all |
+| **The scripted provider reaches production** | not measured; it follows from the default | a deployed project with the default untouched answers every weather question `Lisbon / 21°C / sunny`, with no error. Decision 5 puts a line in the generated file: development and tests only, set `LLM_URL` before deploying, or delete `agents/` |
+| **`zod` missing from the generated `package.json`** | the tool's `import { z } from 'zod'` does not resolve under pnpm; a fresh project fails at build | section 5 adds it to `dependencies` explicitly. `@beatzball/litro-agent` ships no schema library, deliberately |
+| **`app:` with nothing packed** | *measured:* clear startup failure naming `litro mcp-app build` | why `app:`, `mcp-apps/` and the pack step ship together or not at all (section 7.2) |
 | **No MCP SDK** | *measured:* clear startup failure naming the install | acceptable as one documented step in v1 |
 | **Elena** | `ui()` throws: `ui(): the "elena" renderer is deferred past v0.` | refuse `--agent` with `--adapter elena` before writing anything (decision 1.4) |
 | **A tool name collides inside a host** | not measured here, but recorded already: two servers registering `get-weather` made a host pick one silently, with no way to tell which answered | **settled by decision 7:** the generated tool is `example-weather`, and names are never prefixed. The collision is real and it is the host's to resolve |
 | **Scaffolding into an existing project** | `create-litro` refuses an existing directory outright, before anything is written | correct today, and the reason phase 3 exists. v1 must not pretend to be an add path |
+| **`--mode ssg` with the agent** | the silent static failure above, reached through the recipe's own prompt | refused before anything is written (decision 1.5) |
 | **`.litro/` not ignored** | session logs are conversation data | the `.gitignore` edit is part of v1, not a docs note |
 | **A name collision on disk** | `agents/` beside `AGENTS.md` is fine — *verified* on a case-insensitive filesystem | nothing |
-| **A reshaped template silently half-removing the agent** | this is what `blog.ts` was written against | every `removeAgent()` edit asserts its target, and the scaffolding check builds both answers |
+| **A reshaped template silently half-adding the agent** | this is what `blog.ts` was written against, inverted | every `addAgent()` edit asserts its anchor and throws (section 11), and the scaffolding check builds both answers |
+| **An Elena scaffold hitting the agent path** | the first draft's `removeAgent()` would have thrown here, breaking a live variant | the option is additive and gated, so Elena's scaffold is unchanged byte for byte (4.1.1, 4.4) |
 
 ## 14. How each phase is verified
 
@@ -641,12 +1043,22 @@ the nine that exist:
 
 - `fullstack:lit:agent` (`--agent`): the build registers one agent; the built
   server contains the `/__litro/agent/` route;
-  `agents/demo/tools/example-weather.ts` is on disk; `@beatzball/litro-agent` is
-  in `package.json`; the rendered home page links `/agent`.
+  `agents/demo/tools/example-weather.ts` and `AGENT.md` are on disk; **both
+  `@beatzball/litro-agent` and `zod` are in `package.json`**; the rendered home
+  page links `/agent`.
 - `fullstack:lit:no-agent` (`--no-agent`): no `agents/`, no `pages/agent.ts`, no
-  `@beatzball/litro-agent` in `package.json`, no `/agent` anywhere in the
-  rendered home page — the prerender-crawl trap of section 11 — and the build
-  still green.
+  `AGENT.md`, **neither `@beatzball/litro-agent` nor `zod`** in `package.json`,
+  no `/agent` anywhere in the rendered home page — the prerender-crawl trap of
+  section 11 — and the build still green.
+
+**The `zod` assertion is not padding.** It is the one finding in this spec that
+would otherwise reach a user as a build failure in a brand-new project, and the
+`no-agent` half catches the mirror mistake of leaving zod behind.
+
+**The existing `fullstack:elena` variant is the third thing this must prove**,
+and it needs no new variant: it already exists, and under 4.1.1 it must come out
+byte-identical to today's. A plan should diff it against the current output once,
+because "unchanged" is the entire safety argument for the Elena gate.
 
 **v1, in the generated project's own `e2e/index.spec.ts`:** one test that opens
 `/agent`, waits for `litro-outlet[data-litro-settled]` before touching anything
@@ -690,10 +1102,30 @@ an agent already in it, which is the case that has no right answer yet.
 `node scripts/check-doc-refs.mjs` still passes with the Known Gaps entries
 removed.
 
-## 15. Decisions 7 to 11, settled
+## 15. Decision 7, and where the other four live
 
-These five were carried as open questions in the first draft of this spec. They
-are now decided, and each is recorded with its reason so it is not re-argued.
+The first draft carried five open questions. All five are settled. **Four of them
+are settled in the sections that already argue them**, and repeating them here
+gave one decision two numbers, and a later section cited both of them for one
+thing. So this section holds the one decision with no home of its own, and
+points at the rest:
+
+| Settled | Where it is argued |
+|---|---|
+| v1 ships no MCP half; the SDK is one install away | **decision 4** — sections 7, 7.1, 7.2 |
+| zod, and the `zod/mini` follow-up | **decision 6** — sections 9, 9.1 |
+| the scaffolding check does not start a server | **section 14.1** |
+| no docs-recipe agent for now | **decision 1.3**, and the note below |
+| the generated tool's name | **decision 7**, below |
+
+**On the docs-recipe question**, one thing from section 1.3 is worth repeating
+because it is the part that keeps the idea alive: `litro mcp serve` should work on
+a static project, since it loads project source through Vite and never touches
+the build. An agent that exists only for an MCP host, on a statically hosted docs
+site, is therefore coherent — the tools answer a host over stdio while the site
+is files on a CDN. **That was read from the CLI's source, not measured**; no
+static project appears in the section 7 table. Nobody has asked for it, so it is
+not built, but a future reader starts from here rather than from scratch.
 
 ### Decision 7 — the generated tool is `example-weather`, and names are never prefixed
 
@@ -713,44 +1145,15 @@ configures two of them.
 
 `example-weather` reduces it without touching the naming rule, and it does a
 second job: the name tells a reader this is scaffolding to replace, not a tool to
-build on. The generated project should say the rule out loud too — a tool name is
-global to a host — so the first rename is informed rather than accidental.
+build on. `AGENT.md` says the rule out loud too — a tool name is global to a
+host — so the first rename is informed rather than accidental.
 
 Rejected: **naming the tool from the project** (`my-app-weather`). It is a prefix
 by another spelling, so it reopens a decision already made, and it makes the
 scaffolded example model the thing the naming rule forbids.
 
-### Decision 8 — v1 ships no MCP half, and the SDK is one install away
-
-Settled as section 7 recommends, on the distinction section 7.1 draws: the SDK is
-a `devDependency` and an optional peer, so it ships to nobody and costs a
-developer one install. The question was never whether MCP is supported — it is —
-but whether every new project pays for it on day one. It should not. Phase 2
-takes the count from one command to zero.
-
-### Decision 9 — zod, with `zod/mini` as a measured follow-up
-
-Settled as section 9 recommends: zod is the only form that publishes a real
-`inputSchema`, and a scaffold is an example first. The 1172 KB is accepted rather
-than endorsed, and section 9.1 records the candidate (`zod/mini`, verified to
-exist in the same package), the baseline to beat, and the two things that have to
-be checked before a swap is honest.
-
-### Decision 10 — the scaffolding check does not start a server
-
-Settled as section 14.1 records, including the weakness: nothing in this
-repository's CI runs a generated project's own suite, so in CI the standing claim
-is "it builds and the wiring is there" and not "a turn runs".
-
-### Decision 11 — no docs-recipe agent for now
-
-Settled as decision 1.3 argues: `starlight` and `supernova` are `mode: 'ssg'`,
-and an agent in a static build is measurably dead and silent.
-
-**The idea is not closed, and this is the part worth keeping.**
-`litro mcp serve` works on a static project — it loads project source through
-Vite and never touches the build, which the walk-through confirms. So an agent
-that exists only for an MCP host, on a statically hosted docs site, is coherent:
-the tools would answer a host over stdio while the site itself is files on a CDN.
-Nobody has asked for it, so it is not built. If it is raised again, it starts
-from here rather than from scratch.
+**Where the collision was recorded**, since this spec cites it twice: the MCP
+server design's phase 4 notes it, from a desktop-host check in which the
+hand-written rig and `litro mcp serve` both registered `get-weather` and the host
+silently served one of them. It is a naming rule a user has to know, not a bug in
+either server. This spec takes it as reported and did not re-run it.
