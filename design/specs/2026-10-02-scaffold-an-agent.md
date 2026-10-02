@@ -1,6 +1,6 @@
 # Design: scaffold an agent
 
-Status: Draft
+Status: Accepted
 
 Issue: https://github.com/beatzball/litro/issues/216
 
@@ -69,6 +69,10 @@ drive      POST /__litro/agent/demo/<session>
 | `agents/demo/instructions.md` | the system prompt | 2 |
 | `agents/demo/tools/get-weather.ts` | `defineTool` plus a `ui()` return | 35 |
 | `src/components/weather-card.ts` | the component `ui()` renders | 20 |
+
+The walk-through named its tool `get-weather`, following the guide's own example.
+Every quotation of a measured run below keeps that name, because that is what was
+run. **The tool the scaffolder generates is `example-weather`** — decision 7.
 
 **Eight edits across three files that already exist:**
 
@@ -155,7 +159,7 @@ There is a precedent either way, which is why the issue leaves it open.
 `supernova` is a recipe that `extends` another, and it also carries an option.
 Both were read end to end before choosing.
 
-**Recommendation: an option on an existing recipe.**
+**Decided: an option on an existing recipe.**
 
 ```ts
 options: [
@@ -192,7 +196,7 @@ Rejected:
 
 ### 4.2 Default true
 
-**Recommendation: `default: true`.** The point of the work is that
+**Decided: `default: true`.** The point of the work is that
 `pnpm create @beatzball/litro my-app`, with every default accepted, reaches an
 agent. A default of `false` turns the sentence into *an agent is a command and a
 flag away*, which is a smaller claim and not the one the landing page wants.
@@ -222,7 +226,7 @@ through Vite and never touches the build.
 (issue 219, which also deprecates the adapter). A scaffolded Elena agent whose
 one tool returns a component would therefore throw on its first tool call.
 
-**Recommendation: with `--adapter elena`, the agent option defaults to `false`
+**Decided: with `--adapter elena`, the agent option defaults to `false`
 and is not prompted; an explicit `--agent` is refused before anything is
 written.** The refusal names the adapter and the issue, in the style of
 `assertAdapterSupported`, which already refuses an adapter a recipe does not
@@ -249,12 +253,16 @@ my-app/
       agent.ts                  defineAgent; the scripted provider, with an env switch
       instructions.md           the system prompt, inlined at build time
       tools/
-        get-weather.ts          defineTool; returns ui(<weather-card>)
+        example-weather.ts      defineTool; returns ui(<weather-card>)
   pages/
     agent.ts                    the chat page, route /agent
   src/components/
     weather-card.ts             the component ui() renders
 ```
+
+The tool is `example-weather`, not `get-weather`. Decision 7 is the reason: a
+tool's name is global to an MCP host, and a name that says "example" both
+collides less and tells a reader it is scaffolding to replace.
 
 And these edits to files the recipe already ships:
 
@@ -278,14 +286,15 @@ and a browser is the only client that speaks it. `playground/pages/agent.ts` is
 
 **What it does NOT produce in v1:** no `mcp-apps/` directory, no `app:` field on
 the tool, no `@modelcontextprotocol/sdk`, no `agents/_config.ts`. Decision 4 and
-section 8 say why.
+section 7.1 say why — and the SDK's absence is a default, not a limit: it is a
+`devDependency` one install away, and the generated project says the command.
 
 ## 6. Decision 3 — yes, a `ui()` tool with a real component
 
 This is the decision the issue calls the one that matters most, and the
 measurement in section 3.4 settles it rather than taste.
 
-**Recommendation: ship the `ui()` tool and its component.**
+**Decided: ship the `ui()` tool and its component.**
 
 - **It costs 16 KB.** An agent whose tool returns a plain object is 2200 KB of
   server output; the same agent returning `ui(html\`<weather-card ...>\`)` is
@@ -329,11 +338,33 @@ does not write (AGENT-012).
 So the question "does it work with no further steps" has a precise answer: **one
 step, and only if the scaffolded tool names no app.**
 
-**Recommendation for v1: the scaffolded tool names no app, and the SDK is not
+**Decided for v1: the scaffolded tool names no app, and the SDK is not
 installed.** `litro mcp serve` then needs one documented command, and nothing in
 the project is broken before it is run.
 
-The reasoning is that the three pieces of the MCP half are all-or-nothing:
+### 7.1 What the SDK actually costs, stated precisely
+
+This has to be exact, because "6 MB in every project" reads worse than the truth
+and could leave a reader thinking a scaffolded project cannot serve MCP at all.
+It can. Three facts:
+
+- **It is a `devDependency`.** `@modelcontextprotocol/sdk` never ships to
+  production, never enters a client bundle, and no visitor to a Litro site
+  downloads a byte of it. The 6.0 MB is a figure on a developer's disk.
+- **It is already an optional peer dependency** of `@beatzball/litro-agent`, and
+  that is the correct shape: the package declares the version it works against,
+  and only a project that serves MCP resolves it.
+- **A project that wants MCP runs one install.** `pnpm add -D
+  @modelcontextprotocol/sdk`, and `litro mcp serve` works — measured, in a
+  scaffolded app, in the table above.
+
+So the question was never whether the SDK is needed eventually. It is whether
+**every new project pays that install on day one for something most of them will
+not use.** It should not. That is the whole of this decision, and it is a default,
+not a limitation.
+
+The second reason is that the MCP pieces are all-or-nothing, and any three of the
+four produce a broken project:
 
 - Ship `app:` without `mcp-apps/` → startup failure out of the box.
 - Ship `mcp-apps/` and `app:` without packing → startup failure until someone
@@ -341,15 +372,18 @@ The reasoning is that the three pieces of the MCP half are all-or-nothing:
 - Pack at create time → a scaffolder that runs a bundler, which nothing in
   `create-litro` does and which would need the project's dependencies installed
   first.
-- Ship the SDK to make the one command unnecessary → 6.0 MB installed in every
-  scaffolded project, for a feature most will not reach.
 
-**Phase 2 ships all four together**: `mcp-apps/weather-card.ts`, the `app:`
-field, `@modelcontextprotocol/sdk` as a `devDependency`, and
-`litro mcp-app build` folded into the project's `build` script so a `pnpm build`
-packs the document. A fresh clone that has not built still meets the measured
-startup message, which names the command — that is the acceptable residue, and it
-is why phase 2 is a phase rather than part of v1.
+**Phase 2 ships all four together** and takes the count to zero:
+`mcp-apps/weather-card.ts`, the `app:` field, `@modelcontextprotocol/sdk` as a
+`devDependency`, and `litro mcp-app build` folded into the project's `build`
+script so a `pnpm build` packs the document. A fresh clone that has not built
+still meets the measured startup message, which names the command — that is the
+acceptable residue, and it is why phase 2 is a phase rather than part of v1.
+
+Until then the generated project must say the one command out loud, somewhere a
+reader meets it — a comment in the tool file and a line in the generated README.
+A capability that is one documented install away is not a gap; a capability
+nobody is told about is.
 
 Rejected: **a `--mcp` flag in v1.** It is a second option, a second removal path
 and two more scaffolding-check variants, for an audience of one. Phase 2 can make
@@ -362,7 +396,7 @@ A new project has no API key. Measured, in section 3.2: the guide's own
 `openaiCompatible` example with no `LLM_URL` set fails on the first turn with a
 raw `TypeError` and a 500, streamed to the browser.
 
-**Recommendation: the scripted provider is the default, and a live one is two
+**Decided: the scripted provider is the default, and a live one is two
 lines away.** This is what `playground/agents/demo/agent.ts` already does, and
 the generated file is a shortened version of it:
 
@@ -411,20 +445,46 @@ Measured in the scaffolded project, through `tools/list`:
 | a hand-rolled Standard Schema | `{ "type": "object" }` | 2216 KB |
 | `z.object({ city: z.string().trim().min(1).max(80).describe(...) })` | full: `properties.city` with `type`, `minLength`, `maxLength`, `description`, and `required: ["city"]` | 3388 KB |
 
-**Recommendation: zod.** A scaffold is an example before it is a feature, and the
+**Decided: zod.** A scaffold is an example before it is a feature, and the
 hand-rolled form teaches the shape that tells a host nothing — the exact gap the
 MCP server design named as "the honest first thing to fix" in this repository's
 own demo tool. The 1172 KB is a server-side dependency on a project that has
-already chosen to run a server.
+already chosen to run a server, and no client ever downloads it.
 
 Rejected: **a hand-rolled Standard Schema**, as the agents page's example writes
 it. It adds no dependency and it is the pattern this repo spent a phase moving
-away from. If the 1.2 MB is judged too much, the honest alternative is the
-hand-rolled form plus the argument spelled out in the `description`, which is
-what the page already documents — but then the scaffolded example models the
-weaker path.
+away from. The scaffolded example would model the weaker path.
 
-This is a genuine fork and it is in the report.
+### 9.1 The follow-up: trim zod to what the tool uses
+
+The 1172 KB is accepted, not endorsed. It is nine tenths of the whole cost of
+scaffolding an agent, and the generated tool uses roughly six functions —
+`object`, `string`, `trim`, `min`, `max`, `describe`. That ratio is worth
+revisiting with a measurement rather than from memory, so the baseline and the
+candidate are both recorded here.
+
+**The candidate exists already.** `zod/mini` is the tree-shakable subset built
+for exactly this complaint, and it ships inside the same package rather than
+being a separate dependency. Verified against zod 4.6.5 in this repository: the
+export map carries `./mini`, `./v4/mini` and `./v4-mini`.
+
+**The baseline to beat is 1172 KB of traced server output** (`dist/server`
+3388 KB with zod against 2216 KB with the hand-rolled schema, measured in section
+3.4).
+
+**Deliberately not attempted now.** Two things have to be checked before a swap
+is honest, and each is its own piece of work:
+
+- whether `zod/mini` exposes the Standard Schema surface `defineTool` requires,
+  `~standard.validate`;
+- whether it carries the Standard JSON Schema converter half,
+  `~standard.jsonSchema.input`, which is what `toolInputJSONSchema` reads and the
+  entire reason zod was chosen. A subset that validates but does not convert
+  would publish `{ "type": "object" }` and lose the argument.
+
+If both hold and the number moves, it is a one-line change in a template with a
+measured justification. If the converter is absent, zod proper stays and this
+section records why.
 
 ## 10. What a new user sees and does
 
@@ -436,7 +496,8 @@ would write.
 2. `cd my-app && pnpm install`
 3. `pnpm dev`
 4. open `/agent`, type *what is the weather in lisbon?*
-5. the agent narrates, calls `get-weather`, and a server-rendered card appears
+5. the agent narrates, calls `example-weather`, and a server-rendered card
+   appears
 
 Three commands and one sentence typed into a page. No key, no network, nothing
 read first.
@@ -446,14 +507,22 @@ across three existing files, five of them inside a build configuration — and t
 first run fails with a raw `TypeError` unless the reader also knows to swap the
 provider the guide's example names.
 
-**After phase 2, to reach a model in an MCP host:** `pnpm build`, then one entry
-in the host's configuration naming `litro mcp serve` and `--project`. Two more
-steps, one of which no script can take for anyone.
+**On v1, to reach a model in an MCP host** — three more steps, all documented in
+the generated project:
 
-**That the sequence is five steps and not more is the finding.** The brief asks
-whether more than a few steps is itself a result; v1 is three commands, and the
-MCP half is where the count grows — which is the reason it is a phase of its own
-rather than part of v1.
+6. `pnpm add -D @modelcontextprotocol/sdk`
+7. `pnpm build` (phase 2 makes this pack the `ui://` document too)
+8. one entry in the host's configuration naming `litro mcp serve --project`
+
+**After phase 2** step 6 goes away, because the SDK is already a `devDependency`
+and the build already packs. Step 8 remains and always will: no script can edit
+somebody's host configuration for them.
+
+**That v1 is five steps and MCP adds three is the finding.** The brief asks
+whether more than a few steps is itself a result. v1 is three commands and a
+sentence typed into a page; the count grows only at the MCP boundary, and only by
+an install and a build — which is exactly why that half is a phase of its own and
+not a gap.
 
 ## 11. What this interacts with
 
@@ -508,26 +577,30 @@ should say so: **deleting `agents/` is a safe way to turn the agent off later.**
 `ui()` tool, a chat page, and a turn that works with no key.**
 
 - `agents/demo/` with the scripted-provider agent, its instructions, and one
-  `get-weather` tool returning `ui()`
+  `example-weather` tool returning `ui()`, its `input` written with zod
 - `src/components/weather-card.ts` and `pages/agent.ts`
 - the twelve edits of section 5, written by the template rather than by hand
 - `removeAgent()` for `--no-agent`, and the Elena refusal
 - two new variants in `scripts/verify-scaffolded-apps.mjs`, and one new test in
   the template's own `e2e/index.spec.ts`
+- one line in the tool file and one in the generated README naming
+  `pnpm add -D @modelcontextprotocol/sdk` as the single step to MCP (section 7.1)
 
-No MCP anything. The chat path is where `ui()` is already visible, and it needs
-no SDK, no packed document and no host.
+**No `app:` field, no `mcp-apps/`, no SDK in the dependency list.** The chat path
+is where `ui()` is already visible, and it needs no SDK, no packed document and
+no host. MCP is one documented install away, not absent.
 
 ### Phases after it
 
 Each ships alone, and each carries one `@beatzball/create-litro` changeset.
 
 1. **v1, as above.**
-2. **The MCP half, all four pieces together** (decision 4):
+2. **The MCP half, all four pieces together** (decisions 4 and 8):
    `mcp-apps/weather-card.ts`, `app: 'weather-card'` on the tool,
    `@modelcontextprotocol/sdk` as a `devDependency`, and `litro mcp-app build`
    folded into the project's `build` script. Plus a host-configuration snippet in
-   the generated project, naming `litro mcp serve --project`.
+   the generated project, naming `litro mcp serve --project`. This takes the
+   install count from one to zero; it does not add a capability v1 lacked.
 3. **An add path for an existing project.** `create-litro` refuses a directory
    that already exists, so there is no way to give an agent to a project someone
    already has — the only path is to scaffold a new one and move files. This is
@@ -551,7 +624,7 @@ Every row marked *measured* was run on 2026-10-02, in the scaffolded project.
 | **`app:` with nothing packed** | *measured:* clear startup failure naming `litro mcp-app build` | why the MCP pieces ship together or not at all (decision 4) |
 | **No MCP SDK** | *measured:* clear startup failure naming the install | acceptable as one documented step in v1 |
 | **Elena** | `ui()` throws: `ui(): the "elena" renderer is deferred past v0.` | refuse `--agent` with `--adapter elena` before writing anything (decision 1.4) |
-| **A tool name collides inside a host** | not measured here, but recorded already: two servers registering `get-weather` made a host pick one silently, with no way to tell which answered | every scaffolded project would ship `get-weather`. Either the generated tool is named from the project, or the generated host snippet names the server distinctly and the docs state the rule. This needs a ruling — see the report |
+| **A tool name collides inside a host** | not measured here, but recorded already: two servers registering `get-weather` made a host pick one silently, with no way to tell which answered | **settled by decision 7:** the generated tool is `example-weather`, and names are never prefixed. The collision is real and it is the host's to resolve |
 | **Scaffolding into an existing project** | `create-litro` refuses an existing directory outright, before anything is written | correct today, and the reason phase 3 exists. v1 must not pretend to be an add path |
 | **`.litro/` not ignored** | session logs are conversation data | the `.gitignore` edit is part of v1, not a docs note |
 | **A name collision on disk** | `agents/` beside `AGENTS.md` is fine — *verified* on a case-insensitive filesystem | nothing |
@@ -567,9 +640,9 @@ workspace symlink hides packaging faults and a green build hides a dropped value
 the nine that exist:
 
 - `fullstack:lit:agent` (`--agent`): the build registers one agent; the built
-  server contains the `/__litro/agent/` route; `agents/demo/tools/get-weather.ts`
-  is on disk; `@beatzball/litro-agent` is in `package.json`; the rendered home
-  page links `/agent`.
+  server contains the `/__litro/agent/` route;
+  `agents/demo/tools/example-weather.ts` is on disk; `@beatzball/litro-agent` is
+  in `package.json`; the rendered home page links `/agent`.
 - `fullstack:lit:no-agent` (`--no-agent`): no `agents/`, no `pages/agent.ts`, no
   `@beatzball/litro-agent` in `package.json`, no `/agent` anywhere in the
   rendered home page — the prerender-crawl trap of section 11 — and the build
@@ -581,13 +654,28 @@ the nine that exist:
 element, the text — reaches the page. The scripted provider is what makes this
 deterministic with no secret.
 
-**The open question this raises**, and it belongs in the report: the scaffolding
-check builds apps and never starts one. Asserting that a *turn* works, rather
-than that the route compiled, means teaching it to run a server. That is new
-machinery in a script that is deliberately dependency-free. The alternative is to
-split the claim — the check proves the app builds and the wiring is present, and
-the template's own Playwright suite proves a turn runs — which is weaker, because
-nothing in this repository's CI would run the template's suite.
+### 14.1 The scaffolding check does not start a server, and the claim is split
+
+**Decided: `verify-scaffolded-apps.mjs` stays a build-and-read check.** Teaching
+it to boot a server and drive a turn is new machinery in a script that is
+deliberately dependency-free, and the script's own reason for existing is
+narrower than that: it exists because a build can exit 0 and emit a dead site.
+
+So the claim is split, and both halves are written down so nobody later reads
+one as the other:
+
+| What proves it | What it proves |
+|---|---|
+| `verify-scaffolded-apps.mjs`, in CI | the app **builds** from packed tarballs and the agent wiring is **present** — the route in the server bundle, the files on disk, the dependency in `package.json`, no dead `/agent` link after `--no-agent` |
+| the generated project's own Playwright suite | a **turn runs**: the page, the tool call, the card's text |
+
+**The weakness, stated plainly: nothing in this repository's CI runs a generated
+project's own suite.** So "a scaffolded turn works" is checked by the template's
+test only when someone runs it, and in CI the strongest standing claim is "it
+builds and the wiring is there". That is a real hole and it is the honest price
+of not putting a server into the check. If it ever needs closing, the cheaper
+route is a single Node assertion against the built server — a POST with a seroval
+body, as section 3.2 describes — rather than a Playwright run inside a scaffold.
 
 **Phase 2:** the SDK's own in-memory or stdio client against the scaffolded
 project, asserting `tools/list` carries `_meta.ui.resourceUri`, `resources/list`
@@ -602,26 +690,67 @@ an agent already in it, which is the case that has no right answer yet.
 `node scripts/check-doc-refs.mjs` still passes with the Known Gaps entries
 removed.
 
-## 15. Open questions
+## 15. Decisions 7 to 11, settled
 
-These could not be settled by reading or by the walk-through.
+These five were carried as open questions in the first draft of this spec. They
+are now decided, and each is recorded with its reason so it is not re-argued.
 
-1. **Whether v1 includes the MCP half.** The spec says no, and names the 6.0 MB
-   SDK and the "needs a build first" failure as the reasons. The counter-argument
-   is real: the packed `ui://` document in an MCP host is the single most
-   striking thing Litro does, and a phase 2 may be a long way off. A ruling,
-   not a spike.
-2. **zod or a hand-rolled schema in the generated tool.** zod publishes a real
-   `inputSchema` and costs 1172 KB of server output; the hand-rolled form costs
-   nothing and publishes `{ type: 'object' }`. Section 9 recommends zod.
-3. **Whether the generated tool keeps a generic name.** `get-weather` is global
-   to an MCP host, and every scaffolded project would ship it. Naming it from the
-   project is kinder to anyone running two; keeping it generic matches the
-   playground and every example in the docs.
-4. **Whether `verify-scaffolded-apps.mjs` learns to start a server.** Section 14.
-   Without it, nothing in CI proves a scaffolded turn runs.
-5. **Whether a docs recipe should ever offer an agent.** Decision 1.3 says no
-   because `mode: 'ssg'` makes the endpoint unreachable — but `litro mcp serve`
-   works on a static project, because it loads source through Vite and never
-   touches the build. An agent that exists only for an MCP host, on a static
-   site, is coherent and nobody has asked for it.
+### Decision 7 — the generated tool is `example-weather`, and names are never prefixed
+
+Two parts, and they are independent.
+
+**No prefixing.** `design/specs/2026-09-24-mcp-server.md` ruled against it
+deliberately, and that ruling stands. A prefix would make a tool's MCP name
+differ from the name the same tool has in the chat loop, and the specification
+says a client aggregating tools from several servers **SHOULD** disambiguate —
+that is the client's job, not the server's.
+
+**The generated tool is named `example-weather`.** The collision is real: tool
+names are global to a host, and two servers both registering `get-weather` made a
+host pick one silently with no way to tell which had answered. Every scaffolded
+project shipping the same generic name guarantees that bug the moment somebody
+configures two of them.
+
+`example-weather` reduces it without touching the naming rule, and it does a
+second job: the name tells a reader this is scaffolding to replace, not a tool to
+build on. The generated project should say the rule out loud too — a tool name is
+global to a host — so the first rename is informed rather than accidental.
+
+Rejected: **naming the tool from the project** (`my-app-weather`). It is a prefix
+by another spelling, so it reopens a decision already made, and it makes the
+scaffolded example model the thing the naming rule forbids.
+
+### Decision 8 — v1 ships no MCP half, and the SDK is one install away
+
+Settled as section 7 recommends, on the distinction section 7.1 draws: the SDK is
+a `devDependency` and an optional peer, so it ships to nobody and costs a
+developer one install. The question was never whether MCP is supported — it is —
+but whether every new project pays for it on day one. It should not. Phase 2
+takes the count from one command to zero.
+
+### Decision 9 — zod, with `zod/mini` as a measured follow-up
+
+Settled as section 9 recommends: zod is the only form that publishes a real
+`inputSchema`, and a scaffold is an example first. The 1172 KB is accepted rather
+than endorsed, and section 9.1 records the candidate (`zod/mini`, verified to
+exist in the same package), the baseline to beat, and the two things that have to
+be checked before a swap is honest.
+
+### Decision 10 — the scaffolding check does not start a server
+
+Settled as section 14.1 records, including the weakness: nothing in this
+repository's CI runs a generated project's own suite, so in CI the standing claim
+is "it builds and the wiring is there" and not "a turn runs".
+
+### Decision 11 — no docs-recipe agent for now
+
+Settled as decision 1.3 argues: `starlight` and `supernova` are `mode: 'ssg'`,
+and an agent in a static build is measurably dead and silent.
+
+**The idea is not closed, and this is the part worth keeping.**
+`litro mcp serve` works on a static project — it loads project source through
+Vite and never touches the build, which the walk-through confirms. So an agent
+that exists only for an MCP host, on a statically hosted docs site, is coherent:
+the tools would answer a host over stdio while the site itself is files on a CDN.
+Nobody has asked for it, so it is not built. If it is raised again, it starts
+from here rather than from scratch.
