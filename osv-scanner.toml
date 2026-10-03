@@ -9,13 +9,16 @@
 # patch on each line — rather than adding two more entries below.
 #
 # The entries below baseline the advisories present when this gate was
-# introduced. Each is either a dev/tooling dependency that is NOT shipped in
+# introduced. Most are either a dev/tooling dependency that is NOT shipped in
 # any published @beatzball package, or a transitive advisory below the `high`
-# severity bar the previous audit enforced. A NEW advisory — or any high/
-# critical advisory in a shipped runtime dependency — is not listed here and
-# will fail the check. Provenance verified: of these packages only nitropack
-# is a direct production dependency of a published package (@beatzball/litro),
-# and its advisories are Medium, below the enforced high threshold.
+# severity bar the previous audit enforced. A NEW advisory is not listed here
+# and will fail the check.
+#
+# ONE entry does not fit either reason: node-forge GHSA-86w9-cpqp-85rv is High
+# AND reaches published packages in production. It has its own section at the
+# bottom, with its own justification and a tracking issue, so that "dev-only"
+# never has to be claimed about a package that ships. Keep that distinction:
+# an entry whose reason is not true is worse than no gate at all.
 
 # --- Dev / tooling only (never shipped to users) ---
 
@@ -53,3 +56,12 @@ reason = "uuid is a dev/benchmark transitive dependency; not a production depend
 id = "GHSA-8988-4f7v-96qf" # @opentelemetry/core 1.30.1
 reason = "Transitive tooling dependency (not a direct production dependency of any published package); Medium severity, below the high threshold this audit enforces."
 
+# --- Production path, no upstream fix (NOT dev-only) ---
+#
+# Read the reason below before adding anything to this section. It is the only
+# place in this file where a filtered advisory does reach a user, and it is
+# filtered because there is nothing to bump to — not because it is harmless.
+
+[[IgnoredVulns]]
+id = "GHSA-86w9-cpqp-85rv" # node-forge 1.4.0 (High, CVSS 8.7)
+reason = "No fixed version exists upstream as of 2026-10-02: node-forge 1.4.0 IS the latest published release, and the advisory lists no patched version (last_affected 1.4.0, no fixed event). This entry is NOT dev-only, unlike the others above: node-forge reaches published packages as a transitive PRODUCTION dependency. `pnpm why --prod node-forge --filter @beatzball/litro` reports @beatzball/litro -> nitropack 2.13.4 -> listhen 1.10.0 -> node-forge 1.4.0, and @beatzball/litro-agent reaches it by the same path. No bump removes the path: nitropack 2.13.4 is the current `latest` tag, and listhen 1.10.1 (latest) still declares node-forge ^1.4.0; Nitro v3 is deferred while it is still beta, so it is not the route here. Exposure is limited, with evidence: the advisory is RSA PKCS#1 v1.5 signature VERIFICATION forgery (CWE-347), and listhen uses node-forge only to generate and sign a self-signed certificate for the dev server's HTTPS option — there is no `verify` call anywhere in listhen's built output, so the vulnerable path is never entered — while a production `litro build` emits a Nitro server that references neither node-forge nor listhen and does not list node-forge in its generated runtime dependencies. Tracked in issue 229, which carries the full assessment. Revisit when node-forge ships a fix, or when listhen or nitropack drops the dependency."
