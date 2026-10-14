@@ -186,11 +186,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # osv-scanner is a standalone binary that scans the checked-in
-      # pnpm-lock.yaml directly — it needs neither Node nor pnpm. A setup-node
-      # step with `cache: pnpm` but no `pnpm install` leaves the pnpm store
-      # path empty and fails at post-run cache-save on the current runners, so
-      # this job deliberately has no setup-node/pnpm steps.
+      # osv-scanner is a standalone binary that scans the checked-in lockfiles
+      # directly — it needs neither Node nor pnpm. A setup-node step with
+      # `cache: pnpm` but no `pnpm install` leaves the pnpm store path empty
+      # and fails at post-run cache-save on the current runners, so this job
+      # deliberately has no setup-node/pnpm steps.
       #
       # npm retired the audit endpoint `pnpm audit` calls (HTTP 410), so audit
       # via osv-scanner instead: it scans the lockfile against the OSV database
@@ -198,10 +198,24 @@ jobs:
       # documented reason) live in osv-scanner.toml at the repo root; a new
       # advisory, or any high/critical advisory in a shipped runtime
       # dependency, is not ignored there and fails this check.
+      #
+      # EVERY checked-in lockfile is scanned, not just pnpm-lock.yaml. The four
+      # npm comparison apps under benchmarks/apps/ are outside the pnpm
+      # workspace and carry their own package-lock.json, so for as long as this
+      # job named one lockfile they were never audited at all — they had
+      # accumulated three Critical and five High advisories that no CI job
+      # would ever have reported. Add a lockfile here whenever one is added to
+      # the repo; `git ls-files | grep -E 'lock\.(json|yaml)$'` is the list.
       - name: Install osv-scanner
         run: |
           curl -sSfL https://github.com/google/osv-scanner/releases/download/v2.4.0/osv-scanner_linux_amd64 -o osv-scanner
           chmod +x osv-scanner
           ./osv-scanner --version
       - name: Audit dependencies
-        run: ./osv-scanner scan source --lockfile pnpm-lock.yaml --config osv-scanner.toml
+        run: |
+          ./osv-scanner scan source --config osv-scanner.toml \
+            --lockfile pnpm-lock.yaml \
+            --lockfile benchmarks/apps/nextjs/package-lock.json \
+            --lockfile benchmarks/apps/nuxt/package-lock.json \
+            --lockfile benchmarks/apps/hn-nextjs/package-lock.json \
+            --lockfile benchmarks/apps/hn-nuxt/package-lock.json
