@@ -46,6 +46,10 @@ id = "GHSA-82fw-gwwq-j7x9" # vitest / @vitest/mocker 2.1.9 (Medium, CVSS 5.9)
 reason = "vitest is a dev/test-only dependency; not a production dependency of any published @beatzball package, so it never ships to users. Verified: none of the four published packages (@beatzball/litro, -router, -agent, create-litro) lists vitest under `dependencies`. The fix is vitest 4.1.11, a MAJOR bump from the 2.x this repo pins — that is a test-infrastructure migration, not a security patch, and it is tracked separately rather than smuggled into an audit fix. Revisit when the repo moves to vitest 4."
 
 [[IgnoredVulns]]
+id = "GHSA-qxg6-89mg-rqv8" # @vitest/mocker 2.1.9 (Medium, CVSS 4.7)
+reason = "vitest is a dev/test-only dependency; not a production dependency of any published @beatzball package, so it never ships to users. Verified: none of the four published packages (@beatzball/litro, -router, -agent, create-litro) lists vitest under `dependencies`. The advisory is code injection via unauthenticated manual mock registration against a running Vitest API server, which this repo never exposes. Same situation as GHSA-82fw-gwwq-j7x9 above: the fix is @vitest/mocker 4.1.12, a MAJOR bump from the 2.x this repo pins, so it is a test-infrastructure migration rather than a security patch. Revisit when the repo moves to vitest 4."
+
+[[IgnoredVulns]]
 id = "GHSA-7pqw-9j4j-h8q3" # extract-zip 2.0.1 (High, CVSS 8.1)
 reason = "No fixed version exists upstream as of 2026-09-13 (the advisory lists no patched release). Same package and same sole path as GHSA-jmr9-qjv8-65gv above: @beatzball/litro-benchmarks (a PRIVATE workspace) -> lighthouse -> puppeteer-core -> @puppeteer/browsers -> extract-zip, confirmed with `pnpm why -r extract-zip`, which reports that workspace and no other. Never ships to users. Revisit when @puppeteer/browsers ships a patched extract-zip."
 
@@ -84,3 +88,56 @@ reason = "No fixed version exists upstream as of 2026-10-02: node-forge 1.4.0 IS
 [[IgnoredVulns]]
 id = "GHSA-vfj7-8cjw-p6xm" # braces 3.0.3 (High, CVSS 8.7)
 reason = "No fixed version exists upstream as of 2026-10-10: braces 3.0.3 IS the latest published release (`npm view braces versions` ends at 3.0.3) and the advisory lists no patched version (last_affected 3.0.3, no fixed event, not withdrawn, last modified 2026-10-02). The upstream fix pull request was closed and the follow-up maxDepth proposal withdrawn. Like node-forge above, this entry is NOT dev-only: braces reaches published packages as a transitive PRODUCTION dependency by TWO independent paths, so dropping our direct dependency would achieve nothing. `pnpm why --prod braces --filter @beatzball/litro` reports both: @beatzball/litro -> fast-glob 3.3.3 (our direct production dependency) -> micromatch 4.0.8 -> braces 3.0.3, AND @beatzball/litro -> nitropack 2.13.4 -> globby 16.2.2 -> fast-glob -> micromatch -> braces. @beatzball/litro-agent reaches it by three paths (its own direct fast-glob plus both of those); @beatzball/litro-router and @beatzball/create-litro do not reach it at all. No bump escapes it, because every link is already at its latest tag: braces 3.0.3, micromatch 4.0.8 (declares braces ^3.0.3), fast-glob 3.3.3 (declares micromatch ^4.0.8) and nitropack 2.13.4 are all `latest`, no nitropack 3.x is published, nitropack declares globby ^16.2.0, and globby 16.2.4 (latest) still declares both fast-glob and micromatch. Exposure is limited, with evidence: the advisory is stack exhaustion from ATTACKER-SUPPLIED deeply nested brace patterns (CWE-674), and there is no path for one. Every pattern Litro passes to fast-glob is a hardcoded literal in framework source — `**/*.{ts,tsx}` in plugins/pages and plugins/ssg, `**/*.server.{ts,tsx,js,mjs}` in plugins/actions, `**/*.md` and `**/*.markdown` in content/index, the `APP_FILE_GLOB` constant in cli/mcp-app, and `tools/*.ts` plus `agents/*/agent.ts` in litro-agent's plugin — so nothing reads a pattern from a request, a user config or any untrusted input (a directory path is passed as `cwd`, which is not a brace pattern). Every one of those call sites is build-time, and the shipped runtime does not contain the dependency at all: `grep -rl fast-glob packages/framework/dist/runtime/` matches none of its 23 built files, and the only mentions in dist/index.js and dist/vite/index.js are source comments rather than imports. The advisory is also DISPUTED upstream by engineers other than the maintainer: github/advisory-database pull request 10132 (open, filed 2026-10-03) proposes marking no version as affected, the technical argument on micromatch/braces issue 73 is that the report overstates the impact because braces can already throw on untrusted input and so grants no new capability, and the CNA has been emailed asking for a withdrawal. Tracked in issue 231, which carries the full assessment. Revisit when advisory-database pull request 10132 lands or the CNA withdraws the advisory — either deletes this entry with no code change — or when braces ships a fix, or when micromatch drops braces. Since the audit began scanning every checked-in lockfile, this id also matches the two npm Nuxt comparison apps under benchmarks/apps/, where it arrives through nuxt rather than through our own fast-glob or nitropack; both are PRIVATE benchmark apps that are never published or deployed, every other advisory in them was cleared by refreshing their lockfiles, and braces is one of only two left because it has no fix to take. A third-party patched fork exists and is deliberately NOT used: pointing a published framework at a stranger's fork of an unmaintained package trades an unreachable theoretical risk for a real supply-chain one."
+
+# --- Production path, a fix EXISTS but taking it is blocked ---
+#
+# Read this before adding anything here. It is NOT the section above: there,
+# nothing can be bumped to. Here a patched release exists and we are choosing
+# not to take it yet, which is a weaker position and must stay a short one.
+#
+# All five vite entries are fixed in vite 8.1.6. Litro cannot move to 8.1.x
+# yet: from Vite 8.1 (Rolldown 1.1.5) onward Rolldown can refuse to fold
+# `lit-element`'s chunk into the entry chunk, leaving the entry with a static
+# import that evaluates before the entry body — which is where
+# `@lit-labs/ssr-client/lit-element-hydrate-support.js` installs its hook.
+# `LitElement` reads that hook once, finds nothing, and no element is ever
+# patched, so hydration silently never runs with a green build and no console
+# error. Reproduced on 8.1.6, 8.2.4, 8.3.0, 8.3.4 and on Rolldown `main`;
+# clean on 8.0.16. Issue 236 carries the measurements and the fix.
+#
+# `vite` is a direct PRODUCTION dependency of `@beatzball/litro`, so do not
+# read these as dev-only — they land in a user's `node_modules`. What limits
+# them is which code is vulnerable, not who installs it: every one of the five
+# is in the Vite DEV SERVER. The framework imports `vite` only from its CLI,
+# its Vite plugin and its dev-server modules (`plugins/vite-dev.ts`,
+# `runtime/vite-dev.ts`, which builds the `middlewareMode` config each app's
+# `server/middleware/vite-dev.ts` uses). A `litro build` emits a Nitro server,
+# and a deployed Litro app never starts a Vite dev server. The exposure is to
+# a developer running `litro dev` on their own machine.
+#
+# `launch-editor` is not a separate entry in any lockfile: vite 8 inlines it,
+# so the advisories name `vite` as the affected package.
+#
+# REVISIT: this whole section is deleted by one change — land the issue 236
+# bootstrap entry, then unpin `vite` from `~8.0.16` to `^8.1.6`. Nothing else
+# removes it, and leaving it is accepting five known advisories, one High.
+
+[[IgnoredVulns]]
+id = "GHSA-587h-7wmj-h5pm" # vite 8.0.16 (High, CVSS 7.5) -- fixed in 8.1.6
+reason = "Fixed in vite 8.1.6, which Litro cannot take until issue 236 lands (Vite 8.1+ silently breaks Lit hydration; see the section comment above for the measurements). The advisory is an inlined launch-editor `fs.existsSync()` existence check that can be bypassed on WINDOWS ONLY, reached through the Vite dev server's click-to-open-in-editor path. vite is a direct production dependency of @beatzball/litro, so this is not dev-only by install, but it is dev-server-only by code path: the framework imports vite from its CLI, its Vite plugin and its dev-server modules, and a deployed Litro app (a Nitro server emitted by `litro build`) never starts a Vite dev server. Revisit by landing issue 236 and unpinning vite to ^8.1.6, which deletes this entry."
+
+[[IgnoredVulns]]
+id = "GHSA-698v-4r3x-3vcv" # vite 8.0.16 (Medium, CVSS 6.3) -- fixed in 8.1.6
+reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section comment above. The advisory is an inlined launch-editor `escapeCmdArgs()` that omits `%` escaping on WINDOWS ONLY, reached through the Vite dev server's click-to-open-in-editor path. Dev-server-only by code path; a deployed Litro app never starts a Vite dev server. Revisit by landing issue 236 and unpinning vite to ^8.1.6."
+
+[[IgnoredVulns]]
+id = "GHSA-r825-w8mm-5pxw" # vite 8.0.16 (Medium, CVSS 6.3) -- fixed in 8.1.6
+reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section comment above. The advisory is an inlined launch-editor editor-CLI-flag misinterpretation that allows arbitrary command execution for some editors, on WINDOWS ONLY, reached through the Vite dev server's click-to-open-in-editor path. Dev-server-only by code path; a deployed Litro app never starts a Vite dev server. Revisit by landing issue 236 and unpinning vite to ^8.1.6."
+
+[[IgnoredVulns]]
+id = "GHSA-rq7h-c2jc-7f22" # vite 8.0.16 (Medium, CVSS 6.3) -- fixed in 8.1.6
+reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section comment above. The advisory is the Vite DEV SERVER serving files outside `server.fs.allow` when project paths match system paths on non-Windows machines. It needs a running dev server to matter: a deployed Litro app is a Nitro server emitted by `litro build` and never starts one, and the dev server binds localhost. Revisit by landing issue 236 and unpinning vite to ^8.1.6."
+
+[[IgnoredVulns]]
+id = "GHSA-9jrq-w75r-8gcw" # vite 8.0.16 (Low, CVSS 2.1) -- fixed in 8.1.6
+reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section comment above. Low severity, below the high threshold this audit enforces. The advisory is cross-origin script execution through Vite custom middleware, in the DEV SERVER; a deployed Litro app never starts one. Revisit by landing issue 236 and unpinning vite to ^8.1.6."
