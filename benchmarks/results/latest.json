@@ -1,6 +1,6 @@
 {
   "meta": {
-    "timestamp": "2026-09-24T06:33:52.078Z",
+    "timestamp": "2026-10-14T14:30:59.957Z",
     "nodeVersion": "v24.7.0",
     "platform": "darwin",
     "arch": "arm64",
@@ -8,77 +8,73 @@
     "cpuCount": 16,
     "memoryGB": 128,
     "loadAverage": [
-      3.05517578125,
-      4.8017578125,
-      5.88232421875
+      3.8623046875,
+      4.9228515625,
+      5.42724609375
     ],
-    "commitSha": "2d8f474",
-    "commitMessage": "bench: fix the cross-framework Litro app and re-run every phase"
+    "commitSha": "95b6336",
+    "commitMessage": "fix(deps): patch six advisories, baseline braces and two unfixable mediums (#232)"
   },
   "buildTime": {
     "ssg": {
       "runs": [
-        9399,
-        8979,
-        9222,
-        9023,
-        8918
+        12862,
+        12262,
+        12168
       ],
-      "mean": 9108,
-      "median": 9023,
-      "p95": 9399,
-      "stddev": 178,
-      "min": 8918,
-      "max": 9399
+      "mean": 12431,
+      "median": 12262,
+      "p95": 12862,
+      "stddev": 307,
+      "min": 12168,
+      "max": 12862
     },
     "ssr": {
       "runs": [
-        3638,
-        3599,
-        3658,
-        3594,
-        3587
+        5179,
+        5152,
+        5123
       ],
-      "mean": 3615,
-      "median": 3599,
-      "p95": 3658,
-      "stddev": 28,
-      "min": 3587,
-      "max": 3658
+      "mean": 5151,
+      "median": 5152,
+      "p95": 5179,
+      "stddev": 23,
+      "min": 5123,
+      "max": 5179
     }
   },
   "bundleSize": {
     "ssg": {
-      "clientJS": 1212223,
-      "clientCSS": 7796,
+      "clientJS": 1304330,
+      "clientCSS": 14205,
       "serverBundle": 0,
-      "staticHTML": 6778010,
-      "totalOutput": 12957731
+      "staticHTML": 8020366,
+      "totalOutput": 14780501
     },
     "ssr": {
-      "clientJS": 1233625,
+      "clientJS": 1327504,
       "clientCSS": 0,
-      "serverBundle": 6677644,
+      "serverBundle": 6901077,
       "staticHTML": 0,
-      "totalOutput": 14023270
+      "totalOutput": 14530917
     }
   },
   "httpPerf": {
     "ssg": {
       "/": {
         "latency": {
-          "mean": 0.05,
-          "p50": 0,
-          "p97_5": 1,
-          "p99": 1,
-          "max": 6
+          "mean": 1.39,
+          "p50": 1,
+          "p97_5": 3,
+          "p99": 4,
+          "max": 11
         },
         "requests": {
-          "mean": 17737.1,
-          "total": 195097
+          "mean": 5014.8,
+          "total": 50142
         },
         "throughput": {
-          "mean": 892219019.64
+          "mean": 915144704
         },
         "errors": 0,
         "timeouts": 0,
@@ -87,18 +83,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 0.26,
+          "mean": 0.57,
           "p50": 0,
-          "p97_5": 1,
-          "p99": 1,
-          "max": 7
+          "p97_5": 2,
+          "p99": 4,
+          "max": 60
         },
         "requests": {
-          "mean": 13125.46,
-          "total": 144373
+          "mean": 8375.21,
+          "total": 83748
         },
         "throughput": {
-          "mean": 947745885.1
+          "mean": 713411788.8
         },
         "errors": 0,
         "timeouts": 0,
@@ -107,18 +103,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 2.21,
+          "mean": 2.47,
           "p50": 2,
-          "p97_5": 4,
-          "p99": 4,
-          "max": 12
+          "p97_5": 5,
+          "p99": 6,
+          "max": 19
         },
         "requests": {
-          "mean": 3922.6,
-          "total": 39220
+          "mean": 3339.8,
+          "total": 33392
         },
         "throughput": {
-          "mean": 1088002457.6
+          "mean": 932026777.6
         },
         "errors": 0,
         "timeouts": 0,
@@ -127,18 +123,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 0.04,
+          "mean": 0.11,
           "p50": 0,
           "p97_5": 1,
-          "p99": 1,
+          "p99": 2,
           "max": 8
         },
         "requests": {
-          "mean": 19458.19,
-          "total": 214010
+          "mean": 13988,
+          "total": 139876
         },
         "throughput": {
-          "mean": 560666437.82
+          "mean": 432354099.2
         },
         "errors": 0,
         "timeouts": 0,
@@ -149,18 +145,18 @@
     "ssr": {
       "/": {
         "latency": {
-          "mean": 27.3,
-          "p50": 27,
-          "p97_5": 38,
-          "p99": 41,
-          "max": 71
+          "mean": 405.76,
+          "p50": 403,
+          "p97_5": 466,
+          "p99": 567,
+          "max": 758
         },
         "requests": {
-          "mean": 359.2,
-          "total": 3592
+          "mean": 24.2,
+          "total": 242
         },
         "throughput": {
-          "mean": 19136921.61
+          "mean": 4796313.6
         },
         "errors": 0,
         "timeouts": 0,
@@ -169,18 +165,18 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 63.16,
-          "p50": 62,
-          "p97_5": 78,
-          "p99": 115,
-          "max": 385
+          "mean": 93.36,
+          "p50": 90,
+          "p97_5": 112,
+          "p99": 196,
+          "max": 674
         },
         "requests": {
-          "mean": 156.64,
-          "total": 1723
+          "mean": 106.1,
+          "total": 1061
         },
         "throughput": {
-          "mean": 12307735.28
+          "mean": 9855590.4
         },
         "errors": 0,
         "timeouts": 0,
@@ -189,18 +185,18 @@
       },
       "/blog": {
         "latency": {
-          "mean": 66.07,
-          "p50": 65,
-          "p97_5": 80,
-          "p99": 85,
-          "max": 362
+          "mean": 152.29,
+          "p50": 148,
+          "p97_5": 190,
+          "p99": 282,
+          "max": 832
         },
         "requests": {
-          "mean": 149.7,
-          "total": 1497
+          "mean": 65,
+          "total": 715
         },
         "throughput": {
-          "mean": 42516480
+          "mean": 20306478.55
         },
         "errors": 0,
         "timeouts": 0,
@@ -209,18 +205,18 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 10.63,
-          "p50": 10,
-          "p97_5": 19,
-          "p99": 22,
-          "max": 79
+          "mean": 18.63,
+          "p50": 18,
+          "p97_5": 35,
+          "p99": 39,
+          "max": 132
         },
         "requests": {
-          "mean": 896.7,
-          "total": 8967
+          "mean": 522.21,
+          "total": 5222
         },
         "throughput": {
-          "mean": 26915635.2
+          "mean": 17601331.2
         },
         "errors": 0,
         "timeouts": 0,
@@ -232,45 +228,45 @@
   "pageWeight": {
     "ssg": {
       "/": {
-        "rawBytes": 50121,
-        "gzipBytes": 8605,
+        "rawBytes": 182299,
+        "gzipBytes": 32517,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 72016,
-        "gzipBytes": 13164,
+        "rawBytes": 85001,
+        "gzipBytes": 16861,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 277180,
-        "gzipBytes": 51915,
+        "rawBytes": 278931,
+        "gzipBytes": 52539,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 28637,
-        "gzipBytes": 7390,
+        "rawBytes": 30727,
+        "gzipBytes": 8123,
         "statusCode": 200
       }
     },
     "ssr": {
       "/": {
-        "rawBytes": 50290,
-        "gzipBytes": 8618,
+        "rawBytes": 187420,
+        "gzipBytes": 33035,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 72147,
-        "gzipBytes": 13192,
+        "rawBytes": 85555,
+        "gzipBytes": 16978,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 278215,
-        "gzipBytes": 51938,
+        "rawBytes": 301518,
+        "gzipBytes": 53201,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 28808,
-        "gzipBytes": 7417,
+        "rawBytes": 32165,
+        "gzipBytes": 8250,
         "statusCode": 200
       }
     }
@@ -278,74 +274,74 @@
   "lighthouse": {
     "ssg": {
       "/": {
-        "performance": 80,
-        "fcp": 2411.98535,
-        "lcp": 4748.64225,
+        "performance": 60,
+        "fcp": 5725.614750000001,
+        "lcp": 10550.152999999998,
         "cls": 0,
-        "tbt": 0,
-        "speedIndex": 2411.98535
+        "tbt": 69.5,
+        "speedIndex": 5725.614750000001
       },
       "/docs/introduction": {
-        "performance": 63,
-        "fcp": 4733.9146,
-        "lcp": 9616.552800000001,
+        "performance": 62,
+        "fcp": 5145.502850000001,
+        "lcp": 9800.003799999999,
         "cls": 0,
-        "tbt": 32,
-        "speedIndex": 4733.9146
+        "tbt": 56.5,
+        "speedIndex": 5145.502850000001
       },
       "/blog": {
-        "performance": 71,
-        "fcp": 3476.24365,
-        "lcp": 6029.072750000001,
+        "performance": 70,
+        "fcp": 3708.3119,
+        "lcp": 5737.186499999999,
         "cls": 0,
         "tbt": 0,
-        "speedIndex": 3476.24365
+        "speedIndex": 3708.3119
       },
       "/blog/welcome": {
-        "performance": 64,
-        "fcp": 4604.94135,
-        "lcp": 9332.9218,
+        "performance": 63,
+        "fcp": 4810.36725,
+        "lcp": 9469.823,
         "cls": 0,
-        "tbt": 30.5,
-        "speedIndex": 4604.94135
+        "tbt": 52.5,
+        "speedIndex": 4810.36725
       }
     }
   },
   "streaming": {
     "ssr": {
       "/": {
-        "ttfb": 0,
-        "ttlb": 3,
-        "delta": 3,
-        "totalBytes": 50290
+        "ttfb": 29,
+        "ttlb": 41,
+        "delta": 12,
+        "totalBytes": 187420
       },
       "/docs/introduction": {
-        "ttfb": 0,
-        "ttlb": 6,
-        "delta": 6,
-        "totalBytes": 72147
+        "ttfb": 1,
+        "ttlb": 10,
+        "delta": 9,
+        "totalBytes": 85555
       },
       "/blog": {
-        "ttfb": 1,
-        "ttlb": 6,
-        "delta": 5,
-        "totalBytes": 278215
+        "ttfb": 2,
+        "ttlb": 18,
+        "delta": 16,
+        "totalBytes": 301518
       },
       "/blog/welcome": {
         "ttfb": 0,
-        "ttlb": 1,
-        "delta": 1,
-        "totalBytes": 28808
+        "ttlb": 2,
+        "delta": 2,
+        "totalBytes": 32165
       }
     }
   },
   "crossFramework": [
     {
       "name": "litro",
-      "version": "0.16.2",
+      "version": "0.17.2",
       "versions": {
-        "@beatzball/litro": "0.16.2",
-        "@beatzball/litro-router": "0.2.1",
+        "@beatzball/litro": "0.17.2",
+        "@beatzball/litro-router": "0.3.1",
         "lit": "3.3.2",
         "@lit-labs/ssr": "3.3.1",
         "@lit-labs/ssr-client": "1.1.8",
@@ -354,103 +350,97 @@
       },
       "buildTime": {
         "runs": [
-          1036,
-          977,
-          954,
-          949,
-          952
+          1591,
+          1385,
+          1382
         ],
-        "mean": 974,
-        "median": 954,
-        "p95": 1036,
-        "stddev": 33,
-        "min": 949,
-        "max": 1036
+        "mean": 1453,
+        "median": 1385,
+        "p95": 1591,
+        "stddev": 98,
+        "min": 1382,
+        "max": 1591
       },
-      "outputSize": 37938,
+      "outputSize": 38355,
       "pageWeight": {
         "/": {
-          "rawBytes": 3650,
-          "gzipBytes": 1786,
+          "rawBytes": 3242,
+          "gzipBytes": 1550,
           "statusCode": 200
         },
         "/blog/hello": {
-          "rawBytes": 3615,
-          "gzipBytes": 1783,
+          "rawBytes": 3202,
+          "gzipBytes": 1537,
           "statusCode": 200
         }
       }
     },
     {
       "name": "nuxt",
-      "version": "4.5.2",
+      "version": "4.6.1",
       "versions": {
-        "nuxt": "4.5.2",
-        "vue": "3.5.43",
-        "vite": "8.3.0"
+        "nuxt": "4.6.1",
+        "vue": "3.5.44",
+        "vite": "8.3.4"
       },
       "buildTime": {
         "runs": [
-          2672,
-          1768,
-          1773,
-          1741,
-          1780
+          5884,
+          2454,
+          2433
         ],
-        "mean": 1947,
-        "median": 1773,
-        "p95": 2672,
-        "stddev": 363,
-        "min": 1741,
-        "max": 2672
+        "mean": 3590,
+        "median": 2454,
+        "p95": 5884,
+        "stddev": 1622,
+        "min": 2433,
+        "max": 5884
       },
-      "outputSize": 206476,
+      "outputSize": 211132,
       "pageWeight": {
         "/": {
-          "rawBytes": 1420,
-          "gzipBytes": 715,
+          "rawBytes": 1582,
+          "gzipBytes": 756,
           "statusCode": 200
         },
         "/blog/hello": {
-          "rawBytes": 1426,
-          "gzipBytes": 714,
+          "rawBytes": 1588,
+          "gzipBytes": 754,
           "statusCode": 200
         }
       }
     },
     {
       "name": "nextjs",
-      "version": "16.3.6",
+      "version": "16.4.0",
       "versions": {
-        "next": "16.3.6",
+        "next": "16.4.0",
         "react": "19.3.0",
         "react-dom": "19.3.0"
       },
       "buildTime": {
         "runs": [
-          3237,
-          3016,
-          2931,
-          2915,
-          2895
+          3653,
+          3372,
+          3955
         ],
-        "mean": 2999,
-        "median": 2931,
-        "p95": 3237,
-        "stddev": 126,
-        "min": 2895,
-        "max": 3237
+        "mean": 3660,
+        "median": 3653,
+        "p95": 3955,
+        "stddev": 238,
+        "min": 3372,
+        "max": 3955
       },
-      "outputSize": 634970,
+      "outputSize": 636618,
       "pageWeight": {
         "/": {
-          "rawBytes": 5072,
-          "gzipBytes": 1678,
+          "rawBytes": 5195,
+          "gzipBytes": 1789,
           "statusCode": 200
         },
         "/blog/hello": {
-          "rawBytes": 6026,
-          "gzipBytes": 1729,
+          "rawBytes": 6189,
+          "gzipBytes": 1880,
           "statusCode": 200
         }
       }
@@ -459,10 +449,10 @@
   "hnBenchmark": [
     {
       "name": "litro-lit",
-      "version": "0.16.2",
+      "version": "0.17.2",
       "versions": {
-        "@beatzball/litro": "0.16.2",
-        "@beatzball/litro-router": "0.2.1",
+        "@beatzball/litro": "0.17.2",
+        "@beatzball/litro-router": "0.3.1",
         "lit": "3.3.2",
         "@lit-labs/ssr": "3.3.1",
         "@lit-labs/ssr-client": "1.1.8",
@@ -471,96 +461,94 @@
       },
       "buildTime": {
         "runs": [
-          1396,
-          1342,
-          1329,
-          1551,
-          1377
+          1969,
+          1977,
+          1964
         ],
-        "mean": 1399,
-        "median": 1377,
-        "p95": 1551,
-        "stddev": 80,
-        "min": 1329,
-        "max": 1551
+        "mean": 1970,
+        "median": 1969,
+        "p95": 1977,
+        "stddev": 5,
+        "min": 1964,
+        "max": 1977
       },
-      "outputSize": 2477444,
+      "outputSize": 2437500,
       "pageWeight": {
         "/": {
-          "rawBytes": 45655,
-          "gzipBytes": 9015,
+          "rawBytes": 45247,
+          "gzipBytes": 8789,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 55683,
-          "gzipBytes": 15424,
+          "rawBytes": 55276,
+          "gzipBytes": 15188,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 69148,
-          "gzipBytes": 18847,
+          "rawBytes": 68740,
+          "gzipBytes": 18649,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 62569,
-          "gzipBytes": 15100,
+          "rawBytes": 62157,
+          "gzipBytes": 14877,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 12117,
-          "gzipBytes": 5703,
+          "rawBytes": 11706,
+          "gzipBytes": 5399,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 977.05725,
-          "lcp": 1052.4687,
+          "fcp": 1071.71055,
+          "lcp": 1225.9474,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 977.05725
+          "speedIndex": 1071.71055
         },
         "/ask": {
           "performance": 100,
-          "fcp": 1216.92085,
-          "lcp": 1370.2278,
+          "fcp": 1222.2322,
+          "lcp": 1376.3096,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1216.92085
+          "speedIndex": 1222.2322
         },
         "/show": {
           "performance": 100,
-          "fcp": 1217.41805,
-          "lcp": 1370.5574,
+          "fcp": 1208.60085,
+          "lcp": 1363.4678000000001,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1217.41805
+          "speedIndex": 1208.60085
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1144.45965,
-          "lcp": 1372.9462,
+          "fcp": 1150.9426,
+          "lcp": 1380.2568,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1144.45965
+          "speedIndex": 1150.9426
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 986.92,
-          "lcp": 1062.504,
+          "fcp": 1131.5859,
+          "lcp": 1360.7812000000001,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 986.92
+          "speedIndex": 1131.5859
         }
       }
     },
     {
       "name": "litro-fast",
-      "version": "0.16.2",
+      "version": "0.17.2",
       "versions": {
-        "@beatzball/litro": "0.16.2",
-        "@beatzball/litro-router": "0.2.1",
+        "@beatzball/litro": "0.17.2",
+        "@beatzball/litro-router": "0.3.1",
         "@microsoft/fast-element": "2.10.3",
         "@microsoft/fast-ssr": "1.0.0-beta.39",
         "nitropack": "2.13.4",
@@ -568,96 +556,94 @@
       },
       "buildTime": {
         "runs": [
-          1420,
-          1349,
-          1339,
-          1439,
-          1402
+          1952,
+          1793,
+          1766
         ],
-        "mean": 1390,
-        "median": 1402,
-        "p95": 1439,
-        "stddev": 39,
-        "min": 1339,
-        "max": 1439
+        "mean": 1837,
+        "median": 1793,
+        "p95": 1952,
+        "stddev": 82,
+        "min": 1766,
+        "max": 1952
       },
-      "outputSize": 2173493,
+      "outputSize": 2133660,
       "pageWeight": {
         "/": {
-          "rawBytes": 38377,
-          "gzipBytes": 8616,
+          "rawBytes": 37969,
+          "gzipBytes": 8387,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 48696,
-          "gzipBytes": 15135,
+          "rawBytes": 48289,
+          "gzipBytes": 14907,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 59320,
-          "gzipBytes": 17826,
+          "rawBytes": 58912,
+          "gzipBytes": 17599,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 52628,
-          "gzipBytes": 11524,
+          "rawBytes": 52216,
+          "gzipBytes": 11300,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 11856,
-          "gzipBytes": 5593,
+          "rawBytes": 11445,
+          "gzipBytes": 5288,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1052.3501,
-          "lcp": 1510.7002000000002,
+          "fcp": 1296.6784499999999,
+          "lcp": 1522.9045999999998,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1052.3501
+          "speedIndex": 1296.6784499999999
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1433.3999,
-          "lcp": 1664.5331999999999,
+          "fcp": 1445.0567,
+          "lcp": 1671.0756000000001,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1433.3999
+          "speedIndex": 1445.0567
         },
         "/show": {
           "performance": 99,
-          "fcp": 1443.2625,
-          "lcp": 1669.3500000000001,
+          "fcp": 1434.8687,
+          "lcp": 1667.4916,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1443.2625
+          "speedIndex": 1434.8687
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1294.8541,
-          "lcp": 1521.1388,
+          "fcp": 1303.82645,
+          "lcp": 1530.7686,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1294.8541
+          "speedIndex": 1303.82645
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1291.6227999999999,
-          "lcp": 1517.8303999999998,
+          "fcp": 1294.58365,
+          "lcp": 1520.7782,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1291.6227999999999
+          "speedIndex": 1294.58365
         }
       }
     },
     {
       "name": "litro-elena",
-      "version": "0.16.2",
+      "version": "0.17.2",
       "versions": {
-        "@beatzball/litro": "0.16.2",
-        "@beatzball/litro-router": "0.2.1",
+        "@beatzball/litro": "0.17.2",
+        "@beatzball/litro-router": "0.3.1",
         "@elenajs/core": "1.0.0",
         "@elenajs/ssr": "1.0.0-alpha.10",
         "nitropack": "2.13.4",
@@ -665,275 +651,269 @@
       },
       "buildTime": {
         "runs": [
-          1221,
-          1172,
-          1179,
-          1190,
-          1164
+          1792,
+          1590,
+          1606
         ],
-        "mean": 1185,
-        "median": 1179,
-        "p95": 1221,
-        "stddev": 20,
-        "min": 1164,
-        "max": 1221
+        "mean": 1663,
+        "median": 1606,
+        "p95": 1792,
+        "stddev": 92,
+        "min": 1590,
+        "max": 1792
       },
-      "outputSize": 1903777,
+      "outputSize": 1891681,
       "pageWeight": {
         "/": {
-          "rawBytes": 29516,
-          "gzipBytes": 8092,
+          "rawBytes": 29388,
+          "gzipBytes": 8019,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 41119,
-          "gzipBytes": 14580,
+          "rawBytes": 40992,
+          "gzipBytes": 14502,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 50459,
-          "gzipBytes": 17139,
+          "rawBytes": 50331,
+          "gzipBytes": 17063,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 48924,
-          "gzipBytes": 11037,
+          "rawBytes": 48792,
+          "gzipBytes": 10959,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 10669,
-          "gzipBytes": 5049,
+          "rawBytes": 10538,
+          "gzipBytes": 4929,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1068.10995,
-          "lcp": 1366.1466,
+          "fcp": 1070.35015,
+          "lcp": 1371.8002000000001,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1068.10995
+          "speedIndex": 1070.35015
         },
         "/ask": {
           "performance": 100,
-          "fcp": 1216.3867500000001,
-          "lcp": 1364.8490000000002,
+          "fcp": 1217.7426,
+          "lcp": 1368.6568,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1216.3867500000001
+          "speedIndex": 1217.7426
         },
         "/show": {
           "performance": 100,
-          "fcp": 1214.64855,
-          "lcp": 1365.5313999999998,
+          "fcp": 1208.9182,
+          "lcp": 1365.5576,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1214.64855
+          "speedIndex": 1208.9182
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1069.857375,
-          "lcp": 1216.8288499999999,
+          "fcp": 1071.18225,
+          "lcp": 1221.8187,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1069.857375
+          "speedIndex": 1071.18225
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1131.76,
-          "lcp": 1361.68,
-          "cls": 0,
+          "fcp": 1143.8376500000002,
+          "lcp": 1367.4502000000002,
+          "cls": 0.01300637319530095,
           "tbt": 0,
-          "speedIndex": 1131.76
+          "speedIndex": 1143.8376500000002
         }
       }
     },
     {
       "name": "nextjs",
-      "version": "16.3.6",
+      "version": "16.4.0",
       "versions": {
-        "next": "16.3.6",
+        "next": "16.4.0",
         "react": "19.3.0",
         "react-dom": "19.3.0"
       },
       "buildTime": {
         "runs": [
-          3749,
-          3341,
-          3237,
-          3275,
-          3422
+          4038,
+          3408,
+          3397
         ],
-        "mean": 3405,
-        "median": 3341,
-        "p95": 3749,
-        "stddev": 183,
-        "min": 3237,
-        "max": 3749
+        "mean": 3614,
+        "median": 3408,
+        "p95": 4038,
+        "stddev": 300,
+        "min": 3397,
+        "max": 4038
       },
-      "outputSize": 7539902,
+      "outputSize": 7505379,
       "pageWeight": {
         "/": {
-          "rawBytes": 45832,
-          "gzipBytes": 6675,
+          "rawBytes": 45951,
+          "gzipBytes": 6802,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 35524,
-          "gzipBytes": 5040,
+          "rawBytes": 35649,
+          "gzipBytes": 5173,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 44733,
-          "gzipBytes": 5944,
+          "rawBytes": 44858,
+          "gzipBytes": 6078,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 65473,
-          "gzipBytes": 16712,
+          "rawBytes": 65628,
+          "gzipBytes": 16975,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 7404,
-          "gzipBytes": 2013,
+          "rawBytes": 7555,
+          "gzipBytes": 2148,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 752.9223999999999,
-          "lcp": 1860.9224,
+          "fcp": 753.3357000000001,
+          "lcp": 1882.3357,
           "cls": 0,
-          "tbt": 8,
-          "speedIndex": 752.9223999999999
+          "tbt": 29,
+          "speedIndex": 753.3357000000001
         },
         "/ask": {
           "performance": 100,
-          "fcp": 752.758,
-          "lcp": 1864.758,
+          "fcp": 753.8939,
+          "lcp": 1882.8939,
           "cls": 0,
-          "tbt": 12,
-          "speedIndex": 752.758
+          "tbt": 29,
+          "speedIndex": 753.8939
         },
         "/show": {
           "performance": 100,
-          "fcp": 754.0464999999999,
-          "lcp": 1862.0465,
+          "fcp": 753.2212,
+          "lcp": 1881.2212,
           "cls": 0,
-          "tbt": 8,
-          "speedIndex": 754.0464999999999
+          "tbt": 28,
+          "speedIndex": 753.2212
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 753.2466999999999,
-          "lcp": 1863.2467,
+          "fcp": 754.2402,
+          "lcp": 1881.2402,
           "cls": 0,
-          "tbt": 10,
-          "speedIndex": 753.2466999999999
+          "tbt": 27,
+          "speedIndex": 754.2402
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 752.7221999999999,
-          "lcp": 1859.7222,
+          "fcp": 753.4338,
+          "lcp": 1880.4338,
           "cls": 0,
-          "tbt": 7,
-          "speedIndex": 752.7221999999999
+          "tbt": 27,
+          "speedIndex": 753.4338
         }
       }
     },
     {
       "name": "nuxt",
-      "version": "4.5.2",
+      "version": "4.6.1",
       "versions": {
-        "nuxt": "4.5.2",
-        "vue": "3.5.43",
-        "vite": "8.3.0"
+        "nuxt": "4.6.1",
+        "vue": "3.5.44",
+        "vite": "8.3.4"
       },
       "buildTime": {
         "runs": [
-          3258,
-          2235,
-          2197,
-          2301,
-          2362
+          3857,
+          2993,
+          2965
         ],
-        "mean": 2471,
-        "median": 2301,
-        "p95": 3258,
-        "stddev": 398,
-        "min": 2197,
-        "max": 3258
+        "mean": 3272,
+        "median": 2993,
+        "p95": 3857,
+        "stddev": 414,
+        "min": 2965,
+        "max": 3857
       },
-      "outputSize": 1196884,
+      "outputSize": 1217376,
       "pageWeight": {
         "/": {
-          "rawBytes": 15633,
-          "gzipBytes": 3897,
+          "rawBytes": 15795,
+          "gzipBytes": 3934,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 12065,
-          "gzipBytes": 2659,
+          "rawBytes": 12227,
+          "gzipBytes": 2701,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 14865,
-          "gzipBytes": 3251,
+          "rawBytes": 15027,
+          "gzipBytes": 3292,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 26564,
-          "gzipBytes": 9037,
+          "rawBytes": 26726,
+          "gzipBytes": 9078,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 2003,
-          "gzipBytes": 877,
+          "rawBytes": 2165,
+          "gzipBytes": 917,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 99,
-          "fcp": 1502.2318,
-          "lcp": 1652.2498,
-          "cls": 0.04198827451067898,
-          "tbt": 59.5,
-          "speedIndex": 1502.2318
+          "fcp": 1502.9759,
+          "lcp": 1653.0000499999999,
+          "cls": 0.04738033042951105,
+          "tbt": 67,
+          "speedIndex": 1502.9759
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1502.1132000000002,
-          "lcp": 1652.1382,
-          "cls": 0.04839732047082653,
-          "tbt": 55,
-          "speedIndex": 1502.1132000000002
+          "fcp": 1503.2875,
+          "lcp": 1653.3097500000001,
+          "cls": 0.03256531648936806,
+          "tbt": 40,
+          "speedIndex": 1503.2875
         },
         "/show": {
           "performance": 99,
-          "fcp": 1502.8942,
-          "lcp": 1652.9119999999998,
-          "cls": 0.032065493172984,
-          "tbt": 42.5,
-          "speedIndex": 1502.8942
+          "fcp": 1502.5370999999998,
+          "lcp": 1652.5622499999997,
+          "cls": 0.04570148848212856,
+          "tbt": 62,
+          "speedIndex": 1502.5370999999998
         },
         "/story/47760529": {
           "performance": 78,
-          "fcp": 1502.4739,
-          "lcp": 1652.49505,
+          "fcp": 1503.3498,
+          "lcp": 1653.3839,
           "cls": 0.5192051339522703,
-          "tbt": 50,
-          "speedIndex": 1502.4739
+          "tbt": 61.5,
+          "speedIndex": 1503.3498
         },
         "/user/divan": {
           "performance": 99,
-          "fcp": 1502.2742,
-          "lcp": 1652.295,
+          "fcp": 1502.7490000000003,
+          "lcp": 1652.7741,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1502.2742
+          "speedIndex": 1502.7490000000003
         }
       }
     }
