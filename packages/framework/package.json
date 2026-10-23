@@ -199,7 +199,7 @@
     "satori": "^0.12.0",
     "seroval": "^1.6.3",
     "unified": "^11.0.5",
-    "vite": "^8.0.16"
+    "vite": "^8.1.6"
   },
   "devDependencies": {
     "@elenajs/core": "1.0.0",
