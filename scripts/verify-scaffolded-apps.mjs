@@ -32,7 +32,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname, resolve } from 'node:path';
+import { join, dirname, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -48,6 +48,11 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
  *
  * `id` names a variant when recipe and adapter alone no longer tell two apart.
  * It is what `--only` matches and what the report prints.
+ *
+ * `fixture` names extra source files written into the scaffolded app before it
+ * is installed. A recipe as shipped cannot exercise a bundler fault that only
+ * appears in an app of a certain SHAPE, and a check over a shape no recipe has
+ * is a green check over nothing. See BARREL_FIXTURE.
  */
 const VARIANTS = [
   { recipe: 'fullstack', adapter: 'lit' },
@@ -64,6 +69,10 @@ const VARIANTS = [
   // e2e suite runs `pnpm dev`, which serves every page file whether or not it
   // prerendered. Only a real build can tell that /docs is missing.
   { recipe: 'starlight', adapter: 'lit', id: 'starlight:lit:for-repo', flags: ['--for-repo', '.'] },
+  // The same fullstack:lit app plus an app-level barrel. The plain variant above
+  // stays, because both shapes have to keep working: this one exists only so the
+  // HYDRATE-ORDER check has a trigger it can actually see.
+  { recipe: 'fullstack', adapter: 'lit', id: 'fullstack:lit:barrel', fixture: 'barrel' },
 ];
 
 /** Workspace packages an app installs from the registry. */
@@ -105,6 +114,244 @@ function grepDir(dir, needle) {
     }
   }
   return false;
+}
+
+/**
+ * BARREL_FIXTURE — the app shape that makes Rolldown refuse to fold `lit-element`.
+ *
+ * WHY A FIXTURE AT ALL
+ *
+ * Every recipe as shipped builds clean, so a hydration-order check over the
+ * recipes alone would be a green check over a trigger it cannot see. The fault
+ * needs an app-level barrel: `src/lib/index.ts` that BOTH the entry and a page
+ * component import, where the component pulls a barrel module the entry never
+ * uses, and the barrel also re-exports a module that imports `lit`.
+ *
+ * All three conditions are load-bearing, and were established by removing them
+ * one at a time: bypass the barrel from either side and the fault goes away;
+ * have `ui-helper.ts` import a local module instead of `lit` and it goes away;
+ * drop the component-only module and it goes away. The CONTENTS of the files
+ * never mattered — ten variants of `polling.ts` behaved identically.
+ *
+ * WHAT GOES WRONG
+ *
+ * From Vite 8.1.6 (Rolldown 1.1.5) onward, that shape leaves `lit-element` in a
+ * chunk `app.js` imports STATICALLY. A static import evaluates before the
+ * importing module's own body, so the first line of `app.ts` — the hydrate
+ * support import — runs second, and the one line in `lit-element` that reads
+ * `globalThis.litElementHydrateSupport` sees nothing. Hydration never installs
+ * for the life of the page. The build exits 0, the bundle parses, the
+ * prerendered HTML is perfect, and the browser throws it all away and
+ * re-renders. See BUILD-009.
+ *
+ * Nothing here is contrived: a `src/lib/` barrel that also exports an `html` or
+ * `css` helper is what an ordinary Lit app looks like.
+ */
+const BARREL_FIXTURE = {
+  // Used by the ENTRY, and by nothing else.
+  'src/lib/session.ts': `export let user: string | null = null;
+
+export function loadFromStorage(): void {
+  user = localStorage.getItem('user');
+}
+`,
+
+  // Used by a PAGE COMPONENT, never by the entry. Rolldown places this module
+  // in the page's chunk, which is correct — it is consumer-local — and that
+  // placement is what makes the entry's predicted import graph look cyclic.
+  'src/lib/polling.ts': `export function startPolling(fn: () => void, ms: number): () => void {
+  const timer = setInterval(fn, ms);
+  return () => clearInterval(timer);
+}
+`,
+
+  // Imports \`lit\`. Nothing has to CALL it — being re-exported by the barrel is
+  // enough. Point this import at a local module instead and the fault vanishes.
+  'src/lib/ui-helper.ts': `import { html } from 'lit';
+
+export function helper(s: string) {
+  return html\`<b>\${s}</b>\`;
+}
+`,
+
+  // The barrel. Both sides go through this one file, which is the whole trigger.
+  'src/lib/index.ts': `export { loadFromStorage, user } from './session.js';
+export { startPolling } from './polling.js';
+export { helper } from './ui-helper.js';
+`,
+
+  // An ordinary recipe-style component. It reaches the barrel for a module the
+  // entry does not use, and stops its own timer so the fixture leaks nothing.
+  'src/components/x-comp-1.ts': `import { LitElement, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { startPolling } from '../lib/index.js';
+
+@customElement('x-comp-1')
+export class XComp1 extends LitElement {
+  override connectedCallback() {
+    super.connectedCallback();
+    startPolling(() => {}, 60_000)();
+  }
+
+  override render() {
+    return html\`<p>barrel fixture</p>\`;
+  }
+}
+`,
+
+  // The page that loads the component. The page scanner turns \`pages/x1.ts\`
+  // into the tag \`page-x1\` and a route whose action is a dynamic import, so
+  // the component lands in a lazily-loaded chunk — as it would in a real app.
+  'pages/x1.ts': `import { LitElement, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import '../src/components/x-comp-1.js';
+
+@customElement('page-x1')
+export class X1Page extends LitElement {
+  override render() {
+    return html\`
+      <main>
+        <h1>Barrel fixture</h1>
+        <x-comp-1></x-comp-1>
+      </main>
+    \`;
+  }
+}
+
+export default X1Page;
+`,
+};
+
+/**
+ * Write BARREL_FIXTURE into a scaffolded app and wire its main module to it.
+ *
+ * The barrel import goes into `app-main.ts`, not `app.ts`, because that is where
+ * BUILD-009 says every import belongs: `app.ts` is a two-statement bootstrap
+ * whose whole job is to install the hydration hook before any Lit code runs.
+ * Writing it into `app.ts` instead would be a fixture of a rule violation, not
+ * of an ordinary app — and it would pass the fault off as unfixed when the real
+ * cause was the fixture. (That mistake was made once while building this check:
+ * a barrel import in `app.ts` drags the `lit` package entry, and `lit`
+ * re-exports `lit-element`, so the entry statically reaches the very module it
+ * is trying to get ahead of.)
+ *
+ * This also asserts the bootstrap shape it depends on, so a recipe that quietly
+ * loses the split fails here by name rather than producing a confusing result.
+ */
+function applyBarrelFixture(appDir) {
+  for (const [rel, text] of Object.entries(BARREL_FIXTURE)) {
+    const full = join(appDir, rel);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, text);
+  }
+
+  const bootstrap = readFileSync(join(appDir, 'app.ts'), 'utf-8');
+  const mainPath = join(appDir, 'app-main.ts');
+  if (!bootstrap.includes("void import('./app-main.js')") || !existsSync(mainPath)) {
+    throw new Error(
+      `[verify] ${join(appDir, 'app.ts')} is not a bootstrap entry that loads ` +
+        `./app-main.js, so this fixture has nowhere to put an app-level import. ` +
+        `Either the recipe lost the split (that is the bug — see BUILD-009) or ` +
+        `applyBarrelFixture() needs updating.`,
+    );
+  }
+
+  const main = readFileSync(mainPath, 'utf-8');
+  writeFileSync(
+    mainPath,
+    `// Barrel fixture (see BARREL_FIXTURE in verify-scaffolded-apps.mjs).\n` +
+      `import { loadFromStorage } from './src/lib/index.js';\n\n` +
+      `${main}\nloadFromStorage();\n`,
+  );
+}
+
+/**
+ * The two markers that decide whether Lit hydration installed.
+ *
+ * `@lit-labs/ssr-client/lit-element-hydrate-support.js` patches nothing itself.
+ * It only ASSIGNS `globalThis.litElementHydrateSupport`. The patch is applied by
+ * `lit-element`, on one line of its own module body:
+ *
+ *   globalThis.litElementHydrateSupport?.({ LitElement });
+ *
+ * That line runs once, when `lit-element` is evaluated, and the `?.` makes a
+ * missing hook a silent no-op forever. So the whole contract is: the assignment
+ * must execute before that call. Both markers survive minification — the
+ * property name is a global and cannot be renamed, and `?.` is the shortest
+ * spelling of an optional call.
+ */
+const HYDRATE_INSTALL = /litElementHydrateSupport\s*=/;
+const HYDRATE_CALL = /litElementHydrateSupport\s*\?\./;
+
+/** Every emitted JavaScript file under `dir`, as paths relative to `dir`. */
+function emittedScripts(dir, prefix = '') {
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) out.push(...emittedScripts(join(dir, entry.name), rel));
+    else if (entry.isFile() && /\.(?:js|mjs)$/.test(entry.name)) out.push(rel);
+  }
+  return out;
+}
+
+/**
+ * Specifiers a chunk imports STATICALLY, in source order.
+ *
+ * Covers `import x from "y"`, a bare `import "y"`, and `export ... from "y"` —
+ * a re-export is a static dependency too. A dynamic `import("y")` deliberately
+ * does NOT match: a `(` follows `import` there, where this pattern needs either
+ * `from` or a quote. That one distinction is the entire check, so it is not
+ * incidental: a dynamic import is the only thing that CANNOT run ahead of the
+ * entry's body.
+ */
+function staticDepsOf(text) {
+  const re = /(?:^|[;}\s])(?:import|export)\s*(?:[^;'"]*?\bfrom\s*)?["']([^"']+)["']/g;
+  const specs = [];
+  let m;
+  while ((m = re.exec(text)) !== null) specs.push(m[1]);
+  return specs;
+}
+
+/**
+ * Flatten the entry's static import graph into EVALUATION order.
+ *
+ * ES modules evaluate depth-first: every static import of a module runs to
+ * completion before that module's own body. So a marker's real position is the
+ * pair (step in this list, byte offset within that chunk). Comparing byte
+ * offsets inside `app.js` alone is not enough, and believing otherwise is
+ * exactly what let this fault ship — in the broken build the call site is not
+ * in `app.js` at all, it is in a chunk `app.js` imports on its first line.
+ */
+function staticEvaluationOrder(clientDir, entryRel) {
+  const order = [];
+  const seen = new Set();
+
+  const visit = (rel) => {
+    if (seen.has(rel)) return;
+    seen.add(rel);
+    const abs = join(clientDir, rel);
+    // A bare package specifier, or anything the build did not emit here.
+    if (!existsSync(abs)) return;
+    const text = readFileSync(abs, 'utf-8');
+    for (const spec of staticDepsOf(text)) {
+      if (!spec.startsWith('.')) continue;
+      visit(posix.normalize(posix.join(posix.dirname(rel), spec)));
+    }
+    // Pushed AFTER its dependencies, so the list reads in evaluation order.
+    order.push({ rel, text });
+  };
+
+  visit(entryRel);
+  return order;
+}
+
+/** Where a marker first appears in evaluation order, or null. */
+function firstMarker(order, re) {
+  for (let step = 0; step < order.length; step++) {
+    const m = re.exec(order[step].text);
+    if (m) return { chunk: order[step].rel, step, byte: m.index };
+  }
+  return null;
 }
 
 const onlyIdx = args.indexOf('--only');
@@ -162,7 +409,7 @@ console.log('');
 // ---------------------------------------------------------------------------
 const results = [];
 
-for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
+for (const { recipe, adapter, id: variantId, flags = [], fixture } of VARIANTS) {
   const id = variantId ?? `${recipe}:${adapter}`;
   if (only && only !== id) continue;
 
@@ -176,6 +423,8 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
     work, 'scaffold',
   );
   if (!step.ok) { results.push({ id, status: 'SCAFFOLD-FAIL', detail: step.error }); continue; }
+
+  if (fixture === 'barrel') applyBarrelFixture(dir);
 
   // Force every Litro package to the packed tarball, transitive deps included.
   const manifestPath = join(dir, 'package.json');
@@ -243,6 +492,81 @@ for (const { recipe, adapter, id: variantId, flags = [] } of VARIANTS) {
         'the site is blank in a browser.\n' + step.error,
     });
     continue;
+  }
+
+  // A bundle can parse perfectly and still have thrown Lit's hydration away.
+  //
+  // `lit-element` reads `globalThis.litElementHydrateSupport` on one line of its
+  // own module body, once, and the `?.` makes a missing hook a permanent silent
+  // no-op. So the hydrate-support module has to be EVALUATED first — and a
+  // static import evaluates before the importing module's body, which means an
+  // `import` at the top of `app.ts` does not settle it. If the bundler leaves
+  // `lit-element` in a chunk `app.js` imports statically, that chunk wins and
+  // every server-rendered page is discarded and re-rendered in the browser.
+  //
+  // Nothing else in this script can see that. The build exits 0, the bundle
+  // parses, and the prerendered HTML is byte-for-byte correct, because the
+  // server never consults the hook. Only the emitted chunk graph shows it.
+  const clientDir = join(dir, 'dist/client');
+  const scripts = emittedScripts(clientDir);
+  const readChunk = (rel) => readFileSync(join(clientDir, rel), 'utf-8');
+  const callSomewhere = scripts.find((rel) => HYDRATE_CALL.test(readChunk(rel)));
+
+  // No call site means `lit-element` never reached the client — a FAST or Elena
+  // app. There is no hook to install and nothing to order.
+  if (callSomewhere) {
+    if (!scripts.some((rel) => HYDRATE_INSTALL.test(readChunk(rel)))) {
+      results.push({
+        id,
+        status: 'NO-HYDRATE-SUPPORT',
+        detail:
+          `lit-element is in the client bundle (${callSomewhere}) but nothing ` +
+          `assigns globalThis.litElementHydrateSupport anywhere under ` +
+          `dist/client. The app never imports ` +
+          `'@lit-labs/ssr-client/lit-element-hydrate-support.js', or it was ` +
+          `tree-shaken out, so no element can ever hydrate. Every page is ` +
+          `re-rendered from scratch and the server's work is wasted.`,
+      });
+      continue;
+    }
+
+    const order = staticEvaluationOrder(clientDir, 'app.js');
+    const call = firstMarker(order, HYDRATE_CALL);
+    // A call site outside the entry's STATIC graph is reached only through a
+    // dynamic import, which cannot run before the entry body. That is the shape
+    // the bootstrap entry exists to guarantee, and it needs no further checking.
+    if (call) {
+      const install = firstMarker(order, HYDRATE_INSTALL);
+      const tooLate =
+        !install ||
+        install.step > call.step ||
+        (install.step === call.step && install.byte > call.byte);
+      if (tooLate) {
+        const where = (m) => `${m.chunk} (step ${m.step + 1} of ${order.length}, byte ${m.byte})`;
+        results.push({
+          id,
+          status: 'HYDRATE-ORDER',
+          detail:
+            `Lit's hydration patch never installs, so every server-rendered ` +
+            `page is thrown away and re-rendered in the browser.\n\n` +
+            `  lit-element reads the hook at: ${where(call)}\n` +
+            `  ssr-client assigns it at:      ` +
+            `${install ? where(install) : "nowhere in the entry's static graph"}\n\n` +
+            `Steps are the entry's static import graph in EVALUATION order — ` +
+            `depth first, each chunk's imports before its own body — so the ` +
+            `assignment has to come first on that list, not merely first in ` +
+            `app.ts.\n\n` +
+            `From Vite 8.1.6 (Rolldown 1.1.5) onward this happens whenever an ` +
+            `app-level barrel is imported by both the entry and a page ` +
+            `component: lit-element is refused from app.js and lands in a chunk ` +
+            `app.js imports statically, which evaluates first.\n\n` +
+            `Fix: make the client entry a two-statement bootstrap — import the ` +
+            `hydrate support, then \`void import('./app-main.js')\` — so no ` +
+            `static import can be hoisted ahead of it. See BUILD-009.`,
+        });
+        continue;
+      }
+    }
   }
 
   // The credit line must survive to rendered HTML, not merely compile. Three
