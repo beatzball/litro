@@ -512,9 +512,17 @@ for (const { recipe, adapter, id: variantId, flags = [], fixture } of VARIANTS) 
   const readChunk = (rel) => readFileSync(join(clientDir, rel), 'utf-8');
   const callSomewhere = scripts.find((rel) => HYDRATE_CALL.test(readChunk(rel)));
 
-  // No call site means `lit-element` never reached the client — a FAST or Elena
-  // app. There is no hook to install and nothing to order.
-  if (callSomewhere) {
+  // Only a Lit app is checked, and `lit-element` being in the bundle is not
+  // enough on its own. The FAST recipe imports eight Shoelace components, and
+  // Shoelace is built on Lit, so `lit-element`'s call site is in that bundle
+  // with nothing to install the hook — yet nothing is lost, because the server
+  // never writes a Lit element's shadow DOM there. Checked on the built
+  // starlight:fast site: across its 12 prerendered pages the only tags
+  // carrying `<template shadowrootmode>` are the FAST ones, and every `sl-*`
+  // element is bare. A missing patch can only discard markup that exists, so
+  // under a non-Lit adapter a Lit element is a client-only widget and the
+  // ordering does not matter.
+  if (adapter === 'lit' && callSomewhere) {
     if (!scripts.some((rel) => HYDRATE_INSTALL.test(readChunk(rel)))) {
       results.push({
         id,
