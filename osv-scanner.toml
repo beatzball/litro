@@ -20,12 +20,24 @@
 # severity bar the previous audit enforced. A NEW advisory is not listed here
 # and will fail the check.
 #
-# TWO entries do not fit either reason: node-forge GHSA-86w9-cpqp-85rv and
-# braces GHSA-vfj7-8cjw-p6xm are both High AND reach published packages in
-# production. They share a section at the bottom, each with its own
-# justification and tracking issue, so that "dev-only" never has to be claimed
-# about a package that ships. Keep that distinction: an entry whose reason is
-# not true is worse than no gate at all.
+# Some entries fit neither reason, so each has its own section below rather
+# than being filed under a claim that is not true about it:
+#
+#   "Production path, no upstream fix" -- node-forge GHSA-86w9-cpqp-85rv and
+#   braces GHSA-vfj7-8cjw-p6xm are both High AND reach published packages in
+#   production, and nothing is published to bump to.
+#
+#   "Production path, a fix EXISTS but taking it is blocked" -- the five vite
+#   8.0.16 advisories. A patch exists and we are choosing not to take it yet,
+#   which is the weakest position in this file and must stay a short one.
+#
+#   "Matched by a range the advisory itself contradicts" -- nuxt
+#   GHSA-vjh5-4x84-xrqp, where we already run the version the advisory names
+#   as fixed and the match comes from its own missing range bound.
+#
+# Keep those distinctions. "dev-only" is never claimed about a package that
+# ships, and "no fix exists" is never claimed where one does. An entry whose
+# reason is not true is worse than no gate at all.
 
 # --- Dev / tooling only (never shipped to users) ---
 
@@ -141,3 +153,19 @@ reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section 
 [[IgnoredVulns]]
 id = "GHSA-9jrq-w75r-8gcw" # vite 8.0.16 (Low, CVSS 2.1) -- fixed in 8.1.6
 reason = "Fixed in vite 8.1.6, blocked by issue 236 as described in the section comment above. Low severity, below the high threshold this audit enforces. The advisory is cross-origin script execution through Vite custom middleware, in the DEV SERVER; a deployed Litro app never starts one. Revisit by landing issue 236 and unpinning vite to ^8.1.6."
+
+# --- Matched by a range the advisory itself contradicts ---
+#
+# This section is not a judgment call about exposure, and it is not a deferral.
+# The entry here is an advisory whose own data says we are already on the fixed
+# version, matched anyway because its machine-readable range omits an upper
+# bound. Nothing can be bumped to, because nothing is wrong with what we have.
+#
+# Keep this section for that one shape only. If an advisory genuinely affects
+# the version in the lockfile, it belongs in one of the sections above, or it
+# belongs fixed. Verify the ranges against `https://api.osv.dev/v1/vulns/<id>`
+# before adding anything here, and quote what you found in the reason.
+
+[[IgnoredVulns]]
+id = "GHSA-vjh5-4x84-xrqp" # nuxt + @nuxt/nitro-server 4.6.2 (Medium, CVSS_V4 6.9) -- already on the fixed version
+reason = "We are ON the version this advisory names as fixed. It records two SEMVER ranges per affected package, one per release line, and only the 4.x one carries a `fixed` event: nuxt gets {introduced 4.0.0, fixed 4.6.2} and {introduced 3.0.0} with no fixed event, and @nuxt/nitro-server gets {introduced 4.2.0, fixed 4.6.2} and {introduced 3.20.0} with no fixed event. The 3.x ranges are meant to stop below 4.0.0 -- the advisory says so itself, in `database_specific.last_known_affected_version_range: < 4.0.0` on both -- but that field is prose that osv-scanner does not use for matching, so the open-ended 3.x range swallows every later version, 4.6.2 included. Both lockfiles resolve 4.6.2, which is `latest` on npm and the newest release in the 4.x line, so there is no version to move to and no exposure to accept: the match is an artifact of the advisory's range data, not of our dependencies. Only the two npm Nuxt comparison apps under benchmarks/apps/ pull nuxt at all; it is absent from pnpm-lock.yaml and from every published @beatzball package. Revisit when GitHub closes the 3.x range (then this entry stops matching and must be deleted), or when a 4.6.3+ release makes it moot."
