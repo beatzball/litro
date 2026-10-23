@@ -47,6 +47,60 @@ import { customElement } from 'lit/decorators.js';
 // firstUpdated() so the module is never evaluated in Node.js.
 import type { LitroRouter, Route } from '@beatzball/litro-router';
 
+/**
+ * Warn, loudly and by name, when Lit's hydration support never installed.
+ *
+ * `@lit-labs/ssr-client/lit-element-hydrate-support.js` does not patch anything
+ * itself. It only assigns `globalThis.litElementHydrateSupport`. The patch is
+ * applied by `lit-element` itself, on this one line of its module body:
+ *
+ *   globalThis.litElementHydrateSupport?.({ LitElement });
+ *
+ * That line runs ONCE, when `lit-element` is evaluated, and the `?.` makes a
+ * missing hook a silent no-op. So if anything evaluates `lit-element` before
+ * the hydrate-support module, no element is ever patched, for the life of the
+ * page. Nothing throws and nothing is logged: the server-rendered DOM is
+ * discarded and re-rendered on the client, which looks almost right and is
+ * measurably slower.
+ *
+ * The patch's first act is to add `defer-hydration` to
+ * `LitElement.observedAttributes`, so that one array answers whether it ran.
+ *
+ * This is not a theoretical ordering hazard. From Vite 8.1 (Rolldown 1.1.5)
+ * onward, Rolldown can leave `lit-element` in a chunk the entry imports
+ * STATICALLY, and a static import evaluates before the importing module's own
+ * body — so source order inside `app.ts` is not enough to guarantee the
+ * sequence. See BUILD-009 for the trigger and the bootstrap-entry fix.
+ *
+ * Deliberately a `console.error` and not a throw: a page that hydrated twice
+ * still works, and breaking it would turn a performance fault into an outage.
+ */
+function assertHydrateSupportInstalled(): void {
+  let observed: unknown;
+  try {
+    observed = (LitElement as unknown as { observedAttributes: unknown }).observedAttributes;
+  } catch {
+    // A non-standard Lit build could throw here. An unreadable list is not
+    // evidence of a broken install, so say nothing rather than cry wolf.
+    return;
+  }
+
+  if (Array.isArray(observed) && observed.includes('defer-hydration')) {
+    return;
+  }
+
+  console.error(
+    '[litro] Lit hydration support is NOT installed, so server-rendered markup ' +
+      'is being thrown away and re-rendered on the client.\n' +
+      "  Cause: something evaluated 'lit-element' before " +
+      "'@lit-labs/ssr-client/lit-element-hydrate-support.js'. lit-element reads that " +
+      'hook once, at module evaluation, and a missing hook is a silent no-op.\n' +
+      '  Fix: make the client entry a two-statement bootstrap — import the hydrate ' +
+      "support, then `void import('./app-main.js')` — so no static import can " +
+      'evaluate ahead of the entry body. See BUILD-009.'
+  );
+}
+
 @customElement('litro-outlet')
 export class LitroOutlet extends LitElement {
   /**
@@ -109,6 +163,7 @@ export class LitroOutlet extends LitElement {
    * never runs on the server.
    */
   override async firstUpdated() {
+    assertHydrateSupportInstalled();
     const { LitroRouter } = await import('@beatzball/litro-router');
     // Do NOT clear SSR'd children here. The router's _resolve() already does an
     // atomic clear-then-append when it commits a navigation:
