@@ -1,21 +1,29 @@
 /**
- * Litro client runtime entry point.
+ * Litro client runtime barrel.
  *
- * This module is the canonical client-side entry that framework consumers
- * import (or that the Litro build pipeline injects as app.ts). It wires
- * together the hydration support patch, the router, and the custom elements.
+ * This module wires the hydration support patch, the router and the custom
+ * elements together and re-exports them, so a consumer can reach all of them
+ * in one import.
  *
- * CRITICAL IMPORT ORDER
- * ─────────────────────
- * The very first import MUST be the ssr-client hydration support. It patches
- * LitElement.prototype.createRenderRoot() so that when a LitElement upgrades
- * on the client it enters "hydration mode" and attaches to the existing
- * Declarative Shadow DOM streamed by the server, rather than tearing it down
- * and creating a fresh shadow root.
+ * NOT A CLIENT ENTRY
+ * ──────────────────
+ * Do not use this file as an app's `app.ts`. The first import below is the
+ * ssr-client hydration support, which only ASSIGNS
+ * `globalThis.litElementHydrateSupport`. `lit-element` reads that hook once,
+ * when its own module body runs, and the `?.` it reads it with makes a missing
+ * hook a permanent silent no-op. Source order here cannot guarantee the
+ * assignment wins: all of a module's static imports evaluate before its body,
+ * and the bundler decides which chunk `lit-element` lands in.
  *
- * If ANY LitElement subclass is evaluated before this patch is applied, the
- * component will create a new shadow root and discard the SSR content. The
- * result is a flash of un-styled or blank content on first load.
+ * This file also cannot BE the two-statement bootstrap that BUILD-009 requires.
+ * Its named exports need `lit-element` synchronously, so they cannot sit behind
+ * a dynamic import. An app's entry is its own `app.ts` plus `app-main.ts` — see
+ * BUILD-009, or any recipe's `app.ts`.
+ *
+ * What the patch itself does, once installed: it replaces
+ * LitElement.prototype.createRenderRoot() so an upgrading element enters
+ * "hydration mode" and attaches to the Declarative Shadow DOM the server
+ * streamed, instead of tearing it down and building a fresh shadow root.
  *
  * Server-side safety
  * ──────────────────
