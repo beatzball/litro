@@ -1,5 +1,73 @@
 # litro
 
+## 0.17.4
+
+### Patch Changes
+
+- 4569da2: Warn by name when Lit's hydration support never installed, and raise the `vite`
+  dependency range from `^8.0.16` to `^8.1.6`.
+
+  `LitroOutlet.firstUpdated()` now reads `LitElement.observedAttributes` and, if
+  `defer-hydration` is missing, logs one `console.error` naming the cause and the
+  fix. The hydrate-support module only assigns
+  `globalThis.litElementHydrateSupport`; `lit-element` reads that hook once, when
+  its own module body runs, and the `?.` it reads it with makes a missing hook a
+  permanent silent no-op. Until now that failed with no error at all: the build
+  exited 0, the prerendered HTML was correct, and the browser threw the server's
+  work away and re-rendered every page. Upgrading surfaces the fault in an
+  existing app with no change to the app. It warns rather than throws, because a
+  page that re-rendered still works and breaking it would turn a slow page into a
+  dead one.
+
+  The `vite` range moves off `^8.0.16` now that the ordering fault is fixed, so a
+  `litro dev` server starts from a release patched against GHSA-587h-7wmj-h5pm
+  (High, CVSS 7.5) and four lower-severity advisories. All five are in the Vite
+  dev server, and all five were fixed in 8.1.6, which Litro could not take while
+  Vite 8.1+ broke hydration. `^8.0.16` still permitted 8.0.16 itself, so the floor
+  had to move, not just the lockfile.
+
+  `src/runtime/client.ts` is unchanged in behavior. Its header no longer claims
+  that importing the hydrate support first is sufficient, and says plainly that
+  the module is a library barrel and must not be used as an app's client entry —
+  its named exports need `lit-element` synchronously, so it cannot be the
+  two-statement bootstrap that recipes now scaffold.
+
+- b8892c3: A page file may now carry a prefix before the bracket: `pages/@[handle].ts`
+  scans as `/@:handle` and `pages/@[handle]/[statusId].ts` as
+  `/@:handle/:statusId`, so Mastodon-style `/@alice@example.social` URLs are
+  served. Before, the file scanned as the static path `/@[handle]` and the URL
+  answered 404 (issue 234).
+
+  A prefixed route now sorts before a bare param sibling, so
+  `pages/@[handle].ts` still wins next to `pages/[slug].ts`. Within dynamic
+  routes, the route with more literal text in its path comes first; ties keep
+  the old string order. No route in the recipes or the example apps changes the
+  page it serves.
+
+  A prefix may use letters, digits and `_ ~ @ ! & ' , ; = -`. Any other
+  character is rejected at scan time, because the client router or the server
+  matcher reads it as pattern syntax or receives it percent-encoded.
+
+  The suffix form (`[id].html.ts`, `[id]x.ts`) is not supported and is tracked
+  separately. A prefixed catch-all or optional (`@[...all].ts`, `@[[lang]].ts`)
+  and any other stray bracket are rejected at scan time with an error that names
+  the file. Before, they scanned as inert static paths. A non-page file with a
+  bracket in its name, such as `pages/[id].stories.ts`, is now an error too;
+  move it out of `pages/` or start its name with `-`.
+
+  During `litro dev`, a page scan that fails on reload (one of the errors above,
+  or a duplicate component tag) is logged and the server keeps serving the last
+  good routes. Before, it stopped the dev server. `litro build` still fails.
+
+  `isDynamic` now comes from the bracket syntax, not from the spelling of the
+  path. A file literally named `pages/:slug.ts` used to be marked dynamic and is
+  now a static route for the path `/:slug`.
+
+  The OG image handler's route matcher now escapes the literal runs between
+  params, so a bracket or a dot in a static part of a path matches itself.
+
+- dbaa8ea: Refuse two page files that derive the same component tag. `pages/index.ts` is special-cased to `page-home`, so adding `pages/home.ts` next to it used to kill the server at startup with `Failed to execute 'define' on 'CustomElementRegistry': the name "page-home" has already been used with this registry`, and `/` went down with `/home`. The page scan now fails first, in `litro dev`, `litro build` and the static build alike, with one clear error that names the tag and every page file that claims it. The root index tag stays `page-home` for now; renaming it to `page-index` is a breaking change deferred to the next major.
+
 ## 0.17.3
 
 ### Patch Changes
