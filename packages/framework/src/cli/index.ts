@@ -68,7 +68,14 @@ switch (command) {
     // can resolve the import in app.ts. Without this file, page components
     // never get defined and remain hidden behind :not(:defined) CSS.
     console.log('[litro] Scanning pages...');
-    await scanAndWriteClientRoutes(cwd);
+    try {
+      await scanAndWriteClientRoutes(cwd);
+    } catch (err) {
+      // A scan error (for example two pages that derive the same component
+      // tag) is the author's to fix. Print the message without a stack.
+      console.error(`[litro] Page scan failed: ${(err as Error).message}`);
+      process.exit(1);
+    }
 
     // If dist/client/app.js doesn't exist, run vite build once so the static
     // asset handler has something to serve. Vite's dev middleware will still

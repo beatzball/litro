@@ -27,7 +27,7 @@ import type { Nitro } from 'nitropack';
 import fastGlob from 'fast-glob';
 import { resolve, join, relative } from 'pathe';
 import { writeFile, mkdir, readFile } from 'node:fs/promises';
-import { fileToRoute, compareRoutes } from './path-to-route.js';
+import { fileToRoute, compareRoutes, assertUniqueComponentTags } from './path-to-route.js';
 import { resolveAdapter } from '../adapter/resolve.js';
 import sideEffectsPlugin from './side-effects.js';
 import type { LitroRoute } from '../types/route.js';
@@ -225,6 +225,23 @@ async function writeIfChanged(absPath: string, content: string): Promise<void> {
 }
 
 /**
+ * Turn the scanned page files into sorted routes, refusing a duplicate tag.
+ *
+ * Both scan paths (`scanAndWriteClientRoutes` for the CLI pre-scan and
+ * `runScan` for the Nitro build:before hook and dev reload) go through here,
+ * so the uniqueness check runs exactly once per scan and fires in `litro dev`,
+ * `litro build` and the SSG path alike, before either generator emits a
+ * `componentTag`. See assertUniqueComponentTags for the failure it prevents.
+ */
+function buildRoutes(pageFiles: string[], pagesDir: string, rootDir: string): LitroRoute[] {
+  const routes = pageFiles
+    .map(file => fileToRoute(file, pagesDir))
+    .sort(compareRoutes);
+  assertUniqueComponentTags(routes, rootDir);
+  return routes;
+}
+
+/**
  * Standalone scanner: scans pages/, generates the client routes file.
  *
  * Exported so the CLI can call it before `vite build` to ensure fresh routes
@@ -241,9 +258,7 @@ export async function scanAndWriteClientRoutes(rootDir: string): Promise<void> {
   }
   if (pageFiles.length === 0) return;
 
-  const routes = pageFiles
-    .map(file => fileToRoute(file, pagesDir))
-    .sort(compareRoutes);
+  const routes = buildRoutes(pageFiles, pagesDir, rootDir);
 
   const content = generateClientRoutes(routes, rootDir);
   await writeClientRoutes(rootDir, content);
@@ -345,10 +360,9 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
 
     // 2. Convert file paths to route definitions.
     // pagesDir is passed to fileToRoute() so it can strip the prefix when
-    // computing relative route paths and component tag names.
-    const routes = pageFiles
-      .map(file => fileToRoute(file, pagesDir))
-      .sort(compareRoutes);
+    // computing relative route paths and component tag names. buildRoutes
+    // throws if two files derive the same component tag.
+    const routes = buildRoutes(pageFiles, pagesDir, rootDir);
 
     nitro.logger.info(
       `[litro] Scanned ${routes.length} page${routes.length === 1 ? '' : 's'}: ${routes

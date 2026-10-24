@@ -101,3 +101,27 @@ later e2e test fails with `ERR_EMPTY_RESPONSE` and then `ECONNREFUSED`.
 
 **Check:** `packages/framework/src/cli/index.ts`. A run of connection-refused
 failures after one test means the server died, not that the specs are wrong.
+
+### NITRO-009 — The page scan refuses two files that derive the same component tag
+
+`buildRoutes` in `packages/framework/src/plugins/pages.ts` is the only place
+that turns scanned page files into routes, and it calls
+`assertUniqueComponentTags` before either generator emits a `componentTag`. The
+error names the tag and every page file that claims it, root-relative and
+sorted.
+
+**Why:** component tags are filename-derived and the page manifest imports every
+page statically, so two pages with one tag both call `customElements.define()`
+at module evaluation. The server exits with "the name has already been used with
+this registry" before any request is served, and `/` goes down with `/home`. In
+a static build the prerenderer gets the same error on every route, renders
+nothing, and still exits 0. The known pair is `pages/index.ts` (special-cased to
+`page-home`) next to `pages/home.ts`. The real cure, renaming the root index tag
+to `page-index`, is a breaking change deferred to the next major, because
+`page-home` is hand-written in every recipe, app, e2e spec and the docs; an
+upgraded app would show a blank page with a 200. Until then, this check is the
+whole fix, and issue 233 stays open.
+
+**Check:** `packages/framework/src/plugins/__tests__/duplicate-component-tag.test.ts`.
+Do not add a second check in `generateManifestModule` or `generateClientRoutes`,
+and do not change `fileToComponentTag` to avoid the collision.
