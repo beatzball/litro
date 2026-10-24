@@ -160,3 +160,59 @@ Build docs-ssr job. Serve the app from ITS OWN directory — the home page reads
 a path relative to the process cwd, and from the repo root that fetcher throws,
 the handler falls back to the client-only shell, and the page has no
 `<litro-link>` in it to check.
+
+### BUILD-009 — A Lit client entry is a two-statement bootstrap
+
+Every Lit `app.ts` contains exactly two statements and no app code:
+
+```ts
+import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
+void import('./app-main.js');
+```
+
+Everything the app imports goes in `app-main.ts`. Adding any other `import` to
+`app.ts` reintroduces the fault below.
+
+**Why:** the hydrate-support module patches nothing. It only assigns
+`globalThis.litElementHydrateSupport`. The patch is applied by `lit-element`
+itself, on one line of its own module body:
+
+```js
+globalThis.litElementHydrateSupport?.({ LitElement });
+```
+
+That line runs ONCE, when `lit-element` is evaluated, and the `?.` makes a
+missing hook a permanent silent no-op. If anything evaluates `lit-element`
+first, no element is ever patched, every server-rendered page is discarded and
+re-rendered on the client, and nothing throws or logs.
+
+Importing ssr-client first in source order does not settle it. All of a
+module's static imports evaluate before its own body, so the question is not
+what `app.ts` says but what chunk the bundler put `lit-element` in. From Vite
+8.1.6 (Rolldown 1.1.5) onward it lands in a chunk the entry imports statically
+whenever the entry and a page component both reach the same app-level barrel —
+a `src/lib/index.ts` that also re-exports a module importing `lit`, which is an
+ordinary Lit app. Rolldown's chunk optimizer over-approximates the import graph
+from raw import records, so the barrel gives the entry a predicted edge to a
+page-local module, folding `lit-element` into the entry reads as a cycle, and
+the fold is refused.
+
+A dynamic import is the one thing that cannot be hoisted ahead of the entry's
+body, which is why the second statement is `void import(...)` and not an
+`import` line. Two consequences of the split that are easy to get wrong:
+
+- `app-main.ts` can now evaluate AFTER `DOMContentLoaded` has fired, and a
+  listener added after its event never runs. Check `document.readyState` before
+  adding one, as every recipe's `app-main.ts` does.
+- `packages/framework/src/runtime/client.ts` cannot be split — it has named
+  exports, which require `lit-element` synchronously. It is a library module,
+  not an entry; do not use it as one.
+
+**Check:** `node scripts/verify-scaffolded-apps.mjs` reports `HYDRATE-ORDER`.
+It flattens the emitted entry's static import graph into evaluation order and
+fails if `lit-element`'s call site is reachable before ssr-client's assignment.
+The recipes alone cannot trigger it, so the `fullstack:lit:barrel` variant adds
+the barrel shape — see `BARREL_FIXTURE` in that script. At runtime
+`LitroOutlet.firstUpdated()` also checks `LitElement.observedAttributes` for
+`defer-hydration` and names the fault in one `console.error`, so an app that
+upgrades the framework finds out without rebuilding anything.

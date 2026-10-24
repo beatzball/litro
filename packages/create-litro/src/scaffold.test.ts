@@ -135,8 +135,10 @@ describe('scaffold', () => {
 
       expect(existsSync(join(targetDir, 'actions/demo.server.ts'))).toBe(true);
 
-      const appTs = await readFile(join(targetDir, 'app.ts'), 'utf-8');
-      expect(appTs).toContain('enhanceForms');
+      // app.ts is a two-statement bootstrap and holds no app code, so the
+      // form enhancer lives in app-main.ts. See the bootstrap test below.
+      const appMain = await readFile(join(targetDir, 'app-main.ts'), 'utf-8');
+      expect(appMain).toContain('enhanceForms');
 
       // Amendment: server/plugins/litro-actions.ts is a committed template
       // file (not gitignored) so actionUrl() works on the very first
@@ -187,6 +189,48 @@ describe('scaffold', () => {
         const usage = creditUsage[recipe] ?? ((r: string) => `<litro-footer recipe="${r}">`);
         expect(home).toContain(usage(recipe));
         expect(home).not.toContain('{{recipe}}');
+      });
+    }
+  });
+
+  it('every Lit recipe scaffolds a two-statement bootstrap entry', async () => {
+    // Lit's hydration patch is installed by one line inside `lit-element`:
+    //
+    //   globalThis.litElementHydrateSupport?.({ LitElement });
+    //
+    // It runs once, when that module is evaluated, and the `?.` makes a missing
+    // hook a permanent silent no-op. Importing ssr-client first in app.ts does
+    // NOT settle it: all of a module's static imports evaluate before its own
+    // body, and from Vite 8.1.6 (Rolldown 1.1.5) onward Rolldown can leave
+    // `lit-element` in a chunk the entry imports statically. A dynamic import
+    // is the only thing guaranteed to come second.
+    //
+    // So app.ts carries exactly two statements and no app code. The shape is
+    // asserted exactly, not loosely: one extra `import` line added here later
+    // would void SSR for the whole site with a green build and no console
+    // error. See BUILD-009.
+    for (const recipe of ['fullstack', '11ty-blog', 'starlight', 'supernova'] as const) {
+      await withTmpDir(async (dir) => {
+        const targetDir = join(dir, 'app');
+        await scaffold(recipe, { projectName: 'app', mode: 'ssg' }, targetDir);
+
+        const appTs = await readFile(join(targetDir, 'app.ts'), 'utf-8');
+        const statements = appTs
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/^\s*\/\/.*$/gm, '')
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        expect(statements, `${recipe}/app.ts`).toEqual([
+          "import '@lit-labs/ssr-client/lit-element-hydrate-support.js';",
+          "void import('./app-main.js');",
+        ]);
+
+        // And the app code has to have landed somewhere, or the site boots
+        // the hydration patch and then nothing at all.
+        const appMain = await readFile(join(targetDir, 'app-main.ts'), 'utf-8');
+        expect(appMain, `${recipe}/app-main.ts`).toContain('routes.generated.js');
       });
     }
   });

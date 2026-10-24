@@ -32,7 +32,8 @@
  * Run with: pnpm --filter litro test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { LitElement } from 'lit';
 
 // ---------------------------------------------------------------------------
 // Mock @beatzball/litro-router before importing LitroOutlet.
@@ -64,6 +65,38 @@ const { LitroOutlet } = await import('../LitroOutlet.js');
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Stand in for `@lit-labs/ssr-client/lit-element-hydrate-support.js`.
+ *
+ * The real module cannot be used here. It only assigns
+ * `globalThis.litElementHydrateSupport`; the patch is applied by `lit-element`
+ * reading that hook ONCE, as its own module body runs. By the time a test file
+ * executes, `lit` has long since been imported, so importing the real module
+ * now would set the hook too late to have any effect — which is the very bug
+ * under test, not a way to set up for it.
+ *
+ * So patch the one thing the assertion reads, exactly the way the real module
+ * patches it: prepend `defer-hydration` onto `LitElement.observedAttributes`
+ * via an own-property getter that delegates to the inherited one.
+ */
+function installHydrateSupportPatch(): void {
+  const inherited = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(LitElement),
+    'observedAttributes'
+  )!.get!;
+  Object.defineProperty(LitElement, 'observedAttributes', {
+    configurable: true,
+    get(this: unknown) {
+      return [...(inherited.call(this) as string[]), 'defer-hydration'];
+    },
+  });
+}
+
+/** Remove the stand-in, so `observedAttributes` falls back to the inherited getter. */
+function removeHydrateSupportPatch(): void {
+  delete (LitElement as unknown as Record<string, unknown>).observedAttributes;
+}
 
 /** Minimal route fixture matching the Route type shape expected by the router. */
 const ROUTES = [
@@ -103,6 +136,15 @@ beforeEach(() => {
   setRoutesSpy.mockClear();
   RouterConstructorSpy.mockClear();
   document.querySelectorAll('litro-outlet').forEach(el => el.remove());
+  // Every test below this line is about routing, not hydration, and mounting an
+  // outlet runs firstUpdated()'s hydrate-support assertion. Install the patch so
+  // those tests represent a correctly built app and do not each log a warning
+  // that is a false alarm here. The assertion has its own tests at the bottom.
+  installHydrateSupportPatch();
+});
+
+afterEach(() => {
+  removeHydrateSupportPatch();
 });
 
 // ---------------------------------------------------------------------------
@@ -203,5 +245,83 @@ describe('LitroOutlet — preserves SSR children in firstUpdated() to prevent FO
     // blank the page for the duration of that async work (FOUC).
     expect(el.childElementCount).toBe(1);
     expect(el.firstElementChild).toBe(ssrNode);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// firstUpdated() — the hydrate-support assertion
+//
+// `lit-element` applies Lit's hydration patch on one line of its module body:
+//
+//   globalThis.litElementHydrateSupport?.({ LitElement });
+//
+// It runs once, at module evaluation, and `?.` makes a missing hook a silent
+// no-op — so a build that evaluates `lit-element` first loses hydration for the
+// life of the page with nothing thrown and nothing logged. From Vite 8.1
+// (Rolldown 1.1.5) onward Rolldown can produce exactly that order by leaving
+// `lit-element` in a chunk the entry imports statically. The assertion turns
+// that silence into one named console.error. See BUILD-009.
+// ---------------------------------------------------------------------------
+
+describe('LitroOutlet — hydrate-support assertion', () => {
+  it('says nothing when the patch is installed', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // beforeEach already installed the patch.
+    await makeOutlet();
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('logs one named error when the patch never installed', async () => {
+    removeHydrateSupportPatch();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await makeOutlet();
+
+    expect(errorSpy).toHaveBeenCalledOnce();
+    const message = String(errorSpy.mock.calls[0]![0]);
+    // The message has to carry its own diagnosis: a reader who sees it in a
+    // browser console has no other clue that anything is wrong.
+    expect(message).toContain('[litro]');
+    expect(message).toContain('lit-element-hydrate-support.js');
+    expect(message).toContain('BUILD-009');
+    errorSpy.mockRestore();
+  });
+
+  it('still mounts the router when the patch never installed', async () => {
+    // Deliberately a warning and not a throw: a page that re-renders instead of
+    // hydrating is slower, not broken, and breaking it would turn a performance
+    // fault into an outage.
+    removeHydrateSupportPatch();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const el = document.createElement('litro-outlet') as InstanceType<typeof LitroOutlet>;
+    el.routes = ROUTES as never;
+    document.body.appendChild(el);
+    await afterUpdate(el);
+
+    expect(RouterConstructorSpy).toHaveBeenCalledWith(el);
+    expect(setRoutesSpy).toHaveBeenCalledWith(ROUTES);
+    errorSpy.mockRestore();
+  });
+
+  it('does not warn merely because observedAttributes is unreadable', async () => {
+    // A non-standard Lit build could throw from the getter. An unreadable list
+    // is not evidence of a broken install, so the assertion must stay quiet
+    // rather than cry wolf.
+    Object.defineProperty(LitElement, 'observedAttributes', {
+      configurable: true,
+      get() {
+        throw new Error('exotic Lit build');
+      },
+    });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await makeOutlet();
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
