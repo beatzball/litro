@@ -42,6 +42,7 @@ interface TransformedSegment {
  *                      `:id{suffix}` throws inside each app's own
  *                      server/routes/[...].ts regex builder, which the
  *                      framework cannot upgrade. Rejected at scan time.
+ *                      Tracked in issue 248.
  *   prefix[...param] → `@:...all` is not a valid param name anywhere.
  *   prefix[[param]]  → same. Both are rejected at scan time.
  *
@@ -120,7 +121,7 @@ function unsupportedBracketMessage(segment: string, rel: string): string {
   if (suffixed) {
     return (
       `[litro] ${file}: a dynamic segment cannot carry a suffix after the bracket. ` +
-      `The suffix form ("${suffixed[3]}") is not supported. ` +
+      `The suffix form ("${suffixed[3]}") is not supported (tracked in issue 248). ` +
       `A prefix is: rename the file to ${suffixed[1]}[${suffixed[2]}].ts, ` +
       `or move the suffix into a nested folder.`
     );
