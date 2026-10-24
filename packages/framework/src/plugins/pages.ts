@@ -426,8 +426,21 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
   await runScan();
 
   // Re-scan on dev file changes (Nitro 2.x hook name: 'dev:reload').
+  //
+  // A scan that throws here must not reach the process. `litro dev` installs
+  // an uncaughtException guard that exits on anything but ECONNRESET and
+  // EPIPE, so one bad file name (`pages/[id].html.ts`, a duplicate component
+  // tag) would take the whole dev server down. Log it and keep the last good
+  // manifest; the next reload after the file is fixed scans again. The
+  // initial scan above stays a hard failure, so `litro build` still stops.
   nitro.hooks.hook('dev:reload', async () => {
     nitro.logger.info('[litro] Dev reload — rescanning pages...');
-    await runScan();
+    try {
+      await runScan();
+    } catch (err) {
+      nitro.logger.error(
+        `[litro] Page scan failed; still serving the last good routes. ${(err as Error).message}`,
+      );
+    }
   });
 }

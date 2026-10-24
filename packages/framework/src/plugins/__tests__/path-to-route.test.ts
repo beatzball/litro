@@ -7,9 +7,17 @@
 
 import { describe, it, expect } from 'vitest';
 import { fileToRoute, fileToComponentTag, compareRoutes } from '../path-to-route.js';
+import { matchRoute } from '../../runtime/og-handler.js';
 import type { LitroRoute } from '../../types/route.js';
 
 const PAGES_DIR = '/app/pages';
+
+// Native in Node 24 (CI) and in every browser the router targets. The
+// framework's lib settings do not type it, so declare the part these tests use.
+declare const URLPattern: new (init: { pathname: string }) => {
+  exec(input: string): { pathname: { groups: Record<string, string | undefined> } } | null;
+  test(input: { pathname: string }): boolean;
+};
 
 // Helper to build an absolute path from a relative pages path
 const p = (rel: string) => `${PAGES_DIR}/${rel}`;
@@ -180,10 +188,102 @@ describe('fileToRoute — rejected bracket forms', () => {
     );
   });
 
+  it('names a .tsx page by its real extension', () => {
+    expect(() => fileToRoute(p('@[...all].tsx'), PAGES_DIR)).toThrow(
+      /pages\/@\[\.\.\.all\]\.tsx: .*name the file \[\.\.\.all\]\.tsx\./,
+    );
+    expect(() => fileToRoute(p('[id].html.tsx'), PAGES_DIR)).toThrow(
+      /pages\/\[id\]\.html\.tsx: .*rename the file to \[id\]\.tsx/,
+    );
+  });
+
+  it('tells the author of a colocated non-page file how to keep it in pages/', () => {
+    // pages/[id].stories.ts is not a page. The suffix error alone would blame
+    // the wrong thing, so the message also names the two ways out.
+    expect(() => fileToRoute(p('[id].stories.ts'), PAGES_DIR)).toThrow(
+      /pages\/\[id\]\.stories\.ts: .*If this file is not a page .*move it out of pages\/ or start its name with "-"/,
+    );
+  });
+
   it('rejects any other stray bracket (pages/a[b]c[d].ts)', () => {
     expect(() => fileToRoute(p('a[b]c[d].ts'), PAGES_DIR)).toThrow(
       /pages\/a\[b\]c\[d\]\.ts.*not a route segment Litro understands/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fileToRoute — prefix characters (issue 234)
+// ---------------------------------------------------------------------------
+
+const PREFIX_ALLOWED = /^[A-Za-z0-9_~@!&',;=-]$/;
+
+// Every printable ASCII character, plus three non-ASCII ones. '/' and '\\'
+// split a path into segments, and '[' and ']' make a different bracket shape,
+// so none of those four can be tested as a one-character prefix.
+const PREFIX_CANDIDATES = [
+  ...Array.from({ length: 0x7e - 0x20 + 1 }, (_, i) => String.fromCharCode(0x20 + i)),
+  'é',
+  'ü',
+  '中',
+].filter(c => !['/', '\\', '[', ']'].includes(c));
+
+const REJECTED_PREFIX_CHARS = PREFIX_CANDIDATES.filter(c => !PREFIX_ALLOWED.test(c));
+
+describe('fileToRoute — prefix characters', () => {
+  it.each(REJECTED_PREFIX_CHARS.map(c => [JSON.stringify(c), c]))(
+    'rejects a prefix containing %s and names the file and the character',
+    (_label, c) => {
+      const file = `x${c}[id].ts`;
+      let message = '';
+      try {
+        fileToRoute(p(file), PAGES_DIR);
+      } catch (err) {
+        message = (err as Error).message;
+      }
+      expect(message).toContain(`pages/${file}: the prefix "x${c}" before [id] contains`);
+      expect(message).toContain(JSON.stringify(c));
+      expect(message).toContain('Rename the file, for example to [id].ts.');
+    },
+  );
+
+  it('accepts every allowed character as a prefix', () => {
+    const allowed = PREFIX_CANDIDATES.filter(c => PREFIX_ALLOWED.test(c));
+    expect(allowed.join('')).toBe(
+      "!&',-0123456789;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~",
+    );
+    for (const c of allowed) {
+      expect(fileToRoute(p(`x${c}[id].ts`), PAGES_DIR).path).toBe(`/x${c}:id`);
+    }
+  });
+
+  it('every prefix the scanner accepts matches the same URL in URLPattern and in the server matcher', () => {
+    // This is the guard on SAFE_PREFIX. If someone adds a character to it,
+    // this loop builds the route, runs the real request URL through native
+    // URLPattern and through the server builder (og-handler uses the same
+    // builder as every server/routes/[...].ts), and checks that both capture
+    // the param and both refuse a decoy URL.
+    let checked = 0;
+    for (const c of PREFIX_CANDIDATES) {
+      let route: LitroRoute;
+      try {
+        route = fileToRoute(p(`x${c}[id].ts`), PAGES_DIR);
+      } catch {
+        continue; // rejected at scan time, which is the safe outcome
+      }
+      checked++;
+      const url = new URL(`http://localhost/x${c}42`);
+      const decoy = new URL('http://localhost/xQ42');
+
+      const pattern = new URLPattern({ pathname: route.path });
+      expect(pattern.exec(url.href)?.pathname.groups.id, `URLPattern, prefix ${c}`).toBe('42');
+      expect(matchRoute(url.pathname, [route])?.params, `server, prefix ${c}`).toEqual({ id: '42' });
+      if (c !== 'Q') {
+        expect(pattern.exec(decoy.href), `URLPattern decoy, prefix ${c}`).toBeNull();
+        expect(matchRoute(decoy.pathname, [route]), `server decoy, prefix ${c}`).toBeUndefined();
+      }
+    }
+    expect(checked).toBeGreaterThan(60);
   });
 });
 
@@ -314,6 +414,64 @@ describe('compareRoutes — sorting', () => {
     isDynamic: true,
     isCatchAll: true,
   };
+
+  it('a prefixed route sorts before a bare param sibling, so /@alice is not swallowed by /:slug', () => {
+    // ':' is 0x3A and '@' is 0x40, so a plain string compare puts /:slug
+    // first. Both matchers take the first route that matches, so the
+    // Mastodon URL would render the [slug] page with no error.
+    const routes = [
+      'index.ts',
+      '[slug].ts',
+      '[slug]/[id].ts',
+      '@[handle].ts',
+      '@[handle]/[statusId].ts',
+    ]
+      .map(rel => fileToRoute(p(rel), PAGES_DIR))
+      .sort(compareRoutes);
+
+    // Literal text: '/@/' 3, '//' 2, '/@' 2, '/' 1. The tie between
+    // /:slug/:id and /@:handle falls back to the string compare; they match
+    // different segment counts, so their relative order changes nothing.
+    expect(routes.map(r => r.path)).toEqual([
+      '/',
+      '/@:handle/:statusId',
+      '/:slug/:id',
+      '/@:handle',
+      '/:slug',
+    ]);
+
+    // The same first-match loop the server catch-all route runs.
+    expect(matchRoute('/@alice@example.social', routes)?.route.path).toBe('/@:handle');
+    expect(matchRoute('/@alice@example.social/12345', routes)).toEqual({
+      route: expect.objectContaining({ path: '/@:handle/:statusId' }),
+      params: { handle: 'alice@example.social', statusId: '12345' },
+    });
+    expect(matchRoute('/some-slug', routes)?.route.path).toBe('/:slug');
+    expect(matchRoute('/some-slug/7', routes)?.params).toEqual({ slug: 'some-slug', id: '7' });
+
+    // And the client router: the first URLPattern that matches wins.
+    const firstClientMatch = (pathname: string) =>
+      routes.find(r => new URLPattern({ pathname: r.path }).test({ pathname }))?.path;
+    expect(firstClientMatch('/@alice@example.social')).toBe('/@:handle');
+    expect(firstClientMatch('/@alice@example.social/12345')).toBe('/@:handle/:statusId');
+    expect(firstClientMatch('/some-slug')).toBe('/:slug');
+  });
+
+  it('a prefix on a later segment also sorts before the bare param', () => {
+    const routes = ['[org]/[repo].ts', '[org]/@[user].ts']
+      .map(rel => fileToRoute(p(rel), PAGES_DIR))
+      .sort(compareRoutes);
+    expect(routes.map(r => r.path)).toEqual(['/:org/@:user', '/:org/:repo']);
+    expect(matchRoute('/acme/@alice', routes)?.params).toEqual({ org: 'acme', user: 'alice' });
+    expect(matchRoute('/acme/widgets', routes)?.params).toEqual({ org: 'acme', repo: 'widgets' });
+  });
+
+  it('a longer prefix sorts before a shorter one', () => {
+    const routes = ['@[handle].ts', '@@[handle].ts']
+      .map(rel => fileToRoute(p(rel), PAGES_DIR))
+      .sort(compareRoutes);
+    expect(routes.map(r => r.path)).toEqual(['/@@:handle', '/@:handle']);
+  });
 
   it('a prefixed dynamic route sorts in the dynamic tier, after static and before catch-all', () => {
     const prefixed = fileToRoute(p('@[handle].ts'), PAGES_DIR);

@@ -26,6 +26,38 @@ interface TransformedSegment {
 }
 
 /**
+ * Characters a prefix before the bracket may use.
+ *
+ * Found by testing, not by reading specs: every printable ASCII character was
+ * put in front of a param (`/x<c>:id`) and run through native `URLPattern`,
+ * the router's own fallback for browsers without it, and the server builder
+ * in `server/routes/[...].ts`. These are the only characters for which all
+ * three construct, capture the param, and refuse a decoy URL. The rest fail:
+ *
+ *   ( ) { } ? + :   native URLPattern throws, which kills every client route
+ *   *               native URLPattern reads it as a wildcard
+ *   . | $ [         the router fallback reads them as regex syntax
+ *   space " < > ^ ` and non-ASCII
+ *                   the request URL percent-encodes them, so the server
+ *                   never sees the literal character
+ *   # ? \           the URL parser treats them as a fragment, a query, or /
+ *   %               passed the probe, but "%" + two hex digits is an escape
+ *
+ * The test "every prefix the scanner accepts matches the same URL in
+ * URLPattern and in the server matcher" fails if this set grows a character
+ * that breaks either matcher.
+ */
+const SAFE_PREFIX = /^[A-Za-z0-9_~@!&',;=-]*$/;
+
+/** Where a segment came from, so an error can name the real file. */
+interface SegmentSource {
+  /** The page file as the author sees it, e.g. `pages/@[...all].tsx`. */
+  file: string;
+  /** The file's extension, e.g. `.tsx`. */
+  ext: string;
+}
+
+/**
  * Transforms a single file-path segment into its route-path equivalent.
  *
  * Conversion table:
@@ -45,11 +77,12 @@ interface TransformedSegment {
  *                      Tracked in issue 248.
  *   prefix[...param] → `@:...all` is not a valid param name anywhere.
  *   prefix[[param]]  → same. Both are rejected at scan time.
+ *   a prefix with a character outside SAFE_PREFIX → rejected at scan time.
  *
  * @param segment  One file-path segment, extension already stripped.
- * @param rel      The whole page path relative to pages/, for error messages.
+ * @param source   The page file, for error messages.
  */
-function transformSegment(segment: string, rel: string): TransformedSegment {
+function transformSegment(segment: string, source: SegmentSource): TransformedSegment {
   // BRANCH ORDER IS LOAD-BEARING. DO NOT REORDER.
   //
   // The dynamic branch below accepts any single bracket pair with an optional
@@ -79,14 +112,18 @@ function transformSegment(segment: string, rel: string): TransformedSegment {
   // `@:...all`, so it falls through to the rejection below.
   const dynamicMatch = segment.match(/^([^\[\]]*)\[([^\[\]]+)\]$/);
   if (dynamicMatch && !dynamicMatch[2].startsWith('...')) {
-    return { value: `${dynamicMatch[1]}:${dynamicMatch[2]}`, kind: 'dynamic' };
+    const [, prefix, param] = dynamicMatch;
+    if (!SAFE_PREFIX.test(prefix)) {
+      throw new Error(unsafePrefixMessage(prefix, param, source));
+    }
+    return { value: `${prefix}:${param}`, kind: 'dynamic' };
   }
 
   // Anything else that still carries a bracket is a dynamic form this scanner
   // does not support. Say so now: left alone it would scan as a static path
   // the author never wanted, and an SSG build would try to prerender it.
   if (/[\[\]]/.test(segment)) {
-    throw new Error(unsupportedBracketMessage(segment, rel));
+    throw new Error(unsupportedBracketMessage(segment, source));
   }
 
   // index → '' (stripped by the caller)
@@ -97,24 +134,44 @@ function transformSegment(segment: string, rel: string): TransformedSegment {
   return { value: segment, kind: 'static' };
 }
 
+/** Appended to errors a non-page file in pages/ is likely to raise. */
+const NOT_A_PAGE_HINT =
+  `If this file is not a page (a story, a fixture, a helper), move it out of ` +
+  `pages/ or start its name with "-", which the scanner skips.`;
+
+/**
+ * Builds the error for a prefix that one of the matchers cannot take.
+ * Names the file and the characters, and says what a prefix may contain.
+ */
+function unsafePrefixMessage(prefix: string, param: string, { file, ext }: SegmentSource): string {
+  const bad = [...new Set([...prefix].filter(c => !SAFE_PREFIX.test(c)))]
+    .map(c => JSON.stringify(c))
+    .join(', ');
+  return (
+    `[litro] ${file}: the prefix "${prefix}" before [${param}] contains ${bad}, ` +
+    `which the client router (URLPattern) or the server route matcher reads as ` +
+    `pattern syntax or receives percent-encoded. A prefix may use letters, digits ` +
+    `and _ ~ @ ! & ' , ; = - only. Rename the file, for example to [${param}]${ext}.`
+  );
+}
+
 /**
  * Builds the error for a bracket segment the scanner cannot turn into a route.
  * Names the file and says what to rename it to.
  */
-function unsupportedBracketMessage(segment: string, rel: string): string {
-  const file = `pages/${rel}.ts`;
+function unsupportedBracketMessage(segment: string, { file, ext }: SegmentSource): string {
   const prefixedCatchAll = segment.match(/^([^\[\]]+)\[\.\.\.(.+)\]$/);
   if (prefixedCatchAll) {
     return (
       `[litro] ${file}: a catch-all segment cannot carry a prefix. ` +
-      `Drop the "${prefixedCatchAll[1]}" and name the file [...${prefixedCatchAll[2]}].ts.`
+      `Drop the "${prefixedCatchAll[1]}" and name the file [...${prefixedCatchAll[2]}]${ext}.`
     );
   }
   const prefixedOptional = segment.match(/^([^\[\]]+)\[\[(.+)\]\]$/);
   if (prefixedOptional) {
     return (
       `[litro] ${file}: an optional segment cannot carry a prefix. ` +
-      `Drop the "${prefixedOptional[1]}" and name the file [[${prefixedOptional[2]}]].ts.`
+      `Drop the "${prefixedOptional[1]}" and name the file [[${prefixedOptional[2]}]]${ext}.`
     );
   }
   const suffixed = segment.match(/^([^\[\]]*)\[([^\[\]]+)\]([^\[\]]+)$/);
@@ -122,13 +179,13 @@ function unsupportedBracketMessage(segment: string, rel: string): string {
     return (
       `[litro] ${file}: a dynamic segment cannot carry a suffix after the bracket. ` +
       `The suffix form ("${suffixed[3]}") is not supported (tracked in issue 248). ` +
-      `A prefix is: rename the file to ${suffixed[1]}[${suffixed[2]}].ts, ` +
-      `or move the suffix into a nested folder.`
+      `A prefix is: rename the file to ${suffixed[1]}[${suffixed[2]}]${ext}, ` +
+      `or move the suffix into a nested folder. ${NOT_A_PAGE_HINT}`
     );
   }
   return (
     `[litro] ${file}: "${segment}" is not a route segment Litro understands. ` +
-    `Supported forms: [param], prefix[param], [...param], [[param]].`
+    `Supported forms: [param], prefix[param], [...param], [[param]]. ${NOT_A_PAGE_HINT}`
   );
 }
 
@@ -163,7 +220,8 @@ function isSegmentCatchAll(seg: TransformedSegment): boolean {
  * @param pagesDir  Absolute path to the pages directory (e.g. '/app/pages')
  * @returns         A fully resolved LitroRoute
  * @throws          When a segment carries a bracket in a form the scanner does
- *                  not support (prefixed catch-all or optional, or any suffix).
+ *                  not support (prefixed catch-all or optional, any suffix, or
+ *                  a prefix with a character outside SAFE_PREFIX).
  *
  * Examples:
  *   pages/index.ts             → path: '/'
@@ -186,7 +244,8 @@ export function fileToRoute(filePath: string, pagesDir: string): LitroRoute {
   const rawSegments = rel.split('/');
 
   // Step 3: transform each segment
-  const transformed = rawSegments.map(seg => transformSegment(seg, rel));
+  const source: SegmentSource = { file: `pages/${relWithExt}`, ext };
+  const transformed = rawSegments.map(seg => transformSegment(seg, source));
   const transformedSegments = transformed.map(t => t.value);
 
   // Step 4: remove empty strings that resulted from `index` transformation,
@@ -300,7 +359,9 @@ export function fileToComponentTag(filePath: string, pagesDir: string): string {
  *   2. Dynamic routes (isDynamic: true,  isCatchAll: false)
  *   3. Catch-all routes (isCatchAll: true)
  *
- * Within each tier, routes are sorted lexicographically by path.
+ * Within the dynamic tier, a route with more literal text sorts first, so
+ * `/@:handle` beats `/:slug`. Ties, and the other two tiers, are sorted
+ * lexicographically by path.
  *
  * This mirrors the Nitro/h3 router's own priority: static wins over params,
  * params win over catch-all.
@@ -315,8 +376,29 @@ export function compareRoutes(a: LitroRoute, b: LitroRoute): number {
   const diff = tier(a) - tier(b);
   if (diff !== 0) return diff;
 
-  // Within the same tier, sort lexicographically by path so the order is stable
+  // Within the dynamic tier, the route that carries more literal text sorts
+  // first. Both matchers take the FIRST route that matches, so without this
+  // `/:slug` would sort before `/@:handle` (':' is 0x3A, '@' is 0x40) and
+  // swallow every `/@alice` request. A literal prefix is strictly more
+  // specific than a bare param. The same holds on a later segment
+  // (`/:a/@:b` before `/:a/:b`) and across two segments (`/@:handle/:id`
+  // before `/:slug/:id`).
+  if (tier(a) === 1) {
+    const lit = literalLength(b) - literalLength(a);
+    if (lit !== 0) return lit;
+  }
+
+  // Otherwise sort lexicographically by path so the order is stable
   return a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
+}
+
+/**
+ * Counts the characters of a route path that are not part of a param token.
+ * Uses the same token rule as the server builder (`:` up to the next `/`), so
+ * `/@:handle/:id` counts `/@/` (3) and `/:slug/:id` counts `//` (2).
+ */
+function literalLength(route: LitroRoute): number {
+  return route.path.replace(/:[^/]+/g, '').length;
 }
 
 // ---------------------------------------------------------------------------
