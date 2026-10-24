@@ -228,3 +228,54 @@ export function compareRoutes(a: LitroRoute, b: LitroRoute): number {
   // Within the same tier, sort lexicographically by path so the order is stable
   return a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 }
+
+// ---------------------------------------------------------------------------
+// assertUniqueComponentTags
+// ---------------------------------------------------------------------------
+
+/**
+ * Throws when two or more routes derive the same `componentTag`.
+ *
+ * Component tags are filename-derived, and the page manifest imports every
+ * page module statically. Two pages that derive the same tag both call
+ * `customElements.define()` with it at module evaluation, before any request
+ * is served, and the server dies with "the name has already been used with
+ * this registry". The known pair is `pages/index.ts` (the root index is
+ * special-cased to `page-home`) next to `pages/home.ts`.
+ *
+ * The message names the tag and every page file that claims it, as
+ * root-relative paths, one per line and sorted so the output is stable across
+ * runs and platforms. Several colliding tags are reported in one error.
+ *
+ * @param routes   Routes produced by `fileToRoute` for every page file
+ * @param rootDir  Project root, used to print root-relative paths
+ */
+export function assertUniqueComponentTags(routes: LitroRoute[], rootDir: string): void {
+  const byTag = new Map<string, string[]>();
+  for (const route of routes) {
+    const bucket = byTag.get(route.componentTag);
+    if (bucket) bucket.push(route.filePath);
+    else byTag.set(route.componentTag, [route.filePath]);
+  }
+
+  const blocks: string[] = [];
+  for (const [tag, files] of [...byTag].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    if (files.length < 2) continue;
+    const listed = files
+      .map(f => relative(rootDir, f))
+      .sort()
+      .map(f => `  ${f}`)
+      .join('\n');
+    blocks.push(
+      `Page component tags are filename-derived and must be unique across pages/; ` +
+        `"${tag}" is claimed by ${files.length} files:\n${listed}`,
+    );
+  }
+
+  if (blocks.length === 0) return;
+
+  throw new Error(
+    `${blocks.join('\n\n')}\n` +
+      `Rename one of these files so each page derives its own tag.`,
+  );
+}
