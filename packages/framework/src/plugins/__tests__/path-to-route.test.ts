@@ -81,6 +81,113 @@ describe('fileToRoute — dynamic routes', () => {
 });
 
 // ---------------------------------------------------------------------------
+// fileToRoute — prefixed dynamic routes (issue 234)
+// ---------------------------------------------------------------------------
+
+describe('fileToRoute — prefixed dynamic routes', () => {
+  it('converts pages/@[handle].ts to /@:handle and marks it dynamic', () => {
+    const route = fileToRoute(p('@[handle].ts'), PAGES_DIR);
+    expect(route.path).toBe('/@:handle');
+    expect(route.isDynamic).toBe(true);
+    expect(route.isCatchAll).toBe(false);
+  });
+
+  it('converts pages/@[handle]/[statusId].ts to /@:handle/:statusId', () => {
+    const route = fileToRoute(p('@[handle]/[statusId].ts'), PAGES_DIR);
+    expect(route.path).toBe('/@:handle/:statusId');
+    expect(route.isDynamic).toBe(true);
+    expect(route.isCatchAll).toBe(false);
+  });
+
+  it('keeps a multi-character prefix: pages/users/u-[id]/posts.ts → /users/u-:id/posts', () => {
+    const route = fileToRoute(p('users/u-[id]/posts.ts'), PAGES_DIR);
+    expect(route.path).toBe('/users/u-:id/posts');
+    expect(route.isDynamic).toBe(true);
+  });
+
+  it('a prefixed segment is dynamic even though the segment does not start with a colon', () => {
+    // The old check was `transformed.startsWith(':')`, which `@:handle` fails.
+    // A false here would leave the route in the static tier: the server would
+    // compare the literal '/@:handle' and never match a real handle.
+    const route = fileToRoute(p('@[handle].ts'), PAGES_DIR);
+    expect(route.isDynamic).toBe(true);
+  });
+
+  it('a static segment that contains a colon stays static', () => {
+    // The suggested replacement `/:[A-Za-z_]/.test(transformed)` would call
+    // `/foo:bar` dynamic and the server would turn `:bar` into a param.
+    // Nothing in the file name asked for a param, so the flag must stay false.
+    const route = fileToRoute(p('foo:bar.ts'), PAGES_DIR);
+    expect(route.path).toBe('/foo:bar');
+    expect(route.isDynamic).toBe(false);
+    expect(route.isCatchAll).toBe(false);
+  });
+
+  it('a catch-all is both dynamic and catch-all under the kind-based check', () => {
+    const route = fileToRoute(p('[...all].ts'), PAGES_DIR);
+    expect(route.path).toBe('/:all(.*)*');
+    expect(route.isDynamic).toBe(true);
+    expect(route.isCatchAll).toBe(true);
+  });
+
+  it('catch-all and optional win over the prefixed dynamic branch because branch order is load-bearing', () => {
+    // The prefixed dynamic regex `^([^\[\]]*)\[([^\[\]]+)\]$` also matches
+    // `[...all]` (prefix '', param '...all'). If that branch ran first the
+    // catch-all would scan as the useless param `:...all`. These two
+    // assertions fail the moment someone reorders the branches in
+    // transformSegment().
+    expect(fileToRoute(p('[...all].ts'), PAGES_DIR).path).toBe('/:all(.*)*');
+    expect(fileToRoute(p('[...all].ts'), PAGES_DIR).path).not.toContain(':...');
+    expect(fileToRoute(p('[[lang]]/index.ts'), PAGES_DIR).path).toBe('/:lang?');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fileToRoute — rejected bracket forms (issue 234)
+// ---------------------------------------------------------------------------
+
+describe('fileToRoute — rejected bracket forms', () => {
+  it('rejects a prefixed catch-all (pages/@[...all].ts) and names the file', () => {
+    // Without the guard this falls into the prefixed dynamic branch and yields
+    // `@:...all`, which no matcher accepts. Before the prefix fix it was at
+    // least an inert static path, so silently scanning it would be a regression.
+    expect(() => fileToRoute(p('@[...all].ts'), PAGES_DIR)).toThrow(
+      /pages\/@\[\.\.\.all\]\.ts.*catch-all segment cannot carry a prefix.*\[\.\.\.all\]\.ts/,
+    );
+  });
+
+  it('rejects a prefixed optional (pages/@[[lang]].ts) and names the file', () => {
+    expect(() => fileToRoute(p('@[[lang]].ts'), PAGES_DIR)).toThrow(
+      /pages\/@\[\[lang\]\]\.ts.*optional segment cannot carry a prefix.*\[\[lang\]\]\.ts/,
+    );
+  });
+
+  it('rejects a suffix after the bracket (pages/[id]x.ts) and points at the prefix form', () => {
+    expect(() => fileToRoute(p('[id]x.ts'), PAGES_DIR)).toThrow(
+      /pages\/\[id\]x\.ts.*suffix after the bracket.*not supported/,
+    );
+  });
+
+  it('rejects a dotted suffix (pages/[id].html.ts)', () => {
+    expect(() => fileToRoute(p('[id].html.ts'), PAGES_DIR)).toThrow(
+      /pages\/\[id\]\.html\.ts.*suffix after the bracket/,
+    );
+  });
+
+  it('rejects a nested rejected segment and names the whole relative path', () => {
+    expect(() => fileToRoute(p('blog/@[...rest].ts'), PAGES_DIR)).toThrow(
+      /pages\/blog\/@\[\.\.\.rest\]\.ts/,
+    );
+  });
+
+  it('rejects any other stray bracket (pages/a[b]c[d].ts)', () => {
+    expect(() => fileToRoute(p('a[b]c[d].ts'), PAGES_DIR)).toThrow(
+      /pages\/a\[b\]c\[d\]\.ts.*not a route segment Litro understands/,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
 // fileToRoute — catch-all routes
 // ---------------------------------------------------------------------------
 
@@ -145,11 +252,25 @@ describe('fileToComponentTag', () => {
     expect(fileToComponentTag(p('[[lang]]/index.ts'), PAGES_DIR)).toBe('page-lang');
   });
 
+  it('pages/@[handle].ts → page-handle (no leading hyphen from the @)', () => {
+    // '@' is not alphanumeric, so it becomes a hyphen; the leading hyphen is
+    // then stripped. A tag like 'page--handle' would be invalid.
+    expect(fileToComponentTag(p('@[handle].ts'), PAGES_DIR)).toBe('page-handle');
+  });
+
+  it('pages/@[handle]/[statusId].ts → page-handle-statusid', () => {
+    expect(fileToComponentTag(p('@[handle]/[statusId].ts'), PAGES_DIR)).toBe(
+      'page-handle-statusid',
+    );
+  });
+
   it('always produces a hyphenated tag', () => {
     const tags = [
       fileToComponentTag(p('index.ts'), PAGES_DIR),
       fileToComponentTag(p('about.ts'), PAGES_DIR),
       fileToComponentTag(p('blog/[slug].ts'), PAGES_DIR),
+      fileToComponentTag(p('@[handle].ts'), PAGES_DIR),
+      fileToComponentTag(p('@[handle]/[statusId].ts'), PAGES_DIR),
     ];
     for (const tag of tags) {
       expect(tag).toMatch(/^[a-z][a-z0-9]*(-[a-z0-9]+)+$/);
@@ -193,6 +314,12 @@ describe('compareRoutes — sorting', () => {
     isDynamic: true,
     isCatchAll: true,
   };
+
+  it('a prefixed dynamic route sorts in the dynamic tier, after static and before catch-all', () => {
+    const prefixed = fileToRoute(p('@[handle].ts'), PAGES_DIR);
+    expect(compareRoutes(staticAbout, prefixed)).toBeLessThan(0);
+    expect(compareRoutes(prefixed, catchAll)).toBeLessThan(0);
+  });
 
   it('static comes before dynamic', () => {
     expect(compareRoutes(staticAbout, dynamic)).toBeLessThan(0);

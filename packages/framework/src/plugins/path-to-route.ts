@@ -16,56 +16,139 @@ import type { LitroRoute } from '../types/route.js';
 // Segment transformation
 // ---------------------------------------------------------------------------
 
+/** What kind of route segment a file-path segment turned into. */
+type SegmentKind = 'static' | 'index' | 'dynamic' | 'optional' | 'catch-all';
+
+interface TransformedSegment {
+  /** The route-path spelling of the segment ('' for `index`). */
+  value: string;
+  kind: SegmentKind;
+}
+
 /**
  * Transforms a single file-path segment into its route-path equivalent.
  *
  * Conversion table:
  *   index            → '' (stripped — represents parent route)
  *   [param]          → :param
+ *   prefix[param]    → prefix:param   (e.g. @[handle] → @:handle)
  *   [...param]       → :param(.*)* (catch-all)
  *   [[param]]        → :param? (optional)
  *   anything else    → unchanged (static segment)
+ *
+ * Deliberately NOT supported (issue 234):
+ *   [param]suffix    → the two matchers disagree. `:idsuffix` swallows the
+ *                      suffix into the param name, and the URLPattern spelling
+ *                      `:id{suffix}` throws inside each app's own
+ *                      server/routes/[...].ts regex builder, which the
+ *                      framework cannot upgrade. Rejected at scan time.
+ *   prefix[...param] → `@:...all` is not a valid param name anywhere.
+ *   prefix[[param]]  → same. Both are rejected at scan time.
+ *
+ * @param segment  One file-path segment, extension already stripped.
+ * @param rel      The whole page path relative to pages/, for error messages.
  */
-function transformSegment(segment: string): string {
-  // Catch-all: [...param] → :param(.*)* — must be tested before single-bracket
+function transformSegment(segment: string, rel: string): TransformedSegment {
+  // BRANCH ORDER IS LOAD-BEARING. DO NOT REORDER.
+  //
+  // The dynamic branch below accepts any single bracket pair with an optional
+  // prefix, so on its own it turns `[...all]` into `:...all` and leaves
+  // `[[lang]]` alone. Catch-all and optional come out right only because
+  // their branches run first. The test "catch-all and optional win over the
+  // prefixed dynamic branch because branch order is load-bearing" in
+  // __tests__/path-to-route.test.ts fails if this order changes.
+
+  // Catch-all: [...param] → :param(.*)*
   const catchAllMatch = segment.match(/^\[\.\.\.(.+)\]$/);
   if (catchAllMatch) {
-    return `:${catchAllMatch[1]}(.*)*`;
+    return { value: `:${catchAllMatch[1]}(.*)*`, kind: 'catch-all' };
   }
 
   // Optional: [[param]] → :param?
   const optionalMatch = segment.match(/^\[\[(.+)\]\]$/);
   if (optionalMatch) {
-    return `:${optionalMatch[1]}?`;
+    return { value: `:${optionalMatch[1]}?`, kind: 'optional' };
   }
 
-  // Dynamic: [param] → :param
-  const dynamicMatch = segment.match(/^\[(.+)\]$/);
-  if (dynamicMatch) {
-    return `:${dynamicMatch[1]}`;
+  // Dynamic with an optional prefix: prefix[param] → prefix:param
+  // (suffix deliberately not supported, see above)
+  //
+  // A param name that starts with '...' can only be a PREFIXED catch-all
+  // (`@[...all]`): the bare form already matched above. It must not become
+  // `@:...all`, so it falls through to the rejection below.
+  const dynamicMatch = segment.match(/^([^\[\]]*)\[([^\[\]]+)\]$/);
+  if (dynamicMatch && !dynamicMatch[2].startsWith('...')) {
+    return { value: `${dynamicMatch[1]}:${dynamicMatch[2]}`, kind: 'dynamic' };
+  }
+
+  // Anything else that still carries a bracket is a dynamic form this scanner
+  // does not support. Say so now: left alone it would scan as a static path
+  // the author never wanted, and an SSG build would try to prerender it.
+  if (/[\[\]]/.test(segment)) {
+    throw new Error(unsupportedBracketMessage(segment, rel));
   }
 
   // index → '' (stripped by the caller)
   if (segment === 'index') {
-    return '';
+    return { value: '', kind: 'index' };
   }
 
-  return segment;
+  return { value: segment, kind: 'static' };
 }
 
 /**
- * Returns true if a transformed route segment is dynamic (starts with ':')
- * or is a catch-all (contains '(.*)').
+ * Builds the error for a bracket segment the scanner cannot turn into a route.
+ * Names the file and says what to rename it to.
  */
-function isSegmentDynamic(transformed: string): boolean {
-  return transformed.startsWith(':');
+function unsupportedBracketMessage(segment: string, rel: string): string {
+  const file = `pages/${rel}.ts`;
+  const prefixedCatchAll = segment.match(/^([^\[\]]+)\[\.\.\.(.+)\]$/);
+  if (prefixedCatchAll) {
+    return (
+      `[litro] ${file}: a catch-all segment cannot carry a prefix. ` +
+      `Drop the "${prefixedCatchAll[1]}" and name the file [...${prefixedCatchAll[2]}].ts.`
+    );
+  }
+  const prefixedOptional = segment.match(/^([^\[\]]+)\[\[(.+)\]\]$/);
+  if (prefixedOptional) {
+    return (
+      `[litro] ${file}: an optional segment cannot carry a prefix. ` +
+      `Drop the "${prefixedOptional[1]}" and name the file [[${prefixedOptional[2]}]].ts.`
+    );
+  }
+  const suffixed = segment.match(/^([^\[\]]*)\[([^\[\]]+)\]([^\[\]]+)$/);
+  if (suffixed) {
+    return (
+      `[litro] ${file}: a dynamic segment cannot carry a suffix after the bracket. ` +
+      `The suffix form ("${suffixed[3]}") is not supported. ` +
+      `A prefix is: rename the file to ${suffixed[1]}[${suffixed[2]}].ts, ` +
+      `or move the suffix into a nested folder.`
+    );
+  }
+  return (
+    `[litro] ${file}: "${segment}" is not a route segment Litro understands. ` +
+    `Supported forms: [param], prefix[param], [...param], [[param]].`
+  );
+}
+
+/**
+ * Returns true if a transformed route segment carries a param: a dynamic
+ * segment (with or without a prefix), an optional segment, or a catch-all.
+ *
+ * Decided from the segment's kind, not from its spelling. The old check
+ * `startsWith(':')` missed `@:handle`, and the suggested `/:[A-Za-z_]/` would
+ * promote a static segment that happens to contain a colon (`foo:bar`) into
+ * the dynamic tier, where the server would turn `:bar` into a param.
+ */
+function isSegmentDynamic(seg: TransformedSegment): boolean {
+  return seg.kind === 'dynamic' || seg.kind === 'optional' || seg.kind === 'catch-all';
 }
 
 /**
  * Returns true if a transformed route segment is a catch-all.
  */
-function isSegmentCatchAll(transformed: string): boolean {
-  return transformed.includes('(.*)');
+function isSegmentCatchAll(seg: TransformedSegment): boolean {
+  return seg.kind === 'catch-all';
 }
 
 // ---------------------------------------------------------------------------
@@ -78,12 +161,15 @@ function isSegmentCatchAll(transformed: string): boolean {
  * @param filePath  Absolute path to the page file (e.g. '/app/pages/blog/[slug].ts')
  * @param pagesDir  Absolute path to the pages directory (e.g. '/app/pages')
  * @returns         A fully resolved LitroRoute
+ * @throws          When a segment carries a bracket in a form the scanner does
+ *                  not support (prefixed catch-all or optional, or any suffix).
  *
  * Examples:
  *   pages/index.ts             → path: '/'
  *   pages/about.ts             → path: '/about'
  *   pages/blog/index.ts        → path: '/blog'
  *   pages/blog/[slug].ts       → path: '/blog/:slug'
+ *   pages/@[handle].ts         → path: '/@:handle'
  *   pages/[...all].ts          → path: '/:all(.*)*'
  *   pages/[[lang]]/index.ts    → path: '/:lang?'
  *   pages/users/[id]/posts.ts  → path: '/users/:id/posts'
@@ -99,7 +185,8 @@ export function fileToRoute(filePath: string, pagesDir: string): LitroRoute {
   const rawSegments = rel.split('/');
 
   // Step 3: transform each segment
-  const transformedSegments = rawSegments.map(transformSegment);
+  const transformed = rawSegments.map(seg => transformSegment(seg, rel));
+  const transformedSegments = transformed.map(t => t.value);
 
   // Step 4: remove empty strings that resulted from `index` transformation,
   // but only if the result would not be completely empty (root index stays '').
@@ -118,8 +205,8 @@ export function fileToRoute(filePath: string, pagesDir: string): LitroRoute {
   const path = '/' + filteredSegments.filter(s => s !== '').join('/');
 
   // Step 6: determine flags
-  const isDynamic = transformedSegments.some(isSegmentDynamic);
-  const isCatchAll = transformedSegments.some(isSegmentCatchAll);
+  const isDynamic = transformed.some(isSegmentDynamic);
+  const isCatchAll = transformed.some(isSegmentCatchAll);
 
   // Step 7: derive component tag
   const componentTag = fileToComponentTag(filePath, pagesDir);
@@ -158,6 +245,8 @@ export function fileToRoute(filePath: string, pagesDir: string): LitroRoute {
  *   pages/about.ts           → page-about
  *   pages/blog/index.ts      → page-blog
  *   pages/blog/[slug].ts     → page-blog-slug
+ *   pages/@[handle].ts       → page-handle (the @ becomes a hyphen, then the
+ *                              leading hyphen is stripped)
  *   pages/[...all].ts        → page-all
  *   pages/[[lang]]/index.ts  → page-lang
  */

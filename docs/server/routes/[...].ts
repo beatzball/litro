@@ -13,12 +13,23 @@ function matchRoute(
       continue;
     }
 
+    // Only the three param forms become capture groups. Every literal run
+    // between them is escaped, so a bracket or a dot in a static part of
+    // the path matches itself instead of acting as regex syntax. Unescaped,
+    // '/@[handle]/:id' matched '/@h/123' as a character class (issue 234).
     const regexStr =
       '^' +
       route.path
-        .replace(/:([^/]+)\(\.\*\)\*/g, '(?<$1>.+)')
-        .replace(/:([^/?]+)\?/g, '(?<$1>[^/]*)?')
-        .replace(/:([^/]+)/g, '(?<$1>[^/]+)') +
+        .split(/(:[^/]+)/)
+        .map((part, i) =>
+          i % 2 === 1
+            ? part
+                .replace(/^:([^/]+)\(\.\*\)\*$/, '(?<$1>.+)') // :param(.*)* — catch-all
+                .replace(/^:([^/?]+)\?$/, '(?<$1>[^/]*)?') // :param? — optional
+                .replace(/^:([^/]+)$/, '(?<$1>[^/]+)') // :param — required
+            : part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        )
+        .join('') +
       '$';
 
     try {
