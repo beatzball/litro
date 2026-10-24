@@ -16,7 +16,19 @@ Litro uses the `pages/` directory for routing. Filenames map to URL paths:
 | `pages/about.ts` | `/about` |
 | `pages/blog/index.ts` | `/blog` |
 | `pages/blog/[slug].ts` | `/blog/:slug` |
+| `pages/@[handle].ts` | `/@:handle` |
 | `pages/[...all].ts` | `/*` (catch-all) |
+
+A dynamic segment may carry a prefix before the bracket, as in `@[handle]` for
+Mastodon-style `/@alice` URLs. A prefixed route wins over a bare `[slug]`
+sibling. The prefix may use letters, digits and `_ ~ @ ! & ' , ; = -`.
+A suffix after the bracket (`[id].html.ts`, `[id]x.ts`) is not supported and
+the scanner rejects the file with an error. A catch-all or optional segment
+cannot carry a prefix either.
+
+A file in `pages/` that is not a page, such as a story or a fixture, must not
+use brackets in its name. Move it out of `pages/`, or start its name with `-`
+so the scanner skips it.
 
 ## Page Components
 
