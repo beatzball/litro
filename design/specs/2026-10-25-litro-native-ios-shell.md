@@ -198,9 +198,20 @@ namespace, which does not exist.
 and requests one update when the answer arrives. A component can then render a
 native-only control without any module-scope native access.
 
+Amended after building it: the controller declares the host type **structurally**
+rather than importing `ReactiveControllerHost` from Lit, so the subpath imports
+no Lit at all. A `LitElement` satisfies the type with no cast, and the package is
+tied to no Lit major version. `supports()` must return false, not true, while the
+answer is outstanding: a control that defaults to shown appears during the server
+render and then vanishes on the first client frame. A failed read must not be
+cached, for the same reason the bridge cache is not — one failed chunk load would
+otherwise hide every native capability for the life of the page.
+
 **Package surface.** Subpath exports per capability, so an app that only wants haptics
-does not pull the rest. `lit` is an optional peer dependency, so the facades work under
-any web-component flavor and only the Lit subpath needs Lit. **There is no third-party
+does not pull the rest. Amended after building it: `lit` is not a dependency of any
+kind, not even an optional peer one. The Lit subpath needs only the two host members
+it calls, so the facades work under any web-component flavor and nothing in the
+package resolves Lit. **There is no third-party
 runtime dependency**: the shell adapter speaks our own protocol, so a web-only install
 and a web-only CI build pull in no native code at all.
 

@@ -122,6 +122,40 @@ the web answer and never throws. If you add to this package, keep it that way: a
 browser global read at module scope breaks the server render, builds cleanly and
 fails silently.
 
+## Use it in a component
+
+`@beatzball/litro-native/lit` exports a controller that reads the platform when
+the host connects and asks for one re-render when the answer lands.
+
+```ts
+import { LitElement, html } from 'lit';
+import { NativeController } from '@beatzball/litro-native/lit';
+import { haptics } from '@beatzball/litro-native/haptics';
+
+class TapButton extends LitElement {
+  private native = new NativeController(this);
+
+  render() {
+    if (!this.native.supports('haptics')) return null;
+    return html`<button @click=${() => haptics.impact('light')}>Tap</button>`;
+  }
+}
+```
+
+`supports()` is false until the answer arrives, not true-by-default. So a
+control that needs a capability is absent during the server render and absent on
+the first client frame, instead of appearing and then vanishing. `platform` is
+null over the same window, and holds the full {@link PlatformInfo} after.
+
+A read that fails is not cached. The next time the host connects, the controller
+tries again, because one failed chunk load should not hide every native
+capability for the life of the page.
+
+**This subpath does not import Lit.** The host type is declared structurally, so
+a `LitElement` satisfies it with no cast, and the package depends on no Lit major
+version — or on Lit at all. Any component base class with `addController` and
+`requestUpdate` works the same way.
+
 ## License
 
 Apache-2.0
