@@ -8,6 +8,14 @@
     "url": "https://github.com/beatzball/litro.git",
     "directory": "packages/framework"
   },
+  "files": [
+    "dist",
+    "assets",
+    "src/content/env.d.ts",
+    "!dist/**/*.test.*",
+    "!dist/**/__tests__",
+    "CHANGELOG.md"
+  ],
   "publishConfig": {
     "access": "public"
   },

@@ -10,6 +10,12 @@
     "url": "https://github.com/beatzball/litro.git",
     "directory": "packages/litro-router"
   },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/__tests__",
+    "CHANGELOG.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
