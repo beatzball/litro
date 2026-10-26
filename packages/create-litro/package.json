@@ -12,6 +12,7 @@
     "dist",
     "!dist/**/*.test.*",
     "!dist/**/__tests__",
+    "!dist/tsconfig.tsbuildinfo",
     "CHANGELOG.md"
   ],
   "publishConfig": {
