@@ -1,0 +1,75 @@
+{
+  "name": "@beatzball/litro-native",
+  "version": "0.1.0",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "description": "Native device capabilities for web apps — haptics, local notifications, app badge, secure storage, share and review request — behind one interface with an honest web fallback for each. Server-render safe, zero dependencies. Works standalone or as part of the Litro framework.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beatzball/litro.git",
+    "directory": "packages/litro-native"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "haptics",
+    "vibration",
+    "app-badge",
+    "badging-api",
+    "web-share",
+    "local-notifications",
+    "secure-storage",
+    "progressive-web-app",
+    "pwa",
+    "web-components",
+    "ssr",
+    "zero-dependencies",
+    "typescript"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./haptics": {
+      "import": "./dist/haptics.js",
+      "types": "./dist/haptics.d.ts"
+    },
+    "./notifications": {
+      "import": "./dist/notifications.js",
+      "types": "./dist/notifications.d.ts"
+    },
+    "./badging": {
+      "import": "./dist/badging.js",
+      "types": "./dist/badging.d.ts"
+    },
+    "./storage": {
+      "import": "./dist/storage.js",
+      "types": "./dist/storage.d.ts"
+    },
+    "./share": {
+      "import": "./dist/share.js",
+      "types": "./dist/share.d.ts"
+    },
+    "./review": {
+      "import": "./dist/review.js",
+      "types": "./dist/review.d.ts"
+    },
+    "./platform": {
+      "import": "./dist/platform.js",
+      "types": "./dist/platform.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

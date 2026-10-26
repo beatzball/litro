@@ -54,7 +54,8 @@ instead of adding it to the list.
 The scanner has no severity threshold, so the baseline keeps the "high and
 above" bar by hand. Decide by where the package ships: a production dependency
 of a published package (`@beatzball/litro`, `litro-router`, `create-litro`,
-`litro-agent`) reaches users; dev and tooling dependencies do not.
+`litro-agent`, `litro-native`) reaches users; dev and tooling dependencies do
+not.
 
 **Check:** a new advisory id fails the job. Read the header of
 `osv-scanner.toml` before editing it.

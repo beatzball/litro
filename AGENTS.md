@@ -70,6 +70,7 @@ litro/
     litro-router/     ← Standalone router (npm: @beatzball/litro-router)
     create-litro/     ← Scaffolding CLI (npm create @beatzball/litro)
     litro-agent/      ← Agent layer (npm: @beatzball/litro-agent)
+    litro-native/     ← Native device capabilities (npm: @beatzball/litro-native)
   playground/                   ← fullstack recipe test app
   playground-11ty/              ← 11ty-blog recipe test app
   playground-starlight/         ← starlight recipe test app
@@ -148,7 +149,7 @@ auto-links it to the PR or issue with that number. Write "PRD item N" or "Item N
 
 - **One changeset file per package** — never combine multiple packages in a single `.changeset/*.md` file. Each file should list one package in the frontmatter and only describe changes relevant to that package. Combined changesets dump the entire description into every listed package's CHANGELOG.
 - **Ignored packages** — `@beatzball/litro-docs`, `@beatzball/litro-docs-content`, `@beatzball/litro-docs-ui`, `@beatzball/litro-docs-ssr`, `@beatzball/litro-benchmarks`, `bench-litro`, `bench-hn-litro`, `bench-hn-litro-fast`, `bench-hn-litro-elena`, and `@beatzball/hn-mock-api` are in the changesets ignore list (`.changeset/config.json`). Never include them in changeset files. Mixing ignored and non-ignored packages in one changeset causes the release workflow to fail.
-- **Published packages** — only `@beatzball/litro`, `@beatzball/litro-router`, `@beatzball/create-litro`, and `@beatzball/litro-agent` get changesets.
+- **Published packages** — only `@beatzball/litro`, `@beatzball/litro-router`, `@beatzball/create-litro`, `@beatzball/litro-agent`, and `@beatzball/litro-native` get changesets.
 
 ## Source References
 
@@ -172,6 +173,6 @@ New decisions go in `design/adr/`.
 
 All core features complete. Three framework adapters: Lit (default), FAST Element, Elena.
 Four recipes: fullstack, 11ty-blog, starlight, and supernova (starlight plus a landing page).
-Run `pnpm test` for unit tests — note it covers `@beatzball/litro` and `@beatzball/litro-agent` only; `@beatzball/litro-router` and `@beatzball/create-litro` are run per package (`pnpm --filter <pkg> test`) and the docs suites via `pnpm test:docs`. Run `pnpm test:e2e` for Playwright e2e tests.
+Run `pnpm test` for unit tests — note it covers `@beatzball/litro` and `@beatzball/litro-agent` only; `@beatzball/litro-router`, `@beatzball/create-litro` and `@beatzball/litro-native` are run per package (`pnpm --filter <pkg> test`) and the docs suites via `pnpm test:docs`. Run `pnpm test:e2e` for Playwright e2e tests.
 `pnpm test:e2e:preview` for production-mode e2e. `pnpm bench` for benchmarks.
 Results in `benchmarks/results/latest.json`.

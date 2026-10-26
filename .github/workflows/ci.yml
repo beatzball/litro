@@ -61,6 +61,10 @@ jobs:
         run: pnpm --filter create-litro build
       - name: Build litro-agent
         run: pnpm --filter litro-agent build
+      # `pnpm -r test` runs vitest, which does not type-check. Without this
+      # step a type error here reaches `pnpm release` and nothing earlier.
+      - name: Build litro-native
+        run: pnpm --filter litro-native build
 
   # Builds every recipe the way a real user gets it: packed tarballs installed
   # into a fresh scaffold, NOT the workspace symlink every other job uses.
@@ -89,6 +93,10 @@ jobs:
         run: pnpm --filter litro build
       - name: Build litro-agent
         run: pnpm --filter litro-agent build
+      # `pnpm -r test` runs vitest, which does not type-check. Without this
+      # step a type error here reaches `pnpm release` and nothing earlier.
+      - name: Build litro-native
+        run: pnpm --filter litro-native build
       - name: Build create-litro
         run: pnpm --filter create-litro build
       - name: Scaffold every recipe from packed tarballs and parse each bundle
@@ -116,6 +124,10 @@ jobs:
       # their nitro.config.ts, so the package must be built for e2e.
       - name: Build litro-agent
         run: pnpm --filter litro-agent build
+      # `pnpm -r test` runs vitest, which does not type-check. Without this
+      # step a type error here reaches `pnpm release` and nothing earlier.
+      - name: Build litro-native
+        run: pnpm --filter litro-native build
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Run E2E tests (dev mode)

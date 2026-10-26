@@ -83,15 +83,38 @@ export type HapticStyle = 'light' | 'medium' | 'heavy' | 'soft' | 'rigid';
 export type HapticNotify = 'success' | 'warning' | 'error';
 export type OS = 'ios' | 'android' | 'web';
 
+export type Capability =
+  | 'haptics'
+  | 'notifications'
+  | 'badging'
+  | 'secureStorage'
+  | 'share'
+  | 'review';
+
 export interface PlatformInfo {
   isNative: boolean;
+  /**
+   * Which platform this is, as far as capabilities are concerned. `'ios'`
+   * means the host; a page in iOS Safari reports `'web'`, because it has none
+   * of the native capabilities. So this answers "what can run here", not
+   * "which operating system is this".
+   */
   os: OS;
   appVersion?: string;
   osVersion?: string;
   /** Bridge protocol version the shell speaks; absent on the web. */
   bridgeVersion?: number;
-  /** Capability names this build supports, from the handshake. */
-  supports: readonly string[];
+  /**
+   * The capabilities that do something real here, from the handshake.
+   *
+   * This is not the same as "safe to call". Every capability is always safe to
+   * call and never throws for a missing platform feature. A capability absent
+   * from this list is one whose call does nothing, so an app reads this to
+   * decide whether to offer a feature at all. On the web the list is built from
+   * the browser APIs actually present, so local notifications and a review
+   * request are never in it.
+   */
+  supports: readonly Capability[];
 }
 
 export interface LocalNotification {
@@ -130,6 +153,12 @@ export interface NativeBridge {
     set(key: string, value: string): Promise<void>;
     remove(key: string): Promise<void>;
   };
+  /**
+   * Whether this payload can be shared here. On the contract rather than read
+   * off the browser, so that `canShare` and `share` cannot answer for two
+   * different places once a host exists.
+   */
+  canShare(p: SharePayload): Promise<boolean>;
   share(p: SharePayload): Promise<void>;
   requestReview(): Promise<void>;
 }
@@ -156,6 +185,14 @@ missing feature behind a silent success.
 **Facades.** One short module per capability, each a thin wrapper that resolves the
 bridge and calls through. Calling code reads as `haptics.impact('light')` with no
 branching and no awaiting of a setup step.
+
+The shape of a facade follows what the capability is. A capability with several
+actions is a namespace object: `haptics`, `notifications`, `badging`,
+`secureStorage`. A capability that is a single action is a plain function:
+`share`, `canShare`, `requestReview`. Both kinds are exported from the package
+root and from the capability's own subpath. The rule is worth writing down because it is
+otherwise guessed wrongly: a reader given only this spec expected a `review`
+namespace, which does not exist.
 
 **Lit integration.** A `ReactiveController` that reads the platform on `hostConnected`
 and requests one update when the answer arrives. A component can then render a
@@ -273,8 +310,11 @@ native work starts.
   including the documented no-op for local notifications.
 - A shell that reports an older protocol version, or omits a capability from its
   handshake, degrades that one capability and leaves the rest working.
-- An app that imports only one capability does not pull the others into its client
-  bundle.
+- An app that imports only one capability imports only that facade, and the
+  others are deferred rather than dropped. The bridge is one module carrying
+  every capability's web implementation, loaded lazily on the first call. Splitting
+  it per capability would be worth doing only if that module grows large; say so
+  in the README rather than claiming a split that is not there.
 - No file outside `adapters/shell.ts` reaches the bridge transport. A check in CI is
   enough.
 - The selection script fails loudly on an unknown app name, and leaves no file from a
