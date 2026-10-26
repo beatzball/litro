@@ -1,6 +1,6 @@
 {
   "name": "@beatzball/litro-native",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "types": "./dist/index.d.ts",
   "description": "Native device capabilities for web apps — haptics, local notifications, app badge, secure storage, share and review request — behind one interface with an honest web fallback for each. Server-render safe, zero dependencies. Works standalone or as part of the Litro framework.",
