@@ -10,6 +10,10 @@
     "url": "https://github.com/beatzball/litro.git",
     "directory": "packages/litro-native"
   },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
