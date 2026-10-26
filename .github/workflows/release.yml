@@ -55,4 +55,12 @@ jobs:
           commit: "chore: version packages"
           createGithubReleases: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # A pull request opened with the default GITHUB_TOKEN is authored by
+          # github-actions[bot], and GitHub deliberately does not run workflows
+          # for that account. The version-packages pull request therefore parks
+          # at action_required until a person clicks "Approve and run".
+          # CHANGESETS_TOKEN is a fine-grained token, so the pull request is
+          # authored by a real account and CI starts on its own. The fallback
+          # keeps releases working if the secret is missing or expired; the
+          # manual approval click comes back, nothing breaks.
+          GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN || secrets.GITHUB_TOKEN }}

@@ -87,3 +87,23 @@ version merge.
 
 **Check:** after a version merge, confirm the publish run actually published:
 `npm view <pkg> version --prefer-online`.
+
+### REL-007 — `CHANGESETS_TOKEN` expires 2026-11-30, and the failure is silent
+
+`.github/workflows/release.yml` passes
+`${{ secrets.CHANGESETS_TOKEN || secrets.GITHUB_TOKEN }}` to the changesets
+action. `CHANGESETS_TOKEN` is a fine-grained token with Contents and Pull
+requests write access, added on 2026-10-26, which **expires 2026-11-30**.
+
+**Why:** a pull request opened with the default `GITHUB_TOKEN` is authored by
+`github-actions[bot]`, and GitHub does not run workflows for that account. The
+`chore: version packages` pull request then parks at `action_required` until a
+person clicks "Approve and run", and `gh pr checks` reports "no checks reported"
+rather than saying so. The fallback means an expired token breaks nothing
+loudly — releases keep working, the approval click just comes back.
+
+**Check:** `gh secret list -R beatzball/litro` must list `CHANGESETS_TOKEN`, and
+the run on the newest `changeset-release/main` pull request must not be
+`action_required`: `gh run list --branch changeset-release/main --limit 1`.
+Renewing the token is one option; minting one per run with
+`actions/create-github-app-token` removes the expiry date altogether.
