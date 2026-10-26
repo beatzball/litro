@@ -18,20 +18,13 @@ export async function share(payload: SharePayload): Promise<void> {
 /**
  * Whether this payload can be shared here.
  *
- * Browsers expose their own check for this, and it can refuse a payload that
- * `share` would reject, so ask before offering a share control. Always false
- * where there is no share sheet at all.
+ * Ask before offering a share control: a platform can refuse a payload that
+ * `share` would then reject. Always false where there is no share sheet at all.
+ *
+ * This goes through the bridge rather than reading the browser directly, so
+ * that once a native host exists, `canShare` and `share` cannot answer for two
+ * different places.
  */
 export async function canShare(payload: SharePayload): Promise<boolean> {
-  if (typeof navigator === 'undefined') return false;
-  const n = navigator as Navigator & { canShare?: (p: SharePayload) => boolean };
-  if (typeof n.share !== 'function') return false;
-  // A browser with `share` but no `canShare` can still share, so treat the
-  // missing check as a yes rather than hiding the control.
-  if (typeof n.canShare !== 'function') return true;
-  try {
-    return n.canShare(payload);
-  } catch {
-    return false;
-  }
+  return (await getBridge()).canShare(payload);
 }

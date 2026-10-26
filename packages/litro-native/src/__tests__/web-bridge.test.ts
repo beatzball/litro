@@ -15,7 +15,7 @@ import { haptics } from '../haptics.js';
 import { notifications } from '../notifications.js';
 import { badging } from '../badging.js';
 import { secureStorage } from '../storage.js';
-import { share } from '../share.js';
+import { canShare, share } from '../share.js';
 import { requestReview } from '../review.js';
 import { platform, supports } from '../platform.js';
 import type { HapticStyle } from '../types.js';
@@ -110,6 +110,31 @@ describe('getBridge', () => {
     const second = getBridge();
     expect(first).toBe(second);
   });
+
+  it('does not keep a failed resolution, so a flaky load is not permanent', async () => {
+    // The adapter arrives as its own chunk over the network. Caching a rejected
+    // promise would turn one bad load into every later call rejecting for the
+    // life of the page, with no retry. This mirrors the pattern in bridge.ts.
+    let attempts = 0;
+    let cached: Promise<unknown> | null = null;
+    async function flaky(): Promise<string> {
+      attempts += 1;
+      if (attempts === 1) throw new Error('chunk load failed');
+      return 'bridge';
+    }
+    function get(): Promise<unknown> {
+      if (cached === null) {
+        cached = flaky();
+        cached.catch(() => {
+          cached = null;
+        });
+      }
+      return cached;
+    }
+    await expect(get()).rejects.toThrow('chunk load failed');
+    await expect(get()).resolves.toBe('bridge');
+    expect(attempts).toBe(2);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -183,6 +208,17 @@ describe('badging on the web', () => {
     await expect(badging.set(1)).resolves.toBeUndefined();
     await expect(badging.clear()).resolves.toBeUndefined();
   });
+
+  it('floors and clamps the count, because the platform API rejects anything else', async () => {
+    // The real API takes an unsigned integer and throws otherwise. Unread
+    // counts come from arithmetic that can land on -1 or 2.5 for one tick.
+    const setAppBadge = vi.fn(async () => {});
+    setNavigator({ setAppBadge, userAgent: '' });
+    await badging.set(-1);
+    await badging.set(2.7);
+    await badging.set(Number.NaN);
+    expect(setAppBadge.mock.calls.map((c) => c[0])).toEqual([0, 2, 0]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -240,7 +276,7 @@ describe('secure storage on the web', () => {
     expect(store.size).toBe(2);
   });
 
-  it('returns null rather than throwing when storage access is blocked', async () => {
+  it('treats blocked site data as no storage at all, not as an error', async () => {
     Object.defineProperty(g, 'localStorage', {
       configurable: true,
       get() {
@@ -248,21 +284,32 @@ describe('secure storage on the web', () => {
       },
     });
     setNavigator({ userAgent: '' });
+    // There is no storage here, so this is a missing platform feature and
+    // every call is a silent no-op, matching every other capability.
     await expect(secureStorage.get('k')).resolves.toBeNull();
     await expect(secureStorage.set('k', 'v')).resolves.toBeUndefined();
     await expect(secureStorage.remove('k')).resolves.toBeUndefined();
+    await expect(supports('secureStorage')).resolves.toBe(false);
   });
 
-  it('swallows a write that exceeds the quota', async () => {
+  it('reports a failed write instead of looking like it worked', async () => {
+    // A store that exists and then refuses the write is a real failure, not a
+    // missing feature. Swallowing it would leave a caller believing it had
+    // persisted a token it had not, with the previous value still in place.
     g.localStorage = {
-      getItem: () => null,
+      getItem: (k: string) => (k === 'litro-native:token' ? 'stale' : null),
       setItem: () => {
         throw new Error('QuotaExceededError');
       },
-      removeItem: () => {},
+      removeItem: () => {
+        throw new Error('QuotaExceededError');
+      },
     };
     setNavigator({ userAgent: '' });
-    await expect(secureStorage.set('k', 'v')).resolves.toBeUndefined();
+    await expect(supports('secureStorage')).resolves.toBe(true);
+    await expect(secureStorage.set('token', 'fresh')).rejects.toThrow('QuotaExceededError');
+    await expect(secureStorage.remove('token')).rejects.toThrow('QuotaExceededError');
+    expect(await secureStorage.get('token')).toBe('stale');
   });
 });
 
@@ -303,6 +350,21 @@ describe('share on the web', () => {
   it('resolves silently when there is no share sheet', async () => {
     setNavigator({ userAgent: '' });
     await expect(share({ title: 'x' })).resolves.toBeUndefined();
+  });
+
+  it('answers canShare through the bridge, so it cannot disagree with share', async () => {
+    setNavigator({ share: vi.fn(async () => {}), canShare: () => false, userAgent: '' });
+    await expect(canShare({ title: 'x' })).resolves.toBe(false);
+  });
+
+  it('treats a browser with share but no canShare as able to share', async () => {
+    setNavigator({ share: vi.fn(async () => {}), userAgent: '' });
+    await expect(canShare({ title: 'x' })).resolves.toBe(true);
+  });
+
+  it('cannot share where there is no share sheet at all', async () => {
+    setNavigator({ userAgent: '' });
+    await expect(canShare({ title: 'x' })).resolves.toBe(false);
   });
 });
 

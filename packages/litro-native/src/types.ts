@@ -23,6 +23,16 @@ export type Capability =
 
 export interface PlatformInfo {
   isNative: boolean;
+  /**
+   * Which platform this is, as far as capabilities are concerned.
+   *
+   * `'ios'` means the native host. A page in iOS Safari reports `'web'`,
+   * because it has none of the native capabilities and an app that read
+   * `'ios'` there would assume ones it does not have. `'android'` is an
+   * Android browser, where some web APIs do work. So this field answers
+   * "what can run here", not "which operating system is this". For install
+   * instructions keyed on the real operating system, read the user agent.
+   */
   os: OS;
   appVersion?: string;
   osVersion?: string;
@@ -86,6 +96,8 @@ export interface NativeBridge {
     set(key: string, value: string): Promise<void>;
     remove(key: string): Promise<void>;
   };
+  /** Whether this payload can be shared here. */
+  canShare(p: SharePayload): Promise<boolean>;
   share(p: SharePayload): Promise<void>;
   requestReview(): Promise<void>;
 }

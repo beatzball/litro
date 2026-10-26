@@ -71,6 +71,9 @@ export class WebBridge implements NativeBridge {
     const ua = n?.userAgent ?? '';
     return {
       isNative: false,
+      // `'ios'` is reserved for the native host. A page in iOS Safari has none
+      // of the native capabilities, so reporting `'ios'` for it would invite an
+      // app to assume capabilities it does not have. It reads as `'web'`.
       os: /Android/i.test(ua) ? 'android' : 'web',
       supports: this.supported(),
     };
@@ -130,8 +133,15 @@ export class WebBridge implements NativeBridge {
    * and the bridge should not quietly merge them.
    */
   badging = {
+    /**
+     * The platform API takes an unsigned integer and throws on anything else,
+     * so a count is floored and clamped first. Badge counts usually come from
+     * arithmetic over unread items, which can land on -1 or 2.5 for one tick,
+     * and that should show an empty badge rather than reject.
+     */
     set: async (count: number): Promise<void> => {
-      await nav()?.setAppBadge?.(count);
+      const safe = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+      await nav()?.setAppBadge?.(safe);
     },
     clear: async (): Promise<void> => {
       await nav()?.clearAppBadge?.();
@@ -152,20 +162,26 @@ export class WebBridge implements NativeBridge {
         return null;
       }
     },
+    /**
+     * Writes, and rejects if the write genuinely failed.
+     *
+     * A missing platform feature is a no-op here, as everywhere: with no
+     * storage at all this resolves and does nothing, and `supports` already
+     * said so. A store that exists and then refuses the write is different. It
+     * is usually a full quota, the previous value is still in place, and
+     * swallowing it would leave a caller believing it had persisted a token it
+     * had not.
+     */
     set: async (key: string, value: string): Promise<void> => {
-      try {
-        store()?.setItem(STORAGE_PREFIX + key, value);
-      } catch {
-        // Out of quota, or site data blocked. A failed write is not worth
-        // breaking a caller that only wanted to remember a preference.
-      }
+      const s = store();
+      if (s === undefined) return;
+      s.setItem(STORAGE_PREFIX + key, value);
     },
+    /** Rejects on a real failure, for the same reason as `set`. */
     remove: async (key: string): Promise<void> => {
-      try {
-        store()?.removeItem(STORAGE_PREFIX + key);
-      } catch {
-        // Same as above.
-      }
+      const s = store();
+      if (s === undefined) return;
+      s.removeItem(STORAGE_PREFIX + key);
     },
   };
 
@@ -174,6 +190,22 @@ export class WebBridge implements NativeBridge {
    * choosing not to share, not a failure, so it is swallowed. Anything else is
    * passed on.
    */
+  /**
+   * Browsers expose their own check, and it can refuse a payload that `share`
+   * would reject. A browser with `share` but no `canShare` can still share, so
+   * a missing check reads as a yes rather than hiding the control.
+   */
+  canShare = async (p: SharePayload): Promise<boolean> => {
+    const n = nav() as (Navigator & { canShare?: (p: SharePayload) => boolean }) | undefined;
+    if (typeof n?.share !== 'function') return false;
+    if (typeof n.canShare !== 'function') return true;
+    try {
+      return n.canShare(p);
+    } catch {
+      return false;
+    }
+  };
+
   share = async (p: SharePayload): Promise<void> => {
     const n = nav();
     if (typeof n?.share !== 'function') return;

@@ -23,7 +23,17 @@ let cached: Promise<NativeBridge> | null = null;
  * however many callers ask.
  */
 export function getBridge(): Promise<NativeBridge> {
-  return (cached ??= resolve());
+  if (cached === null) {
+    // Cache the promise, not the result, so concurrent first callers share one
+    // resolution. Drop it again if that resolution fails: the adapter arrives
+    // over the network as its own chunk, and a single flaky load must not turn
+    // every later call into a rejection for the life of the page.
+    cached = resolve();
+    cached.catch(() => {
+      cached = null;
+    });
+  }
+  return cached;
 }
 
 /**
