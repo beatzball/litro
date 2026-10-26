@@ -1,0 +1,62 @@
+# Some paths in this repository are not code. They are policy: the files that
+# tell an agent how to work here, and the files GitHub executes as CI. A pull
+# request from a fork must not change either, because a reviewer reads one as
+# instructions and a runner executes the other.
+#
+# This runs on `pull_request_target`, so GitHub takes the workflow file from the
+# base branch instead of from the pull request. A guard living in `ci.yml` would
+# be useless: `pull_request` runs the workflow as the pull request has it, so a
+# fork could delete the guard in the same change the guard exists to catch.
+#
+# `pull_request_target` runs with the base branch's token, so this job never
+# checks out the pull request and never runs a line of its code. It asks the API
+# which files changed and nothing else.
+name: Guard agent instructions
+
+on:
+  pull_request_target:
+    branches: [main]
+    paths:
+      - ".agents/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    name: Guard agent instructions
+    if: github.event.pull_request.head.repo.fork
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refuse fork changes to instructions and workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          changed=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          blocked=$(printf '%s\n' "$changed" \
+            | grep -E '^(\.agents/|\.github/workflows/)|^(AGENTS|CLAUDE)\.md$' || true)
+
+          if [ -z "$blocked" ]; then
+            echo "No guarded path was changed."
+            exit 0
+          fi
+
+          echo "This pull request comes from a fork and changes guarded paths:"
+          printf '  %s\n' $blocked
+          echo
+          echo "Those files are policy, not code:"
+          echo "  .agents/**, AGENTS.md, CLAUDE.md  an agent reads these as instructions"
+          echo "  .github/workflows/**              a runner executes these"
+          echo
+          echo "A fork cannot change them. Open an issue describing the change instead,"
+          echo "and a maintainer will make it on a branch in this repository."
+          exit 1

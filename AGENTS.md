@@ -145,6 +145,13 @@ placeholder.
 **Never use bare `#N` for internal numbering** in a commit or PR body. GitHub
 auto-links it to the PR or issue with that number. Write "PRD item N" or "Item N".
 
+**Some paths are policy, and a fork cannot change them.** `.agents/**`,
+`AGENTS.md`, `CLAUDE.md` and `.github/workflows/**` are read as instructions by
+an agent or executed as CI by a runner. This repository is public, so a pull
+request from a fork that touches any of them fails the Guard agent instructions
+check. Changes to these paths belong on a branch in this repository. Work on a
+branch here is unaffected.
+
 ## Changesets
 
 - **One changeset file per package** — never combine multiple packages in a single `.changeset/*.md` file. Each file should list one package in the frontmatter and only describe changes relevant to that package. Combined changesets dump the entire description into every listed package's CHANGELOG.
