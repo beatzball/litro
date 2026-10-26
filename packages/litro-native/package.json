@@ -64,6 +64,10 @@
     "./platform": {
       "import": "./dist/platform.js",
       "types": "./dist/platform.d.ts"
+    },
+    "./lit": {
+      "import": "./dist/lit.js",
+      "types": "./dist/lit.d.ts"
     }
   },
   "scripts": {
