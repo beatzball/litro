@@ -564,6 +564,9 @@ importers:
       '@beatzball/litro-agent':
         specifier: workspace:^
         version: link:../packages/litro-agent
+      '@beatzball/litro-native':
+        specifier: workspace:^
+        version: link:../packages/litro-native
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
