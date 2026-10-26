@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# No job here uses the token: nothing comments, pushes, or reads an issue.
+# Without this block every job would inherit the repository default, which is
+# write, and a workflow step would be able to change the repository it is
+# testing.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Unit Tests
