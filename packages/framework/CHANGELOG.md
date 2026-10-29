@@ -1,5 +1,14 @@
 # litro
 
+## 0.17.5
+
+### Patch Changes
+
+- 3fef4a0: Publish only `dist`, `assets`, the content type declarations and the changelog. The tarball no longer carries TypeScript sources, test files, vitest config or `tsconfig.tsbuildinfo`: 575 files and 2.15 MB unpacked become 286 files and 0.77 MB.
+- cf4f575: Update `satori` to 0.33.5 and `seroval` to 1.7.3, clearing four security advisories published on 2026-10-27 and 2026-10-28. Open Graph images render byte-for-byte the same after the satori update: the only API changes across the range are optional new options, and the font this package ships is a static instance, so the variable-font handling added upstream does not apply.
+- Updated dependencies [3fef4a0]
+  - @beatzball/litro-router@0.3.2
+
 ## 0.17.4
 
 ### Patch Changes
