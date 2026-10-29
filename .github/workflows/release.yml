@@ -54,6 +54,16 @@ jobs:
           title: "chore: version packages"
           commit: "chore: version packages"
           createGithubReleases: true
+          # Commit through the GitHub API rather than the git CLI. The CLI path
+          # runs setupGitUser, which hardcodes the commit author to
+          # github-actions[bot]; GitHub then declines to start workflows for
+          # that account, so every PUSH that updates the version pull request
+          # parked at action_required even after CHANGESETS_TOKEN fixed the
+          # pull request's own author. In github-api mode the commit is
+          # attributed to whoever owns the token below -- a real account -- so
+          # updates start their own checks too. It also means GitHub signs the
+          # release commits with its GPG key.
+          commitMode: "github-api"
         env:
           # A pull request opened with the default GITHUB_TOKEN is authored by
           # github-actions[bot], and GitHub deliberately does not run workflows
