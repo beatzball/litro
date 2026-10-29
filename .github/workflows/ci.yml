@@ -73,6 +73,17 @@ jobs:
       - name: Build litro-native
         run: pnpm --filter litro-native build
 
+      # Packs each published package and resolves every exports/main/module/
+      # types/bin target inside the tarball. The tarball is the point: a target
+      # can exist in dist/ here and still be missing from the package, because
+      # the `files` allowlist excluded it. @beatzball/litro shipped a `main`
+      # and a root `require` condition naming a dist/index.cjs that was never
+      # built, through every published version, with every job green.
+      - name: Verify export maps (self-test)
+        run: node scripts/check-exports.mjs --self-test
+      - name: Verify export maps
+        run: node scripts/check-exports.mjs
+
   # Builds every recipe the way a real user gets it: packed tarballs installed
   # into a fresh scaffold, NOT the workspace symlink every other job uses.
   #
