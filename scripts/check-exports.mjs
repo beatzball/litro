@@ -238,7 +238,7 @@ console.error(`
 How to fix, in order of likelihood:
 
   1. The file is built but excluded. Check the package's \`files\` field --
-     the target must be inside one of its patterns, and not cancelled by a
+     the target must be inside one of its patterns, and not canceled by a
      later \`!\` pattern.
   2. The file is never built. Check the package's \`build\` script actually
      emits it. A single \`tsc\` pass over a "type": "module" package cannot
