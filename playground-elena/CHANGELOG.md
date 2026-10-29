@@ -1,5 +1,12 @@
 # playground-elena
 
+## 0.0.24
+
+### Patch Changes
+
+- Updated dependencies [bf1e014]
+  - @beatzball/litro@0.17.6
+
 ## 0.0.23
 
 ### Patch Changes
