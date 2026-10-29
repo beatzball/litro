@@ -102,8 +102,47 @@ person clicks "Approve and run", and `gh pr checks` reports "no checks reported"
 rather than saying so. The fallback means an expired token breaks nothing
 loudly — releases keep working, the approval click just comes back.
 
+**The token is only half the fix, and the other half is easy to undo.** It
+corrects who *opens* the pull request. Every later push that *updates* it is a
+separate event, and that one parked too until `commitMode: "github-api"` was
+set on the same action. The default `"git-cli"` path runs `setupGitUser`, which
+hardcodes the commit author to `github-actions[bot]` whatever the token says;
+`github-api` mode attributes the commit to the token owner instead, and GitHub
+GPG-signs it. Leave `setupGitUser` alone — `commitMode` overrides it, and
+setting both is two ways to say one thing. If the gate ever returns, check both
+the secret and `commitMode` before concluding the token expired.
+
 **Check:** `gh secret list -R beatzball/litro` must list `CHANGESETS_TOKEN`, and
 the run on the newest `changeset-release/main` pull request must not be
 `action_required`: `gh run list --branch changeset-release/main --limit 1`.
 Renewing the token is one option; minting one per run with
 `actions/create-github-app-token` removes the expiry date altogether.
+
+
+### REL-008 — A manifest can promise a file the build never emits
+
+Every `exports`, `main`, `module`, `types` and `bin` target of a published
+package must resolve inside the tarball `pnpm pack` produces. `scripts/check-exports.mjs`
+enforces it in the Build job, and `--self-test` proves the check still fires.
+
+**Why:** `@beatzball/litro` declared `main` and a root `require` condition
+pointing at `dist/index.cjs` for its entire published life. The build is a
+single `tsc` pass over a `"type": "module"` package, which cannot emit `.cjs`,
+so the file was never in any tarball. Every job stayed green, because nothing
+in this repo resolves the `require` condition — only a consumer would have hit
+it, as `MODULE_NOT_FOUND` naming a path they never wrote (issue 262).
+
+Checking the working tree is not enough. A target can exist in `dist/` on your
+disk and still be missing from the package, because the `files` allowlist
+excluded it. Pack, then look inside.
+
+**When a target is missing, delete it before you build it.** A `.cjs` target on
+an ESM-only package needs a whole second build pass for every subpath, and it
+cannot work at all when the entry re-exports ESM-only dependencies — `lit`,
+`@lit-labs/ssr` and `nitropack` all expose no `require` condition. An honest
+ESM-only manifest gives a consumer a clear error; a half-built dual package
+gives them a confusing one.
+
+**Check:** `node scripts/check-exports.mjs` after a build. It packs every
+non-`private` package under `packages/`, so a new published package is covered
+with no edit here.
