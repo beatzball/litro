@@ -1,5 +1,14 @@
 # @beatzball/litro-agent
 
+## 0.7.2
+
+### Patch Changes
+
+- 3fef4a0: Publish only `dist` and the changelog, without compiled tests. The tarball no longer carries sources, tests, vitest config or `tsconfig.tsbuildinfo`: 352 files and 1.75 MB unpacked become 140 files and 0.51 MB.
+- Updated dependencies [3fef4a0]
+- Updated dependencies [cf4f575]
+  - @beatzball/litro@0.17.5
+
 ## 0.7.1
 
 ### Patch Changes
