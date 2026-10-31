@@ -116,3 +116,29 @@ prove the comparison still fires. Change the protocol in both files in one
 commit.
 
 **Check.** `node scripts/check-bridge-parity.mjs && node scripts/check-bridge-parity.mjs --self-test`.
+
+## NATIVE-009 — CI's Swift is older than yours, and it is the stricter one
+
+**Trap.** Swift 6.2 and later infer main-actor isolation in places 6.1 does not.
+Code that compiles on a current Mac can fail on the runner with
+`main actor-isolated property ... can not be mutated from a nonisolated context`,
+and nothing local reproduces it. On 2026-10-31 the local toolchain was Swift
+6.3.3 and `macos-15` had Xcode 16.4 with Swift 6.1.2.
+
+Two shapes caused it, both in tests:
+
+- `override func setUp()`. `XCTestCase.setUp()` is declared nonisolated, so it
+  cannot touch a main-actor property however the class is annotated.
+- A stored property with an initializer, such as
+  `private let dispatcher = BridgeDispatcher(...)`. That initializer runs in a
+  nonisolated context under 6.1, and `BridgeDispatcher` is main-actor bound.
+
+**Rule.** Build main-actor fixtures inside the test body, or in a `private func`
+on the `@MainActor` class that each test calls. Never in `setUp`, never in a
+stored property initializer. This also removes shared mutable state between
+tests, so it is not a workaround.
+
+**Check.** `swift test --package-path native` passing locally is not evidence
+for this one. The native CI job is. Do not pin the runner to a newer Xcode to
+make the error go away: the older compiler is the one telling the truth about
+what the code requires.
