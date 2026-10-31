@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Litro bridge test</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 24px;
+         background: #0d0d10; color: #e8e8ea; }
+  h1 { font-size: 19px; margin: 0 0 16px; }
+  pre { background: #000; border: 1px solid #26262c; border-radius: 10px; padding: 12px;
+        white-space: pre-wrap; word-break: break-word; font-size: 13px; margin: 0 0 16px; }
+  button { font: 600 15px -apple-system, system-ui, sans-serif; margin: 0 8px 8px 0;
+           padding: 11px 15px; border: 0; border-radius: 10px; background: #2f6feb; color: #fff; }
+  button:disabled { background: #2a2a31; color: #6a6a74; }
+  .ok { color: #4ad07a; } .bad { color: #ff6b6b; }
+</style>
+</head>
+<body>
+<h1>Litro bridge test</h1>
+<pre id="log">starting</pre>
+<div id="controls"></div>
+
+<script>
+// A hand-written stand-in for the page-side transport that Phase 5 brings.
+// Deliberately small: it exists to exercise the shell, not to be the real thing.
+const log = document.getElementById('log');
+const lines = [];
+function say(text, kind) {
+  lines.push(kind ? `<span class="${kind}">${text}</span>` : text);
+  log.innerHTML = lines.join('\n');
+}
+
+const shell = window.__litroNative;
+if (!shell) {
+  say('no shell: this is a plain browser', 'bad');
+} else {
+  say('shell present, version ' + shell.version, 'ok');
+}
+
+let nextId = 1;
+const pending = new Map();
+
+if (shell) {
+  // The shell injects only { version }. The page owns `receive`.
+  shell.receive = (reply) => {
+    const entry = pending.get(reply.id);
+    if (!entry) return say('reply for an unknown id ' + reply.id, 'bad');
+    pending.delete(reply.id);
+    clearTimeout(entry.timer);
+    entry.resolve(reply);
+  };
+}
+
+function call(method, params, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const id = String(nextId++);
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error('timeout after ' + timeoutMs + 'ms'));
+    }, timeoutMs);
+    pending.set(id, { resolve, timer });
+    const request = { jsonrpc: '2.0', id, method };
+    if (params) request.params = params;
+    window.webkit.messageHandlers.litroNative.postMessage(request);
+  });
+}
+
+async function show(label, method, params, timeoutMs = 10000) {
+  try {
+    const reply = await call(method, params, timeoutMs);
+    const text = 'error' in reply
+      ? `error ${reply.error.code} ${reply.error.message}`
+      : 'result ' + JSON.stringify(reply.result);
+    say(`${label} -> ${text}`, 'error' in reply ? 'bad' : 'ok');
+  } catch (error) {
+    say(`${label} -> ${error.message}`, 'bad');
+  }
+}
+
+const buttons = [
+  ['handshake', () => show('handshake', 'handshake', undefined, 2000)],
+  ['impact', () => show('haptics.impact', 'haptics.impact', { style: 'medium' })],
+  ['notify', () => show('haptics.notify', 'haptics.notify', { type: 'success' })],
+  ['selection', () => show('haptics.selection', 'haptics.selection')],
+  ['badge 3', () => show('badging.set', 'badging.set', { count: 3 })],
+  ['badge clear', () => show('badging.clear', 'badging.clear')],
+  ['bad style', () => show('bad style', 'haptics.impact', { style: 'rumble' })],
+  ['bad count', () => show('bad count', 'badging.set', { count: -1 })],
+  ['unknown method', () => show('unknown method', 'haptics.rumble')],
+  ['share (absent)', () => show('share', 'share', { text: 'hello' }, 120000)],
+];
+
+const controls = document.getElementById('controls');
+for (const [label, run] of buttons) {
+  const button = document.createElement('button');
+  button.textContent = label;
+  button.disabled = !shell;
+  button.addEventListener('click', run);
+  controls.appendChild(button);
+}
+
+// The checks that need nobody run by themselves, in order, so a screenshot
+// taken after launch is a whole report rather than one line. The two that put
+// something in front of a person -- the badge permission prompt and the share
+// sheet -- stay on their buttons.
+// Proves the shell's origin allowlist is actually wired to the web view.
+//
+// Worth its own check because the failure is silent: a navigation delegate
+// method whose signature only nearly matches the protocol compiles, warns once,
+// and is never called. Nothing else here would notice, because every other
+// check loads an allowed origin.
+//
+// If the policy runs, the navigation is refused and this page stays put. If it
+// does not, the page is gone and the screenshot shows that instead.
+function checkOriginPolicy() {
+  return new Promise((resolve) => {
+    const here = location.hostname;
+    location.assign('https://blocked.example.invalid/');
+    setTimeout(() => {
+      const stayed = location.hostname === here;
+      say('origin policy -> ' + (stayed ? 'refused the outside origin' : 'DID NOT BLOCK'),
+          stayed ? 'ok' : 'bad');
+      resolve();
+    }, 1500);
+  });
+}
+
+async function runUnattended() {
+  await show('handshake', 'handshake', undefined, 2000);
+  await show('haptics.impact', 'haptics.impact', { style: 'medium' });
+  await show('haptics.notify', 'haptics.notify', { type: 'success' });
+  await show('haptics.selection', 'haptics.selection');
+  await show('bad style', 'haptics.impact', { style: 'rumble' });
+  await show('bad count', 'badging.set', { count: -1 });
+  await show('unknown method', 'haptics.rumble');
+  await show('share, module absent', 'share', { text: 'hello' }, 10000);
+  await checkOriginPolicy();
+  say('unattended checks done');
+}
+
+if (shell) runUnattended();
+</script>
+</body>
+</html>

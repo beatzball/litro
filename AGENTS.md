@@ -83,6 +83,7 @@ litro/
   docs-ssr/                     ← SSR docs site (@beatzball/litro-docs-ssr)
   research/                     ← Research agent findings (R-1 through R-4)
   design/                       ← Specs, plans and ADRs (see design/README.md)
+  native/                       ← iOS app shell: one Xcode project, one folder per app (see native/README.md)
 ```
 
 ## Key Conventions
@@ -105,6 +106,7 @@ and a check. Read the file before you work in its area.
 - `.agents/rules/testing.md` — before you write or debug an e2e spec, a test fixture, a scaffolding check, or a benchmark run.
 - `.agents/rules/release-deps.md` — before you add or bump a dependency, change the dependency audit, pack a package, or edit the release workflow.
 - `.agents/rules/agent-mcp.md` — before you touch `packages/litro-agent/`, its session stores, or the MCP Apps packager.
+- `.agents/rules/native-shell.md` — before you touch `native/`, the bridge protocol, or either side's mirror of it.
 
 ## Writing
 
