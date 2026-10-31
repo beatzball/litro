@@ -142,3 +142,36 @@ tests, so it is not a workaround.
 for this one. The native CI job is. Do not pin the runner to a newer Xcode to
 make the error go away: the older compiler is the one telling the truth about
 what the code requires.
+
+## NATIVE-010 — a delegate method that "nearly matches" is never called
+
+**Trap.** `WKNavigationDelegate`'s completion-handler method carries a
+`@MainActor` attribute on its closure. Writing the signature by hand without it
+produces a method that merely resembles the requirement. It compiles. It emits
+one warning — `nearly matches optional requirement` — and WebKit never calls it.
+
+The shell shipped that way for a day. The origin allowlist, the thing that stops
+page content turning the app into a general-purpose browser with the app's
+permissions, did not run at all. Every test passed, because every test loaded an
+allowed origin: a block that never runs is indistinguishable from a block that
+permits.
+
+**Rule.** Implement the **async** form of an optional delegate method, not the
+completion-handler form. There is no closure attribute to get wrong:
+
+```swift
+func webView(_ webView: WKWebView,
+             decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy
+```
+
+Treat `nearly matches optional requirement` as an error wherever it appears. It
+is never cosmetic.
+
+**Check.** Two, and the first alone is not enough.
+
+- The build emits no `nearly matches` warning. Read the whole build output; a
+  grep narrowed to a guessed pattern is how this one survived.
+- `native/scripts/bridge-test-page.html` attempts a navigation to an outside
+  origin in its unattended run and reports `refused the outside origin`. A
+  policy that stops being wired makes that line say `DID NOT BLOCK`, or takes
+  the page away entirely.

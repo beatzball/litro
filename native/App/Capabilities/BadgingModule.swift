@@ -37,7 +37,7 @@ final class BadgingModule: BadgingHost {
     /// answered from the stored setting rather than by asking again, because iOS
     /// does not show a second prompt and the call would appear to hang.
     private func isAuthorized() async -> Bool {
-        switch await center.notificationSettings().authorizationStatus {
+        switch await authorizationStatus() {
         case .authorized, .provisional, .ephemeral:
             return true
         case .denied:
@@ -48,6 +48,20 @@ final class BadgingModule: BadgingHost {
             // A status this build does not know is treated as "not allowed".
             // Guessing the other way would promise a badge that never appears.
             return false
+        }
+    }
+
+    /// Reads only the status, never the settings object.
+    ///
+    /// `UNNotificationSettings` is not Sendable in every iOS SDK, so awaiting
+    /// `notificationSettings()` fails to compile against some of them. The
+    /// status is a plain enum, so extracting it inside the callback crosses the
+    /// boundary with a value that is always safe to send.
+    private func authorizationStatus() async -> UNAuthorizationStatus {
+        await withCheckedContinuation { continuation in
+            center.getNotificationSettings { settings in
+                continuation.resume(returning: settings.authorizationStatus)
+            }
         }
     }
 }

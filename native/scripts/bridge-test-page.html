@@ -105,6 +105,28 @@ for (const [label, run] of buttons) {
 // taken after launch is a whole report rather than one line. The two that put
 // something in front of a person -- the badge permission prompt and the share
 // sheet -- stay on their buttons.
+// Proves the shell's origin allowlist is actually wired to the web view.
+//
+// Worth its own check because the failure is silent: a navigation delegate
+// method whose signature only nearly matches the protocol compiles, warns once,
+// and is never called. Nothing else here would notice, because every other
+// check loads an allowed origin.
+//
+// If the policy runs, the navigation is refused and this page stays put. If it
+// does not, the page is gone and the screenshot shows that instead.
+function checkOriginPolicy() {
+  return new Promise((resolve) => {
+    const here = location.hostname;
+    location.assign('https://blocked.example.invalid/');
+    setTimeout(() => {
+      const stayed = location.hostname === here;
+      say('origin policy -> ' + (stayed ? 'refused the outside origin' : 'DID NOT BLOCK'),
+          stayed ? 'ok' : 'bad');
+      resolve();
+    }, 1500);
+  });
+}
+
 async function runUnattended() {
   await show('handshake', 'handshake', undefined, 2000);
   await show('haptics.impact', 'haptics.impact', { style: 'medium' });
@@ -114,6 +136,7 @@ async function runUnattended() {
   await show('bad count', 'badging.set', { count: -1 });
   await show('unknown method', 'haptics.rumble');
   await show('share, module absent', 'share', { text: 'hello' }, 10000);
+  await checkOriginPolicy();
   say('unattended checks done');
 }
 
