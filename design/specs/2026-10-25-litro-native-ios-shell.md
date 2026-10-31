@@ -1,6 +1,6 @@
 # Native app shell for Litro PWAs
 
-Status: Draft
+Status: Accepted. Phases 1-4 built.
 
 ## The problem
 
@@ -282,6 +282,78 @@ native work starts.
 6. **Second app and CI.** A second configuration folder, the selection script, and the
    build matrix. The second app is the test that the shape generalizes.
 7. **Store submission.** One app first, end to end, before the second is submitted.
+
+## Phase 4, as built
+
+The host, the handshake and two modules — haptics and badging — are in `native/`.
+Seven decisions were made while building it that the plan above did not settle.
+
+**The shell lives in this repository, not its own.** The first instinct was a
+separate repo: this one is public, and each real app's name, identifier and icons
+belong to that app rather than to the framework. The argument that beat it is
+that the protocol exists twice on purpose — once in TypeScript, once in Swift,
+because an installed app cannot import TypeScript — and a parity check across two
+repositories is the kind that gets skipped. One repository means one commit
+changes both halves and `scripts/check-bridge-parity.mjs` can fail CI when they
+disagree. Phase 4 has one throwaway demo app and no real app assets to protect,
+so the cost of the choice is deferred rather than paid now. If a real app's
+assets ever need to be private, move only its `Apps/` folder out.
+
+**No project generator.** `LitroShell.xcodeproj` is hand-written and committed.
+A generator is a build-time dependency, which the bar above forbids, and a
+checkout that cannot be built without first installing a tool is not a checkout.
+The project stays small because every source folder is a synchronized folder
+group and every per-app value comes from a generated xcconfig.
+
+**The dispatcher is async and main-actor bound.** Setting a badge needs the
+notification permission, and asking for it is a prompt. A synchronous signature
+could only be honored by answering before the system had, which would report
+success for a badge that never appeared. Phase 5's four remaining modules are all
+async too, so this is the shape they fit into rather than a rewrite they force.
+
+**A malformed request that carries an id is answered.** Validating the envelope
+before reading the id meant a bad message could not be replied to at all, and the
+page waited out its whole timeout for a reply the shell had already decided not
+to send. The id is now read first. Only a message with no usable id goes
+unanswered. Found by a test, which is the point of writing them before the device.
+
+**The shell holds the capability promise too.** The risk list below asked for
+Phase 4's shell to be reviewed for returning an error on a capability it omitted.
+It does not: an absent module is answered with that capability's documented empty
+behavior, the same value the web adapter gives, and its params are not validated
+either. The page is still supposed to gate the call, but the page may be an old
+deploy nobody can fix. Pinned by `AbsentCapabilityTests`.
+
+**Origins are compared whole, never as prefixes.** Scheme, host and port
+together, with an explicit default port treated as the default. A prefix match
+would let `https://app.example.test.attacker.invalid` through an allowlist naming
+`https://app.example.test`.
+
+**App Transport Security allows local networking only.** A Litro app in
+development runs on a plain-http dev server, which iOS blocks by default. The
+Info.plist sets `NSAllowsLocalNetworking`, not `NSAllowsArbitraryLoads`: the
+narrow key permits http to localhost and the local network and changes nothing
+for a public host.
+
+### What was verified, and how
+
+- 72 Swift tests over the protocol, the dispatcher and the origin policy, run by
+  `swift test` with no simulator.
+- The app built for the simulator, launched, and answered every unattended method
+  against a real `WKWebView`: the handshake with the build's own version numbers,
+  all three haptics, both parameter rejections, an unknown method, and `share`
+  with its module absent returning `result null` rather than an error.
+- `scripts/check-bridge-parity.mjs`, whose self-test breaks the Swift source nine
+  ways and expects a complaint each time.
+- On hardware: Xcode 26.6 installs and launches on a device running iOS 27.2, so
+  the one-major-version gap between the tool and the phone is not a blocker.
+
+### Not yet done
+
+The badge permission prompt and the share sheet both need a person, so they sit
+on buttons in `native/scripts/bridge-test-page.html` rather than in the automatic
+run. Haptics cannot be felt in a simulator at all. Both are physical-device
+checks, and neither is covered by anything above.
 
 ## Risks
 
