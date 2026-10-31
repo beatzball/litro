@@ -47,18 +47,23 @@ extension ShellViewController: WKNavigationDelegate {
     /// purpose browser running with the app's permissions. An outside URL the
     /// user actually tapped is handed to the system browser instead, which is
     /// what the user expects and keeps it out of the app's context.
+    /// The async form, not the completion-handler one.
+    ///
+    /// The completion-handler signature acquired a `@MainActor` attribute on its
+    /// closure, so writing it by hand produces a method that only *nearly*
+    /// matches the protocol: it compiles with a warning and is never called.
+    /// That failure is silent and total -- the allowlist simply does not run.
+    /// The async form has no closure to get wrong.
     func webView(_ webView: WKWebView,
-                 decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        guard let url = navigationAction.request.url else {
-            return decisionHandler(.cancel)
-        }
-        if configuration.allows(url) {
-            return decisionHandler(.allow)
-        }
+                 decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+        guard let url = navigationAction.request.url else { return .cancel }
+        if configuration.allows(url) { return .allow }
         if navigationAction.navigationType == .linkActivated {
-            UIApplication.shared.open(url)
+            // The result says whether the system found a handler. There is
+            // nothing useful to do when it did not -- the navigation is refused
+            // either way -- so it is discarded rather than branched on.
+            _ = await UIApplication.shared.open(url)
         }
-        decisionHandler(.cancel)
+        return .cancel
     }
 }
