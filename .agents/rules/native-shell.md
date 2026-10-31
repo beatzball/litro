@@ -175,3 +175,27 @@ is never cosmetic.
   origin in its unattended run and reports `refused the outside origin`. A
   policy that stops being wired makes that line say `DID NOT BLOCK`, or takes
   the page away entirely.
+
+## NATIVE-011 — do not store an SDK type that is not `Sendable`
+
+**Trap.** `BadgingModule` held a `UNUserNotificationCenter` as a property of a
+`@MainActor` class. On SDKs where that type is not yet audited for concurrency,
+handing it to its own nonisolated async methods fails with
+`sending 'self.center' risks causing data races`. The current SDK marks the type
+`Sendable`, so the mistake is invisible on a current Mac and fails on CI.
+
+The same file had already failed once for a neighboring reason: awaiting
+`notificationSettings()` returns `UNNotificationSettings`, also not `Sendable`
+on those SDKs.
+
+**Rule.** Reach for the shared instance inside a `nonisolated` helper rather than
+storing it, so it stays a local that never crosses an isolation boundary. Where
+a callback hands back a non-Sendable object, extract the one value you need
+inside the callback and send that.
+
+Do not reach for `@preconcurrency import` to silence this class of error. It
+downgrades every Sendable complaint from that module, including the next real
+one.
+
+**Check.** The native CI job. A local build uses the newest SDK and will not
+reproduce it.
