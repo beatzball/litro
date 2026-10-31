@@ -234,6 +234,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Printed because this runner's Swift is usually OLDER than a current
+      # Mac's, and the older one is stricter about main-actor isolation. A
+      # failure here that does not reproduce locally is almost always that
+      # difference; see NATIVE-009 in .agents/rules/native-shell.md.
       - name: Show the toolchain
         run: |
           xcodebuild -version

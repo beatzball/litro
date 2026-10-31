@@ -90,15 +90,19 @@ final class HandshakeDispatchTests: XCTestCase {
 
 @MainActor
 final class HapticsDispatchTests: XCTestCase {
-    private var haptics: RecordingHaptics!
-    private var dispatcher: BridgeDispatcher!
-
-    override func setUp() {
-        haptics = RecordingHaptics()
-        dispatcher = BridgeDispatcher(info: testInfo, haptics: haptics)
+    /// Built per test rather than in `setUp`.
+    ///
+    /// `XCTestCase.setUp()` is declared nonisolated, so it cannot touch a
+    /// main-actor property however the class is annotated. Swift 6.3 infers its
+    /// way around that; the 6.1 on CI does not, and the difference is invisible
+    /// until the other compiler sees it.
+    private func fixture() -> (RecordingHaptics, BridgeDispatcher) {
+        let haptics = RecordingHaptics()
+        return (haptics, BridgeDispatcher(info: testInfo, haptics: haptics))
     }
 
     func testImpactReachesTheModuleAndAnswersNull() async {
+        let (haptics, dispatcher) = fixture()
         for style in HapticStyle.allCases {
             let reply = await dispatcher.handle(message(method: .string("haptics.impact"),
                                                         params: .object(["style": .string(style.rawValue)])))
@@ -108,6 +112,7 @@ final class HapticsDispatchTests: XCTestCase {
     }
 
     func testNotifyReachesTheModuleAndAnswersNull() async {
+        let (haptics, dispatcher) = fixture()
         for type in HapticNotify.allCases {
             let reply = await dispatcher.handle(message(method: .string("haptics.notify"),
                                                         params: .object(["type": .string(type.rawValue)])))
@@ -117,6 +122,7 @@ final class HapticsDispatchTests: XCTestCase {
     }
 
     func testSelectionNeedsNoParams() async {
+        let (haptics, dispatcher) = fixture()
         let reply = await dispatcher.handle(message(method: .string("haptics.selection")))
         XCTAssertEqual(result(reply), .null)
         XCTAssertEqual(haptics.selections, 1)
@@ -125,6 +131,7 @@ final class HapticsDispatchTests: XCTestCase {
     /// A style the protocol does not define is a caller mistake, and must not
     /// silently become a different buzz.
     func testRejectsAnUnknownMissingOrNonStringStyle() async {
+        let (haptics, dispatcher) = fixture()
         for params: JSONValue? in [nil,
                                    .object([:]),
                                    .object(["style": .string("rumble")]),
@@ -136,6 +143,7 @@ final class HapticsDispatchTests: XCTestCase {
     }
 
     func testRejectsAnUnknownOrMissingNotifyType() async {
+        let (haptics, dispatcher) = fixture()
         for params: JSONValue? in [nil, .object([:]), .object(["type": .string("info")])] {
             let reply = await dispatcher.handle(message(method: .string("haptics.notify"), params: params))
             XCTAssertEqual(code(reply), .invalidParams)
@@ -146,15 +154,14 @@ final class HapticsDispatchTests: XCTestCase {
 
 @MainActor
 final class BadgingDispatchTests: XCTestCase {
-    private var badging: RecordingBadging!
-    private var dispatcher: BridgeDispatcher!
-
-    override func setUp() {
-        badging = RecordingBadging()
-        dispatcher = BridgeDispatcher(info: testInfo, badging: badging)
+    /// Built per test; see the note in `HapticsDispatchTests`.
+    private func fixture() -> (RecordingBadging, BridgeDispatcher) {
+        let badging = RecordingBadging()
+        return (badging, BridgeDispatcher(info: testInfo, badging: badging))
     }
 
     func testSetReachesTheModuleAndAnswersNull() async {
+        let (badging, dispatcher) = fixture()
         let reply = await dispatcher.handle(message(method: .string("badging.set"),
                                                     params: .object(["count": .number(3)])))
         XCTAssertEqual(result(reply), .null)
@@ -163,12 +170,14 @@ final class BadgingDispatchTests: XCTestCase {
 
     /// Clearing is setting zero. One code path means the two cannot disagree.
     func testClearSetsZero() async {
+        let (badging, dispatcher) = fixture()
         let reply = await dispatcher.handle(message(method: .string("badging.clear")))
         XCTAssertEqual(result(reply), .null)
         XCTAssertEqual(badging.counts, [0])
     }
 
     func testAcceptsZero() async {
+        let (badging, dispatcher) = fixture()
         let reply = await dispatcher.handle(message(method: .string("badging.set"),
                                                     params: .object(["count": .number(0)])))
         XCTAssertEqual(result(reply), .null)
@@ -178,6 +187,7 @@ final class BadgingDispatchTests: XCTestCase {
     /// A negative or fractional count is a caller mistake. Rounding it would
     /// show a badge the app never asked for.
     func testRejectsANegativeFractionalMissingOrNonNumericCount() async {
+        let (badging, dispatcher) = fixture()
         for params: JSONValue? in [nil,
                                    .object([:]),
                                    .object(["count": .number(-1)]),
@@ -192,6 +202,7 @@ final class BadgingDispatchTests: XCTestCase {
     /// A declined badge permission is the user's answer, not a bug, so it is
     /// PERMISSION_DENIED and not INTERNAL_ERROR. The page must not retry it.
     func testADeclinedPermissionIsReportedAsDeniedForBothSetAndClear() async {
+        let (badging, dispatcher) = fixture()
         badging.allowed = false
         let set = await dispatcher.handle(message(method: .string("badging.set"),
                                                   params: .object(["count": .number(1)])))
@@ -205,7 +216,11 @@ final class BadgingDispatchTests: XCTestCase {
 final class AbsentCapabilityTests: XCTestCase {
     /// A build with nothing compiled in. Every capability call must still answer,
     /// and must answer the way the web adapter degrades.
-    private let dispatcher = BridgeDispatcher(info: ShellInfo())
+    ///
+    /// A function rather than a stored property: a stored property's initializer
+    /// runs in a nonisolated context under Swift 6.1, which cannot build a
+    /// main-actor type.
+    private func dispatcher() -> BridgeDispatcher { BridgeDispatcher(info: ShellInfo()) }
 
     /// The rule the whole protocol is shaped around.
     ///
@@ -215,7 +230,7 @@ final class AbsentCapabilityTests: XCTestCase {
     /// promise too: it answers, and the answer is never an error.
     func testEveryCapabilityCallSucceedsWhenTheModuleIsAbsent() async {
         for method in BridgeMethod.allCases where method.capability != nil {
-            let reply = await dispatcher.handle(BridgeRequest(id: "7", method: method))
+            let reply = await dispatcher().handle(BridgeRequest(id: "7", method: method))
             guard case .success = reply else {
                 XCTFail("\(method.rawValue) answered \(reply) with its module absent")
                 continue
@@ -249,7 +264,7 @@ final class AbsentCapabilityTests: XCTestCase {
         XCTAssertEqual(Set(expected.keys),
                        Set(BridgeMethod.allCases.filter { $0.capability != nil }))
         for (method, value) in expected {
-            let reply = await dispatcher.handle(BridgeRequest(id: "7", method: method))
+            let reply = await dispatcher().handle(BridgeRequest(id: "7", method: method))
             XCTAssertEqual(result(reply), value, method.rawValue)
         }
     }
@@ -257,7 +272,7 @@ final class AbsentCapabilityTests: XCTestCase {
     /// An absent module must not be reported in the handshake, or the page would
     /// offer a feature that does nothing.
     func testAnAbsentModuleIsNotAdvertised() {
-        XCTAssertEqual(dispatcher.capabilities, [])
+        XCTAssertEqual(dispatcher().capabilities, [])
     }
 
     /// A call for a module that is absent must not disturb one that is present.
@@ -277,7 +292,7 @@ final class AbsentCapabilityTests: XCTestCase {
     /// bad style on a build without haptics would make the absence visible as a
     /// failure, which is exactly what the contract forbids.
     func testAnAbsentModuleDoesNotValidateParams() async {
-        let reply = await dispatcher.handle(BridgeRequest(id: "7", method: .hapticsImpact,
+        let reply = await dispatcher().handle(BridgeRequest(id: "7", method: .hapticsImpact,
                                                            params: ["style": .string("rumble")]))
         XCTAssertEqual(result(reply), .null)
     }
@@ -285,34 +300,36 @@ final class AbsentCapabilityTests: XCTestCase {
 
 @MainActor
 final class MalformedMessageTests: XCTestCase {
-    private let dispatcher = BridgeDispatcher(info: testInfo, haptics: RecordingHaptics())
+    private func dispatcher() -> BridgeDispatcher {
+        BridgeDispatcher(info: testInfo, haptics: RecordingHaptics())
+    }
 
     func testAnUnknownMethodIsAnsweredWithMethodNotFound() async {
-        let reply = await dispatcher.handle(message(method: .string("haptics.rumble")))
+        let reply = await dispatcher().handle(message(method: .string("haptics.rumble")))
         XCTAssertEqual(code(reply), .methodNotFound)
     }
 
     /// A malformed envelope that still carries an id is answered, not dropped.
     /// A dropped reply costs the page its whole timeout for no reason.
     func testAMalformedEnvelopeWithAnIdIsAnsweredWithInvalidRequest() async {
-        let reply = await dispatcher.handle(message(jsonrpc: .string("1.0"), method: .string("handshake")))
+        let reply = await dispatcher().handle(message(jsonrpc: .string("1.0"), method: .string("handshake")))
         XCTAssertEqual(code(reply), .invalidRequest)
     }
 
     /// No usable id means there is nowhere to send a reply. Inventing one would
     /// have the page resolve a call it never made.
     func testAMessageWithNoUsableIdIsNotAnswered() async {
-        let noId = await dispatcher.handle(message(id: nil, method: .string("handshake")))
+        let noId = await dispatcher().handle(message(id: nil, method: .string("handshake")))
         XCTAssertNil(noId)
-        let emptyId = await dispatcher.handle(message(id: .string(""), method: .string("handshake")))
+        let emptyId = await dispatcher().handle(message(id: .string(""), method: .string("handshake")))
         XCTAssertNil(emptyId)
-        let notAnObject = await dispatcher.handle(.string("handshake"))
+        let notAnObject = await dispatcher().handle(.string("handshake"))
         XCTAssertNil(notAnObject)
     }
 
     /// The reply is addressed to the id that was sent, every time.
     func testAReplyCarriesTheRequestsId() async {
-        let reply = await dispatcher.handle(message(id: .string("abc"), method: .string("haptics.selection")))
+        let reply = await dispatcher().handle(message(id: .string("abc"), method: .string("haptics.selection")))
         guard case let .success(id, _) = reply else { return XCTFail("expected a success") }
         XCTAssertEqual(id, "abc")
     }
