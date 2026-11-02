@@ -199,3 +199,33 @@ one.
 
 **Check.** The native CI job. A local build uses the newest SDK and will not
 reproduce it.
+
+## NATIVE-012 — a canceled navigation is not a load failure
+
+**Trap.** The shell now shows a screen when a navigation fails, because a bare
+`WKWebView` whose load fails shows an empty white view and reports the reason to
+nobody. The obvious wiring is wrong: WebKit reports the origin allowlist's own
+refusal through the same delegate method as a real failure. Returning `.cancel`
+from `decidePolicyFor` produces `NSURLErrorCancelled` in `NSURLErrorDomain`, and
+on some versions `WebKitErrorDomain` 102, `frame load interrupted`.
+
+Shown, that covers the page the reader was already on with a failure screen
+every time the allowlist does its job. The allowlist working then looks exactly
+like the shell broken. The same code arrives when a second navigation replaces
+one still in flight, which is also not a fault.
+
+**Rule.** Build the screen's text through `LoadFailure(error:url:)` in
+`LitroShellKit`, which returns nil for both of those. Never read an error in the
+delegate and show it directly.
+
+Two neighboring rules the same screen depends on:
+
+- Take the screen down on `didFinish`, not on the retry tap. Removing it when
+  tapped uncovers the empty web view and flashes the container's background
+  before the new page paints. The retry's feedback is the button's own state.
+- Retry by loading the configured start URL, not `webView.reload()`. A
+  provisional navigation that failed left no page behind to reload.
+
+**Check.** `swift test --filter LoadFailure`. The visibility tests assert nil
+for both canceled spellings, and that a different `WebKitErrorDomain` code is
+still shown, so the rule cannot be satisfied by hiding every WebKit error.

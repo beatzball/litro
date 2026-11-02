@@ -16,7 +16,7 @@ native/
   Package.swift              the testable halves, as a Swift package
   Sources/
     LitroBridge/             the wire protocol: envelope, dispatch, handshake
-    LitroShellKit/           per-app configuration and the origin policy
+    LitroShellKit/           per-app configuration, origin policy, failure text
   App/                       UIKit and WebKit: the host, the transport, the modules
   Apps/
     demo/app.json            one app, as plain data
@@ -25,7 +25,7 @@ native/
     Info.plist               reads the per-app values as build settings
   scripts/
     select-app.sh            copies one app's folder into the build
-    serve-test-page.sh       serves the bridge test page
+    serve-test-page.sh       serves the bridge test page, --lan for a device
     bridge-test-page.html    exercises every method against a running shell
   LitroShell.xcodeproj       hand-written, no generator needed
 ```
@@ -75,6 +75,19 @@ native/scripts/serve-test-page.sh     # http://localhost:5173
 
 It runs every unattended method on load and leaves the two that need a person —
 the badge permission prompt and the share sheet — on buttons.
+
+On a real device, `localhost` is the device, so the default server is
+unreachable from it. Pass `--lan` instead, which binds every interface and
+prints the `startURL` and `allowedOrigins` to put in the app's `app.json`:
+
+```sh
+native/scripts/serve-test-page.sh 5173 --lan
+```
+
+The shell loads that plain `http` address because `Info.plist` sets
+`NSAllowsLocalNetworking`, which covers private network addresses only. A device
+and a Mac on different networks produce the shell's load failure screen naming
+the address it could not reach, which is the fastest way to notice.
 
 ## Adding an app
 
