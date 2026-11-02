@@ -120,3 +120,4 @@ export default litroContentPlugin;
 
 export { litroActionsPlugin } from './actions.js';
 export { litroEntryPlugin } from './entry.js';
+export { litroShellScriptsPlugin } from './shell-scripts.js';

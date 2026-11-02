@@ -595,3 +595,24 @@ describe('createPageHandler — client entry URL', () => {
     delete g.__litro_app_version__;
   });
 });
+
+describe('shellScriptOptions (inlineScripts)', async () => {
+  const { shellScriptOptions } = await import('../create-page-handler.js');
+
+  it('is inline by default', () => {
+    expect(shellScriptOptions(undefined, { isDev: false, basePath: '', filesPresent: true })).toEqual({});
+    expect(shellScriptOptions(true, { isDev: false, basePath: '', filesPresent: true })).toEqual({});
+  });
+
+  it('serves files under the base path in production when the build has them', () => {
+    expect(shellScriptOptions(false, { isDev: false, basePath: '/b', filesPresent: true })).toEqual({
+      inlineScripts: false,
+      scriptFilesUrl: '/b/_litro/assets',
+    });
+  });
+
+  it('stays inline in dev, and in a build without the files', () => {
+    expect(shellScriptOptions(false, { isDev: true, basePath: '', filesPresent: true })).toEqual({});
+    expect(shellScriptOptions(false, { isDev: false, basePath: '', filesPresent: false })).toEqual({});
+  });
+});

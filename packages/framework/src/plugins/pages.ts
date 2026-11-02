@@ -31,6 +31,7 @@ import { fileToRoute, compareRoutes, assertUniqueComponentTags } from './path-to
 import { resolveAdapter } from '../adapter/resolve.js';
 import sideEffectsPlugin from './side-effects.js';
 import { computeAppVersion, resolveClientDir } from './app-version.js';
+import { shellScriptsStatement } from './shell-scripts.js';
 import { LITRO_APP_VERSION_GLOBAL } from '../runtime/app-entry.js';
 import type { LitroRoute } from '../types/route.js';
 
@@ -328,15 +329,19 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
   // Production builds only. `litro dev` serves the entry live (or, for an
   // older dev middleware, a leftover bundle the next `vite build` replaces),
   // and a hash there would also rewrite the manifest stub on every reload.
-  async function appVersionStatement(): Promise<string> {
-    if (nitro.options.dev) return '';
-    // Hash and check the directory Nitro actually serves at /_litro/, which
-    // sits under LITRO_BASE_PATH when one is set.
-    const clientDir = resolveClientDir(
+  // The directory Nitro actually serves at /_litro/, which sits under
+  // LITRO_BASE_PATH when one is set.
+  function servedClientDir(): string {
+    return resolveClientDir(
       nitro.options.rootDir,
       (nitro.options.publicAssets ?? []) as Array<{ dir: string; baseURL?: string }>,
       process.env.LITRO_BASE_PATH ?? '',
     );
+  }
+
+  async function appVersionStatement(): Promise<string> {
+    if (nitro.options.dev) return '';
+    const clientDir = servedClientDir();
     // Vite copies its publicDir (default `<root>/public`) into the client
     // directory; those copies are not chunks.
     const result = await computeAppVersion(clientDir, {
@@ -364,6 +369,13 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     return `\nglobalThis[${JSON.stringify(LITRO_APP_VERSION_GLOBAL)}] = ${JSON.stringify(result.version)};\n`;
   }
 
+  // Shell script files — see plugins/shell-scripts.ts. Production only, like
+  // the version: `litro dev` keeps the shell's scripts inline.
+  function shellScriptsFlagStatement(): string {
+    if (nitro.options.dev) return '';
+    return shellScriptsStatement(servedClientDir());
+  }
+
   // ---------------------------------------------------------------------------
   // Core scan function — called both at build time and on dev reload
   // ---------------------------------------------------------------------------
@@ -388,7 +400,10 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     // the shim registry as a side effect of `.define()` during page module
     // evaluation.
     const adapter = await resolveAdapter();
-    const preamble = (adapter.manifestPreamble?.() ?? '') + (await appVersionStatement());
+    const preamble =
+      (adapter.manifestPreamble?.() ?? '') +
+      (await appVersionStatement()) +
+      shellScriptsFlagStatement();
 
     if (pageFiles.length === 0) {
       nitro.logger.info('[litro] No page files found in pages/.');

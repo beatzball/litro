@@ -262,3 +262,25 @@ from `packages/framework/src/plugins/app-version.ts`.
 `e2e/playground/client-entry-cache.spec.ts` checks the served headers in
 `pnpm test:e2e:preview`. `packages/create-litro/src/entry-cache.test.ts` fails
 when a recipe template brings back the `/_litro/**` rule or the `maxAge`.
+
+### BUILD-011 — Every framework script in the shell comes from `SHELL_SCRIPTS`
+
+A classic script that `buildShell()` writes goes in `SHELL_SCRIPTS`
+(`packages/framework/src/runtime/shell-scripts.ts`) and reaches the page
+through `scriptTag()`. Never write `<script>...</script>` source into
+`shell.ts` directly. When you edit a script's source, rename its `fileName` to
+the new hash.
+
+**Why:** `createPageHandler({ inlineScripts: false })` lets an app run under
+`script-src 'self'` with no `'unsafe-inline'` (issue 290). It works only for
+scripts in the registry: `litroShellScriptsPlugin()` emits each one as
+`dist/client/assets/<fileName>`, and the shell writes `<script src>` for it.
+An inline script added beside them is blocked by the app's policy, and the
+build is green. The files are served `immutable` (BUILD-010), so a script
+whose source changed under its old name stays cached in browsers for a year.
+
+**Check:** `packages/framework/src/runtime/__tests__/shell-scripts.test.ts`
+fails on any inline script in the rendered shell or in the `shell.ts` source,
+and on a `fileName` whose hash does not match its source.
+`e2e/playground/strict-csp.spec.ts` serves the playground under a strict
+policy in `pnpm test:e2e:preview`.

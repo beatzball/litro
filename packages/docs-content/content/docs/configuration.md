@@ -69,6 +69,63 @@ export default defineConfig({
 });
 ```
 
+## Content Security Policy
+
+By default the page shell writes two small framework scripts inline: the Declarative Shadow DOM polyfill (Lit and FAST only) and the skip-link script. A policy of `script-src 'self'` blocks them. To serve a strict policy with no `'unsafe-inline'` for scripts, load them as files instead.
+
+1. Add `litroShellScriptsPlugin()` to `vite.config.ts`. It writes the scripts to `dist/client/assets/`, under names that carry a content hash, so the existing `/_litro/assets/**` immutable rule covers them and a framework upgrade changes their URLs.
+
+   ```ts
+   import { litroEntryPlugin, litroShellScriptsPlugin } from '@beatzball/litro/vite';
+
+   export default defineConfig({
+     plugins: [litroEntryPlugin(), litroShellScriptsPlugin()],
+     // ...
+   });
+   ```
+
+2. Pass `inlineScripts: false` to `createPageHandler()` in your page route (`server/routes/[...].ts`):
+
+   ```ts
+   const handler = createPageHandler({
+     route: matched,
+     pageModule: pageModules[matched.filePath],
+     inlineScripts: false,
+   });
+   ```
+
+3. Send the policy. A Nitro route rule works for the Node server and for static hosts that read `_headers`:
+
+   ```ts
+   routeRules: {
+     '/**': {
+       headers: {
+         'content-security-policy':
+           "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+           "img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
+           "base-uri 'none'; form-action 'self'",
+       },
+     },
+     // ...the cache rules above
+   },
+   ```
+
+The page then loads `<script src="/_litro/assets/litro-dsd-polyfill-<hash>.js">` as a synchronous classic script, so it still runs before the parser reaches the first declarative shadow root, and `<script src="/_litro/assets/litro-skip-links-<hash>.js" defer>`. The DSD polyfill costs one blocking request on Lit and FAST pages. That is why the default stays inline.
+
+What the option does not cover:
+
+- **Your own scripts.** Anything in `routeMeta.head`, a page's `seoHead`, or a `bodyScript` is written exactly as you gave it. Move such a script into a file under `public/`, or add its hash to `script-src`. The hash is the base64 SHA-256 of the exact text between `<script>` and `</script>`:
+
+  ```sh
+  node -e "const s=require('fs').readFileSync(0,'utf8');console.log(\"'sha256-\"+require('crypto').createHash('sha256').update(s).digest('base64')+\"'\")" < my-inline-script.js
+  ```
+
+  Data blocks (`<script type="application/json">`, `<script type="application/ld+json">`) are not run, so the policy does not apply to them.
+- **Styles.** Lit SSR writes a `<style>` element into every shadow root, so `style-src` still needs `'unsafe-inline'`.
+- **`litro dev`.** The dev server keeps the framework's scripts inline and logs a note when `inlineScripts: false` is set. Test a strict policy against `litro build` and `litro preview`.
+
+If a production build has `inlineScripts: false` but no script files (the plugin is missing), the page handler keeps the scripts inline and logs an error once, naming the plugin.
+
 ## Environment Variables
 
 | Variable | Description | Default |

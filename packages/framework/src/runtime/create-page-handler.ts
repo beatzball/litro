@@ -21,6 +21,7 @@ import type { EventHandler } from 'h3';
 import { buildShell } from './shell.js';
 import { appEntryUrl } from './app-entry.js';
 import type { AppScriptUrl } from './app-entry.js';
+import { shellScriptFilesPresent } from './shell-scripts.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
@@ -65,6 +66,63 @@ export interface PageHandlerOptions {
    * Ignored under `litro dev`, with either dev middleware.
    */
   appScriptUrl?: AppScriptUrl;
+  /**
+   * Write the framework's own scripts inline (the default), or as
+   * `<script src>` files so the page can run under a strict
+   * `Content-Security-Policy` with `script-src 'self'` and no
+   * `'unsafe-inline'`.
+   *
+   * `false` needs `litroShellScriptsPlugin()` from `@beatzball/litro/vite` in
+   * `vite.config.ts`, which writes the files to `dist/client/assets/`. A
+   * production build without them keeps the scripts inline and logs an error
+   * once. Under `litro dev` the scripts always stay inline.
+   *
+   * Scripts in `routeMeta.head`, `seoHead` and `bodyScript` are the app's own
+   * and are written as given.
+   *
+   * @default true
+   */
+  inlineScripts?: boolean;
+}
+
+/** One message per process, not one per request. */
+const warned = new Set<string>();
+function warnOnce(key: string, log: (msg: string) => void, msg: string): void {
+  if (warned.has(key)) return;
+  warned.add(key);
+  log(msg);
+}
+
+/**
+ * Resolves `inlineScripts` for this request into the shell's options: the
+ * script files' URL, or nothing for inline. Exported for tests.
+ */
+export function shellScriptOptions(
+  inlineScripts: boolean | undefined,
+  env: { isDev: boolean; basePath: string; filesPresent?: boolean },
+): { inlineScripts?: false; scriptFilesUrl?: string } {
+  if (inlineScripts !== false) return {};
+  if (env.isDev) {
+    warnOnce(
+      'dev',
+      console.info,
+      '[litro] inlineScripts: false applies to production builds only. Under litro dev the ' +
+        "framework's scripts stay inline, so a strict script-src blocks them. Test the policy " +
+        'with litro build and litro preview.',
+    );
+    return {};
+  }
+  if (!(env.filesPresent ?? shellScriptFilesPresent())) {
+    warnOnce(
+      'missing',
+      console.error,
+      "[litro] inlineScripts: false, but this build has no shell script files, so the framework's " +
+        'scripts stay inline and a strict script-src blocks them. Add litroShellScriptsPlugin() ' +
+        'from @beatzball/litro/vite to the plugins in vite.config.ts, then rebuild.',
+    );
+    return {};
+  }
+  return { inlineScripts: false, scriptFilesUrl: `${env.basePath}/_litro/assets` };
 }
 
 /**
@@ -238,6 +296,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         skipLinks,
         includeDSDPolyfill: adapter.needsDSDPolyfill,
         bodyScript: dynamicBodyScript || undefined,
+        ...shellScriptOptions(options.inlineScripts, { isDev, basePath }),
       });
 
       // Delegate rendering to the framework adapter. The adapter returns an
@@ -303,6 +362,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         appScriptUrl,
         skipLinks,
+        ...shellScriptOptions(options.inlineScripts, { isDev, basePath }),
       });
 
       // Client-only fallback: emit the shell with a bare component tag.
