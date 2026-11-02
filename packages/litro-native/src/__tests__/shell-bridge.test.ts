@@ -624,6 +624,22 @@ describe('badging', () => {
     ]);
   });
 
+  it('native: waits past the default budget while a permission prompt may be open', async () => {
+    fakeTimers();
+    const shell = installShell({ capabilities: ['badging'], answers: { 'badging.set': () => SILENT } });
+    const { badging, getBridge } = await load();
+    const bridgeReady = getBridge();
+    await untilSent(shell);
+    await vi.advanceTimersByTimeAsync(1);
+    await bridgeReady;
+    const call = badging.set(3);
+    await untilSent(shell, 2);
+    // A person reads the prompt for thirty seconds, then taps Allow.
+    await vi.advanceTimersByTimeAsync(30_000);
+    shell.deliver(success(shell.sent[1].id, null));
+    await expect(call).resolves.toBeUndefined();
+  });
+
   it('fallback: uses the web badge and sends nothing', async () => {
     const setAppBadge = vi.fn();
     const shell = installShell({ capabilities: [] }, { setAppBadge });

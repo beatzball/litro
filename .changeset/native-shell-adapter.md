@@ -6,4 +6,6 @@ Talk to the Litro native shell. Inside the iOS shell, every capability the shell
 
 When `isNative` is true, a `secureStorage` write reaches the keychain or goes nowhere: the shell bridge never falls back to browser storage, even on a build without the keychain module. A page inside the shell whose handshake failed gets the web bridge and browser storage, with `isNative` false. So gate a token write on `isNative` and nothing else.
 
+`badging.set`, `badging.clear` and `notifications.schedule` now get the two-minute interactive timeout, because the first call can show a permission prompt that a person reads. A failed shell chunk no longer rejects calls on a plain web page.
+
 A rejection is now a `NativeBridgeError`, exported with `ERROR_CODES`, so an app can tell a declined permission (`isPermissionDenied`) or a timeout (`isTimeout`) from a fault.

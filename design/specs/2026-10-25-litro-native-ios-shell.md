@@ -423,7 +423,16 @@ waiting on is dropped.
 
 Two smaller choices. Both adapters load in parallel in a browser, so a plain web
 page pays no extra round trip to learn there is no shell; on the server the
-shell adapter is never loaded. And a rejection carries a `NativeBridgeError`,
+shell adapter is never loaded. If the shell chunk fails to load, the waiting
+calls get the web bridge and that answer is not cached: `bridge.ts` may not look
+for a shell itself, so it cannot tell a plain page from a shell, and the next
+call retries.
+
+**Calls that can raise a permission prompt get the interactive budget.**
+`badging.set`, `badging.clear` and `notifications.schedule` joined `share` and
+`requestReview` in `INTERACTIVE_METHODS`. A review found that a ten-second budget
+failed a call while the person was still reading the prompt, and the shell then
+did the work anyway. The Swift side has no timeouts, so nothing mirrors this. And a rejection carries a `NativeBridgeError`,
 exported with `ERROR_CODES`, so an app can tell a declined permission from a
 fault without matching a message.
 
