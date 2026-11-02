@@ -143,7 +143,7 @@ is the hardest thing to get subtly wrong.
 | `haptics.impact` | `haptics` | `{ style }` | `null` |
 | `haptics.notify` | `haptics` | `{ type }` | `null` |
 | `haptics.selection` | `haptics` | — | `null` |
-| `notifications.schedule` | `notifications` | `LocalNotification` | the id, a string |
+| `notifications.schedule` | `notifications` | `LocalNotification`, plus `budgetMs` | the id, a string |
 | `notifications.cancel` | `notifications` | `{ id }` | `null` |
 | `badging.set` | `badging` | `{ count }` | `null` |
 | `badging.clear` | `badging` | — | `null` |
@@ -156,6 +156,22 @@ is the hardest thing to get subtly wrong.
 
 `notifications.schedule` returning an empty string means nothing was scheduled. Callers
 that store the id treat an empty one as "no reminder set".
+
+`notifications.schedule` carries two params the caller does not write. The page adapter
+fills in `id` when the caller gave none, so the page knows the id even when the call
+times out; that rejection carries it as `data.id`. And it sends `budgetMs`, the number of
+milliseconds its own timer for this call waits. The shell schedules nothing once that
+much time has passed, measured on its own monotonic clock with a small margin, because
+past it the page has already rejected the call. `budgetMs` is optional and relative, not
+a deadline: a shell that gets none uses 120 000, and an older shell ignores it. No
+version change was needed. iOS keeps at most 64 pending notifications per app and drops
+the rest silently, so past that a returned id may never fire.
+
+`secureStorage` is one store **per origin**, not per app. Each origin in the app's
+`allowedOrigins` has its own store, as the web fallback has, and never sees another's
+values. The origin is the one the shell checked for the frame the message arrived on.
+An empty key, or a key or value with a lone surrogate, is refused with `INVALID_PARAMS`
+by the page adapter, on every path, before anything is sent.
 
 ## Errors
 
@@ -182,6 +198,10 @@ A dropped message must never leave a promise pending for the life of the page.
 | handshake | 2s | `handshake` |
 | default | 10s | every call that does not wait on a person |
 | interactive | 120s | `badging.set`, `badging.clear`, `notifications.schedule`, `share`, `requestReview` |
+
+The shell keeps no copy of these numbers. Where it needs one, the page sends it with the
+call, as `notifications.schedule` sends `budgetMs`: an installed app cannot be updated
+when the page changes a budget or which methods it applies to.
 
 The handshake is shortest because startup queues behind it, and a shell that cannot answer
 that fast is treated as absent. The default is shorter than the MCP Apps bridge's 30

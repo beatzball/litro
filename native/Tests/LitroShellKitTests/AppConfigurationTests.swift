@@ -186,6 +186,18 @@ final class BridgeOriginTests: XCTestCase {
         XCTAssertFalse(config.allowsBridgeOrigin(scheme: "", host: "", port: 0))
     }
 
+    /// Secure storage is kept per this value, so two spellings of one origin
+    /// must give one value, and so one store.
+    func testTwoSpellingsOfOneOriginAreOneBridgeOrigin() {
+        let config = configuration(allowedOrigins: ["https://app.example.test", "https://login.example.test"])
+        let plain = config.bridgeOrigin(scheme: "https", host: "app.example.test", port: 0)
+        XCTAssertNotNil(plain)
+        XCTAssertEqual(config.bridgeOrigin(scheme: "HTTPS", host: "App.Example.TEST", port: 443), plain)
+        XCTAssertEqual(plain?.serialized, "https://app.example.test:443")
+        XCTAssertNotEqual(config.bridgeOrigin(scheme: "https", host: "login.example.test", port: 0), plain)
+        XCTAssertNil(config.bridgeOrigin(scheme: "https", host: "evil.example.test", port: 0))
+    }
+
     func testRefusesAnotherOrigin() {
         let config = configuration(allowedOrigins: ["https://app.example.test"])
         XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "evil.example.test", port: 0),

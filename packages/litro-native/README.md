@@ -23,9 +23,9 @@ Zero dependencies. Safe to import in a page that renders on the server.
 The web path is complete. The page side of the native shell is here too: inside
 the Litro iOS shell, each call goes to the shell for every capability that
 shell's build compiled in, and takes its web behavior for the rest. The shell
-itself, in `native/` in this repository, implements two of the six modules so
-far, haptics and badging; the other four take their web behavior until they
-land.
+itself, in `native/` in this repository, implements four of the six modules so
+far, haptics, badging, notifications and secure storage; share and review take
+their web behavior until they land.
 
 **Not published yet.** This package is in the repository and not on the
 registry. The release pipeline authenticates per package, and that cannot be set
@@ -89,7 +89,12 @@ When `isNative` is true, a `secureStorage` write reaches the keychain or goes
 nowhere. It never falls back to browser storage, even on a shell build that
 left the keychain module out: there it reads `null` and writes nothing. A page
 inside the shell whose handshake failed gets the web bridge, which IS browser
-storage, but there `isNative` is false. So gate on `isNative` and nothing else:
+storage, but there `isNative` is false. So gate on `isNative` and nothing else.
+
+Inside the shell the keychain is one store per origin, as browser storage is.
+An app whose shell allows several origins gets a separate store for each, and
+a page on one never sees another's values.
+
 
 ```ts
 import { platform, secureStorage } from '@beatzball/litro-native';
@@ -116,7 +121,9 @@ These are different questions, and the difference matters.
 
 - **Every capability is always safe to call.** No call throws because of a
   missing platform feature. A platform that refuses the operation itself is a
-  different thing, and does reject.
+  different thing, and does reject. So does a bad argument, the same way on
+  every platform: an empty `secureStorage` key, or a key or value that is not
+  well-formed text, rejects with `INVALID_PARAMS`.
 - **`supports(name)` says whether the call does anything.** Use it to decide
   whether a feature belongs in the interface at all.
 
@@ -142,7 +149,18 @@ try {
 
 `isTimeout` is true when the shell did not answer in time. Every call has a
 budget, so no promise is ever left pending: ten seconds for most calls, two
-minutes for the share sheet and the review prompt, which wait on a person.
+minutes for the calls that can wait on a person -- the share sheet, the review
+prompt, and the badging and notification calls, which can show the
+notification permission prompt.
+
+A timed-out `notifications.schedule` may still have scheduled the reminder,
+right at the end of the wait. Its error carries the id in `err.data.id`. Cancel
+it, or pass it as `id` when you retry, so the retry replaces the reminder
+instead of adding a second one. Pass your own `id` from the start and you
+always know it.
+
+iOS keeps at most 64 pending notifications per app and silently drops the
+rest, so past that a returned id may never fire.
 
 ## Server rendering
 

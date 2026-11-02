@@ -27,7 +27,8 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
         super.init()
     }
 
-    /// Whether the frame that sent a message may use the bridge.
+    /// The origin of the frame that sent a message, when that frame may use the
+    /// bridge; `nil` when it may not.
     ///
     /// `markerScript` is injected `forMainFrameOnly`, but a message handler is
     /// NOT scoped to a frame: `add(_:name:)` puts
@@ -41,19 +42,24 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
     /// contract the marker script already sets. The origin test is what still
     /// holds if the navigation allowlist is ever wired wrong -- which has
     /// happened once here already, silently.
-    private func accepts(_ frame: WKFrameInfo) -> Bool {
+    ///
+    /// The origin returned is the one checked here, from the frame the message
+    /// arrived on. It is carried to the dispatcher rather than read again
+    /// later, because secure storage is kept per origin: the web view's URL may
+    /// already be the next page, and nothing the page sends is trusted for it.
+    private func accepts(_ frame: WKFrameInfo) -> MessageOrigin? {
         guard frame.isMainFrame else {
             logger.error("bridge message from a subframe; refused")
-            return false
+            return nil
         }
         let origin = frame.securityOrigin
-        guard configuration.allowsBridgeOrigin(scheme: origin.`protocol`,
-                                               host: origin.host,
-                                               port: origin.port) else {
+        guard let checked = configuration.bridgeOrigin(scheme: origin.`protocol`,
+                                                       host: origin.host,
+                                                       port: origin.port) else {
             logger.error("bridge message from an origin that is not allowed; refused")
-            return false
+            return nil
         }
-        return true
+        return checked
     }
 
     /// The script the shell injects before any page script runs.
@@ -78,7 +84,7 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
     }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard accepts(message.frameInfo) else { return }
+        guard let origin = accepts(message.frameInfo) else { return }
         // Converted here, synchronously, so only a Sendable value crosses into
         // the task. A body that is not all JSON still yields its id, and the
         // dispatcher answers it rather than leaving the page to time out.
@@ -87,7 +93,7 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
             logger.error("bridge message held a value that is not JSON")
         }
         Task { @MainActor in
-            guard let reply = await dispatcher.handle(incoming) else {
+            guard let reply = await dispatcher.handle(incoming, from: origin) else {
                 // No usable id. Answering an invented one would have the page
                 // resolve a call it never made, so the message is dropped and
                 // logged instead.
