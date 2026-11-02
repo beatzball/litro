@@ -18,6 +18,48 @@ pnpm update @beatzball/litro @beatzball/litro-router
 
 Full change lists live in each package's CHANGELOG on npm or in the repository.
 
+## litro 0.18.0
+
+### The client entry is no longer cached forever (issue 253)
+
+Every recipe used to send `cache-control: public, max-age=31536000, immutable` for all of `/_litro/**`. But `/_litro/app.js` has the same name in every build. After a deploy a browser kept the old entry for a year, the old entry asked for chunks that no longer existed, and client-side navigation silently did nothing.
+
+Make two changes to an existing app.
+
+1. In `nitro.config.ts`, mark only the hashed chunks immutable, and send `no-cache` for the entry:
+
+   ```ts
+   routeRules: {
+     '/_litro/assets/**': {
+       headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+     },
+     '/_litro/app.js': { headers: { 'cache-control': 'no-cache' } },
+   },
+   ```
+
+   Also remove `maxAge` from the `publicAssets` entry for `/_litro/`, so it reads `{ dir: '../dist/client', baseURL: '/_litro/' }`. Nitro turns that `maxAge` into a `/_litro/**` immutable rule of its own. On the Node server the more specific `/_litro/app.js` rule wins, but a static host preset writes both rules into its headers file, and the host decides which applies.
+
+   If you serve a static build from your own web server, do the same there. For nginx, use `location /_litro/assets/` for the immutable rule and `location = /_litro/app.js { add_header Cache-Control "no-cache"; }`.
+
+2. In `vite.config.ts`, add `litroEntryPlugin()`:
+
+   ```ts
+   import { litroEntryPlugin } from '@beatzball/litro/vite';
+
+   export default defineConfig({
+     plugins: [/* your plugins */, litroEntryPlugin()],
+     // ...
+   });
+   ```
+
+With the plugin, the page loads the entry as `/_litro/app.js?v=<content hash>`. The hash comes from the built `dist/client/app.js`, so each deploy names a URL that no browser has cached yet, and a browser that still holds an old entry recovers by itself. The plugin moves the code the entry imports statically into a hashed `boot` chunk, so no other chunk imports `app.js` by name and the runtime loads only once.
+
+Without the plugin nothing breaks: the build prints a warning and the page keeps loading the bare `/_litro/app.js`. Step 1 alone already stops new browsers from keeping a stale entry.
+
+To load the entry from somewhere else, such as a CDN, pass `appScriptUrl` to `createPageHandler()`. A string is used as given. A function receives the build's entry version, so the URL can still change with each deploy: `appScriptUrl: (v) => \`https://cdn.example/app.js?v=${v}\``. `litro dev` ignores the option.
+
+`litroEntryPlugin()` expects one client entry. If your client build has several entries, exactly one must be named `app.ts` (or `app.js`); otherwise the build stops with an error that names the entries.
+
 ## litro 0.12.1 / litro-router 0.2.0
 
 ### Live dev entry — the stale-bundle fix (opt-in)

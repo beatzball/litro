@@ -21,7 +21,7 @@ export default defineNitroConfig({
   // publicAssets.dir is resolved relative to srcDir ('server/').
   // Use '../dist/client' (not 'dist/client') to reach <rootDir>/dist/client.
   publicAssets: [
-    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
+    { dir: '../dist/client', baseURL: '/_litro/' },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
   ],
 
@@ -68,8 +68,14 @@ export default defineNitroConfig({
   compatibilityDate: '2025-01-01',
 
   routeRules: {
-    '/_litro/**': {
+    // Only the hashed chunks are immutable. app.js keeps one name in every
+    // build, so a browser must ask again each time; the page loads it as
+    // app.js?v=<content hash>, which changes with each deploy.
+    '/_litro/assets/**': {
       headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+    },
+    '/_litro/app.js': {
+      headers: { 'cache-control': 'no-cache' },
     },
     '/__litro/action/**': {
       headers: { 'cache-control': 'no-store' },

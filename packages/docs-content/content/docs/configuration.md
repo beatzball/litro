@@ -23,7 +23,7 @@ export default defineNitroConfig({
   srcDir: 'server',
 
   publicAssets: [
-    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
+    { dir: '../dist/client', baseURL: '/_litro/' },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
   ],
 
@@ -34,6 +34,15 @@ export default defineNitroConfig({
       await ssgPlugin(nitro);     // static route generation
     },
   },
+
+  routeRules: {
+    // Only the content-hashed chunks may be cached forever.
+    '/_litro/assets/**': {
+      headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+    },
+    // app.js has the same name in every build, so a browser must ask again.
+    '/_litro/app.js': { headers: { 'cache-control': 'no-cache' } },
+  },
 });
 ```
 
@@ -41,12 +50,14 @@ export default defineNitroConfig({
 
 Standard Vite config. The `litroContentPlugin()` bridges the `litro:content` virtual module for the client bundle (returns a browser stub — real data is server-side only).
 
+`litroEntryPlugin()` keeps the client entry `app.js` free of shared code: everything the entry imports statically goes into one hashed `boot` chunk, so no other chunk imports `app.js`. That lets the page load the entry as `/_litro/app.js?v=<content hash>`, which changes with every deploy. Without the plugin the build prints a warning and the page loads the bare `/_litro/app.js`.
+
 ```ts
 import { defineConfig } from 'vite';
-import litroContentPlugin from '@beatzball/litro/vite';
+import litroContentPlugin, { litroEntryPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
-  plugins: [litroContentPlugin()],
+  plugins: [litroContentPlugin(), litroEntryPlugin()],
   base: '/_litro/',
   build: {
     outDir: 'dist/client',

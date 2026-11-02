@@ -55,7 +55,7 @@ export default defineNitroConfig({
 
 The `handlers` entry must be declared statically. The dev server reads handler configuration before `build:before` fires, so entries pushed programmatically from the plugin would not appear during development. The plugin generates `server/stubs/action-handler.ts` before Rollup compiles it; declaring the route statically ensures both the dev server and the production build see it.
 
-The `/__litro/action/**` route rule keeps the endpoint outside Nitro's static-asset prefix (`/_litro/`), which is served by a placeholder middleware that intercepts misses before the router runs. No carve-out of the `/_litro/**` immutable cache rule is required.
+The `/__litro/action/**` route rule keeps the endpoint outside Nitro's static-asset prefix (`/_litro/`), which is served by a placeholder middleware that intercepts misses before the router runs. No carve-out of the `/_litro/` cache rules is required.
 
 ### package.json
 

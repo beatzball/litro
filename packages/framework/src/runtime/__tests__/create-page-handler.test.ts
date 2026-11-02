@@ -560,3 +560,38 @@ describe('createPageHandler — vary: Accept on HTML path', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Client entry URL — issue 253
+// ---------------------------------------------------------------------------
+
+describe('createPageHandler — client entry URL', () => {
+  const g = globalThis as Record<string, unknown>;
+
+  beforeEach(() => {
+    vi.mocked(buildShell).mockClear();
+    mockRequestHeaders.current = {};
+    delete g.__litro_app_version__;
+  });
+
+  it('loads the bare /_litro/app.js when the manifest set no version', async () => {
+    await callHandler(createPageHandler({ route: makeRoute(), pageModule: {} }));
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/_litro/app.js');
+  });
+
+  it('loads /_litro/app.js?v=<version> when the manifest set one', async () => {
+    g.__litro_app_version__ = '1ee500dabf80';
+    await callHandler(createPageHandler({ route: makeRoute(), pageModule: {} }));
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/_litro/app.js?v=1ee500dabf80');
+    delete g.__litro_app_version__;
+  });
+
+  it('uses the appScriptUrl option in production', async () => {
+    g.__litro_app_version__ = 'abc';
+    await callHandler(
+      createPageHandler({ route: makeRoute(), pageModule: {}, appScriptUrl: '/custom/app.js' }),
+    );
+    expect(lastBuildShellOpts()?.appScriptUrl).toBe('/custom/app.js');
+    delete g.__litro_app_version__;
+  });
+});

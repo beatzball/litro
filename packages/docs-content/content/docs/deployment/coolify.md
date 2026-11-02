@@ -32,4 +32,4 @@ The Docker image:
 - Builds the SSG output in a multi-stage Node.js build
 - Copies `dist/static/` to nginx
 - Configures clean-URL routing (directory index + try_files)
-- Sets 1-year immutable caching headers for `/_litro/` and `/shoelace/` assets
+- Sets 1-year immutable caching for the hashed chunks in `/_litro/assets/`, `no-cache` for the client entry `/_litro/app.js`, and 1-week caching for `/shoelace/` assets

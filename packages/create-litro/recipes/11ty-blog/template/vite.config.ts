@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
-import litroContentPlugin from '@beatzball/litro/vite';
+import litroContentPlugin, { litroEntryPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
-  plugins: [litroContentPlugin()],
+  plugins: [litroContentPlugin(), litroEntryPlugin()],
   base: '/_litro/',
   resolve: {
     // NOTE: no 'source' condition. An installed package's TypeScript is

@@ -390,7 +390,7 @@ export default defineNitroConfig({
   publicAssets: [
     // Paths resolved relative to srcDir ('server/') — use '../' to reach root.
     // Bare 'dist/client' resolves to 'server/dist/client' and 404s all /_litro/** assets.
-    { dir: "../dist/client", baseURL: "/_litro/", maxAge: 31536000 },
+    { dir: "../dist/client", baseURL: "/_litro/" },
     { dir: "../public", baseURL: "/", maxAge: 0 },
   ],
   externals: { inline: ["@lit-labs/ssr", "@lit-labs/ssr-client"] },

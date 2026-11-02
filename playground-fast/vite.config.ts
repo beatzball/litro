@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite';
+import { litroEntryPlugin } from '@beatzball/litro/vite';
 import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 export default defineConfig({
   base: '/_litro/',
+  plugins: [litroEntryPlugin()],
   resolve: {
     // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).
     alias: litroSourceAlias(),

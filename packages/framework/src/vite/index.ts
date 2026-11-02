@@ -119,3 +119,4 @@ export function litroContentPlugin(): Plugin {
 export default litroContentPlugin;
 
 export { litroActionsPlugin } from './actions.js';
+export { litroEntryPlugin } from './entry.js';

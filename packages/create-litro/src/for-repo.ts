@@ -267,10 +267,23 @@ export function renderNginxConf(): string {
         try_files $uri $uri.html $uri/index.html =404;
     }
 
-    # The client bundle has a stable name, but every deploy rewrites the file.
-    location /_litro/ {
+    # Only the content-hashed chunks are immutable.
+    location /_litro/assets/ {
         expires 1y;
         add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # The client entry keeps one name in every build, so a browser must ask
+    # again each time. The page loads it as app.js?v=<content hash>.
+    location = /_litro/app.js {
+        add_header Cache-Control "no-cache";
+    }
+
+    # Anything else under /_litro/ (files Vite copies from public/) has no
+    # content hash. Cache it for a day rather than for good.
+    location /_litro/ {
+        expires 1d;
+        add_header Cache-Control "public, max-age=86400";
     }
 
     # Shoelace icon assets are not content-hashed, so no immutable here.
