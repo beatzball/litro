@@ -47,6 +47,19 @@ public struct AppConfiguration: Decodable, Equatable {
 public enum AppConfigurationError: Error, CustomStringConvertible {
     case missing(String)
     case unreadable(String, underlying: Error)
+    /// An `allowedOrigins` entry that does not parse to a scheme and a host.
+    ///
+    /// The plausible typo is an entry with no scheme, such as
+    /// `"app.example.com"`: `URL.host` is nil for it, so the origin policy
+    /// would drop it without a word and the list would be shorter than it reads.
+    case unusableOrigin(String)
+    /// The start URL is not covered by `allowedOrigins`.
+    ///
+    /// The first navigation would be refused by the app's own origin policy. A
+    /// refusal is a cancel, and a cancel is deliberately not a load failure
+    /// (NATIVE-012), so without this the app would open to a white view and
+    /// say nothing.
+    case startURLNotAllowed(URL, allowedOrigins: [String])
 
     public var description: String {
         switch self {
@@ -58,6 +71,20 @@ public enum AppConfigurationError: Error, CustomStringConvertible {
             """
         case let .unreadable(name, underlying):
             return "\(name) could not be read: \(underlying)"
+        case let .unusableOrigin(entry):
+            return """
+            allowedOrigins has an entry that is not an origin: "\(entry)". Write each \
+            entry as a scheme and a host, such as https://app.example.com. This one \
+            is missing the scheme, the host, or both, so it would be ignored, and the \
+            app would refuse the pages it was meant to allow.
+            """
+        case let .startURLNotAllowed(url, allowedOrigins):
+            let list = allowedOrigins.isEmpty ? "an empty list" : allowedOrigins.joined(separator: ", ")
+            return """
+            startURL \(url.absoluteString) is not in allowedOrigins (\(list)). The app \
+            would refuse its own first page and show nothing. Add its origin to \
+            allowedOrigins in the app's app.json under native/Apps/.
+            """
         }
     }
 }
@@ -72,10 +99,31 @@ extension AppConfiguration {
         guard let url = bundle.url(forResource: name, withExtension: "json") else {
             throw AppConfigurationError.missing("\(name).json")
         }
+        let configuration: AppConfiguration
         do {
-            return try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
+            configuration = try JSONDecoder().decode(AppConfiguration.self, from: Data(contentsOf: url))
         } catch {
             throw AppConfigurationError.unreadable("\(name).json", underlying: error)
+        }
+        try configuration.validate()
+        return configuration
+    }
+
+    /// Refuses a configuration that would boot to a blank screen.
+    ///
+    /// Two faults, with a message each, because they send the reader to
+    /// different lines: an allowlist entry that is not an origin at all, and a
+    /// start URL the list does not cover. The entries are checked first, since
+    /// a dropped entry is the usual reason the start URL is not covered.
+    ///
+    /// In `load`, not in the decoder, so a test can still build a configuration
+    /// with an empty list to exercise the origin policy itself.
+    public func validate() throws {
+        if let bad = allowedOrigins.first(where: { Origin(string: $0) == nil }) {
+            throw AppConfigurationError.unusableOrigin(bad)
+        }
+        guard allows(startURL) else {
+            throw AppConfigurationError.startURLNotAllowed(startURL, allowedOrigins: allowedOrigins)
         }
     }
 

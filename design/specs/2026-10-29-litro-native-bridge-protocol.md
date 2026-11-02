@@ -57,7 +57,17 @@ Three deliberate narrowings:
 - **Every request carries an `id`.** The page never sends a notification. A call whose
   failure is invisible is a call that is hard to debug on a device.
 - **`params` is an object or absent, never positional.** A positional argument list is a
-  silent breakage when an argument is inserted.
+  silent breakage when an argument is inserted. An explicit `"params": null` is neither, and
+  both sides reject it with `INVALID_REQUEST`. A page that means "no params" leaves the key
+  out: `JSON.stringify` and WebKit's message conversion both drop a key whose value is
+  `undefined`, so `null` only arrives when a page wrote it. The shell once accepted it while
+  `isBridgeRequest` refused it; the shell was changed, because the TypeScript side already
+  matched this document and a published package should not widen what it accepts to cover a
+  shell bug.
+- **Every message with a usable `id` is answered.** That holds even when the message holds a
+  value JSON cannot carry, such as a `Date`: the shell reads the `id` before it converts the
+  rest, and answers `INVALID_REQUEST`. A message with no usable `id` is logged and dropped,
+  because there is no call to address the reply to.
 - **No batching.** One message, one call. A batch cannot be validated by the same
   predicate, and nothing here needs it.
 

@@ -53,6 +53,33 @@ public enum RequestParseFailure: Error, Equatable, Sendable {
     }
 }
 
+/// A message as it arrived from the web view, converted once at the edge.
+///
+/// `WKScriptMessage.body` is `Any`, and `JSONValue(any:)` returns nil for the
+/// whole body when any value inside it is not JSON -- a `Date` arrives as an
+/// `NSDate`. Converting first and reading the id afterwards therefore lost the
+/// id, and the page waited out its whole timeout for a message the shell had
+/// already decided not to answer. That is NATIVE-003 one layer up, so this does
+/// what `BridgeRequest.parse` does: it reads the id before judging the rest.
+public enum IncomingMessage: Equatable, Sendable {
+    /// Every value in the body is JSON.
+    case json(JSONValue)
+    /// The body held something JSON cannot carry.
+    ///
+    /// `id` is read from the raw body under the same rule `parse` applies, a
+    /// non-empty string, and is `nil` only when there is nowhere to reply.
+    case notJSON(id: String?)
+
+    public init(body: Any) {
+        if let value = JSONValue(any: body) {
+            self = .json(value)
+            return
+        }
+        let id = (body as? [String: Any])?["id"] as? String
+        self = .notJSON(id: id?.isEmpty == false ? id : nil)
+    }
+}
+
 public extension BridgeRequest {
     /// Reads a request out of a decoded message.
     ///
@@ -73,8 +100,15 @@ public extension BridgeRequest {
 
         // `params` present but not an object is a malformed envelope, not an
         // unknown method, so it is checked before the method name is resolved.
+        //
+        // An explicit `null` is "present and not an object", as it is for
+        // `isBridgeRequest`. A page that leaves params out sends no key at all:
+        // `JSON.stringify` and WebKit's message conversion both drop a key
+        // whose value is `undefined`. So `null` arrives only when a page wrote
+        // it, and accepting it here would make the shell the one side that
+        // takes a message the protocol rejects.
         var params: [String: JSONValue] = [:]
-        if let raw = message["params"], raw != .null {
+        if let raw = message["params"] {
             guard let object = raw.objectValue else { return .failure(.invalidRequest(id: id)) }
             params = object
         }

@@ -205,3 +205,106 @@ final class BridgeOriginTests: XCTestCase {
         XCTAssertTrue(config.allowsBridgeOrigin(scheme: "HTTPS", host: "App.Example.TEST", port: 0))
     }
 }
+
+/// A configuration whose own start URL its allowlist refuses boots to a blank
+/// screen: the first navigation is canceled by the origin policy, and a cancel
+/// is deliberately not a load failure (NATIVE-012). So `load` refuses it, and
+/// the app shows the startup failure screen with the reason instead.
+final class AppConfigurationValidationTests: XCTestCase {
+    /// Writes `json` as app.json in a fresh directory and loads it as a bundle.
+    private func load(_ json: String) throws -> AppConfiguration {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("litro-config-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try Data(json.utf8).write(to: dir.appendingPathComponent("app.json"))
+        let bundle = try XCTUnwrap(Bundle(url: dir))
+        return try AppConfiguration.load(from: bundle)
+    }
+
+    private func json(start: String, origins: [String]) -> String {
+        let list = origins.map { "\"\($0)\"" }.joined(separator: ", ")
+        return """
+        { "name": "Demo", "bundleIdentifier": "test.demo", "startURL": "\(start)",
+          "allowedOrigins": [\(list)], "capabilities": [] }
+        """
+    }
+
+    func testLoadsAConfigurationWhoseStartUrlIsAllowed() throws {
+        let config = try load(json(start: "https://app.example.test/", origins: ["https://app.example.test"]))
+        XCTAssertEqual(config.startURL, URL(string: "https://app.example.test/"))
+    }
+
+    func testRefusesAStartUrlOutsideTheAllowlist() {
+        XCTAssertThrowsError(try load(json(start: "https://app.example.test/",
+                                           origins: ["https://other.example.test"]))) { error in
+            guard case let .startURLNotAllowed(url, allowedOrigins: _)? = error as? AppConfigurationError else {
+                return XCTFail("expected startURLNotAllowed, got \(error)")
+            }
+            XCTAssertEqual(url.absoluteString, "https://app.example.test/")
+            let text = String(describing: error)
+            XCTAssertTrue(text.contains("https://app.example.test/"), text)
+            XCTAssertTrue(text.contains("allowedOrigins"), text)
+        }
+    }
+
+    func testRefusesAnEmptyAllowlist() {
+        XCTAssertThrowsError(try load(json(start: "https://app.example.test/", origins: []))) { error in
+            guard case .startURLNotAllowed? = error as? AppConfigurationError else {
+                return XCTFail("expected startURLNotAllowed, got \(error)")
+            }
+        }
+    }
+
+    /// The plausible typo: an entry with no scheme. `URL.host` is nil for it,
+    /// so it used to vanish from the list without a word. It gets its own
+    /// message, because "your start URL is not allowed" would send the reader
+    /// to the wrong line.
+    func testRefusesAnEntryWithNoScheme() {
+        XCTAssertThrowsError(try load(json(start: "https://app.example.test/",
+                                           origins: ["https://app.example.test", "app.example.test"]))) { error in
+            guard case let .unusableOrigin(entry)? = error as? AppConfigurationError else {
+                return XCTFail("expected unusableOrigin, got \(error)")
+            }
+            XCTAssertEqual(entry, "app.example.test")
+            let text = String(describing: error)
+            XCTAssertTrue(text.contains("\"app.example.test\""), text)
+            XCTAssertTrue(text.contains("https://"), text)
+        }
+    }
+
+    func testRefusesAnEntryThatIsNotAUrl() {
+        XCTAssertThrowsError(try load(json(start: "https://app.example.test/",
+                                           origins: ["https://app.example.test", "not a url"]))) { error in
+            guard case .unusableOrigin("not a url")? = error as? AppConfigurationError else {
+                return XCTFail("expected unusableOrigin, got \(error)")
+            }
+        }
+    }
+
+    /// `about:blank` and `file:///` have a scheme and no host. The message must
+    /// not send the reader looking for a missing scheme that is right there.
+    func testTheMessageDoesNotBlameAMissingSchemeThatIsPresent() {
+        for entry in ["about:blank", "file:///", "app.example.test", "localhost:5173"] {
+            XCTAssertThrowsError(try load(json(start: "https://app.example.test/",
+                                               origins: ["https://app.example.test", entry]))) { error in
+                guard case .unusableOrigin(entry)? = error as? AppConfigurationError else {
+                    return XCTFail("expected unusableOrigin for \(entry), got \(error)")
+                }
+                let text = String(describing: error)
+                XCTAssertFalse(text.contains("no scheme"), "\(entry): \(text)")
+                XCTAssertTrue(text.contains("scheme and a host"), "\(entry): \(text)")
+                XCTAssertTrue(text.contains("host"), "\(entry): \(text)")
+            }
+        }
+    }
+
+    /// The demo app in native/Apps/ must pass its own check.
+    func testTheDemoConfigurationIsValid() throws {
+        let demo = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Apps/demo/app.json")
+        let config = try load(String(contentsOf: demo, encoding: .utf8))
+        XCTAssertTrue(config.allows(config.startURL))
+    }
+}

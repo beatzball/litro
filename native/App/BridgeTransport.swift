@@ -79,14 +79,15 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard accepts(message.frameInfo) else { return }
-        guard let value = JSONValue(any: message.body) else {
-            // The body held something that is not JSON, so there is no id to
-            // answer and nothing to dispatch.
-            logger.error("bridge message was not JSON")
-            return
+        // Converted here, synchronously, so only a Sendable value crosses into
+        // the task. A body that is not all JSON still yields its id, and the
+        // dispatcher answers it rather than leaving the page to time out.
+        let incoming = IncomingMessage(body: message.body)
+        if case .notJSON = incoming {
+            logger.error("bridge message held a value that is not JSON")
         }
         Task { @MainActor in
-            guard let reply = await dispatcher.handle(value) else {
+            guard let reply = await dispatcher.handle(incoming) else {
                 // No usable id. Answering an invented one would have the page
                 // resolve a call it never made, so the message is dropped and
                 // logged instead.
