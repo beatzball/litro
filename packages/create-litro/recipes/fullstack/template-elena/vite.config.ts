@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
+import { litroEntryPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
   base: '/_litro/',
+  plugins: [litroEntryPlugin()],
   resolve: {
     // NOTE: no 'source' condition. An installed package's TypeScript is
     // never transpiled by Vite (it lives under node_modules), so resolving

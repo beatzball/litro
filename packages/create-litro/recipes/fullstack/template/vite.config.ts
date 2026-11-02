@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { litroActionsPlugin } from '@beatzball/litro/vite';
+import { litroActionsPlugin, litroEntryPlugin } from '@beatzball/litro/vite';
 
 export default defineConfig({
   // base must match publicAssets.baseURL in nitro.config.ts ('/_litro/').
@@ -8,7 +8,7 @@ export default defineConfig({
   // Without this, preload requests hit the catch-all page handler and return
   // HTML, causing a MIME type error for module scripts.
   base: '/_litro/',
-  plugins: [litroActionsPlugin()],
+  plugins: [litroActionsPlugin(), litroEntryPlugin()],
   resolve: {
     // NOTE: no 'source' condition. An installed package's TypeScript is
     // never transpiled by Vite (it lives under node_modules), so resolving

@@ -30,6 +30,8 @@ import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { fileToRoute, compareRoutes, assertUniqueComponentTags } from './path-to-route.js';
 import { resolveAdapter } from '../adapter/resolve.js';
 import sideEffectsPlugin from './side-effects.js';
+import { computeAppVersion, resolveClientDir } from './app-version.js';
+import { LITRO_APP_VERSION_GLOBAL } from '../runtime/app-entry.js';
 import type { LitroRoute } from '../types/route.js';
 
 // ---------------------------------------------------------------------------
@@ -321,6 +323,34 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
   sideEffectsPlugin(nitro);
 
   // ---------------------------------------------------------------------------
+  // Client entry version — see plugins/app-version.ts and runtime/app-entry.ts
+  // ---------------------------------------------------------------------------
+  // Production builds only. `litro dev` serves the entry live (or, for an
+  // older dev middleware, a leftover bundle the next `vite build` replaces),
+  // and a hash there would also rewrite the manifest stub on every reload.
+  async function appVersionStatement(): Promise<string> {
+    if (nitro.options.dev) return '';
+    const clientDir = resolveClientDir(
+      nitro.options.rootDir,
+      (nitro.options.publicAssets ?? []) as Array<{ dir: string; baseURL?: string }>,
+    );
+    const result = await computeAppVersion(clientDir);
+    if (result.version === undefined) {
+      if (result.reason === 'imported') {
+        nitro.logger.warn(
+          `[litro] ${result.importers.length} client chunk(s) import app.js by name ` +
+            `(${result.importers.slice(0, 3).join(', ')}${result.importers.length > 3 ? ', ...' : ''}), ` +
+            'so the page loads the bare /_litro/app.js with no version. ' +
+            'Add litroEntryPlugin() from @beatzball/litro/vite to vite.config.ts.',
+        );
+      }
+      return '';
+    }
+    nitro.logger.info(`[litro] Client entry version ${result.version}`);
+    return `\nglobalThis[${JSON.stringify(LITRO_APP_VERSION_GLOBAL)}] = ${JSON.stringify(result.version)};\n`;
+  }
+
+  // ---------------------------------------------------------------------------
   // Core scan function — called both at build time and on dev reload
   // ---------------------------------------------------------------------------
   async function runScan(): Promise<void> {
@@ -344,7 +374,7 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     // the shim registry as a side effect of `.define()` during page module
     // evaluation.
     const adapter = await resolveAdapter();
-    const preamble = adapter.manifestPreamble?.() ?? '';
+    const preamble = (adapter.manifestPreamble?.() ?? '') + (await appVersionStatement());
 
     if (pageFiles.length === 0) {
       nitro.logger.info('[litro] No page files found in pages/.');

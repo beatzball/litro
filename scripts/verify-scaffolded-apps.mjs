@@ -577,6 +577,46 @@ for (const { recipe, adapter, id: variantId, flags = [], fixture } of VARIANTS) 
     }
   }
 
+  // The page loads the entry as `app.js?v=<content hash>` (issue 253). A
+  // module loaded under a second URL is a second copy, so no other chunk may
+  // import the entry by its bare name. Every adapter is checked: under FAST and
+  // Elena the entry holds the whole runtime. `litroEntryPlugin()` in the
+  // template's vite.config.ts is what keeps the entry free of shared code.
+  const entryImporters = scripts.filter(
+    (rel) => rel !== 'app.js' && /["'`](?:\.\.?\/)+app\.js["'`]/.test(readChunk(rel)),
+  );
+  if (entryImporters.length > 0) {
+    results.push({
+      id,
+      status: 'ENTRY-SHARED',
+      detail:
+        `${entryImporters.join(', ')} import app.js by name, so shared code ` +
+        `sits in the entry. The page loads the entry as app.js?v=<hash>, and ` +
+        `these chunks would load a second copy under the bare URL. Add ` +
+        `litroEntryPlugin() from @beatzball/litro/vite to vite.config.ts.`,
+    });
+    continue;
+  }
+
+  // A prerendered page must name the versioned entry. The bare URL is served
+  // `no-cache`, which is safe but costs a revalidation on every page load,
+  // and a missing version means the build step that hashes app.js did not run.
+  const prerenderedHome = join(dir, 'dist/static/index.html');
+  if (
+    existsSync(prerenderedHome) &&
+    !/src="[^"]*\/_litro\/app\.js\?v=[0-9a-f]{12}"/.test(readFileSync(prerenderedHome, 'utf-8'))
+  ) {
+    results.push({
+      id,
+      status: 'ENTRY-UNVERSIONED',
+      detail:
+        `dist/static/index.html does not load /_litro/app.js?v=<hash>. The ` +
+        `pages plugin hashes dist/client/app.js during nitro build; check the ` +
+        `build log for a "[litro] Client entry version" line or a warning.`,
+    });
+    continue;
+  }
+
   // The credit line must survive to rendered HTML, not merely compile. Three
   // things can silently drop it and still exit 0: Rollup tree-shaking the
   // component's registration, an adapter failing to expand an unregistered

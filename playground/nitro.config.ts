@@ -176,8 +176,14 @@ export default defineNitroConfig({
     '/__litro/mcp/**': {
       headers: { 'cache-control': 'no-store' },
     },
-    '/_litro/**': {
+    // Only the hashed chunks are immutable. app.js keeps one name in every
+    // build, so a browser must ask again each time; the page loads it as
+    // app.js?v=<content hash>, which changes with each deploy.
+    '/_litro/assets/**': {
       headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+    },
+    '/_litro/app.js': {
+      headers: { 'cache-control': 'no-cache' },
     },
   },
 });

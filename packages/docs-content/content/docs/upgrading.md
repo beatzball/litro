@@ -18,6 +18,44 @@ pnpm update @beatzball/litro @beatzball/litro-router
 
 Full change lists live in each package's CHANGELOG on npm or in the repository.
 
+## litro 0.18.0
+
+### The client entry is no longer cached forever (issue 253)
+
+Every recipe used to send `cache-control: public, max-age=31536000, immutable` for all of `/_litro/**`. But `/_litro/app.js` has the same name in every build. After a deploy a browser kept the old entry for a year, the old entry asked for chunks that no longer existed, and client-side navigation silently did nothing.
+
+Make two changes to an existing app.
+
+1. In `nitro.config.ts`, mark only the hashed chunks immutable, and send `no-cache` for the entry:
+
+   ```ts
+   routeRules: {
+     '/_litro/assets/**': {
+       headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+     },
+     '/_litro/app.js': { headers: { 'cache-control': 'no-cache' } },
+   },
+   ```
+
+   If you serve a static build from your own web server, do the same there. For nginx, use `location /_litro/assets/` for the immutable rule and `location = /_litro/app.js { add_header Cache-Control "no-cache"; }`.
+
+2. In `vite.config.ts`, add `litroEntryPlugin()`:
+
+   ```ts
+   import { litroEntryPlugin } from '@beatzball/litro/vite';
+
+   export default defineConfig({
+     plugins: [/* your plugins */, litroEntryPlugin()],
+     // ...
+   });
+   ```
+
+With the plugin, the page loads the entry as `/_litro/app.js?v=<content hash>`. The hash comes from the built `dist/client/app.js`, so each deploy names a URL that no browser has cached yet, and a browser that still holds an old entry recovers by itself. The plugin moves the code the entry imports statically into a hashed `boot` chunk, so no other chunk imports `app.js` by name and the runtime loads only once.
+
+Without the plugin nothing breaks: the build prints a warning and the page keeps loading the bare `/_litro/app.js`. Step 1 alone already stops new browsers from keeping a stale entry.
+
+To load the entry from somewhere else, such as a CDN, pass `appScriptUrl` to `createPageHandler()`. The dev live entry ignores it.
+
 ## litro 0.12.1 / litro-router 0.2.0
 
 ### Live dev entry — the stale-bundle fix (opt-in)

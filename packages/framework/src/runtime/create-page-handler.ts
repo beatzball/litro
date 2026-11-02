@@ -19,6 +19,7 @@ import { PassThrough } from 'node:stream';
 import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader, getRequestURL } from 'h3';
 import type { EventHandler } from 'h3';
 import { buildShell } from './shell.js';
+import { appEntryUrl } from './app-entry.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
@@ -54,6 +55,12 @@ export interface PageHandlerOptions {
    * (default: 'lit'). Prefer passing explicitly for deterministic builds.
    */
   adapter?: FrameworkAdapter;
+  /**
+   * Production URL of the client entry, in place of the default
+   * `/_litro/app.js?v=<content hash>`. Set it only when the entry is served
+   * from somewhere else, such as a CDN. The dev live entry ignores it.
+   */
+  appScriptUrl?: string;
 }
 
 /**
@@ -196,7 +203,9 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       // (issue #97). The dev Vite server runs with base '/', so it emits and
       // serves the entry and every transitive import at root-relative paths.
       // In production the compiled `/_litro/app.js` bundle is served by the
-      // publicAssets static handler (dist/client/app.js).
+      // publicAssets static handler (dist/client/app.js), as
+      // `/_litro/app.js?v=<content hash>` so a deploy changes the URL — see
+      // runtime/app-entry.ts.
       //
       // LITRO_DEV_LIVE_ENTRY gates the live entry on the app actually running
       // the new litroViteDevConfig()-based middleware: an app upgraded to this
@@ -206,7 +215,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const isDev = process.env.LITRO_DEV === 'true';
       const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
-      const appScriptUrl = liveEntry ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
+      const appScriptUrl = appEntryUrl({ basePath, liveEntry, override: options.appScriptUrl });
 
       // Get any framework-specific head scripts from the adapter.
       const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
@@ -281,7 +290,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const isDev = process.env.LITRO_DEV === 'true';
       // Same LITRO_DEV_LIVE_ENTRY gating as the happy path above.
       const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
-      const appScriptUrl = liveEntry ? `${basePath}/app.ts` : `${basePath}/_litro/app.js`;
+      const appScriptUrl = appEntryUrl({ basePath, liveEntry, override: options.appScriptUrl });
       // Carry vary header through the fallback path too — the URL can still
       // be hit with Accept: application/json on retries.
       setResponseHeader(event, 'vary', 'Accept');

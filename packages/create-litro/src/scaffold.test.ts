@@ -112,7 +112,7 @@ describe('scaffold', () => {
       expect(nitroConfig).toContain("'/__litro/action/**'");
 
       const viteConfig = await readFile(join(targetDir, 'vite.config.ts'), 'utf-8');
-      expect(viteConfig).toContain("import { litroActionsPlugin } from '@beatzball/litro/vite';");
+      expect(viteConfig).toContain("import { litroActionsPlugin, litroEntryPlugin } from '@beatzball/litro/vite';");
       expect(viteConfig).toContain('litroActionsPlugin()');
 
       const pkg = JSON.parse(await readFile(join(targetDir, 'package.json'), 'utf-8'));

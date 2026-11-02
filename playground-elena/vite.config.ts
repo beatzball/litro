@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
-import { litroActionsPlugin } from '@beatzball/litro/vite';
+import { litroActionsPlugin, litroEntryPlugin } from '@beatzball/litro/vite';
 import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 export default defineConfig({
-  plugins: [litroActionsPlugin()],
+  plugins: [litroActionsPlugin(), litroEntryPlugin()],
   base: '/_litro/',
   resolve: {
     // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).

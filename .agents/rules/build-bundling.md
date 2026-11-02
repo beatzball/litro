@@ -216,3 +216,29 @@ the barrel shape — see `BARREL_FIXTURE` in that script. At runtime
 `LitroOutlet.firstUpdated()` also checks `LitElement.observedAttributes` for
 `defer-hydration` and names the fault in one `console.error`, so an app that
 upgrades the framework finds out without rebuilding anything.
+
+### BUILD-010 — No chunk imports the client entry by name
+
+Every app's `vite.config.ts` lists `litroEntryPlugin()` from
+`@beatzball/litro/vite`. Do not remove it, and do not add a code-splitting
+group that pulls a module the entry imports statically back out of its `boot`
+chunk.
+
+**Why:** `/_litro/app.js` keeps one name in every build, so it is served
+`no-cache` and the page loads it as `/_litro/app.js?v=<content hash>` (issue
+253). Before that it was `immutable`, and after a deploy browsers kept the old
+entry, which asked for chunks that no longer existed: client navigation
+silently did nothing. A module loaded under a second URL is a second copy. By
+default the bundler puts the entry's static imports (lit-html and the hydration
+support, or the whole FAST or Elena runtime) inside `app.js`, and other chunks
+import `../app.js` by its bare name — a second runtime next to the versioned
+one. The plugin moves those modules into a hashed `boot` chunk. It does not
+touch `lit-element`, which a Lit entry reaches only through its dynamic import
+(BUILD-009).
+
+**Check:** `node scripts/verify-scaffolded-apps.mjs` reports `ENTRY-SHARED` when
+a chunk imports `app.js`, and `ENTRY-UNVERSIONED` when a prerendered page does
+not load `app.js?v=`. The build also warns, and falls back to the bare URL,
+from `packages/framework/src/plugins/app-version.ts`.
+`e2e/playground/client-entry-cache.spec.ts` checks the served headers in
+`pnpm test:e2e:preview`.

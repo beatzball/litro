@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
-import litroContentPlugin from '@beatzball/litro/vite';
+import litroContentPlugin, { litroEntryPlugin } from '@beatzball/litro/vite';
 import { litroSourceAlias } from '../scripts/litro-source-alias.mjs';
 
 // Browser stub for @beatzball/litro-docs-ui/src/packages.ts — that module
@@ -36,7 +36,7 @@ export function packagesStubPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [litroContentPlugin(), packagesStubPlugin()],
+  plugins: [litroContentPlugin(), litroEntryPlugin(), packagesStubPlugin()],
   base: process.env.LITRO_BASE_PATH ? `${process.env.LITRO_BASE_PATH}/_litro/` : '/_litro/',
   resolve: {
     // Workspace-only: read the Litro packages from src/ (see scripts/litro-source-alias.mjs).

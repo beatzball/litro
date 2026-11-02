@@ -87,8 +87,14 @@ export default defineNitroConfig({
   compatibilityDate: '2025-01-01',
 
   routeRules: {
-    [`${basePath}/_litro/**`]: {
+    // Only the hashed chunks are immutable. app.js keeps one name in every
+    // build, so a browser must ask again each time; the page loads it as
+    // app.js?v=<content hash>, which changes with each deploy.
+    [`${basePath}/_litro/assets/**`]: {
       headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+    },
+    [`${basePath}/_litro/app.js`]: {
+      headers: { 'cache-control': 'no-cache' },
     },
     '/shoelace/**': {
       headers: { 'cache-control': 'public, max-age=604800' },
