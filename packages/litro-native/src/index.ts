@@ -17,6 +17,8 @@ export { secureStorage } from './storage.js';
 export { share, canShare } from './share.js';
 export { requestReview } from './review.js';
 export { platform, supports } from './platform.js';
+export { NativeBridgeError } from './errors.js';
+export { ERROR_CODES } from './protocol.js';
 
 export type {
   Capability,

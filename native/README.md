@@ -176,6 +176,8 @@ the promise anyway, because the page may be an old deploy that cannot be fixed.
 ## What is not here yet
 
 Phase 4 built the host, the handshake, and two modules: haptics and badging. The
-other four — notifications, secure storage, share and review — arrive in Phase 5
-with `adapters/shell.ts` on the page side. Until then they are not compiled in,
-so the handshake omits them and every call for one is answered empty.
+page side, `packages/litro-native/src/adapters/shell.ts`, now speaks the
+protocol to this shell. The other four modules — notifications, secure storage,
+share and review — are still to come in Phase 5. Until then they are not
+compiled in, so the handshake omits them, and the page answers those calls
+itself without sending them.

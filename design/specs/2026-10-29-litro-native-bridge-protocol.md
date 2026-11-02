@@ -181,13 +181,17 @@ A dropped message must never leave a promise pending for the life of the page.
 |---|---|---|
 | handshake | 2s | `handshake` |
 | default | 10s | every call that does not wait on a person |
-| interactive | 120s | `share`, `requestReview` |
+| interactive | 120s | `badging.set`, `badging.clear`, `notifications.schedule`, `share`, `requestReview` |
 
 The handshake is shortest because startup queues behind it, and a shell that cannot answer
 that fast is treated as absent. The default is shorter than the MCP Apps bridge's 30
 seconds because every call here is a local device operation with no network work behind it.
 `share` and `requestReview` open something a person reads, so a long wait there is not a
-failure. `canShare` is **not** interactive: it opens nothing, and a user-sized budget would
+failure. `badging.set`, `badging.clear` and `notifications.schedule` ask for the
+notification permission the first time, and that prompt is read by a person too. With
+the default budget, the page failed the call while the shell went on to do the work: a
+notification scheduled with an id the page never learned, so it could never be canceled.
+They were added in Phase 5 after a review found the gap. `canShare` is **not** interactive: it opens nothing, and a user-sized budget would
 hide a dropped message for two minutes.
 
 ## What this phase does not decide
@@ -197,6 +201,7 @@ hide a dropped message for two minutes.
   lets a test assert on an exact message.
 - **Queueing and concurrency.** How many calls may be outstanding, and what happens to
   calls made before the handshake resolves, belong with the transport in Phase 5.
+  Decided there: see "Phase 5, as built" in the parent spec.
 - **Origin checks.** Which origins the web view may load is per-app shell configuration,
   described in the parent spec, not a property of the message format.
 

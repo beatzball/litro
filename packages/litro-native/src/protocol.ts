@@ -193,14 +193,29 @@ export const HANDSHAKE_TIMEOUT_MS = 2_000;
 /**
  * How long a share sheet or permission prompt may sit open.
  *
- * These are the only calls that legitimately wait on a human, so they are
+ * These are the calls that can legitimately wait on a human, so they are
  * exempt from {@link DEFAULT_TIMEOUT_MS}. A person reading a share sheet for
  * twenty seconds is not a failure.
  */
 export const INTERACTIVE_TIMEOUT_MS = 120_000;
 
-/** Methods that wait on a human and therefore use {@link INTERACTIVE_TIMEOUT_MS}. */
-export const INTERACTIVE_METHODS: readonly Method[] = ['share', 'requestReview'];
+/**
+ * Methods that can wait on a human and therefore use {@link INTERACTIVE_TIMEOUT_MS}.
+ *
+ * Not only the two that open system UI. Setting a badge and scheduling a
+ * notification both ask for the notification permission the first time, and a
+ * person may read that prompt for longer than ten seconds. A shorter budget
+ * there fails the call while the shell goes on to do the work: the badge is
+ * set, or the notification is scheduled with an id the page never learns, so
+ * it can never be canceled, and a caller that retries schedules it twice.
+ */
+export const INTERACTIVE_METHODS: readonly Method[] = [
+  'badging.set',
+  'badging.clear',
+  'notifications.schedule',
+  'share',
+  'requestReview',
+];
 
 /** The timeout that applies to `method`. */
 export function timeoutFor(method: Method): number {

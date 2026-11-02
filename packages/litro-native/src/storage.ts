@@ -6,6 +6,12 @@
  * it, and it is visible in developer tools. Before persisting anything that
  * would matter if it leaked, such as a long-lived access token, check
  * `isNative` and keep the web build signed out instead.
+ *
+ * When `isNative` is true, a write reaches the keychain or goes nowhere: the
+ * shell bridge never falls back to browser storage, even on a build without
+ * the keychain module. A page inside the shell whose handshake failed gets the
+ * web bridge and browser storage, but `isNative` is false there. So gate on
+ * `isNative` and nothing else.
  */
 
 import { getBridge } from './bridge.js';

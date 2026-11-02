@@ -179,6 +179,21 @@ describe('timeouts', () => {
     for (const m of METHODS) expect(timeoutFor(m)).toBeGreaterThan(0);
   });
 
+  it('gives every call that can raise a permission prompt the interactive budget', () => {
+    // Setting a badge and scheduling a notification ask for the notification
+    // permission the first time. Timing out while a person reads that prompt
+    // fails a call whose work the shell then does anyway.
+    for (const m of ['badging.set', 'badging.clear', 'notifications.schedule'] as const) {
+      expect(timeoutFor(m)).toBe(INTERACTIVE_TIMEOUT_MS);
+    }
+  });
+
+  it('names exactly the interactive methods, so one cannot join or leave unnoticed', () => {
+    expect([...INTERACTIVE_METHODS].sort()).toEqual(
+      ['badging.clear', 'badging.set', 'notifications.schedule', 'requestReview', 'share'],
+    );
+  });
+
   it('treats canShare as a plain call, not an interactive one', () => {
     // canShare only asks whether a payload is shareable. It opens no sheet, so
     // a user-sized budget would hide a dropped message for two minutes.

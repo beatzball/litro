@@ -20,9 +20,12 @@ Zero dependencies. Safe to import in a page that renders on the server.
 
 ## Status
 
-Phase 1: the web path. The interface, the bridge and the web fallbacks are here
-and useful on their own. The native host is not built yet, so every capability
-currently takes its web behavior.
+The web path is complete. The page side of the native shell is here too: inside
+the Litro iOS shell, each call goes to the shell for every capability that
+shell's build compiled in, and takes its web behavior for the rest. The shell
+itself, in `native/` in this repository, implements two of the six modules so
+far, haptics and badging; the other four take their web behavior until they
+land.
 
 **Not published yet.** This package is in the repository and not on the
 registry. The release pipeline authenticates per package, and that cannot be set
@@ -80,7 +83,13 @@ if (await supports('notifications')) {
 **Secure storage is not secure on the web.** The fallback is browser storage.
 Any script on the origin can read it and it shows up in developer tools. For
 anything that would matter if it leaked, such as a long-lived access token,
-check the platform first and keep the web build signed out:
+check the platform first and keep the web build signed out.
+
+When `isNative` is true, a `secureStorage` write reaches the keychain or goes
+nowhere. It never falls back to browser storage, even on a shell build that
+left the keychain module out: there it reads `null` and writes nothing. A page
+inside the shell whose handshake failed gets the web bridge, which IS browser
+storage, but there `isNative` is false. So gate on `isNative` and nothing else:
 
 ```ts
 import { platform, secureStorage } from '@beatzball/litro-native';
@@ -113,6 +122,27 @@ These are different questions, and the difference matters.
 
 On the web the list is built from the APIs the browser actually exposes, so it
 differs between two browsers, and between two visits to the same browser.
+
+## When a call rejects
+
+A rejection from inside the native shell is a `NativeBridgeError`. Its `code` is
+one of `ERROR_CODES`, so you can tell a person saying no from a fault:
+
+```ts
+import { notifications, NativeBridgeError } from '@beatzball/litro-native';
+
+try {
+  await notifications.schedule({ title: 'Stand up', at: Date.now() + 60_000 });
+} catch (err) {
+  if (err instanceof NativeBridgeError && err.isPermissionDenied) {
+    // The user declined. Do not ask again on every tap.
+  }
+}
+```
+
+`isTimeout` is true when the shell did not answer in time. Every call has a
+budget, so no promise is ever left pending: ten seconds for most calls, two
+minutes for the share sheet and the review prompt, which wait on a person.
 
 ## Server rendering
 

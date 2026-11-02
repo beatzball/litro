@@ -94,6 +94,15 @@ jobs:
       - name: Verify bridge protocol parity
         run: node scripts/check-bridge-parity.mjs
 
+      # Only packages/litro-native/src/adapters/shell.ts may reach the bridge
+      # transport. A page that posts to the message handler directly builds
+      # clean and works, skipping the handshake, the capability gating and the
+      # timeouts, and breaks the day the transport changes.
+      - name: Verify the native boundary (self-test)
+        run: node scripts/check-native-boundary.mjs --self-test
+      - name: Verify the native boundary
+        run: node scripts/check-native-boundary.mjs
+
   # Builds every recipe the way a real user gets it: packed tarballs installed
   # into a fresh scaffold, NOT the workspace symlink every other job uses.
   #
