@@ -288,6 +288,11 @@ Three things the wiring needs, each of which cost a build to learn:
 - `plutil -extract` on an array prints its **element count**, not its elements.
   Counting the lines of that output gives 1 whether the count is 0 or 20. That
   is exactly the bug the capability warning shipped with for one build.
+- `plutil` reports a missing key on **stdout on some machines and stderr on
+  others** -- stderr on a current Mac, stdout on the CI runner. Silencing one
+  channel let the error text through as the value on the other, and the failure
+  appeared only in CI. Check the shape of what came back rather than trusting
+  the exit code and one redirect.
 
 **Check.** `native/scripts/check-release-config.sh --self-test`, and the two CI
 steps in the native job: one runs that self-test, the other attempts a Release

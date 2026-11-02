@@ -93,8 +93,18 @@ split_url() {
 # earlier version counted the LINES of that output, which is 1 whether the count
 # is 0 or 20, so the warning below never fired once. The self-test covers this
 # now, which is the only reason that is not still true.
+# Anything that is not a plain number is read as zero, rather than trusted.
+# `plutil` reports a missing key on stdout on some machines and on stderr on
+# others -- it was stderr here and stdout on the CI runner -- so silencing one
+# channel let the error text through as the count on the other. Checking the
+# shape of the answer does not depend on which channel it arrived by.
 capability_count() {
-  plutil -extract capabilities raw -o - "$1" 2>/dev/null || echo 0
+  local n
+  n="$(plutil -extract capabilities raw -o - "$1" 2>/dev/null)" || n=""
+  case "$n" in
+    "" | *[!0-9]*) echo 0 ;;
+    *) echo "$n" ;;
+  esac
 }
 
 self_test() {
@@ -140,8 +150,10 @@ self_test() {
   # Plain http to a public host is refused by App Transport Security at run
   # time, so it is an error here rather than something to discover on a device.
   check "http://app.example.com/"             reject
-  # Credentials in the URL must not hide the host behind an @.
-  check "https://user:pass@localhost/"        reject
+  # Credentials in the URL must not hide the host behind an @. Written without
+  # a password because a CI log masks anything shaped like one, and a masked
+  # line in the one place these rules are read is worse than no line.
+  check "https://someone@localhost/"          reject
 
   # The capability count, against real files, because the bug it had was in
   # reading plutil's output rather than in any rule.
@@ -163,6 +175,15 @@ self_test() {
   count_check "one"     '{"capabilities":["haptics"]}'          1
   count_check "two"     '{"capabilities":["haptics","badging"]}' 2
   count_check "missing" '{}'                                    0
+  # Both of these make plutil fail and print why. Which channel it prints on
+  # differs between machines, so these are what keep the answer a number
+  # rather than an error message that happened to arrive on stdout.
+  count_check "not json" 'this is not a plist at all'           0
+  # A capabilities value that is not a list prints as itself, which is not a
+  # number, so it reads as none and warns. That is the right end of the two:
+  # AppConfiguration refuses to decode it, so the app shows its failure screen
+  # on launch, and the guard has no business calling that a release blocker.
+  count_check "not a list" '{"capabilities":"haptics"}'         0
 
   if [ "$failures" -ne 0 ]; then
     echo "check-release-config: self-test FAILED, $failures of them" >&2
