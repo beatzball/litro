@@ -294,6 +294,11 @@ jobs:
             tail -40 release-attempt.log >&2
             exit 1
           fi
+          if ! grep -q "allowedOrigins has" release-attempt.log; then
+            echo "the guard refused the start URL but never read allowedOrigins" >&2
+            tail -40 release-attempt.log >&2
+            exit 1
+          fi
           echo "the guard refused it, as it should"
 
   audit:

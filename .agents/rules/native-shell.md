@@ -269,9 +269,30 @@ failure screen instead of the app. Nothing between "works on my Mac" and
 Debug build where the address is right.
 
 **Rule.** `native/scripts/check-release-config.sh` runs as the app target's
-first build phase. A Release build fails on a loopback or private address, a
-`.local` name, or plain `http`, and warns when `capabilities` is empty. A Debug
-build is left alone, because a Debug build is where those belong.
+first build phase. Any build that is not Debug fails on a loopback or private
+address, a `.local` name, or plain `http`, and warns when `capabilities` is
+empty. Only Debug is skipped, because a future `Staging` or `AppStore`
+configuration is exactly the kind of build that must not carry a dev address.
+
+**Every URL in the configuration, not only `startURL`.** A reviewer found the
+guard read the start URL alone, so a Release build passed with
+`http://localhost:5173` and a LAN address still in `allowedOrigins`. That is
+the entry that matters for safety rather than for a rejection: `Info.plist`
+keeps `NSAllowsLocalNetworking` in Release, so plain http to a LAN address is
+still permitted in the shipped app, and whatever host holds that address on the
+user's current network would be served the bridge.
+
+**Normalize before matching.** Hosts are case-insensitive and DNS treats a
+trailing dot as the same name, and the authority ends at the first of `?`, `#`
+or `/`. Every one of these passed the guard until a reviewer wrote them down:
+
+    https://LOCALHOST/              case
+    https://my-mac.local./          trailing dot
+    https://localhost?x=1           the query stayed inside the host
+    https://localhost?u=a@example.com   the "@" strip then moved the host
+    https://2130706433/             an IPv4 address as one integer
+    https://[::ffff:127.0.0.1]/     IPv4-mapped IPv6
+    https://[FD00::1]/              case, in an IPv6 literal
 
 Errors and warnings are split on purpose: an unreachable start URL is certainly
 broken, and an app with no capabilities is only *likely* to be rejected under
