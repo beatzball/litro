@@ -231,6 +231,35 @@ Two neighboring rules the same screen depends on:
 for both canceled spellings, and that a different `WebKitErrorDomain` code is
 still shown, so the rule cannot be satisfied by hiding every WebKit error.
 
+## NATIVE-013 — the window belongs to a scene, not to the app delegate
+
+**Trap.** `AppDelegate` built a `UIWindow` from `UIScreen.main.bounds` and held
+it. That is the shape every older UIKit example uses, it compiles, and it runs.
+On an iOS 27 device UIKit logs a fault against it:
+
+```
+`UIScene` life cycle is now required when building with the latest SDKs.
+Apps that don't adopt will fail to launch.
+```
+
+Built against the SDK that enforces it, the app is terminated on launch. Not
+rejected at review -- terminated, before review happens.
+
+**Rule.** The app delegate owns nothing UI-shaped. A `UIWindowSceneDelegate`
+builds the window with `UIWindow(windowScene:)`, and `Support/Info.plist`
+carries a `UIApplicationSceneManifest` naming that class.
+
+Name the class `$(PRODUCT_MODULE_NAME).SceneDelegate` in the manifest, never
+with a literal module prefix. The module name follows `PRODUCT_NAME`, which
+`select-app.sh` writes per app, so a literal resolves for one app and silently
+fails to load for the next. A scene delegate that fails to load is a black
+window with no error anywhere.
+
+**Check.** Launch on a simulator and confirm the page renders: a window that
+appears at all proves the manifest named a class that loaded. Confirming the
+fault itself is gone needs an iOS 27 device, because no simulator runtime
+through iOS 26.5 emits that line -- a quiet simulator log proves nothing here.
+
 ## NATIVE-015 — a message handler is not scoped to a frame
 
 **Trap.** `markerScript` is injected with `forMainFrameOnly: true`, which reads

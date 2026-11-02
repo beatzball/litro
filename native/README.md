@@ -17,7 +17,8 @@ native/
   Sources/
     LitroBridge/             the wire protocol: envelope, dispatch, handshake
     LitroShellKit/           per-app configuration, origin policy, failure text
-  App/                       UIKit and WebKit: the host, the transport, the modules
+  App/                       UIKit and WebKit: the scene, the host, the transport,
+                             the modules
   Apps/
     demo/app.json            one app, as plain data
   Support/
