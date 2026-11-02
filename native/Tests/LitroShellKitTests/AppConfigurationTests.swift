@@ -282,6 +282,23 @@ final class AppConfigurationValidationTests: XCTestCase {
         }
     }
 
+    /// `about:blank` and `file:///` have a scheme and no host. The message must
+    /// not send the reader looking for a missing scheme that is right there.
+    func testTheMessageDoesNotBlameAMissingSchemeThatIsPresent() {
+        for entry in ["about:blank", "file:///", "app.example.test", "localhost:5173"] {
+            XCTAssertThrowsError(try load(json(start: "https://app.example.test/",
+                                               origins: ["https://app.example.test", entry]))) { error in
+                guard case .unusableOrigin(entry)? = error as? AppConfigurationError else {
+                    return XCTFail("expected unusableOrigin for \(entry), got \(error)")
+                }
+                let text = String(describing: error)
+                XCTAssertFalse(text.contains("no scheme"), "\(entry): \(text)")
+                XCTAssertTrue(text.contains("scheme and a host"), "\(entry): \(text)")
+                XCTAssertTrue(text.contains("host"), "\(entry): \(text)")
+            }
+        }
+    }
+
     /// The demo app in native/Apps/ must pass its own check.
     func testTheDemoConfigurationIsValid() throws {
         let demo = URL(fileURLWithPath: #filePath)

@@ -74,9 +74,9 @@ public enum AppConfigurationError: Error, CustomStringConvertible {
         case let .unusableOrigin(entry):
             return """
             allowedOrigins has an entry that is not an origin: "\(entry)". Write each \
-            entry as a scheme and a host, such as https://app.example.com. An entry \
-            with no scheme would be ignored, and the app would refuse the pages it \
-            names.
+            entry as a scheme and a host, such as https://app.example.com. This one \
+            is missing the scheme, the host, or both, so it would be ignored, and the \
+            app would refuse the pages it was meant to allow.
             """
         case let .startURLNotAllowed(url, allowedOrigins):
             let list = allowedOrigins.isEmpty ? "an empty list" : allowedOrigins.joined(separator: ", ")

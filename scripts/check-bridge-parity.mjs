@@ -49,6 +49,40 @@ function must(match, what, file) {
   return match;
 }
 
+/**
+ * Drops comments so a declaration list can be read item by item.
+ *
+ * Good enough for these blocks, which hold no string containing `//` or `/*`.
+ * The strict readers below are the backstop: anything this leaves behind that
+ * is not a declaration makes them throw.
+ */
+function stripComments(block) {
+  return block.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
+/**
+ * Reads a comma-separated declaration list strictly: every item must match
+ * `pattern`, or this throws.
+ *
+ * Strict on purpose. The first version matched the declarations it recognized
+ * and skipped the rest, so a shape it did not expect -- the last entry with no
+ * trailing comma, two entries on one line -- vanished from BOTH the extracted
+ * set and the comparison, and the check printed OK. Consuming every item and
+ * failing on the first one it cannot read means a new shape stops the check
+ * loudly, the way `must` does for a moved declaration.
+ */
+function readList(block, pattern, what, file) {
+  const items = stripComments(block)
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  return items.map((item) => {
+    const match = item.match(pattern);
+    if (!match) throw new Error(`${file}: could not read "${item}" in ${what}. Update this checker.`);
+    return match;
+  });
+}
+
 function readTypeScript(source) {
   const file = TS_PATH;
 
@@ -58,13 +92,20 @@ function readTypeScript(source) {
   const handlerName = must(source.match(/export const HANDLER_NAME = '([^']+)';/), 'HANDLER_NAME', file)[1];
   const globalName = must(source.match(/export const GLOBAL_NAME = '([^']+)';/), 'GLOBAL_NAME', file)[1];
 
+  // A string literal in either quote style. Only the value is kept.
+  const QUOTED = /^(?:'([^']*)'|"([^"]*)")$/;
+  const unquote = (m) => m[1] ?? m[2];
+
   const methodsBlock = must(source.match(/export const METHODS = \[([\s\S]*?)\] as const;/), 'METHODS', file)[1];
-  const methods = [...methodsBlock.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const methods = readList(methodsBlock, QUOTED, 'METHODS', file).map(unquote);
 
   const codesBlock = must(source.match(/export const ERROR_CODES = \{([\s\S]*?)\} as const;/), 'ERROR_CODES', file)[1];
-  const errorCodes = Object.fromEntries(
-    [...codesBlock.matchAll(/^\s*([A-Z_]+):\s*(-?\d+),/gm)].map((m) => [m[1], Number(m[2])])
-  );
+  const codeEntries = readList(codesBlock, /^([A-Z][A-Z0-9_]*)\s*:\s*(-?\d+)$/, 'ERROR_CODES', file);
+  const errorCodes = Object.fromEntries(codeEntries.map((m) => [m[1], Number(m[2])]));
+  // A key written twice collapses in the object above; the list length does not.
+  if (Object.keys(errorCodes).length !== codeEntries.length) {
+    throw new Error(`${file}: ERROR_CODES declares a key twice.`);
+  }
 
   // The capability names live in the private CAPABILITIES set, which is the
   // list the handshake validator actually enforces.
@@ -73,33 +114,48 @@ function readTypeScript(source) {
     'CAPABILITIES',
     file
   )[1];
-  const capabilities = [...capsBlock.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const capabilities = readList(capsBlock, QUOTED, 'CAPABILITIES', file).map(unquote);
 
   return { version, handlerName, globalName, methods, errorCodes, capabilities };
 }
 
 /* ── Reading the Swift side ───────────────────────────────────────────── */
 
-/** The cases of a Swift enum, as their raw values. */
-function swiftEnumRawValues(source, name, file) {
-  const block = must(
-    source.match(new RegExp(`public enum ${name}: [^{]*\\{([\\s\\S]*?)\\n\\}`)),
-    `enum ${name}`,
-    file
-  )[1];
-  const values = [];
-  for (const line of block.split('\n')) {
-    // `case a, b, c` and `case a = "x"` are both legal, and both appear here.
-    const match = line.match(/^\s*case\s+(.+?)\s*$/);
-    if (!match) continue;
+/**
+ * The cases of a Swift enum, each as `[name, rawValue]`. `rawValue` is the
+ * written raw value, or `undefined` when the case has none.
+ *
+ * Every `case` in the body is read, and every item in a `case a, b = "x"` list
+ * must parse, or this throws. The earlier reader matched the shapes it knew and
+ * dropped the rest: a trailing comment, or two error codes on one `case` line,
+ * made a declaration disappear without a word.
+ */
+function swiftEnumCases(source, name, file) {
+  const block = stripComments(
+    must(source.match(new RegExp(`public enum ${name}: [^{]*\\{([\\s\\S]*?)\\n\\}`)), `enum ${name}`, file)[1]
+  );
+  const cases = [];
+  // `case` statements end at a line break or a `;`.
+  for (const statement of block.split(/[\n;]/)) {
+    const match = statement.match(/^\s*case\s+(.+?)\s*$/);
+    if (!match) {
+      if (/\bcase\b/.test(statement)) {
+        throw new Error(`${file}: could not read "${statement.trim()}" in enum ${name}. Update this checker.`);
+      }
+      continue;
+    }
     for (const part of match[1].split(',')) {
-      const withRaw = part.match(/^\s*\w+\s*=\s*"([^"]+)"\s*$/);
-      const bare = part.match(/^\s*(\w+)\s*$/);
-      if (withRaw) values.push(withRaw[1]);
-      else if (bare) values.push(bare[1]);
+      const m = part.trim().match(/^(\w+)(?:\s*=\s*(?:"([^"]*)"|(-?\d+)))?$/);
+      if (!m) throw new Error(`${file}: could not read "${part.trim()}" in enum ${name}. Update this checker.`);
+      cases.push([m[1], m[2] ?? m[3]]);
     }
   }
-  return values;
+  return cases;
+}
+
+/** The raw values of a String enum. A case with none uses its own name. */
+function swiftEnumRawValues(source, name, file) {
+  return swiftEnumCases(source, name, file).map(([caseName, raw]) => raw ?? caseName);
 }
 
 function readSwift(source) {
@@ -112,10 +168,13 @@ function readSwift(source) {
   const methods = swiftEnumRawValues(source, 'BridgeMethod', file);
   const capabilities = swiftEnumRawValues(source, 'Capability', file);
 
-  const codesBlock = must(source.match(/public enum ErrorCode: Int[^{]*\{([\s\S]*?)\n\}/), 'enum ErrorCode', file)[1];
-  const errorCodes = Object.fromEntries(
-    [...codesBlock.matchAll(/^\s*case\s+(\w+)\s*=\s*(-?\d+)\s*$/gm)].map((m) => [m[1], Number(m[2])])
-  );
+  const codeCases = swiftEnumCases(source, 'ErrorCode', file);
+  for (const [caseName, raw] of codeCases) {
+    if (raw === undefined || !/^-?\d+$/.test(raw)) {
+      throw new Error(`${file}: ErrorCode.${caseName} has no integer raw value. Update this checker.`);
+    }
+  }
+  const errorCodes = Object.fromEntries(codeCases.map(([caseName, raw]) => [caseName, Number(raw)]));
 
   return { version, handlerName, globalName, methods, errorCodes, capabilities };
 }
@@ -198,55 +257,113 @@ function compare(ts, swift) {
 /**
  * Proves the comparison still fires.
  *
- * Each case breaks one thing in a copy of one side's real source and expects a
- * complaint. Most cases break the Swift side; the error-code cases break both,
- * because the comparison runs in both directions and each needs its own proof. A checker nobody has broken on purpose is a checker that may be
- * comparing nothing: the extractors return empty lists as readily as full ones
+ * Each case changes a copy of one or both real sources and states the result it
+ * requires: a reported difference, a clean read of a harmless reformatting, or
+ * a refusal of a shape the readers cannot consume. The reformatting cases are
+ * what prove the readers lose nothing; the others prove the comparison fires.
+ *
+ * A checker nobody has broken on purpose is a checker that may be comparing
+ * nothing: the extractors return empty lists as readily as full ones
  * when a declaration moves, which is why `must` throws instead.
  */
 function selfTest(tsSource, swiftSource) {
-  const ts = readTypeScript(tsSource);
-  // Cases with no side named break the Swift source.
+  // Each case mutates one or both sources and states what must follow:
+  //   differ  the comparison reports a problem
+  //   same    the comparison reports nothing -- a reformatting the readers
+  //           must see through, rather than lose a declaration in
+  //   throw   a reader refuses a shape it cannot consume
+  const swift = (what, mutate) => ({ what, swift: mutate, expect: 'differ' });
   const cases = [
-    ['a changed protocol version', (s) => s.replace('bridgeProtocolVersion = 1', 'bridgeProtocolVersion = 2')],
-    ['a changed handler name', (s) => s.replace('handlerName = "litroNative"', 'handlerName = "litroShell"')],
-    ['a changed global name', (s) => s.replace('globalName = "__litroNative"', 'globalName = "__litro"')],
-    ['a renamed method', (s) => s.replace('case hapticsImpact = "haptics.impact"', 'case hapticsImpact = "haptics.buzz"')],
-    ['a dropped method', (s) => s.replace('    case requestReview = "requestReview"\n', '')],
-    ['a reordered method list', (s) =>
+    swift('a changed protocol version', (s) => s.replace('bridgeProtocolVersion = 1', 'bridgeProtocolVersion = 2')),
+    swift('a changed handler name', (s) => s.replace('handlerName = "litroNative"', 'handlerName = "litroShell"')),
+    swift('a changed global name', (s) => s.replace('globalName = "__litroNative"', 'globalName = "__litro"')),
+    swift('a renamed method', (s) => s.replace('case hapticsImpact = "haptics.impact"', 'case hapticsImpact = "haptics.buzz"')),
+    swift('a dropped method', (s) => s.replace('    case requestReview = "requestReview"\n', '')),
+    swift('a reordered method list', (s) =>
       s.replace('    case handshake = "handshake"\n    case hapticsImpact = "haptics.impact"\n',
-                '    case hapticsImpact = "haptics.impact"\n    case handshake = "handshake"\n')],
-    ['a changed error code', (s) => s.replace('case permissionDenied = -32000', 'case permissionDenied = -32010')],
-    ['a dropped capability', (s) => s.replace('    case review\n', '')],
-    ['an added capability', (s) => s.replace('    case review\n', '    case review\n    case camera\n')],
-    ['a dropped Swift error code', (s) => s.replace('    case permissionDenied = -32000\n', '')],
-    ['a dropped TypeScript error code', 'ts', (s) => s.replace('  PERMISSION_DENIED: -32000,\n', '')],
+                '    case hapticsImpact = "haptics.impact"\n    case handshake = "handshake"\n')),
+    swift('a changed error code', (s) => s.replace('case permissionDenied = -32000', 'case permissionDenied = -32010')),
+    swift('a dropped capability', (s) => s.replace('    case review\n', '')),
+    swift('an added capability', (s) => s.replace('    case review\n', '    case review\n    case camera\n')),
+    swift('a dropped Swift error code', (s) => s.replace('    case permissionDenied = -32000\n', '')),
+    {
+      what: 'a dropped TypeScript error code',
+      ts: (s) => s.replace('  PERMISSION_DENIED: -32000,\n', ''),
+      expect: 'differ',
+    },
+    // The extractor once required a trailing comma, so the last entry written
+    // without one vanished. Swift drops the same code, and the two lost
+    // declarations used to cancel out into OK.
+    {
+      what: 'a last TypeScript error code with no trailing comma, missing from Swift',
+      ts: (s) => s.replace('  VERSION_UNSUPPORTED: -32002,\n', '  VERSION_UNSUPPORTED: -32002\n'),
+      swift: (s) => s.replace('    case versionUnsupported = -32002\n', ''),
+      expect: 'differ',
+    },
+    // The extractor once read only the first declaration on a line.
+    {
+      what: 'a second TypeScript error code on the same line',
+      ts: (s) => s.replace('  VERSION_UNSUPPORTED: -32002,\n', '  VERSION_UNSUPPORTED: -32002, EXTRA_ERROR: -32003,\n'),
+      expect: 'differ',
+    },
+    {
+      what: 'a TypeScript error code that is not a plain number',
+      ts: (s) => s.replace('  VERSION_UNSUPPORTED: -32002,\n', '  VERSION_UNSUPPORTED: BASE - 2,\n'),
+      expect: 'throw',
+    },
+    {
+      what: 'a TypeScript method written on one line with another, in double quotes',
+      ts: (s) => s.replace("  'canShare',\n  'share',\n", '  \'canShare\', "share",\n'),
+      expect: 'same',
+    },
+    {
+      what: 'two Swift error codes on one case line',
+      swift: (s) => s.replace('    case timeout = -32001\n', '    case timeout = -32001, versionUnsupported = -32002\n')
+                     .replace(/\n    case versionUnsupported = -32002\n/, '\n'),
+      expect: 'same',
+    },
+    {
+      what: 'a Swift capability with a trailing comment',
+      swift: (s) => s.replace('    case review\n', '    case review // the store prompt\n'),
+      expect: 'same',
+    },
+    {
+      what: 'a Swift case the reader cannot consume',
+      swift: (s) => s.replace('    case review\n', '    case review(String)\n'),
+      expect: 'throw',
+    },
   ];
 
   let failures = 0;
-  for (const entry of cases) {
-    const [what, side, mutate] = entry.length === 3 ? entry : [entry[0], 'swift', entry[1]];
-    const source = side === 'ts' ? tsSource : swiftSource;
-    const mutated = mutate(source);
-    if (mutated === source) {
+  const fail = (text) => {
+    console.error(`  self-test FAILED: ${text}`);
+    failures += 1;
+  };
+  for (const { what, ts: mutateTs, swift: mutateSwift, expect } of cases) {
+    const tsMutated = mutateTs ? mutateTs(tsSource) : tsSource;
+    const swiftMutated = mutateSwift ? mutateSwift(swiftSource) : swiftSource;
+    if ((mutateTs && tsMutated === tsSource) || (mutateSwift && swiftMutated === swiftSource)) {
       console.error(`  self-test BROKEN: ${what} changed nothing; the mutation no longer applies`);
       failures += 1;
       continue;
     }
-    const problems = side === 'ts'
-      ? compare(readTypeScript(mutated), readSwift(swiftSource))
-      : compare(ts, readSwift(mutated));
-    if (problems.length === 0) {
-      console.error(`  self-test FAILED: ${what} was not reported`);
-      failures += 1;
-    } else {
-      console.log(`  caught ${what}`);
+    let problems;
+    try {
+      problems = compare(readTypeScript(tsMutated), readSwift(swiftMutated));
+    } catch (error) {
+      if (expect === 'throw') console.log(`  refused ${what}`);
+      else fail(`${what} threw instead of being read: ${error.message}`);
+      continue;
     }
+    if (expect === 'throw') fail(`${what} was read without complaint`);
+    else if (expect === 'differ' && problems.length === 0) fail(`${what} was not reported`);
+    else if (expect === 'same' && problems.length > 0) fail(`${what} lost a declaration: ${problems.join('; ')}`);
+    else console.log(`  ${expect === 'same' ? 'read through' : 'caught'} ${what}`);
   }
 
   // And the real pair must pass, or every case above would "catch" a problem
   // that was already there.
-  const real = compare(ts, readSwift(swiftSource));
+  const real = compare(readTypeScript(tsSource), readSwift(swiftSource));
   if (real.length > 0) {
     console.error('  self-test FAILED: the real files already differ, so the cases above prove nothing');
     failures += 1;

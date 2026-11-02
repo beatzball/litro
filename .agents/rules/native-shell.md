@@ -44,8 +44,8 @@ the reply to. The page then waits out its entire timeout for a reply that the
 shell already decided not to send. Found by a test, not on a device.
 
 **Rule.** `BridgeRequest.parse` reads the id first. Every rejection carries the
-id when the message had a usable one. Only a message with no id at all goes
-unanswered, and the transport logs that.
+id when the message had a usable one: a non-empty string. Only a message without
+one goes unanswered, and the transport logs that.
 
 The same rule holds one layer up. `JSONValue(any:)` returns nil for the whole
 body when any value inside it is not JSON -- a `Date` arrives as `NSDate` -- and
@@ -118,14 +118,22 @@ App Store's schedule rather than ours.
 
 **Rule.** `scripts/check-bridge-parity.mjs` compares the version, the transport
 names, the method list in order, the capability list and every error code. It
-runs in CI, and it has a `--self-test` that breaks the sources eleven ways to
-prove the comparison still fires. Change the protocol in both files in one
+runs in CI, and it has a `--self-test` that changes the sources eighteen ways:
+to prove the comparison still fires, that a harmless reformatting loses
+nothing, and that a shape the readers cannot consume stops the check. Change the protocol in both files in one
 commit.
 
 Error codes are compared in both directions, against both sets of
 **declarations**. The reverse check once asked only whether the checker's own
 name table had a partner for each Swift code, so deleting `PERMISSION_DENIED`
 from `protocol.ts` still passed. The self-test now deletes a code on each side.
+
+The readers are strict: every item in a declaration list must parse, or the
+script throws. A reader that matched only the shapes it knew lost a declaration
+silently -- the last TypeScript error code with no trailing comma, a second
+code on the same line, a Swift case with a trailing comment -- and the loss
+removed it from both the extracted set and the comparison, so the check
+printed OK. Do not loosen a reader back to "match what you can".
 
 The script compares constants only. It cannot see a difference in how the two
 validators behave, such as one side accepting `"params": null`. That class is
