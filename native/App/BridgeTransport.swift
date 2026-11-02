@@ -6,20 +6,54 @@
 
 import WebKit
 import LitroBridge
+import LitroShellKit
 import os
 
 @MainActor
 final class BridgeTransport: NSObject, WKScriptMessageHandler {
     private let dispatcher: BridgeDispatcher
+    /// Held to answer one question: may the frame that sent this message use
+    /// the bridge at all.
+    private let configuration: AppConfiguration
     private let logger = Logger(subsystem: "dev.litro.shell", category: "bridge")
 
     /// Weak, because the web view's content controller holds this handler. A
     /// strong reference here would keep both alive for the life of the process.
     weak var webView: WKWebView?
 
-    init(dispatcher: BridgeDispatcher) {
+    init(dispatcher: BridgeDispatcher, configuration: AppConfiguration) {
         self.dispatcher = dispatcher
+        self.configuration = configuration
         super.init()
+    }
+
+    /// Whether the frame that sent a message may use the bridge.
+    ///
+    /// `markerScript` is injected `forMainFrameOnly`, but a message handler is
+    /// NOT scoped to a frame: `add(_:name:)` puts
+    /// `window.webkit.messageHandlers` in every frame, main or not. Without
+    /// this check any subframe can call the bridge, and the navigation
+    /// allowlist does not stop it -- that allows a frame's request URL, not the
+    /// origin the frame runs as. A `sandbox` or `srcdoc` frame loads from an
+    /// allowed path and then has an opaque origin.
+    ///
+    /// Two gates rather than one, deliberately. The main-frame test matches the
+    /// contract the marker script already sets. The origin test is what still
+    /// holds if the navigation allowlist is ever wired wrong -- which has
+    /// happened once here already, silently.
+    private func accepts(_ frame: WKFrameInfo) -> Bool {
+        guard frame.isMainFrame else {
+            logger.error("bridge message from a subframe; refused")
+            return false
+        }
+        let origin = frame.securityOrigin
+        guard configuration.allowsBridgeOrigin(scheme: origin.`protocol`,
+                                               host: origin.host,
+                                               port: origin.port) else {
+            logger.error("bridge message from an origin that is not allowed; refused")
+            return false
+        }
+        return true
     }
 
     /// The script the shell injects before any page script runs.
@@ -44,6 +78,7 @@ final class BridgeTransport: NSObject, WKScriptMessageHandler {
     }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard accepts(message.frameInfo) else { return }
         guard let value = JSONValue(any: message.body) else {
             // The body held something that is not JSON, so there is no id to
             // answer and nothing to dispatch.

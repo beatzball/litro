@@ -36,7 +36,7 @@ public struct LoadFailure: Equatable, Sendable {
     /// shown.
     ///
     /// A canceled navigation is not a fault. The origin allowlist refuses an
-    /// outside origin by cancelling it, and WebKit reports every such refusal
+    /// outside origin by canceling it, and WebKit reports every such refusal
     /// here as an error. Showing a failure screen for one would make the
     /// allowlist doing its job look like the shell breaking, and would cover the
     /// page the user was already reading. The same code arrives when a second

@@ -148,3 +148,60 @@ final class OriginPolicyTests: XCTestCase {
         XCTAssertTrue(config.allows(config.startURL))
     }
 }
+
+/// The bridge's own gate, which is not the navigation allowlist.
+///
+/// The navigation allowlist authorizes a frame's request URL. This authorizes
+/// the origin the frame ended up running as, and the two differ exactly where
+/// it matters: a sandboxed frame loads an allowed path and then has an opaque
+/// origin.
+final class BridgeOriginTests: XCTestCase {
+    func testAllowsTheAppsOwnOrigin() {
+        let config = configuration(allowedOrigins: ["https://app.example.test"])
+        XCTAssertTrue(config.allowsBridgeOrigin(scheme: "https", host: "app.example.test", port: 0))
+    }
+
+    /// WebKit reports 0 for a default port, and the allowlist entry has no port
+    /// written in it either. Both have to resolve to the same number.
+    func testADefaultPortMatchesAnEntryWithNoPort() {
+        let config = configuration(allowedOrigins: ["http://app.example.test"])
+        XCTAssertTrue(config.allowsBridgeOrigin(scheme: "http", host: "app.example.test", port: 0))
+        XCTAssertTrue(config.allowsBridgeOrigin(scheme: "http", host: "app.example.test", port: 80))
+    }
+
+    /// An opaque origin -- what a `sandbox` or `srcdoc` frame runs as -- has an
+    /// empty scheme and host. It belongs to nothing and must match nothing.
+    func testRefusesAnOpaqueOrigin() {
+        let config = configuration(allowedOrigins: ["https://app.example.test"])
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "", host: "", port: 0))
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "", host: "app.example.test", port: 0))
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "", port: 0))
+    }
+
+    /// An empty allowlist must not become an allow-all through some empty-set
+    /// comparison going the wrong way.
+    func testAnEmptyAllowlistAllowsNothing() {
+        let config = configuration(allowedOrigins: [])
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "app.example.test", port: 0))
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "", host: "", port: 0))
+    }
+
+    func testRefusesAnotherOrigin() {
+        let config = configuration(allowedOrigins: ["https://app.example.test"])
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "evil.example.test", port: 0),
+                       "another host")
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "http", host: "app.example.test", port: 0),
+                       "another scheme")
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "app.example.test", port: 8443),
+                       "another port")
+        XCTAssertFalse(config.allowsBridgeOrigin(scheme: "https", host: "app.example.test.evil.test", port: 0),
+                       "a suffix, which a prefix match would have let through")
+    }
+
+    /// WebKit reports the origin as the page set it; DNS does not care about
+    /// case and neither may this.
+    func testTheComparisonIgnoresCase() {
+        let config = configuration(allowedOrigins: ["https://app.example.test"])
+        XCTAssertTrue(config.allowsBridgeOrigin(scheme: "HTTPS", host: "App.Example.TEST", port: 0))
+    }
+}

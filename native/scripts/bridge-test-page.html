@@ -14,7 +14,7 @@
   button { font: 600 15px -apple-system, system-ui, sans-serif; margin: 0 8px 8px 0;
            padding: 11px 15px; border: 0; border-radius: 10px; background: #2f6feb; color: #fff; }
   button:disabled { background: #2a2a31; color: #6a6a74; }
-  .ok { color: #4ad07a; } .bad { color: #ff6b6b; }
+  .ok { color: #4ad07a; } .bad { color: #ff6b6b; } .warn { color: #f0b429; }
 </style>
 </head>
 <body>
@@ -112,19 +112,37 @@ for (const [label, run] of buttons) {
 // and is never called. Nothing else here would notice, because every other
 // check loads an allowed origin.
 //
-// If the policy runs, the navigation is refused and this page stays put. If it
-// does not, the page is gone and the screenshot shows that instead.
-function checkOriginPolicy() {
-  return new Promise((resolve) => {
-    const here = location.hostname;
-    location.assign('https://blocked.example.invalid/');
-    setTimeout(() => {
-      const stayed = location.hostname === here;
-      say('origin policy -> ' + (stayed ? 'refused the outside origin' : 'DID NOT BLOCK'),
-          stayed ? 'ok' : 'bad');
-      resolve();
-    }, 1500);
-  });
+// The destination must be REACHABLE, and that is the whole difficulty. An
+// earlier version navigated to a `.invalid` host, which never resolves. The
+// navigation failed on its own and the page stayed put, so the check reported
+// "refused the outside origin" whether or not any allowlist existed -- verified
+// by running it against a web view with no navigation delegate at all. It could
+// not detect the one trap it was written for.
+//
+// So the destination is the second server that serve-test-page.sh runs, one
+// port up from this one: same host, reachable, and a different origin, which is
+// what the allowlist is being asked about. If the allowlist is not wired, the
+// browser goes there and that page says so in large red text -- this page is
+// gone by then, so it cannot report its own failure.
+//
+// An unreachable probe is reported as SKIPPED. A check that cannot run is not
+// a check that passed.
+async function checkOriginPolicy() {
+  const here = location.origin;
+  const probe = location.protocol + '//' + location.hostname + ':'
+    + (Number(location.port) + 1) + '/';
+  try {
+    // Opaque by design: this asks only whether something answers there.
+    await fetch(probe, { mode: 'no-cors', cache: 'no-store' });
+  } catch (error) {
+    say('origin policy -> SKIPPED, nothing answers at ' + probe, 'warn');
+    return;
+  }
+  location.assign(probe);
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  const stayed = location.origin === here;
+  say('origin policy -> ' + (stayed ? 'refused the outside origin' : 'DID NOT BLOCK'),
+      stayed ? 'ok' : 'bad');
 }
 
 async function runUnattended() {

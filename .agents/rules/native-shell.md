@@ -173,8 +173,9 @@ is never cosmetic.
   grep narrowed to a guessed pattern is how this one survived.
 - `native/scripts/bridge-test-page.html` attempts a navigation to an outside
   origin in its unattended run and reports `refused the outside origin`. A
-  policy that stops being wired makes that line say `DID NOT BLOCK`, or takes
-  the page away entirely.
+  policy that stops being wired takes the page away to the second server's
+  `ORIGIN POLICY FAILED` page. See NATIVE-016: the destination has to be
+  reachable, and until it was, this check could not fail.
 
 ## NATIVE-011 — do not store an SDK type that is not `Sendable`
 
@@ -229,3 +230,72 @@ Two neighboring rules the same screen depends on:
 **Check.** `swift test --filter LoadFailure`. The visibility tests assert nil
 for both canceled spellings, and that a different `WebKitErrorDomain` code is
 still shown, so the rule cannot be satisfied by hiding every WebKit error.
+
+## NATIVE-015 — a message handler is not scoped to a frame
+
+**Trap.** `markerScript` is injected with `forMainFrameOnly: true`, which reads
+like the bridge is main-frame only. It is not.
+`WKUserContentController.add(_:name:)` installs
+`window.webkit.messageHandlers.<name>` in **every** frame, whatever its origin,
+and `WKScriptMessage` was dispatched without looking at `frameInfo`.
+
+The navigation allowlist does not cover this, and that is the part that is easy
+to get wrong: it authorizes a frame's **request URL**, not the **security
+origin** the frame ends up running as. An `<iframe sandbox="allow-scripts">` or
+an `<iframe srcdoc>` loads from an allowed path and then runs with an **opaque
+origin**, and it could call the bridge.
+
+Proved with a headless `WKWebView` registering the handler the same way:
+
+```
+RECEIVED body={...} isMainFrame=false origin=://
+SUBFRAME REACHED THE BRIDGE
+```
+
+**Rule.** `BridgeTransport.accepts(_:)` gates every message on two independent
+things: `frameInfo.isMainFrame`, and `AppConfiguration.allowsBridgeOrigin` over
+`frameInfo.securityOrigin`. An opaque origin has an empty scheme and host and is
+refused by name rather than left to fail a comparison by luck.
+
+Two gates, not one, on purpose. The origin test is what still holds if the
+navigation allowlist is ever wired wrong -- which has happened here once
+already, silently (NATIVE-010).
+
+**Check.** `swift test` covers `allowsBridgeOrigin`, including the opaque
+origin, an empty allowlist, a suffix host and a default port. The frame test
+needs WebKit: re-run the probe above and confirm `REFUSED ...: subframe`.
+
+## NATIVE-016 — a negative test needs a reachable destination
+
+**Trap.** The origin-policy check navigated to `https://blocked.example.invalid/`
+and reported success when the page had not moved after 1.5 seconds. `.invalid`
+never resolves, so the navigation failed on its own and the page never moved --
+**whether or not any allowlist existed**.
+
+Run against a `WKWebView` with `navigationDelegate = nil`, which is the total
+absence of the thing under test, it printed:
+
+```
+RESULT origin policy -> refused the outside origin
+```
+
+So the one check written for NATIVE-010's silent trap could not detect it, and
+every report that cited that line as evidence was citing nothing.
+
+**Rule.** A test that asserts something was *refused* must use a destination
+that would otherwise *succeed*. `serve-test-page.sh` runs a second server one
+port up for exactly this: same host, reachable, different origin. Never add that
+port to an `allowedOrigins`; being refused is its whole purpose.
+
+When the destination cannot be reached, the check reports `SKIPPED` and says
+where it looked. A check that could not run is not a check that passed.
+
+**Check.** Three probes, all with the real page:
+
+- allowlist wired -> stays, `origin policy -> refused the outside origin`
+- no navigation delegate at all -> lands on the second server's
+  `ORIGIN POLICY FAILED` page
+- nothing on the second port -> `origin policy -> SKIPPED, nothing answers at ...`
+
+The middle one is the test of the test. If it ever passes again, the check has
+gone back to proving nothing.

@@ -18,7 +18,7 @@ private func error(
 }
 
 final class LoadFailureVisibilityTests: XCTestCase {
-    /// The origin allowlist refuses an outside origin by cancelling the
+    /// The origin allowlist refuses an outside origin by canceling the
     /// navigation, and WebKit reports that refusal as an error. A failure screen
     /// here would cover the page the reader was already on and make the
     /// allowlist working look like the shell broken.

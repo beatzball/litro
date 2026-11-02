@@ -88,6 +88,30 @@ extension AppConfiguration {
         guard let candidate = Origin(url) else { return false }
         return allowedOrigins.compactMap { Origin(string: $0) }.contains(candidate)
     }
+
+    /// Whether a frame with this security origin may use the bridge.
+    ///
+    /// The navigation allowlist does not cover this. It authorizes a frame's
+    /// *request URL*; this asks about the *security origin* the frame ended up
+    /// with, and the two differ exactly where it matters. A `sandbox` or
+    /// `srcdoc` frame loads from an allowed path and then runs with an opaque
+    /// origin, and WebKit installs the message handler in every frame whatever
+    /// its origin, so without this the frame reaches the bridge.
+    ///
+    /// An opaque origin has an empty scheme and host. It belongs to nothing, so
+    /// it can never match an allowlist entry, and it is refused here rather than
+    /// left to fall through the comparison by luck.
+    ///
+    /// Takes the three parts rather than a `WKSecurityOrigin` so this stays in
+    /// a target with no WebKit in it, and therefore has tests.
+    public func allowsBridgeOrigin(scheme: String, host: String, port: Int) -> Bool {
+        guard !scheme.isEmpty, !host.isEmpty else { return false }
+        let scheme = scheme.lowercased()
+        // WebKit reports 0 for a default port; `Origin` stores the real one.
+        let port = port == 0 ? Origin.defaultPort(for: scheme) : port
+        let candidate = Origin(scheme: scheme, host: host.lowercased(), port: port)
+        return allowedOrigins.compactMap { Origin(string: $0) }.contains(candidate)
+    }
 }
 
 /// A scheme, host and port, compared as a whole.
@@ -95,6 +119,14 @@ struct Origin: Equatable {
     let scheme: String
     let host: String
     let port: Int
+
+    /// Declaring the initializers below costs the struct its implicit
+    /// memberwise one, so it is written out.
+    init(scheme: String, host: String, port: Int) {
+        self.scheme = scheme
+        self.host = host
+        self.port = port
+    }
 
     init?(_ url: URL) {
         guard let scheme = url.scheme?.lowercased(), let host = url.host?.lowercased() else { return nil }

@@ -16,7 +16,7 @@ final class ShellViewController: UIViewController {
 
     init(configuration: AppConfiguration, dispatcher: BridgeDispatcher) {
         self.configuration = configuration
-        self.transport = BridgeTransport(dispatcher: dispatcher)
+        self.transport = BridgeTransport(dispatcher: dispatcher, configuration: configuration)
         super.init(nibName: nil, bundle: nil)
     }
 
