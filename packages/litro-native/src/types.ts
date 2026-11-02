@@ -91,6 +91,15 @@ export interface NativeBridge {
     set(count: number): Promise<void>;
     clear(): Promise<void>;
   };
+  /**
+   * Key-value storage for small secrets.
+   *
+   * **Secure only inside the native shell, and only when `supports` lists
+   * `secureStorage`.** There it is the platform keychain. On the web it is
+   * browser storage, which any script on the origin can read. Gate a
+   * long-lived token on `isNative`: inside the shell this never falls back to
+   * browser storage, so a write there reaches the keychain or nothing.
+   */
   secureStorage: {
     get(key: string): Promise<string | null>;
     set(key: string, value: string): Promise<void>;

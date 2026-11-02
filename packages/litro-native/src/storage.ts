@@ -6,6 +6,10 @@
  * it, and it is visible in developer tools. Before persisting anything that
  * would matter if it leaked, such as a long-lived access token, check
  * `isNative` and keep the web build signed out instead.
+ *
+ * Inside the native shell this never falls back to browser storage, even when
+ * the build left the keychain out: there `get` answers `null` and the writes do
+ * nothing. That is what makes the `isNative` check sufficient.
  */
 
 import { getBridge } from './bridge.js';

@@ -197,6 +197,7 @@ hide a dropped message for two minutes.
   lets a test assert on an exact message.
 - **Queueing and concurrency.** How many calls may be outstanding, and what happens to
   calls made before the handshake resolves, belong with the transport in Phase 5.
+  Decided there: see "Phase 5, as built" in the parent spec.
 - **Origin checks.** Which origins the web view may load is per-app shell configuration,
   described in the parent spec, not a property of the message format.
 

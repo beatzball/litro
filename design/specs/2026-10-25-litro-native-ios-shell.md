@@ -355,6 +355,71 @@ on buttons in `native/scripts/bridge-test-page.html` rather than in the automati
 run. Haptics cannot be felt in a simulator at all. Both are physical-device
 checks, and neither is covered by anything above.
 
+## Phase 5, as built
+
+Phase 5 lands in three pull requests: the page-side shell adapter first, then
+notifications with secure storage, then share with review. This section grows
+with each one.
+
+### The shell adapter
+
+`packages/litro-native/src/adapters/shell.ts` implements `NativeBridge` over the
+protocol, and `bridge.ts` now resolves it in a browser. The protocol work left
+id generation, queueing and concurrency to this file on purpose. Seven decisions
+were made here that nothing above settled.
+
+**Ids are one counter for the whole page session.** Not one per transport. A
+transport is abandoned when its handshake fails, and a late reply for one of its
+calls could otherwise resolve a call on the next transport with the same id.
+
+**Calls are concurrent, with no cap.** Replies are matched by id and may arrive
+in any order. Every call already has its own timeout, which is what bounds the
+pending set. A cap would add a failure mode the contract has no way to express.
+
+**A call made before the handshake resolves waits, without a queue.** Every
+facade awaits `getBridge()`, and that promise settles only after the handshake
+answers or times out. No call is ever sent to a shell whose capabilities are not
+yet known, and there is no buffer to get wrong.
+
+**A missing capability takes its web behavior, except secure storage.** Where
+the handshake leaves a capability out, the call never reaches the wire and the
+web adapter answers it, so a share sheet the web view itself offers still works.
+Secure storage is the exception. Inside the shell `isNative` is true, and
+checking `isNative` is the documented way to keep a token out of browser
+storage. A build without the keychain module that quietly wrote to browser
+storage would pass that check and leak the token. So there `get` answers `null`,
+the writes do nothing, and `supports` leaves `secureStorage` out.
+
+**An unknown capability name is dropped, not fatal.** `isHandshakeResult`
+rejects a name it does not know, which is right for the format. But adding a
+capability does not bump the version, so a newer shell may report one, and
+rejecting the whole handshake would send every older page to the web bridge.
+The adapter filters the names it knows before validating.
+
+**Params cross as plain JSON.** Each call's params take a round trip through
+JSON before they are posted. A `Date` becomes its string and an `undefined`
+field is dropped. Without this, one non-JSON value nested in the params loses
+the whole message on the native side, id included, and the call waits out its
+timeout (issue 279, item 1, is the same bug seen from the shell).
+
+**A malformed reply that names a call fails it now.** The page-side twin of
+NATIVE-003: the id is read before the reply is judged, so a bad reply rejects its
+call at once instead of at the timeout. Only a reply with no id the page is
+waiting on is dropped.
+
+Two smaller choices. Both adapters load in parallel in a browser, so a plain web
+page pays no extra round trip to learn there is no shell; on the server the
+shell adapter is never loaded. And a rejection carries a `NativeBridgeError`,
+exported with `ERROR_CODES`, so an app can tell a declined permission from a
+fault without matching a message.
+
+**The boundary check exists now.** `scripts/check-native-boundary.mjs` fails CI
+when a tracked code file outside the shell adapter, the protocol, its tests or
+`native/` names `messageHandlers`, the handler or global name, or the constants
+that hold them. It reads the names from `protocol.ts`, and it refuses to pass if
+the adapter itself stops matching its patterns, since a check that matches
+nothing passes everything.
+
 ## Risks
 
 - **All iOS upkeep is ours.** There is no upstream to absorb a yearly OS release, a new

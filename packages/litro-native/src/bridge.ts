@@ -7,8 +7,10 @@
  * before this file's body, and that class of bug builds clean and fails
  * silently. See rule BUILD-009 for the same trap in the hydration entry.
  *
- * Phase 1 ships the web path only. When the native host lands, this is the one
- * place that learns about it.
+ * In a browser, both adapters are loaded in parallel and the shell adapter is
+ * asked whether a shell hosts this page. It answers only after the handshake,
+ * so every call made before then simply waits on the promise below. On the
+ * server, the shell adapter is never loaded at all.
  */
 
 import type { NativeBridge } from './types.js';
@@ -47,6 +49,21 @@ export function resetBridgeForTests(): void {
 }
 
 async function resolve(): Promise<NativeBridge> {
-  const { WebBridge } = await import('./adapters/web.js');
-  return new WebBridge();
+  // `typeof` on an undeclared global never throws, so this is safe on the
+  // server, and it is the only global this file reads. Everything that knows
+  // what a shell looks like lives in adapters/shell.ts.
+  if (typeof window === 'undefined') {
+    const { WebBridge } = await import('./adapters/web.js');
+    return new WebBridge();
+  }
+
+  // In parallel, not one after the other: the shell bridge needs the web one
+  // for every capability its build left out, and a plain browser should not
+  // pay a second round trip to learn there is no shell.
+  const [{ WebBridge }, { connectShell }] = await Promise.all([
+    import('./adapters/web.js'),
+    import('./adapters/shell.js'),
+  ]);
+  const web = new WebBridge();
+  return (await connectShell(window, web)) ?? web;
 }
