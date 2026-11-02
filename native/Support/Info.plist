@@ -32,6 +32,35 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- The scene life cycle, which UIKit requires of an app built with a
+	     current SDK. Without this an app delegate owning a UIWindow directly
+	     only logs a fault today, and is terminated on launch by the SDK that
+	     enforces it.
+
+	     The delegate class is named with $(PRODUCT_MODULE_NAME) rather than
+	     spelled out, because the module name follows PRODUCT_NAME, which
+	     select-app.sh writes per app. A literal prefix here would resolve for
+	     one app and silently fail to load for the next one, and a scene
+	     delegate that fails to load is a black window with no error. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<!-- One window. The shell is one web view filling the screen, so there
+		     is nothing a second scene would show. -->
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<!-- App Transport Security blocks plain http, which includes the Vite dev
 	     server a Litro app runs on during development. NSAllowsLocalNetworking
 	     permits http to the local network and to localhost ONLY; it does not
