@@ -54,10 +54,20 @@ export interface PlatformInfo {
 }
 
 export interface LocalNotification {
+  /**
+   * Scheduling again with the same id replaces the earlier reminder. When
+   * omitted, one is made for you, and a timed-out call's error carries it as
+   * `data.id`. Pass your own if you may retry.
+   */
   id?: string;
   title: string;
   body?: string;
-  /** Epoch milliseconds. */
+  /**
+   * Epoch milliseconds. For a one-off, the instant it fires. For a daily
+   * repeat, only the time of day is used, in the device's time zone; it starts
+   * at the next such time, today if that has not passed, even when `at` is a
+   * later date.
+   */
   at: number;
   repeat?: 'daily' | 'none';
 }
@@ -100,6 +110,10 @@ export interface NativeBridge {
    * long-lived token on `isNative` and nothing else: when it is true, a write
    * reaches the keychain or nothing. A page inside the shell whose handshake
    * failed gets browser storage, but reports `isNative` false.
+   *
+   * One store per origin, in the shell as on the web. An empty key, or a key
+   * or value that is not well-formed text, rejects with `INVALID_PARAMS`
+   * everywhere.
    */
   secureStorage: {
     get(key: string): Promise<string | null>;

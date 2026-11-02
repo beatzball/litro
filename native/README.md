@@ -189,6 +189,15 @@ Two things about the modules that are already here and easy to trip on:
   notifications both need it, and whichever asks first decides for both. So
   both ask for the same set, `PermissionScope`: the badge alone for an app
   without notifications, and badge, alerts and sound for one with them.
+- **Secure storage is per origin.** Each origin in `allowedOrigins` has its
+  own keychain store, under the service
+  `<bundleIdentifier>.secureStorage.<scheme>://<host>:<port>`, and never sees
+  another's values. The origin is the one checked for the frame the message
+  arrived on.
+- **The page sends its own budget for a schedule call.** The shell schedules
+  nothing once `budgetMs` has passed on its own monotonic clock, and keeps no
+  copy of the page's timeouts. iOS keeps at most 64 pending notifications per
+  app and drops the rest without an error.
 - **A keychain value outlives the app.** iOS keeps keychain items when an app is
   deleted, so a reinstall can find a token from before. An app that must start
   signed out after a reinstall has to handle that itself.

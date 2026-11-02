@@ -23,6 +23,7 @@ import {
   failure,
   isBridgeRequest,
   success,
+  timeoutFor,
   type BridgeRequest,
   type Method,
 } from '../protocol.js';
@@ -99,6 +100,14 @@ function installShell(options: FakeShellOptions = {}, navigatorProps: Record<str
   vi.stubGlobal('window', shell.win);
   vi.stubGlobal('navigator', { userAgent: 'LitroShell', ...navigatorProps });
   return shell;
+}
+
+/** A plain browser page: no shell, and working browser storage. */
+function installWeb(): undefined {
+  vi.stubGlobal('window', {});
+  vi.stubGlobal('navigator', { userAgent: 'Browser' });
+  fakeLocalStorage();
+  return undefined;
 }
 
 function fakeLocalStorage(): Map<string, string> {
@@ -563,9 +572,54 @@ describe('notifications', () => {
     expect(await notifications.schedule({ title: 'Hi', at: 10, repeat: 'daily' })).toBe('n-1');
     await notifications.cancel('n-1');
     expect(shell.sent.slice(1).map(({ method, params }) => ({ method, params }))).toEqual([
-      { method: 'notifications.schedule', params: { title: 'Hi', at: 10, repeat: 'daily' } },
+      {
+        method: 'notifications.schedule',
+        params: { title: 'Hi', at: 10, repeat: 'daily', id: expect.any(String), budgetMs: 120_000 },
+      },
       { method: 'notifications.cancel', params: { id: 'n-1' } },
     ]);
+  });
+
+  it('native: makes the id before sending, and keeps one the caller gave', async () => {
+    const shell = installShell({
+      capabilities: ['notifications'],
+      answers: { 'notifications.schedule': (req) => success(req.id, (req.params as { id: string }).id) },
+    });
+    const { notifications } = await load();
+    const made = await notifications.schedule({ title: 'A', at: 10 });
+    const fromEmpty = await notifications.schedule({ title: 'B', at: 10, id: '' });
+    const given = await notifications.schedule({ title: 'C', at: 10, id: 'tea' });
+    expect(made).toMatch(/\S/);
+    expect(fromEmpty).toMatch(/\S/);
+    expect(made).not.toBe(fromEmpty);
+    expect(given).toBe('tea');
+    expect(shell.sent.slice(1).map((r) => (r.params as { id: string }).id)).toEqual([made, fromEmpty, 'tea']);
+  });
+
+  it('native: sends the budget its own timer uses, and a caller cannot override it', async () => {
+    const shell = installShell({ capabilities: ['notifications'] });
+    const { notifications } = await load();
+    await notifications
+      .schedule({ title: 'A', at: 10, budgetMs: 1 } as Parameters<typeof notifications.schedule>[0])
+      .catch(() => undefined);
+    expect((shell.sent[1].params as { budgetMs: number }).budgetMs).toBe(timeoutFor('notifications.schedule'));
+  });
+
+  it('native: a timed-out schedule carries the id, so the caller can cancel or retry it', async () => {
+    fakeTimers();
+    const shell = installShell({
+      capabilities: ['notifications'],
+      answers: { 'notifications.schedule': () => SILENT },
+    });
+    const { notifications } = await load();
+    const settled = notifications.schedule({ title: 'A', at: 10 }).catch((e: NativeBridgeError) => e);
+    await untilSent(shell);
+    await vi.advanceTimersByTimeAsync(1);
+    await untilSent(shell, 2);
+    await vi.advanceTimersByTimeAsync(timeoutFor('notifications.schedule'));
+    const err = (await settled) as NativeBridgeError;
+    expect(err.isTimeout).toBe(true);
+    expect(err.data).toEqual({ id: (shell.sent[1].params as { id: string }).id });
   });
 
   it('native: a declined permission rejects, and says so', async () => {
@@ -694,6 +748,43 @@ describe('secureStorage', () => {
     const info = await platform();
     expect(info.isNative).toBe(true);
     expect(info.supports).not.toContain('secureStorage');
+  });
+});
+
+describe('secureStorage input', () => {
+  // The same bad key must fail the same way on the web, in a shell with the
+  // keychain, and in a shell without it. A page that works in a browser and
+  // throws on a phone is found by a user first.
+  const paths = {
+    web: () => installWeb(),
+    'shell with the keychain': () => installShell({ capabilities: ['secureStorage'] }),
+    'shell without the keychain': () => installShell({ capabilities: [] }),
+  };
+  for (const [path, install] of Object.entries(paths)) {
+    it(`${path}: rejects an empty key or ill-formed text with INVALID_PARAMS, and sends nothing`, async () => {
+      const shell = install();
+      const { secureStorage } = await load();
+      const calls: [string, () => Promise<unknown>][] = [
+        ['get empty', () => secureStorage.get('')],
+        ['set empty', () => secureStorage.set('', 'v')],
+        ['remove empty', () => secureStorage.remove('')],
+        ['lone high surrogate key', () => secureStorage.get('a\uD800')],
+        ['lone low surrogate key', () => secureStorage.set('\uDC00b', 'v')],
+        ['lone surrogate value', () => secureStorage.set('k', 'x\uDBFF')],
+      ];
+      for (const [label, call] of calls) {
+        const err = (await call().catch((e) => e)) as NativeBridgeError;
+        expect(err?.name, label).toBe('NativeBridgeError');
+        expect(err.code, label).toBe(ERROR_CODES.INVALID_PARAMS);
+      }
+      if (shell) expect(methods(shell)).toEqual(['handshake']);
+    });
+  }
+
+  it('accepts a well-formed pair and a key outside the basic plane', async () => {
+    installShell({ capabilities: ['secureStorage'] });
+    const { secureStorage } = await load();
+    await expect(secureStorage.set('\u{1F511}', 'v\u{1F600}')).resolves.toBeUndefined();
   });
 });
 

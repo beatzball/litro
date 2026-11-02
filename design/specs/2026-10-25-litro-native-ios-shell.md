@@ -447,54 +447,101 @@ nothing passes everything.
 
 The second pull request. Every decision is in `Sources/`, with tests;
 `App/Capabilities/NotificationsModule.swift` and `SecureStorageModule.swift`
-only call the system. Six decisions were made that nothing above settled.
+only call the system. These are the decisions nothing above settled. A review
+of the first version changed several of them; each says what it replaced.
 
 **One permission set for both prompting modules.** iOS shows the notification
 permission prompt once, and the first request's options are what the user
-grants. A badge-only request made first would leave an app with notifications
-compiled in unable to show one, with no prompt ever offered again. So
-`PermissionScope.forCapabilities` decides the set once, from the app's
-configuration, and both modules ask for it: the badge alone without
-notifications, badge, alerts and sound with them. A grant with alerts turned off
-is a denial for a notification, answered without a prompt, for the same reason.
+grants. So `PermissionScope.forCapabilities` decides the set once, from the
+app's configuration, and both modules ask for it: the badge alone without
+notifications, badge, alerts and sound with them.
 
-**The id reaches the page, or nothing is scheduled.** The order in the
-dispatcher is: validate, then the permission, then check the page still waits,
-then schedule. Validation is against the moment the call arrived, so a bad call
-is rejected before anyone sees a prompt, and a reminder is not rejected only
-because a person took a while to tap Allow. A prompt that outlasts the page's
-two-minute budget schedules nothing: the page has already rejected the call
-with `TIMEOUT`, and a notification scheduled then would carry an id it never
-learns and can never cancel. The shell gives up two seconds before the page
-does, to cover the reply's own trip back. That budget now exists in Swift as
-`interactiveTimeoutMilliseconds`, and the parity check holds it equal to
-`INTERACTIVE_TIMEOUT_MS`.
+**A grant counts if the notification shows anywhere.** Banners, the Lock
+Screen or Notification Center: any one is enough. A person who turned banners
+off still sees the reminder, and refusing it would call that a declined
+permission. A grant that shows nothing at all, such as a badge-only grant from
+an earlier build, is asked about once more, which shows no second prompt, and
+the settings are read again. It is refused only if they still show nothing,
+and the message does not say the person declined. A stored denial is answered
+at once. Not checked on a device: what `alertSetting` reads with only banners
+off, and whether iOS widens a badge-only grant without a prompt. Reading all
+three settings again after asking is right either way.
 
-**A one-off whose time passed during the prompt fires at once.** A calendar
-trigger for a past moment is accepted by the system and never fires, which is
-a silent loss. The person asked for the reminder and allowed it, so it fires in
-one second. A one-off already in the past when the call arrived is a page bug
-and is rejected.
+**The page sends its budget, and the page makes the id.** The first version
+copied the page's two-minute interactive timeout into Swift and held the two
+equal with the parity check. That checked the number but not which methods it
+applies to: a page release that moved `notifications.schedule` to a shorter
+budget would leave every installed shell waiting the old two minutes, with the
+check still passing. Now the page sends `budgetMs` with each schedule call, the
+same number its own timer uses, and the shell refuses to schedule once that
+much has passed. It measures on a monotonic clock, so a change to the device
+time cannot stretch or shrink the wait, and it keeps a margin of two seconds,
+or a quarter of a short budget, for the reply's trip back. It is a relative
+duration, not a deadline, so the shell never compares the page's clock with its
+own. A page with no `budgetMs` gets two minutes, which is what pages before the
+field waited. An older shell ignores the field.
+
+The page also makes the id before sending when the caller gave none. A call
+that ends in `TIMEOUT` may still have scheduled the reminder, and its
+rejection carries the id in `data.id`, so the caller can cancel it, or retry
+with it and replace rather than duplicate. The budget is still needed: a
+cancel sent while the prompt is open runs first, finds nothing, and the
+schedule lands after it.
+
+The order in the dispatcher is: validate, then the permission, then check the
+page still waits, then schedule. Validation is against the moment the call
+arrived, so a bad call is rejected before anyone sees a prompt.
+
+**A one-off is an interval, never a calendar moment.** The first version used a
+calendar trigger, which keeps whole seconds only: a reminder under a second away
+named a moment already past, which the system accepts and never fires, while
+the page was told it existed. A calendar trigger with no time zone also moves
+when the person changes time zone. `at` is an instant, and an interval from
+now names an instant, so both go away. The interval is at least one second, so
+a one-off whose time passed while the person read the prompt fires at once:
+they asked for it and allowed it. A one-off already in the past when the call
+arrived is a page bug and is rejected.
 
 **A daily reminder repeats at the time of day of `at`,** in the device's
-calendar and time zone when it is scheduled, so a date in the past is the
-ordinary way to say "every day at 9".
+current calendar and time zone, starting at the next such time, which is today
+if it has not passed. A date in the past is the ordinary way to say "every day
+at 9", and a date in the future does not delay the start: iOS has no start date
+for a repeating trigger.
 
-**The shell makes an id when the page gives none.** A page that passes an id
-gets that id back, and scheduling again with it replaces the earlier one, which
-is the system's rule for a repeated identifier. An empty id counts as none,
-because empty is what the web returns for "nothing scheduled".
+**At most 64 are pending.** iOS keeps the 64 soonest pending notifications per
+app and drops the rest without an error, so a 65th schedule returns an id for a
+reminder that may never fire. Not checked on a device.
+
+**Secure storage is per origin.** The first version kept one store per app, so
+with two origins in `allowedOrigins` each page read, overwrote and removed the
+other's secrets, while the web fallback was already per origin. Now the item's
+service is `<bundleIdentifier>.secureStorage.<scheme>://<host>:<port>`. The
+origin is the one the transport checked for the frame the message arrived on,
+normalized once (lowercased scheme and host, the real port when WebKit reports
+0), and carried to the dispatcher. It is never the web view's current URL and
+never anything the page sends. Nothing had shipped, so no item needed moving.
 
 **The keychain item is this device only, after first unlock, never
-synchronized.** A generic password under the service
-`<bundleIdentifier>.secureStorage`. Readable once the phone has been unlocked
+synchronized.** A generic password. Readable once the phone has been unlocked
 after a restart, so a background task can read a token; never restored onto
 another device from a backup, and never put in iCloud Keychain. An update sets
 the accessibility too, so an item from an older build is moved to it. A write
 is update-then-add, never delete-then-add, so a failed write leaves the old
-value in place, as the contract promises. A keychain failure is reported with
-its status code and never with the key or the value, because the reply is
-evaluated in the page, where script can log it.
+value in place, as the contract promises.
+
+**A keychain failure says whether to retry.** A status that refuses the input
+(`errSecParam`, `errSecDataTooLarge`) is `INVALID_PARAMS`, because the same call
+fails the same way every time. Any other status is `INTERNAL_ERROR`. An item that
+is there but cannot be read is `INTERNAL_ERROR` too, never `null`, because an app
+reads `null` as signed out. A message carries the status code and never the key
+or the value, because the reply is evaluated in the page, where script can log
+it. The keychain's real size limits have not been measured on a device.
+
+**A bad key fails the same way everywhere.** An empty key, or a key or value
+with a lone surrogate, is refused with `INVALID_PARAMS` by the page adapter on
+every path: on the web, in a shell with the keychain, and in one without it. The
+shell cannot see a lone surrogate, because the bridge turns it into U+FFFD
+first, and two different keys would land on one item.
 
 The page-side rule is unchanged and still true: when `isNative` is true, a
 `secureStorage` write reaches this keychain or goes nowhere. Gate on `isNative`

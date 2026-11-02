@@ -91,7 +91,10 @@ const buttons = [
   ['unknown method', () => show('unknown method', 'haptics.rumble')],
   ['share (absent)', () => show('share', 'share', { text: 'hello' }, 120000)],
   // Notifications. The first tap on a fresh install shows the permission
-  // prompt, so these use the interactive budget the page itself uses.
+  // prompt, so these use the interactive budget the page itself uses, and
+  // send it as budgetMs as the page adapter does. Half a second checks that a
+  // reminder under a second away still fires.
+  ['notify in 0.5s', () => scheduleIn(0.5)],
   ['notify in 5s', () => scheduleIn(5)],
   ['notify in 10s', () => scheduleIn(10)],
   ['cancel last', () => show('notifications.cancel', 'notifications.cancel', { id: lastNotificationId })],
@@ -110,7 +113,8 @@ async function scheduleIn(seconds) {
   const label = `notifications.schedule +${seconds}s`;
   try {
     const reply = await call('notifications.schedule',
-      { title: 'Litro bridge test', body: `Scheduled ${seconds}s ago`, at: Date.now() + seconds * 1000 },
+      { title: 'Litro bridge test', body: `Scheduled ${seconds}s ago`, at: Date.now() + seconds * 1000,
+        budgetMs: 120000 },
       120000);
     if ('error' in reply) {
       say(`${label} -> error ${reply.error.code} ${reply.error.message}`, 'bad');

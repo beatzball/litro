@@ -44,7 +44,7 @@ final class NotificationsModule: NotificationsHost {
         await Self.readAuthorization()
     }
 
-    func requestPermission() async -> Bool {
+    func requestPermission() async {
         await Self.request(scope.authorizationOptions)
     }
 
@@ -66,7 +66,15 @@ final class NotificationsModule: NotificationsHost {
                 case .notDetermined:
                     value = .notDetermined
                 case .authorized, .provisional, .ephemeral:
-                    value = .authorized(alerts: settings.alertSetting == .enabled)
+                    // Visible anywhere, not banners alone. A person who turned
+                    // banners off but kept the Lock Screen or Notification
+                    // Center still sees the reminder, and refusing it would
+                    // call that a declined permission. What `alertSetting`
+                    // reads with only banners off has NOT been checked on a
+                    // device; reading all three is right whichever it is.
+                    value = .authorized(visible: settings.alertSetting == .enabled
+                                        || settings.lockScreenSetting == .enabled
+                                        || settings.notificationCenterSetting == .enabled)
                 case .denied:
                     value = .denied
                 @unknown default:
@@ -80,9 +88,10 @@ final class NotificationsModule: NotificationsHost {
         }
     }
 
-    private nonisolated static func request(_ options: UNAuthorizationOptions) async -> Bool {
-        let granted = try? await UNUserNotificationCenter.current().requestAuthorization(options: options)
-        return granted ?? false
+    /// The answer is not returned: the dispatcher reads the settings again,
+    /// because a yes can still be a grant that shows nothing.
+    private nonisolated static func request(_ options: UNAuthorizationOptions) async {
+        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: options)
     }
 
     /// Builds the system request here, from `Sendable` values, rather than on

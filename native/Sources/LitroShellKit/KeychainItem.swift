@@ -7,17 +7,24 @@
 
 import Foundation
 import Security
+import LitroBridge
 
 /// The keychain attributes for one `secureStorage` key.
 public struct KeychainItem: Sendable, Equatable {
-    /// Groups this app's secure storage, so a key cannot collide with another
-    /// keychain item the app might add later.
+    /// This app's secure storage for one origin: `<bundleIdentifier>.secureStorage.<origin>`.
+    ///
+    /// The origin is in the item because the web fallback is per origin, and
+    /// the keychain must not be wider than it. An app may list several origins
+    /// in `allowedOrigins`; without this, a page on any of them would read,
+    /// overwrite and remove every other one's secrets. The origin is the one
+    /// the transport checked for the frame the call arrived on, written with
+    /// its port, so no two origins share a service.
     public let service: String
     /// The page's key.
     public let account: String
 
-    public init(bundleIdentifier: String, key: String) {
-        service = "\(bundleIdentifier).secureStorage"
+    public init(bundleIdentifier: String, origin: MessageOrigin, key: String) {
+        service = "\(bundleIdentifier).secureStorage.\(origin.serialized)"
         account = key
     }
 
@@ -73,8 +80,8 @@ public struct KeychainItem: Sendable, Equatable {
     /// The stored bytes as the page's string, or `nil` when they are not UTF-8.
     ///
     /// Only this shell writes these items, always as UTF-8, so bytes that do not
-    /// decode are a damaged item. Reported as absent rather than as a failure,
-    /// so the page can write a fresh value over it.
+    /// decode are a damaged item. The module reports that as a failure, not as
+    /// "no value": the page treats `null` as nothing stored.
     public static func decode(_ data: Data) -> String? {
         String(data: data, encoding: .utf8)
     }

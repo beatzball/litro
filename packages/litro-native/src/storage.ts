@@ -12,6 +12,14 @@
  * the keychain module. A page inside the shell whose handshake failed gets the
  * web bridge and browser storage, but `isNative` is false there. So gate on
  * `isNative` and nothing else.
+ *
+ * Inside the shell the keychain is one store per origin, as browser storage
+ * is: an app whose shell allows several origins gets a separate store for
+ * each, and a page on one never reads, overwrites or removes another's values.
+ *
+ * An empty key, or a key or value that is not well-formed text, rejects with
+ * `INVALID_PARAMS` on every platform, so a call that works in a browser works
+ * the same on a phone.
  */
 
 import { getBridge } from './bridge.js';

@@ -40,6 +40,7 @@
  */
 
 import { NativeBridgeError } from '../errors.js';
+import { checkSecureStorageInput } from '../secure-storage-input.js';
 import {
   ERROR_CODES,
   GLOBAL_NAME,
@@ -342,6 +343,17 @@ export async function connectShell(win: unknown, web: NativeBridge): Promise<She
 
 /* ── The bridge ───────────────────────────────────────────────────────── */
 
+/**
+ * A notification id the page makes, so it knows the id before any reply.
+ * Read at call time. A web view always has `crypto.randomUUID`; the fallback
+ * is the connection prefix's source of randomness.
+ */
+function notificationId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?(): string } }).crypto;
+  if (typeof c?.randomUUID === 'function') return c.randomUUID();
+  return `${connectionPrefix()}${connectionPrefix()}`;
+}
+
 function unexpected(method: Method, result: unknown): NativeBridgeError {
   return new NativeBridgeError(
     ERROR_CODES.INTERNAL_ERROR,
@@ -409,11 +421,35 @@ export class ShellBridge implements NativeBridge {
       this.has('haptics') ? this.send('haptics.selection') : this.web.haptics.selection(),
   };
 
+  /**
+   * `schedule` sends two things the caller does not write.
+   *
+   * The id, made here when the caller gave none, so the page knows it even
+   * when the call fails. A call that times out may still have scheduled the
+   * reminder; its rejection carries `data.id`, which the caller can cancel or
+   * reuse so a retry replaces rather than duplicates.
+   *
+   * `budgetMs`, the same number this call's own timer uses. The shell refuses
+   * to schedule once that much time has passed, measured on its own clock, so
+   * nothing is scheduled after the page stopped waiting. The page sends the
+   * number rather than the shell keeping a copy, because an installed app
+   * cannot be updated when the page's timeouts change.
+   */
   notifications = {
     schedule: async (n: LocalNotification): Promise<string> => {
       if (!this.has('notifications')) return this.web.notifications.schedule(n);
-      const result = await this.transport.call('notifications.schedule', { ...n });
-      if (typeof result !== 'string') throw unexpected('notifications.schedule', result);
+      const id = n.id || notificationId();
+      const method = 'notifications.schedule';
+      let result: unknown;
+      try {
+        result = await this.transport.call(method, { ...n, id, budgetMs: timeoutFor(method) });
+      } catch (error) {
+        if (error instanceof NativeBridgeError && error.isTimeout) {
+          throw new NativeBridgeError(error.code, error.message, { id });
+        }
+        throw error;
+      }
+      if (typeof result !== 'string') throw unexpected(method, result);
       return result;
     },
     cancel: (id: string): Promise<void> =>
@@ -434,17 +470,21 @@ export class ShellBridge implements NativeBridge {
     clear: (): Promise<void> => (this.has('badging') ? this.send('badging.clear') : this.web.badging.clear()),
   };
 
+  /** Checked first, on every path, so a bad key fails the same way everywhere. */
   secureStorage = {
     get: async (key: string): Promise<string | null> => {
+      checkSecureStorageInput(key);
       if (!this.has('secureStorage')) return null;
       const result = await this.transport.call('secureStorage.get', { key });
       if (result !== null && typeof result !== 'string') throw unexpected('secureStorage.get', result);
       return result;
     },
     set: async (key: string, value: string): Promise<void> => {
+      checkSecureStorageInput(key, value);
       if (this.has('secureStorage')) await this.send('secureStorage.set', { key, value });
     },
     remove: async (key: string): Promise<void> => {
+      checkSecureStorageInput(key);
       if (this.has('secureStorage')) await this.send('secureStorage.remove', { key });
     },
   };

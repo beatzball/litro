@@ -13,6 +13,7 @@
  * every browser API here is reached defensively and never at module scope.
  */
 
+import { checkSecureStorageInput } from '../secure-storage-input.js';
 import type {
   Capability,
   HapticNotify,
@@ -156,6 +157,7 @@ export class WebBridge implements NativeBridge {
    */
   secureStorage = {
     get: async (key: string): Promise<string | null> => {
+      checkSecureStorageInput(key);
       try {
         return store()?.getItem(STORAGE_PREFIX + key) ?? null;
       } catch {
@@ -173,12 +175,14 @@ export class WebBridge implements NativeBridge {
      * had not.
      */
     set: async (key: string, value: string): Promise<void> => {
+      checkSecureStorageInput(key, value);
       const s = store();
       if (s === undefined) return;
       s.setItem(STORAGE_PREFIX + key, value);
     },
     /** Rejects on a real failure, for the same reason as `set`. */
     remove: async (key: string): Promise<void> => {
+      checkSecureStorageInput(key);
       const s = store();
       if (s === undefined) return;
       s.removeItem(STORAGE_PREFIX + key);

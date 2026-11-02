@@ -37,7 +37,8 @@ final class NotificationsDispatchTests: XCTestCase {
         let clock = TestClock()
         var next = 0
         let dispatcher = BridgeDispatcher(info: testInfo, notifications: center,
-                                          now: { clock.now }, calendar: { utcCalendar },
+                                          now: { clock.now }, monotonic: { clock.monotonic },
+                                          calendar: { utcCalendar },
                                           makeID: { next += 1; return "made-\(next)" })
         return (center, clock, dispatcher)
     }
@@ -51,7 +52,7 @@ final class NotificationsDispatchTests: XCTestCase {
         XCTAssertEqual(dispatcher.capabilities, [.notifications])
     }
 
-    func testSchedulesAOneOffAtItsCalendarMomentAndAnswersTheId() async {
+    func testSchedulesAOneOffAsAnIntervalToItsInstantAndAnswersTheId() async {
         let (center, clock, dispatcher) = fixture()
         let at = clock.now.addingTimeInterval(3600)
         let reply = await schedule(dispatcher, ["id": .string("tea"), "title": .string("Tea"),
@@ -61,8 +62,7 @@ final class NotificationsDispatchTests: XCTestCase {
         let (request, trigger) = center.scheduled[0]
         XCTAssertEqual(request.title, "Tea")
         XCTAssertEqual(request.body, "Kettle")
-        XCTAssertEqual(trigger, .calendar(utcCalendar.dateComponents(
-            [.year, .month, .day, .hour, .minute, .second], from: at), repeats: false))
+        XCTAssertEqual(trigger, .after(seconds: 3600))
     }
 
     func testMakesAnIdWhenThePageGaveNoneOrAnEmptyOne() async {
@@ -119,22 +119,44 @@ final class NotificationsDispatchTests: XCTestCase {
     func testADeclinedPromptIsPermissionDenied() async {
         let (center, clock, dispatcher) = fixture()
         center.stored = .notDetermined
-        center.grants = false
+        center.afterAsking = .denied
         let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(60))])
         XCTAssertEqual(failure(reply)?.0, .permissionDenied)
         XCTAssertTrue(center.scheduled.isEmpty)
     }
 
-    /// iOS never shows a second prompt, so asking again would only look like a
-    /// hang. A stored denial, or a grant with alerts off, answers at once.
-    func testAStoredDenialOrAlertsOffAnswersWithoutAPrompt() async {
-        for stored in [NotificationAuthorization.denied, .authorized(alerts: false)] {
-            let (center, clock, dispatcher) = fixture()
-            center.stored = stored
-            let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(60))])
-            XCTAssertEqual(failure(reply)?.0, .permissionDenied, "\(stored)")
-            XCTAssertEqual(center.prompts, 0, "\(stored)")
-        }
+    /// iOS never shows a second prompt, so asking after a denial would only
+    /// look like a hang. A stored denial answers at once.
+    func testAStoredDenialAnswersWithoutAsking() async {
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .denied
+        let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(60))])
+        XCTAssertEqual(failure(reply)?.0, .permissionDenied)
+        XCTAssertEqual(center.prompts, 0)
+    }
+
+    /// A grant that shows nothing -- a badge-only grant from an earlier build,
+    /// say -- is asked about once more, and goes through if the answer widens.
+    func testAGrantThatShowsNothingAsksOnceAndSchedulesIfItWidens() async {
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .authorized(visible: false)
+        center.afterAsking = .authorized(visible: true)
+        let reply = await schedule(dispatcher, ["id": .string("w"), "title": .string("A"),
+                                                "at": ms(clock.now.addingTimeInterval(60))])
+        XCTAssertEqual(result(reply), .string("w"))
+        XCTAssertEqual(center.prompts, 1)
+    }
+
+    /// And refuses, without claiming the person declined, when it does not.
+    func testAGrantThatStillShowsNothingAfterAskingIsRefused() async {
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .authorized(visible: false)
+        center.afterAsking = .authorized(visible: false)
+        let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(60))])
+        XCTAssertEqual(failure(reply)?.0, .permissionDenied)
+        XCTAssertFalse(failure(reply)?.1.contains("declined") ?? true)
+        XCTAssertEqual(center.prompts, 1)
+        XCTAssertTrue(center.scheduled.isEmpty)
     }
 
     /// The person read the prompt for thirty seconds. That is inside the
@@ -149,15 +171,69 @@ final class NotificationsDispatchTests: XCTestCase {
         XCTAssertEqual(center.scheduled.map(\.0.id), ["r1"])
     }
 
-    /// Past the page's budget the page has rejected the call with TIMEOUT. A
-    /// notification scheduled now would carry an id the page never learns, so
-    /// it could never be canceled. Nothing is scheduled.
-    func testAPromptThatOutlastsThePagesBudgetSchedulesNothing() async {
+    /// Past the budget the page sent, the page has rejected the call with
+    /// TIMEOUT. Nothing is scheduled.
+    func testAPromptThatOutlastsTheBudgetThePageSentSchedulesNothing() async {
         let (center, clock, dispatcher) = fixture()
         center.stored = .notDetermined
-        center.whilePrompting = { clock.advance(Double(interactiveTimeoutMilliseconds) / 1000) }
+        center.whilePrompting = { clock.advance(30) }
+        let reply = await schedule(dispatcher, ["title": .string("A"), "budgetMs": .number(30_000),
+                                                "at": ms(clock.now.addingTimeInterval(600))])
+        XCTAssertEqual(failure(reply)?.0, .internalError)
+        XCTAssertTrue(center.scheduled.isEmpty)
+    }
+
+    /// The page's budget, not a copy in the shell, decides. A page that waits
+    /// longer than the old constant is honored.
+    func testALongerBudgetThePageSentIsHonored() async {
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .notDetermined
+        center.whilePrompting = { clock.advance(150) }
+        let reply = await schedule(dispatcher, ["id": .string("long"), "title": .string("A"),
+                                                "budgetMs": .number(300_000),
+                                                "at": ms(clock.now.addingTimeInterval(600))])
+        XCTAssertEqual(result(reply), .string("long"))
+    }
+
+    /// A page built before `budgetMs` existed waited two minutes.
+    func testAPageThatSendsNoBudgetGetsTheTwoMinutesItWaited() async {
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .notDetermined
+        center.whilePrompting = { clock.advance(120) }
         let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(600))])
         XCTAssertEqual(failure(reply)?.0, .internalError)
+        XCTAssertTrue(center.scheduled.isEmpty)
+    }
+
+    /// The device time jumps back an hour while the prompt is open, and only
+    /// a few seconds pass. The page is still waiting, so the id must arrive.
+    /// A wall-clock measure would see minus an hour, and the reverse jump
+    /// would refuse a call the page still waits for.
+    func testADeviceTimeChangeDuringThePromptDoesNotMoveTheBudget() async {
+        for jump in [-3600.0, 3600.0] {
+            let (center, clock, dispatcher) = fixture()
+            center.stored = .notDetermined
+            center.whilePrompting = { clock.advance(5); clock.setWallClock(by: jump) }
+            let reply = await schedule(dispatcher, ["id": .string("j"), "title": .string("A"),
+                                                    "budgetMs": .number(120_000),
+                                                    "at": ms(clock.now.addingTimeInterval(7200))])
+            XCTAssertEqual(result(reply), .string("j"), "jump \(jump)")
+        }
+        let (center, clock, dispatcher) = fixture()
+        center.stored = .notDetermined
+        center.whilePrompting = { clock.advance(200); clock.setWallClock(by: -3600) }
+        let late = await schedule(dispatcher, ["title": .string("A"), "budgetMs": .number(120_000),
+                                               "at": ms(clock.now.addingTimeInterval(7200))])
+        XCTAssertEqual(failure(late)?.0, .internalError, "a clock set back must not stretch the budget")
+    }
+
+    func testRejectsABudgetThatIsNotAPositiveNumber() async {
+        let (center, clock, dispatcher) = fixture()
+        for bad: JSONValue in [.number(0), .number(-5), .string("120000"), .bool(true)] {
+            let reply = await schedule(dispatcher, ["title": .string("A"), "budgetMs": bad,
+                                                    "at": ms(clock.now.addingTimeInterval(60))])
+            XCTAssertEqual(failure(reply)?.0, .invalidParams, "\(bad)")
+        }
         XCTAssertTrue(center.scheduled.isEmpty)
     }
 
@@ -170,6 +246,32 @@ final class NotificationsDispatchTests: XCTestCase {
         let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(10))])
         XCTAssertNotNil(result(reply))
         XCTAssertEqual(center.scheduled.first?.1, .after(seconds: 1))
+    }
+
+    /// A daily reminder starts at its next time of day, today if that has
+    /// not passed, even when `at` is next week. Documented, not a bug: iOS has
+    /// no start date for a repeating trigger.
+    func testADailyReminderWithAFutureDateStillUsesOnlyItsTimeOfDay() async {
+        let (center, clock, dispatcher) = fixture()
+        let nextWeekAtEight = utcCalendar.date(bySettingHour: 8, minute: 0, second: 0,
+                                               of: clock.now.addingTimeInterval(7 * 86_400))!
+        _ = await schedule(dispatcher, ["title": .string("A"), "at": ms(nextWeekAtEight), "repeat": .string("daily")])
+        XCTAssertEqual(center.scheduled.first?.1,
+                       .calendar(DateComponents(hour: 8, minute: 0, second: 0), repeats: true))
+    }
+
+    /// A reminder under a second away. A calendar trigger keeps whole seconds
+    /// only, so it would name a moment already past and never fire, while the
+    /// page was told it exists. Every one-off is an interval instead.
+    func testAOneOffUnderASecondAwayIsAnIntervalNotACalendarMoment() async {
+        let (center, clock, dispatcher) = fixture()
+        clock.advance(0.2)
+        let reply = await schedule(dispatcher, ["title": .string("A"), "at": ms(clock.now.addingTimeInterval(0.3))])
+        XCTAssertNotNil(result(reply))
+        guard case let .after(seconds)? = center.scheduled.first?.1 else {
+            return XCTFail("expected an interval trigger, got \(String(describing: center.scheduled.first?.1))")
+        }
+        XCTAssertGreaterThan(seconds, 0)
     }
 
     func testASystemRefusalIsAnInternalError() async {
@@ -215,11 +317,16 @@ final class PermissionScopeTests: XCTestCase {
         XCTAssertEqual(PermissionScope.forCapabilities([.haptics, .secureStorage]), [])
     }
 
-    func testTheBudgetMatchesThePages() {
-        // The parity check holds this equal to INTERACTIVE_TIMEOUT_MS. This
-        // pins that the shell gives up strictly before the page does.
-        XCTAssertTrue(isStillAwaited(arrived: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 100)))
-        XCTAssertFalse(isStillAwaited(arrived: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 119)))
+    /// The shell gives up strictly before the page does, and a short budget
+    /// is not all margin.
+    func testTheBudgetKeepsAMarginForTheReply() {
+        let twoMinutes = ScheduleBudget(duration: .seconds(120))
+        XCTAssertTrue(twoMinutes.isStillAwaited(after: .seconds(117)))
+        XCTAssertFalse(twoMinutes.isStillAwaited(after: .seconds(118)))
+        let oneSecond = ScheduleBudget(duration: .seconds(1))
+        XCTAssertTrue(oneSecond.isStillAwaited(after: .milliseconds(500)))
+        XCTAssertFalse(oneSecond.isStillAwaited(after: .milliseconds(750)))
+        XCTAssertEqual(ScheduleBudget.unstated.duration, .seconds(120))
     }
 }
 
@@ -238,6 +345,48 @@ final class SecureStorageDispatchTests: XCTestCase {
     func testIsAdvertisedInTheHandshake() {
         let (_, dispatcher) = fixture()
         XCTAssertEqual(dispatcher.capabilities, [.secureStorage])
+    }
+
+    /// Two allowed origins write the same key. Each reads back its own value,
+    /// and removing one leaves the other: the store is per origin, as the web
+    /// fallback is, not one store for the whole app.
+    func testTwoOriginsWritingTheSameKeyNeverSeeEachOther() async {
+        let (_, dispatcher) = fixture()
+        let a = MessageOrigin(scheme: "https", host: "app.example", port: 443)
+        let b = MessageOrigin(scheme: "https", host: "login.example", port: 443)
+        func call(_ method: BridgeMethod, _ params: [String: JSONValue], from origin: MessageOrigin) async -> BridgeResponse {
+            await dispatcher.handle(BridgeRequest(id: "7", method: method, params: params), from: origin)
+        }
+        _ = await call(.secureStorageSet, ["key": .string("token"), "value": .string("from-a")], from: a)
+        let bBefore = await call(.secureStorageGet, ["key": .string("token")], from: b)
+        XCTAssertEqual(result(bBefore), .null, "origin B must not read origin A's value")
+
+        _ = await call(.secureStorageSet, ["key": .string("token"), "value": .string("from-b")], from: b)
+        let aAfter = await call(.secureStorageGet, ["key": .string("token")], from: a)
+        XCTAssertEqual(result(aAfter), .string("from-a"), "origin B must not overwrite origin A's value")
+
+        _ = await call(.secureStorageRemove, ["key": .string("token")], from: b)
+        let aLast = await call(.secureStorageGet, ["key": .string("token")], from: a)
+        XCTAssertEqual(result(aLast), .string("from-a"), "origin B must not remove origin A's value")
+    }
+
+    /// A refusal the same input hits every time is not offered as retryable.
+    func testAKeychainRefusalOfTheInputIsInvalidParams() async {
+        for status: Int32 in [-50, -25302] {
+            let (store, dispatcher) = fixture()
+            store.failing = .status(status)
+            let reply = await call(dispatcher, .secureStorageSet, ["key": .string("k"), "value": .string("v")])
+            XCTAssertEqual(failure(reply)?.0, .invalidParams, "\(status)")
+        }
+    }
+
+    /// A damaged item is a failure, never `null`: an app reads `null` as
+    /// signed out.
+    func testADamagedItemIsAnErrorNotNoValue() async {
+        let (store, dispatcher) = fixture()
+        store.failing = .unreadable
+        let reply = await call(dispatcher, .secureStorageGet, ["key": .string("k")])
+        XCTAssertEqual(failure(reply)?.0, .internalError)
     }
 
     func testSetsGetsAndRemoves() async {
@@ -285,7 +434,7 @@ final class SecureStorageDispatchTests: XCTestCase {
     /// failure names the status and never the key or the value.
     func testAKeychainRefusalIsAnInternalErrorThatLeaksNothing() async {
         let (store, dispatcher) = fixture()
-        store.failing = -25308
+        store.failing = .status(-25308)
         for method in [BridgeMethod.secureStorageGet, .secureStorageSet, .secureStorageRemove] {
             let reply = await call(dispatcher, method, ["key": .string("refreshToken"), "value": .string("s3cret")])
             guard let (code, message) = failure(reply) else { continue }

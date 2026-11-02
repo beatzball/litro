@@ -117,13 +117,17 @@ clean, passes both suites, and fails only on a device — one that updates on th
 App Store's schedule rather than ours.
 
 **Rule.** `scripts/check-bridge-parity.mjs` compares the version, the transport
-names, the method list in order, the capability list, every error code and the
-interactive timeout. The shell carries that one timeout so it can tell when the
-page has stopped waiting on a permission prompt. It
-runs in CI, and it has a `--self-test` that changes the sources eighteen ways:
-to prove the comparison still fires, that a harmless reformatting loses
+names, the method list in order, the capability list and every error code. It
+runs in CI, and it has a `--self-test` that changes the sources in every way it
+lists when it runs: to prove the comparison still fires, that a harmless reformatting loses
 nothing, and that a shape the readers cannot consume stops the check. Change the protocol in both files in one
 commit.
+
+Mirror names, not policy. A number the shell needs from the page -- how long
+the page waits for `notifications.schedule`, say -- is sent in that call's
+params, never copied into Swift. A copy has to match both the number and which
+methods it applies to, the parity check can only see the number, and an
+installed app cannot be updated when the page changes either.
 
 Error codes are compared in both directions, against both sets of
 **declarations**. The reverse check once asked only whether the checker's own

@@ -20,16 +20,6 @@ import Foundation
 /// capabilities exist, so a shell that gains one is readable by an unchanged page.
 public let bridgeProtocolVersion = 1
 
-/// How long the page waits for a call that may sit behind a person: a share
-/// sheet, a review prompt, or the notification permission prompt.
-///
-/// The shell sets no timeouts of its own. It carries this one number so it can
-/// tell when the page has already given up on a call, and not do work whose
-/// result nobody will receive -- a notification scheduled after the page timed
-/// out is one the page can never cancel. Mirrors `INTERACTIVE_TIMEOUT_MS`, and
-/// scripts/check-bridge-parity.mjs holds the two equal.
-public let interactiveTimeoutMilliseconds = 120_000
-
 /// The message handler the page posts to.
 public let handlerName = "litroNative"
 

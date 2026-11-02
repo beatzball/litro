@@ -48,9 +48,10 @@ public struct PermissionScope: OptionSet, Sendable, Equatable {
 public enum NotificationAuthorization: Equatable, Sendable {
     /// Nobody has been asked. Asking shows the prompt.
     case notDetermined
-    /// Granted. `alerts` is whether alerts in particular are on, which is
-    /// false after a badge-only grant or when the user turned alerts off.
-    case authorized(alerts: Bool)
+    /// Granted. `visible` is whether a notification would appear anywhere:
+    /// as a banner, on the Lock Screen, or in Notification Center. It is false
+    /// after a badge-only grant, or when the person turned all three off.
+    case authorized(visible: Bool)
     case denied
 }
 
@@ -58,23 +59,35 @@ public enum NotificationAuthorization: Equatable, Sendable {
 public enum PermissionStep: Equatable, Sendable {
     case allowed
     case denied
-    /// Show the prompt, then decide from its answer.
+    /// Ask, then decide from the settings read again afterward.
     case ask
 }
 
 public extension NotificationAuthorization {
-    /// Whether a notification may be shown, or whether the user must be asked.
+    /// Whether a notification may be shown, or whether the shell should ask.
     ///
-    /// A previous denial is answered from the stored setting, never by asking
-    /// again: iOS does not show a second prompt, so the call would only look
-    /// like it hangs. An authorization with alerts off is a denial for a
-    /// notification, for the same reason: no prompt can turn alerts back on.
+    /// A stored denial is answered from the setting, never by asking again:
+    /// iOS does not show a second prompt, so the call would only look like it
+    /// hangs.
+    ///
+    /// A grant that shows nothing is asked about once more rather than refused.
+    /// The usual cause is an app whose earlier build had badging only, so the
+    /// person granted the badge alone. Asking again shows no second prompt, so
+    /// it costs nothing, and if the system widens the grant the reminder goes
+    /// through. Whether iOS widens a badge-only grant without a prompt has NOT
+    /// been checked on a device; the settings are read again after asking, so
+    /// the answer is right either way.
     var stepForNotification: PermissionStep {
         switch self {
         case .notDetermined: return .ask
-        case let .authorized(alerts): return alerts ? .allowed : .denied
+        case let .authorized(visible): return visible ? .allowed : .ask
         case .denied: return .denied
         }
+    }
+
+    /// Whether a notification scheduled now would be shown somewhere.
+    var allowsNotification: Bool {
+        self == .authorized(visible: true)
     }
 }
 
@@ -144,8 +157,10 @@ public extension NotificationRequest {
             return .failure(ParamsFailure("at is in the past"))
         }
 
-        // An empty id is what the web adapter returns for "nothing scheduled",
-        // so a page passing one back has no id of its own: make one.
+        // The page adapter makes the id before sending, so it knows the id
+        // even when its call times out. A page that sent none, or an empty
+        // one -- what the web adapter returns for "nothing scheduled" -- gets
+        // one made here.
         var id = makeID()
         if let raw = params["id"], raw != .null {
             guard let given = raw.stringValue else { return .failure(ParamsFailure("id must be a string")) }
@@ -157,19 +172,31 @@ public extension NotificationRequest {
 
     /// The trigger to schedule with, decided at the moment of scheduling.
     ///
-    /// `now` here is AFTER the prompt. A one-off reminder whose time passed
-    /// while the person read it fires in one second: they asked for it and
-    /// allowed it. A calendar trigger for a past moment would be accepted by the
-    /// system and never fire, which is a silent loss.
+    /// `now` here is AFTER any prompt.
+    ///
+    /// A one-off is an interval from now, never a calendar moment. `at` is an
+    /// instant, and an interval names an instant:
+    ///
+    /// - A calendar trigger keeps whole seconds only. For a reminder under a
+    ///   second away it names a moment already past, which the system accepts
+    ///   and never fires, while the page was told the reminder exists.
+    /// - A calendar trigger with no time zone is floating: a person who flies
+    ///   west sees it fire hours after the instant the page asked for.
+    ///
+    /// A one-off whose time passed while the person read the prompt fires in
+    /// one second: they asked for it and allowed it. One second is also the
+    /// floor, because the system refuses an interval of zero.
+    ///
+    /// A daily reminder uses the time of day only, in the device's current
+    /// calendar and time zone, and starts at its next occurrence -- today, if
+    /// that time has not passed yet -- even when `at` is a later date. iOS has
+    /// no start date for a repeating trigger. "Every day at 9, local time" is
+    /// the meaning, so it follows the person across time zones.
     func trigger(now: Date, calendar: Calendar) -> NotificationTrigger {
         if repeatsDaily {
             return .calendar(calendar.dateComponents([.hour, .minute, .second], from: at), repeats: true)
         }
-        if at <= now {
-            return .after(seconds: 1)
-        }
-        return .calendar(calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: at),
-                         repeats: false)
+        return .after(seconds: max(1, at.timeIntervalSince(now)))
     }
 }
 
@@ -179,15 +206,44 @@ public struct ParamsFailure: Error, Equatable, Sendable {
     public init(_ message: String) { self.message = message }
 }
 
-/// Whether a schedule that waited on a prompt is still wanted by the page.
+/// How long the page waits for one `notifications.schedule` call.
 ///
-/// The page waits `interactiveTimeoutMilliseconds` for `notifications.schedule`
-/// and then rejects with TIMEOUT. A notification scheduled after that has an id
-/// the page never learns, so the page can never cancel it, and a page that
-/// retries on timeout schedules it twice. So past the page's budget the shell
-/// schedules nothing. The margin covers the reply's own trip back.
-public func isStillAwaited(arrived: Date, now: Date) -> Bool {
-    let budget = Double(interactiveTimeoutMilliseconds) / 1000
-    let margin: TimeInterval = 2
-    return now.timeIntervalSince(arrived) < budget - margin
+/// The page sends it as `budgetMs`, the same number its own timer uses. After
+/// that time the page has rejected the call with TIMEOUT, and a notification
+/// scheduled then carries an id the page may never learn. So past the budget
+/// the shell schedules nothing.
+///
+/// The page sends the number rather than the shell carrying a copy because
+/// the two are released apart. A copy would have to match both the number and
+/// which methods it applies to, and an installed app cannot be updated when
+/// either changes on the page side. The budget is relative, not a deadline,
+/// so the shell never compares the page's clock to its own.
+public struct ScheduleBudget: Equatable, Sendable {
+    public let duration: Duration
+
+    /// What a page that sends no `budgetMs` waited: the page's interactive
+    /// timeout when this field was added. Only for a page built before it.
+    public static let unstated = ScheduleBudget(duration: .milliseconds(120_000))
+
+    public init(duration: Duration) { self.duration = duration }
+
+    /// Reads `budgetMs`. Absent is `unstated`; anything but a positive,
+    /// finite number is a page bug.
+    public static func parse(_ params: [String: JSONValue]) -> Result<ScheduleBudget, ParamsFailure> {
+        guard let raw = params["budgetMs"], raw != .null else { return .success(.unstated) }
+        guard let ms = raw.numberValue, ms.isFinite, ms > 0 else {
+            return .failure(ParamsFailure("budgetMs must be a positive number of milliseconds"))
+        }
+        return .success(ScheduleBudget(duration: .milliseconds(ms)))
+    }
+
+    /// Whether the page is still waiting after `elapsed`, measured by the
+    /// shell on a clock no change to the device time can move.
+    ///
+    /// The margin covers the reply's own trip back. It is two seconds, or a
+    /// quarter of a short budget, so a small budget is not all margin.
+    public func isStillAwaited(after elapsed: Duration) -> Bool {
+        let margin = min(.seconds(2), duration / 4)
+        return elapsed < duration - margin
+    }
 }

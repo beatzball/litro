@@ -153,12 +153,22 @@ extension AppConfiguration {
     /// Takes the three parts rather than a `WKSecurityOrigin` so this stays in
     /// a target with no WebKit in it, and therefore has tests.
     public func allowsBridgeOrigin(scheme: String, host: String, port: Int) -> Bool {
-        guard !scheme.isEmpty, !host.isEmpty else { return false }
+        bridgeOrigin(scheme: scheme, host: host, port: port) != nil
+    }
+
+    /// The frame's origin, normalized, when it may use the bridge; else `nil`.
+    ///
+    /// The transport carries this value to the dispatcher, so secure storage is
+    /// kept per the origin that was actually checked here. Normalized once, in
+    /// this one place: two spellings of one origin must reach one store.
+    public func bridgeOrigin(scheme: String, host: String, port: Int) -> MessageOrigin? {
+        guard !scheme.isEmpty, !host.isEmpty else { return nil }
         let scheme = scheme.lowercased()
         // WebKit reports 0 for a default port; `Origin` stores the real one.
         let port = port == 0 ? Origin.defaultPort(for: scheme) : port
         let candidate = Origin(scheme: scheme, host: host.lowercased(), port: port)
-        return allowedOrigins.compactMap { Origin(string: $0) }.contains(candidate)
+        guard allowedOrigins.compactMap({ Origin(string: $0) }).contains(candidate) else { return nil }
+        return MessageOrigin(scheme: candidate.scheme, host: candidate.host, port: candidate.port)
     }
 }
 
