@@ -47,6 +47,13 @@ shell already decided not to send. Found by a test, not on a device.
 id when the message had a usable one. Only a message with no id at all goes
 unanswered, and the transport logs that.
 
+The same rule holds one layer up. `JSONValue(any:)` returns nil for the whole
+body when any value inside it is not JSON -- a `Date` arrives as `NSDate` -- and
+the transport used to drop the message right there, id and all. The transport
+goes through `IncomingMessage(body:)`, which reads the id from the raw body when
+the conversion fails, and the dispatcher answers `INVALID_REQUEST`. Never
+convert the body and then look for the id.
+
 **Check.** `swift test --package-path native --filter MalformedMessageTests`.
 
 ## NATIVE-004 — an absent capability is answered, never refused
@@ -111,9 +118,18 @@ App Store's schedule rather than ours.
 
 **Rule.** `scripts/check-bridge-parity.mjs` compares the version, the transport
 names, the method list in order, the capability list and every error code. It
-runs in CI, and it has a `--self-test` that breaks the Swift source nine ways to
+runs in CI, and it has a `--self-test` that breaks the sources eleven ways to
 prove the comparison still fires. Change the protocol in both files in one
 commit.
+
+Error codes are compared in both directions, against both sets of
+**declarations**. The reverse check once asked only whether the checker's own
+name table had a partner for each Swift code, so deleting `PERMISSION_DENIED`
+from `protocol.ts` still passed. The self-test now deletes a code on each side.
+
+The script compares constants only. It cannot see a difference in how the two
+validators behave, such as one side accepting `"params": null`. That class is
+held by the spec and by a test on each side over the same input.
 
 **Check.** `node scripts/check-bridge-parity.mjs && node scripts/check-bridge-parity.mjs --self-test`.
 
@@ -426,3 +442,24 @@ adding any line with `//` in it.
 asserts **both** directions: Debug carries both keys, Release carries neither.
 One without the other would still pass if the flag stopped working in a single
 direction.
+
+## NATIVE-018 — a start URL its own allowlist refuses is a white screen
+
+**Trap.** Nothing checked that `startURL` is covered by `allowedOrigins`. When
+it is not, the origin policy cancels the first navigation, a cancel is
+deliberately not a load failure (NATIVE-012), and the app opens to an empty
+white view that explains nothing. A retry tap on the same path left the failure
+screen stuck on "Trying again".
+
+The plausible way in is a typo: an entry with no scheme, such as
+`"app.example.com"`, has no `URL.host`, so `Origin(string:)` drops it without a
+word and the list is shorter than it reads.
+
+**Rule.** `AppConfiguration.load` calls `validate()`, which throws
+`unusableOrigin` for an entry that is not a scheme and a host, and
+`startURLNotAllowed` for a start URL the list does not cover. The error reaches
+the startup failure screen, which prints it. Two messages, because the two
+faults send the reader to different lines. The check is in `load`, not in the
+decoder, so tests can still build a configuration with an empty list.
+
+**Check.** `swift test --package-path native --filter AppConfigurationValidationTests`.

@@ -174,9 +174,19 @@ function compare(ts, swift) {
       say(`error code ${tsName} differs`, value, swift.errorCodes[swiftName]);
     }
   }
-  for (const swiftName of Object.keys(swift.errorCodes)) {
-    if (!Object.values(ERROR_CODE_NAMES).includes(swiftName)) {
-      problems.push(`Swift error code ${swiftName} has no TypeScript partner`);
+  // The reverse direction compares against the TypeScript DECLARATIONS, not
+  // just this checker's table. Asking only whether the table names a partner
+  // let a code deleted from protocol.ts pass: the table still had the entry,
+  // so the Swift code looked partnered while TypeScript no longer declared it.
+  const tsNameFor = Object.fromEntries(Object.entries(ERROR_CODE_NAMES).map(([t, s]) => [s, t]));
+  for (const [swiftName, value] of Object.entries(swift.errorCodes)) {
+    const tsName = tsNameFor[swiftName];
+    if (!tsName) {
+      problems.push(`Swift error code ${swiftName} has no TypeScript name in this checker's table`);
+      continue;
+    }
+    if (!(tsName in ts.errorCodes)) {
+      problems.push(`error code ${swiftName} (${value}) is missing from TypeScript as ${tsName}`);
     }
   }
 
@@ -188,13 +198,15 @@ function compare(ts, swift) {
 /**
  * Proves the comparison still fires.
  *
- * Each case breaks one thing in a copy of the real Swift source and expects a
- * complaint. A checker nobody has broken on purpose is a checker that may be
+ * Each case breaks one thing in a copy of one side's real source and expects a
+ * complaint. Most cases break the Swift side; the error-code cases break both,
+ * because the comparison runs in both directions and each needs its own proof. A checker nobody has broken on purpose is a checker that may be
  * comparing nothing: the extractors return empty lists as readily as full ones
  * when a declaration moves, which is why `must` throws instead.
  */
 function selfTest(tsSource, swiftSource) {
   const ts = readTypeScript(tsSource);
+  // Cases with no side named break the Swift source.
   const cases = [
     ['a changed protocol version', (s) => s.replace('bridgeProtocolVersion = 1', 'bridgeProtocolVersion = 2')],
     ['a changed handler name', (s) => s.replace('handlerName = "litroNative"', 'handlerName = "litroShell"')],
@@ -207,17 +219,23 @@ function selfTest(tsSource, swiftSource) {
     ['a changed error code', (s) => s.replace('case permissionDenied = -32000', 'case permissionDenied = -32010')],
     ['a dropped capability', (s) => s.replace('    case review\n', '')],
     ['an added capability', (s) => s.replace('    case review\n', '    case review\n    case camera\n')],
+    ['a dropped Swift error code', (s) => s.replace('    case permissionDenied = -32000\n', '')],
+    ['a dropped TypeScript error code', 'ts', (s) => s.replace('  PERMISSION_DENIED: -32000,\n', '')],
   ];
 
   let failures = 0;
-  for (const [what, mutate] of cases) {
-    const mutated = mutate(swiftSource);
-    if (mutated === swiftSource) {
+  for (const entry of cases) {
+    const [what, side, mutate] = entry.length === 3 ? entry : [entry[0], 'swift', entry[1]];
+    const source = side === 'ts' ? tsSource : swiftSource;
+    const mutated = mutate(source);
+    if (mutated === source) {
       console.error(`  self-test BROKEN: ${what} changed nothing; the mutation no longer applies`);
       failures += 1;
       continue;
     }
-    const problems = compare(ts, readSwift(mutated));
+    const problems = side === 'ts'
+      ? compare(readTypeScript(mutated), readSwift(swiftSource))
+      : compare(ts, readSwift(mutated));
     if (problems.length === 0) {
       console.error(`  self-test FAILED: ${what} was not reported`);
       failures += 1;

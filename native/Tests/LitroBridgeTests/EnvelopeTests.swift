@@ -17,13 +17,16 @@ final class RequestParsingTests: XCTestCase {
         XCTAssertEqual(parsed.params, [:])
     }
 
-    /// `params: null` is what a JavaScript caller produces by passing `undefined`
-    /// through `JSON.stringify`, so it is read as absent rather than rejected.
-    func testTreatsANullParamsAsAbsent() throws {
-        let parsed = try BridgeRequest.parse(
-            message(method: .string("haptics.selection"), params: .null)
-        ).get()
-        XCTAssertEqual(parsed.params, [:])
+    /// `params: null` is rejected, the same as `isBridgeRequest` in protocol.ts
+    /// rejects it. A page leaving params out sends no key at all: both
+    /// `JSON.stringify` and WebKit's message conversion drop a key whose value
+    /// is `undefined`, so `null` arrives only when a page wrote it on purpose.
+    /// The reply still carries the id, so the page learns at once.
+    func testRejectsANullParamsWithTheId() {
+        XCTAssertEqual(
+            BridgeRequest.parse(message(method: .string("haptics.selection"), params: .null)).failure,
+            .invalidRequest(id: "7")
+        )
     }
 
     func testRejectsAMessageThatIsNotAnObject() {

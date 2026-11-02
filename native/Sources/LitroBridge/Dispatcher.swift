@@ -84,6 +84,21 @@ public final class BridgeDispatcher {
         }
     }
 
+    /// Handles one message as it came off the transport.
+    ///
+    /// A body holding a value that is not JSON is answered `INVALID_REQUEST`
+    /// against its id, never dropped, when it has a usable id.
+    public func handle(_ message: IncomingMessage) async -> BridgeResponse? {
+        switch message {
+        case let .json(value):
+            return await handle(value)
+        case let .notJSON(id):
+            guard let id else { return nil }
+            return .failure(id: id, code: .invalidRequest,
+                            message: "the message held a value that is not JSON, such as a Date")
+        }
+    }
+
     private static func message(for reason: RequestParseFailure) -> String {
         switch reason {
         case .invalidRequest: return "not a valid request for protocol version \(bridgeProtocolVersion)"

@@ -332,6 +332,41 @@ final class MalformedMessageTests: XCTestCase {
         XCTAssertNil(notAnObject)
     }
 
+    /// A message holding one value JSON cannot carry -- a `Date` arrives from
+    /// WebKit as an `NSDate` -- still carries a usable id, so it is answered.
+    /// Converting the whole body first lost that id, and the page waited out
+    /// its full timeout for a reply the shell had already decided not to send.
+    func testAMessageHoldingANonJsonValueIsAnsweredAgainstItsId() async {
+        let body: [String: Any] = [
+            "jsonrpc": "2.0", "id": "1", "method": "badging.set",
+            "params": ["count": 3, "at": Date()] as [String: Any],
+        ]
+        let reply = await dispatcher().handle(IncomingMessage(body: body))
+        XCTAssertEqual(code(reply), .invalidRequest)
+        guard case let .failure(id, _, _)? = reply else { return XCTFail("expected a failure, got \(String(describing: reply))") }
+        XCTAssertEqual(id, "1")
+    }
+
+    /// The same rule as for any message: with no usable id there is nowhere to
+    /// send the reply, even when the reason is a non-JSON value.
+    func testANonJsonMessageWithNoUsableIdIsNotAnswered() async {
+        for id: Any? in [nil, "", 7] {
+            var body: [String: Any] = ["jsonrpc": "2.0", "method": "handshake", "at": Date()]
+            if let id { body["id"] = id }
+            let reply = await dispatcher().handle(IncomingMessage(body: body))
+            XCTAssertNil(reply, "id \(String(describing: id))")
+        }
+        let notAnObject = await dispatcher().handle(IncomingMessage(body: Date()))
+        XCTAssertNil(notAnObject)
+    }
+
+    /// A message that is all JSON takes the ordinary path.
+    func testAJsonMessageArrivingAsABodyIsDispatched() async {
+        let body: [String: Any] = ["jsonrpc": "2.0", "id": "2", "method": "haptics.selection"]
+        let reply = await dispatcher().handle(IncomingMessage(body: body))
+        XCTAssertEqual(reply, .success(id: "2", result: .null))
+    }
+
     /// The reply is addressed to the id that was sent, every time.
     func testAReplyCarriesTheRequestsId() async {
         let reply = await dispatcher().handle(message(id: .string("abc"), method: .string("haptics.selection")))

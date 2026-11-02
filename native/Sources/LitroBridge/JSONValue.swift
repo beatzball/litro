@@ -21,7 +21,9 @@ public extension JSONValue {
     ///
     /// Returns `nil` for anything that is not JSON, such as a `Date` or a class
     /// instance. A message carrying one is not a valid request, and the caller
-    /// answers `INVALID_REQUEST` rather than guessing what was meant.
+    /// answers `INVALID_REQUEST` rather than guessing what was meant -- which
+    /// needs the id, so the transport goes through `IncomingMessage(body:)`,
+    /// which reads the id from the raw body when this returns nil.
     ///
     /// `NSNumber` is the awkward case: JavaScriptCore boxes both `true` and `1`
     /// as `NSNumber`, so a bool must be recognized by its ObjC type encoding
