@@ -21,7 +21,7 @@ export default defineNitroConfig({
   // publicAssets.dir is resolved relative to srcDir ('server/').
   // Use '../dist/client' (not 'dist/client') to reach <rootDir>/dist/client.
   publicAssets: [
-    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
+    { dir: '../dist/client', baseURL: '/_litro/' },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
   ],
 

@@ -63,7 +63,10 @@ test.describe('client entry caching (production build)', () => {
     page.on('load', () => loads++);
 
     await page.goto('/blog');
-    await page.waitForSelector('page-blog:not([hidden])');
+    // TEST-001: until the router has swapped in the client element, the
+    // server-rendered link is a plain anchor, and a click would be a full
+    // document navigation.
+    await page.waitForSelector('litro-outlet[data-litro-settled]');
     await page.click('litro-link[href="/blog/hello-world"]');
     await page.waitForURL('**/blog/hello-world');
     await expect(page.locator('page-blog-slug')).toBeVisible();

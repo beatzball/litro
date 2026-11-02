@@ -15,7 +15,7 @@ export default defineNitroConfig({
   srcDir: 'server',
 
   publicAssets: [
-    { dir: '../dist/client', baseURL: '/_litro/', maxAge: 31536000 },
+    { dir: '../dist/client', baseURL: '/_litro/' },
     { dir: '../public',      baseURL: '/',        maxAge: 0 },
     { dir: '../content',     baseURL: '/content/', maxAge: 86400 },
   ],

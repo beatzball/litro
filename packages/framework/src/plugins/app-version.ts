@@ -18,6 +18,7 @@
 
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import fastGlob from 'fast-glob';
 import { resolve, join } from 'pathe';
 
@@ -30,15 +31,38 @@ export interface PublicAssetDir {
 /** Length of the hash in the `?v=` query. 12 hex characters is 48 bits. */
 const VERSION_LENGTH = 12;
 
-/** A quoted relative specifier that names the entry: `"../app.js"`, `'./app.js'`. */
-const ENTRY_IMPORT = /["'`](?:\.\.?\/)+app\.js["'`]/;
+/** Every JavaScript module format the client build can emit. */
+const SCRIPT_GLOB = '**/*.{js,mjs,cjs}';
 
 /**
- * Finds the directory served at `/_litro/`. Falls back to
- * `<rootDir>/dist/client`, the location every recipe uses.
+ * An import of the entry by a relative specifier: `from"../app.js"`,
+ * `import"./app.js"`, `import("../app.js")`, `export*from"../app.js"`.
+ * Anchored to import syntax, so a code sample in a string does not count.
  */
-export function resolveClientDir(rootDir: string, publicAssets: PublicAssetDir[] = []): string {
-  const entry = publicAssets.find(a => (a.baseURL ?? '').replace(/^\/+|\/+$/g, '') === '_litro');
+const ENTRY_IMPORT = /(?:\bfrom|\bimport)\s*\(?\s*["'`](?:\.\.?\/)+app\.js["'`]/;
+
+/** A `publicAssets` baseURL, without leading or trailing slashes. */
+const trimSlashes = (url: string): string => url.replace(/^\/+|\/+$/g, '');
+
+/**
+ * Finds the directory served at `/_litro/`, including under a base path:
+ * Nitro normalizes `${LITRO_BASE_PATH}/_litro/` to `/litro/_litro`, so a
+ * mount ending in `/_litro` counts. A mount at exactly `<basePath>/_litro`
+ * wins over any other. Falls back to `<rootDir>/dist/client`, the location
+ * every recipe uses, only when no mount matches.
+ */
+export function resolveClientDir(
+  rootDir: string,
+  publicAssets: PublicAssetDir[] = [],
+  basePath = '',
+): string {
+  const exact = trimSlashes(`${basePath}/_litro`);
+  const mounts = publicAssets.filter(a => {
+    const url = trimSlashes(a.baseURL ?? '');
+    return url === '_litro' || url.endsWith('/_litro');
+  });
+  const entry =
+    mounts.find(a => trimSlashes(a.baseURL ?? '') === exact) ?? mounts[0];
   return entry ? resolve(rootDir, entry.dir) : resolve(rootDir, 'dist', 'client');
 }
 
@@ -51,7 +75,18 @@ export type AppVersionResult =
  * Hashes `<clientDir>/app.js`. Returns no version when the file does not
  * exist, or when another emitted file imports it by name.
  */
-export async function computeAppVersion(clientDir: string): Promise<AppVersionResult> {
+export interface ComputeAppVersionOptions {
+  /**
+   * Vite's `publicDir`. Files it copies into the client directory are not
+   * chunks, so a file that also exists there at the same path is skipped.
+   */
+  publicDir?: string;
+}
+
+export async function computeAppVersion(
+  clientDir: string,
+  options: ComputeAppVersionOptions = {},
+): Promise<AppVersionResult> {
   let entry: Buffer;
   try {
     entry = await readFile(join(clientDir, 'app.js'));
@@ -59,9 +94,10 @@ export async function computeAppVersion(clientDir: string): Promise<AppVersionRe
     return { version: undefined, reason: 'missing' };
   }
 
-  const others = await fastGlob('**/*.js', { cwd: clientDir, ignore: ['app.js'] });
+  const others = await fastGlob(SCRIPT_GLOB, { cwd: clientDir, ignore: ['app.js'] });
   const importers: string[] = [];
   for (const file of others.sort()) {
+    if (options.publicDir && existsSync(join(options.publicDir, file))) continue;
     const code = await readFile(join(clientDir, file), 'utf-8');
     if (ENTRY_IMPORT.test(code)) importers.push(file);
   }

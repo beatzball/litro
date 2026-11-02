@@ -31,6 +31,10 @@ describe('recipe templates cache the client entry safely', () => {
     expect(src).not.toContain("'/_litro/**'");
     expect(src).toMatch(/'\/_litro\/assets\/\*\*': \{\s*headers: \{ 'cache-control': 'public, max-age=31536000, immutable' \}/);
     expect(src).toMatch(/'\/_litro\/app\.js': \{\s*headers: \{ 'cache-control': 'no-cache' \}/);
+    // A maxAge on the /_litro/ publicAssets mount makes Nitro add its own
+    // '/_litro/**' immutable rule, which a static host's _headers file then
+    // applies to app.js as well.
+    expect(src).not.toMatch(/baseURL: '\/_litro\/',\s*maxAge/);
   });
 
   it.each(templates)('%s/vite.config.ts', (template) => {

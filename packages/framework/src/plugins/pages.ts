@@ -330,13 +330,27 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
   // and a hash there would also rewrite the manifest stub on every reload.
   async function appVersionStatement(): Promise<string> {
     if (nitro.options.dev) return '';
+    // Hash and check the directory Nitro actually serves at /_litro/, which
+    // sits under LITRO_BASE_PATH when one is set.
     const clientDir = resolveClientDir(
       nitro.options.rootDir,
       (nitro.options.publicAssets ?? []) as Array<{ dir: string; baseURL?: string }>,
+      process.env.LITRO_BASE_PATH ?? '',
     );
-    const result = await computeAppVersion(clientDir);
+    // Vite copies its publicDir (default `<root>/public`) into the client
+    // directory; those copies are not chunks.
+    const result = await computeAppVersion(clientDir, {
+      publicDir: resolve(nitro.options.rootDir, 'public'),
+    });
     if (result.version === undefined) {
-      if (result.reason === 'imported') {
+      if (result.reason === 'missing') {
+        nitro.logger.warn(
+          `[litro] No client entry at ${clientDir}/app.js, so the page loads the bare ` +
+            '/_litro/app.js with no version. `litro build` runs `vite build` first; ' +
+            "check that vite.config.ts's build.outDir is the directory nitro.config.ts " +
+            'serves at /_litro/.',
+        );
+      } else {
         nitro.logger.warn(
           `[litro] ${result.importers.length} client chunk(s) import app.js by name ` +
             `(${result.importers.slice(0, 3).join(', ')}${result.importers.length > 3 ? ', ...' : ''}), ` +

@@ -26,7 +26,10 @@
  * same evaluation order, and nothing else. A Lit entry reaches `lit-element`
  * only through its `void import('./app-main.js')`, which is a dynamic import,
  * so `lit-element` is not in the entry's static graph and cannot join the
- * group. `scripts/verify-scaffolded-apps.mjs` (HYDRATE-ORDER) checks the
+ * group. That holds for the BOOTSTRAP entry's graph only: in a build with
+ * more entries, another entry may import `lit-element` statically, so only
+ * the bootstrap's graph is collected, and a build whose bootstrap cannot be
+ * identified fails rather than guess (see `findBootstrapEntry`). `scripts/verify-scaffolded-apps.mjs` (HYDRATE-ORDER) checks the
  * emitted bundle.
  *
  * The set is computed in `buildEnd`, after the module graph is complete and
@@ -43,17 +46,44 @@ interface ModuleGraphReader {
   getModuleInfo(id: string): { isEntry: boolean; importedIds: readonly string[] } | null;
 }
 
+/** A module id that names the client bootstrap: `app.ts`, `app.js`, ... */
+const BOOTSTRAP_ID = /(?:^|[\\/])app\.(?:ts|js|mts|mjs|tsx|jsx)$/;
+
 /**
- * Returns every module reachable from an entry through STATIC imports only,
- * without the entry modules themselves. Exported for tests.
+ * Picks the client bootstrap among the build's entries. One entry is the
+ * bootstrap whatever its name. With several, exactly one must be `app.*`.
+ * Throws otherwise: guessing would put another entry's dependencies into the
+ * boot chunk, and when that entry imports `lit-element` the hydration hook
+ * would be read before it is set (BUILD-009). Exported for tests.
+ */
+export function findBootstrapEntry(entries: readonly string[]): string {
+  if (entries.length === 1) return entries[0];
+  const apps = entries.filter(id => BOOTSTRAP_ID.test(id));
+  if (apps.length === 1) return apps[0];
+  throw new Error(
+    `[litro] litroEntryPlugin() cannot tell which of these ${entries.length} entries is ` +
+      `the client bootstrap: ${entries.join(', ')}. It needs a single entry, or ` +
+      `exactly one entry named app.ts (or app.js). Rename the bootstrap, or ` +
+      `remove litroEntryPlugin() from this build.`,
+  );
+}
+
+/**
+ * Returns every module reachable from the client bootstrap entry through
+ * STATIC imports only, without the entry itself. Other entries are ignored:
+ * their dependencies are not the bootstrap's, and putting them in the boot
+ * chunk could evaluate `lit-element` before the hydration support. Exported
+ * for tests.
  */
 export function collectEntryStaticDeps(graph: ModuleGraphReader): Set<string> {
   const entries: string[] = [];
   for (const id of graph.getModuleIds()) {
     if (graph.getModuleInfo(id)?.isEntry) entries.push(id);
   }
+  if (entries.length === 0) return new Set();
+  const bootstrap = findBootstrapEntry(entries);
   const seen = new Set<string>();
-  const stack = [...entries];
+  const stack = [bootstrap];
   while (stack.length > 0) {
     const id = stack.pop()!;
     for (const dep of graph.getModuleInfo(id)?.importedIds ?? []) {
@@ -62,7 +92,7 @@ export function collectEntryStaticDeps(graph: ModuleGraphReader): Set<string> {
       stack.push(dep);
     }
   }
-  for (const entry of entries) seen.delete(entry);
+  seen.delete(bootstrap);
   return seen;
 }
 

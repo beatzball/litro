@@ -279,6 +279,13 @@ export function renderNginxConf(): string {
         add_header Cache-Control "no-cache";
     }
 
+    # Anything else under /_litro/ (files Vite copies from public/) has no
+    # content hash. Cache it for a day rather than for good.
+    location /_litro/ {
+        expires 1d;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
     # Shoelace icon assets are not content-hashed, so no immutable here.
     location /shoelace/ {
         expires 7d;

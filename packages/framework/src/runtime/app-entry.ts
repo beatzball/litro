@@ -19,13 +19,23 @@
 /** The global the generated page manifest assigns the entry version to. */
 export const LITRO_APP_VERSION_GLOBAL = '__litro_app_version__';
 
+/**
+ * A production entry URL in place of `/_litro/app.js?v=<version>`. A string
+ * is used exactly as given, with no version added. A function receives the
+ * build's entry version (undefined when none is known) and returns the URL,
+ * so a URL elsewhere can still change with each deploy.
+ */
+export type AppScriptUrl = string | ((version: string | undefined) => string);
+
 export interface AppEntryUrlOptions {
   /** `LITRO_BASE_PATH`, without a trailing slash. */
   basePath: string;
+  /** True under `litro dev` (`LITRO_DEV=true`), with either dev middleware. */
+  isDev: boolean;
   /** True under `litro dev` with the live-source entry (see `runtime/vite-dev.ts`). */
   liveEntry: boolean;
-  /** An explicit production URL from `createPageHandler({ appScriptUrl })`. */
-  override?: string;
+  /** `createPageHandler({ appScriptUrl })`. Production only. */
+  override?: AppScriptUrl;
   /** The entry version. Defaults to the value the page manifest assigned. */
   version?: string;
 }
@@ -39,17 +49,21 @@ export function getAppVersion(): string | undefined {
 /**
  * Returns the client entry URL for the page shell.
  *
- * - Dev live entry: `${basePath}/app.ts`. An override or a version is ignored,
- *   because Vite serves live source there.
- * - Production with an override: the override, as given.
+ * - Dev live entry: `${basePath}/app.ts`, served by Vite as live source.
+ * - Dev with an older middleware: the bare `${basePath}/_litro/app.js`. No
+ *   version is computed in dev, and the override is a production setting.
+ * - Production with an override: a string as given, or the function's result
+ *   for this build's version.
  * - Production: `${basePath}/_litro/app.js?v=<version>`, or without the query
  *   when no version is known.
  */
 export function appEntryUrl(options: AppEntryUrlOptions): string {
-  const { basePath, liveEntry, override } = options;
+  const { basePath, isDev, liveEntry, override } = options;
   if (liveEntry) return `${basePath}/app.ts`;
-  if (override) return override;
-  const version = options.version ?? getAppVersion();
   const url = `${basePath}/_litro/app.js`;
+  if (isDev) return url;
+  const version = options.version ?? getAppVersion();
+  if (typeof override === 'function') return override(version);
+  if (override) return override;
   return version ? `${url}?v=${encodeURIComponent(version)}` : url;
 }

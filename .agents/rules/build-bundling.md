@@ -219,10 +219,26 @@ upgrades the framework finds out without rebuilding anything.
 
 ### BUILD-010 — No chunk imports the client entry by name
 
-Every app's `vite.config.ts` lists `litroEntryPlugin()` from
-`@beatzball/litro/vite`. Do not remove it, and do not add a code-splitting
-group that pulls a module the entry imports statically back out of its `boot`
-chunk.
+Every recipe template, playground and docs site lists `litroEntryPlugin()`
+from `@beatzball/litro/vite` in its `vite.config.ts`. Do not remove it, and do
+not add a code-splitting group that pulls a module the entry imports statically
+back out of its `boot` chunk.
+
+The four apps under `benchmarks/apps/` do NOT list it, on purpose: their
+committed results were measured with the default chunk layout, and the plugin
+adds a `boot` request to every page. Their builds print the "import app.js by
+name" warning and load the bare `/_litro/app.js`, which is served `no-cache`.
+That is the expected state there, not a fault, but it means the benchmarks
+measure the fallback, not what ships: every page load revalidates a `no-cache`
+entry that holds the runtime. Add the plugin to a benchmark app only together
+with new benchmark results.
+
+No `/_litro/` `publicAssets` entry carries a `maxAge`. Nitro turns a `maxAge`
+into a synthesized `'/_litro/**'` immutable route rule
+(`nitropack/dist/core/index.mjs`). The Node server applies the more specific
+`/_litro/app.js` rule first, but a static host preset writes every rule into
+its `_headers` file and the host picks, so app.js could be cached forever
+again. The explicit `routeRules` say everything that needs saying.
 
 **Why:** `/_litro/app.js` keeps one name in every build, so it is served
 `no-cache` and the page loads it as `/_litro/app.js?v=<content hash>` (issue
@@ -234,11 +250,15 @@ support, or the whole FAST or Elena runtime) inside `app.js`, and other chunks
 import `../app.js` by its bare name — a second runtime next to the versioned
 one. The plugin moves those modules into a hashed `boot` chunk. It does not
 touch `lit-element`, which a Lit entry reaches only through its dynamic import
-(BUILD-009).
+(BUILD-009). That is true of the bootstrap entry's static graph only, so the
+plugin collects that graph alone, and refuses a multi-entry build in which no
+single entry is named `app.*`: another entry's `lit-element` in the boot chunk
+would read the hydration hook before it is set.
 
 **Check:** `node scripts/verify-scaffolded-apps.mjs` reports `ENTRY-SHARED` when
 a chunk imports `app.js`, and `ENTRY-UNVERSIONED` when a prerendered page does
 not load `app.js?v=`. The build also warns, and falls back to the bare URL,
 from `packages/framework/src/plugins/app-version.ts`.
 `e2e/playground/client-entry-cache.spec.ts` checks the served headers in
-`pnpm test:e2e:preview`.
+`pnpm test:e2e:preview`. `packages/create-litro/src/entry-cache.test.ts` fails
+when a recipe template brings back the `/_litro/**` rule or the `maxAge`.

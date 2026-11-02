@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import fastGlob from 'fast-glob';
 import { build } from 'vite';
 import { litroEntryPlugin, collectEntryStaticDeps, withBootGroup } from '../entry.js';
@@ -27,6 +29,18 @@ describe('collectEntryStaticDeps', () => {
       }),
     );
     expect([...deps].sort()).toEqual(['\0vite/preload-helper.js', '/hydrate.js', '/lit-html.js']);
+  });
+
+  it('collects only the app bootstrap when there are several entries', () => {
+    const deps = collectEntryStaticDeps(
+      graph({
+        '/src/widget.ts': { isEntry: true, importedIds: ['/lit-element.js'] },
+        '/src/app.ts': { isEntry: true, importedIds: ['/hydrate.js'] },
+        '/hydrate.js': {},
+        '/lit-element.js': {},
+      }),
+    );
+    expect([...deps]).toEqual(['/hydrate.js']);
   });
 
   it('survives an import cycle', () => {
@@ -130,5 +144,78 @@ describe('litroEntryPlugin in a vite build', () => {
     expect(await chunksImportingEntry(outDir)).toEqual([]);
     const result = await computeAppVersion(outDir);
     expect(result.version).toMatch(/^[0-9a-f]{12}$/);
+  });
+});
+
+// B1 from the PR 286 review. A second, independent entry that imports the
+// element base class must not drag that class into the app entry's boot
+// chunk. `element.js` stands in for lit-element: it reads the hook when it is
+// evaluated, and `hydrate.js` stands in for the hydration support that sets
+// the hook. The built output is RUN, so the test sees evaluation order, not
+// source order.
+describe('litroEntryPlugin with two entries', () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'litro-entry-multi-'));
+    await writeFile(join(root, 'hydrate.js'), 'globalThis.__fixtureHook = "installed";\n');
+    await writeFile(
+      join(root, 'element.js'),
+      'globalThis.__fixtureSeen = globalThis.__fixtureHook ?? "missing";\nexport class Element {}\n',
+    );
+    await writeFile(join(root, 'main.js'), 'import { Element } from "./element.js";\nglobalThis.__fixtureMain = Element;\n');
+    // The two-statement bootstrap that BUILD-009 asks for.
+    await writeFile(join(root, 'app.js'), 'import "./hydrate.js";\nvoid import("./main.js");\n');
+    // An unrelated entry, never loaded by the page under test.
+    await writeFile(join(root, 'widget.js'), 'import { Element } from "./element.js";\nexport const widget = Element;\n');
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  async function buildTwoEntries(name: string, input: Record<string, string>): Promise<string> {
+    const outDir = join(root, name);
+    await build({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      base: '/_litro/',
+      plugins: [litroEntryPlugin()],
+      build: {
+        outDir,
+        emptyOutDir: true,
+        minify: false,
+        modulePreload: false,
+        rollupOptions: { input, output: { entryFileNames: '[name].js' } },
+      },
+    });
+    return outDir;
+  }
+
+  it('installs the hook before the element class is evaluated', async () => {
+    const outDir = await buildTwoEntries('out-multi', {
+      widget: join(root, 'widget.js'),
+      app: join(root, 'app.js'),
+    });
+    // Run in a fresh Node process: load the entry, wait for its dynamic
+    // import, and print what the element class saw when it was evaluated.
+    const seen = execFileSync(process.execPath, [
+      '--input-type=module',
+      '-e',
+      `await import(${JSON.stringify(pathToFileURL(join(outDir, 'app.js')).href)});
+       for (let i = 0; i < 100 && !globalThis.__fixtureMain; i++) await new Promise(r => setTimeout(r, 10));
+       process.stdout.write(String(globalThis.__fixtureSeen));`,
+    ]).toString();
+    expect(seen).toBe('installed');
+  });
+
+  it('refuses a multi-entry build when no entry is the app bootstrap', async () => {
+    await expect(
+      buildTwoEntries('out-ambiguous', {
+        one: join(root, 'widget.js'),
+        two: join(root, 'main.js'),
+      }),
+    ).rejects.toThrow(/litroEntryPlugin/);
   });
 });

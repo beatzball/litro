@@ -20,6 +20,7 @@ import { defineEventHandler, setResponseHeader, sendStream, getRequestHeader, ge
 import type { EventHandler } from 'h3';
 import { buildShell } from './shell.js';
 import { appEntryUrl } from './app-entry.js';
+import type { AppScriptUrl } from './app-entry.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
@@ -58,9 +59,12 @@ export interface PageHandlerOptions {
   /**
    * Production URL of the client entry, in place of the default
    * `/_litro/app.js?v=<content hash>`. Set it only when the entry is served
-   * from somewhere else, such as a CDN. The dev live entry ignores it.
+   * from somewhere else, such as a CDN. A string is used as given, with no
+   * version added; pass a function to receive the build's entry version:
+   * `appScriptUrl: (v) => \`https://cdn.example/app.js?v=${v}\``.
+   * Ignored under `litro dev`, with either dev middleware.
    */
-  appScriptUrl?: string;
+  appScriptUrl?: AppScriptUrl;
 }
 
 /**
@@ -215,7 +219,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const basePath = process.env.LITRO_BASE_PATH ?? '';
       const isDev = process.env.LITRO_DEV === 'true';
       const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
-      const appScriptUrl = appEntryUrl({ basePath, liveEntry, override: options.appScriptUrl });
+      const appScriptUrl = appEntryUrl({ basePath, isDev, liveEntry, override: options.appScriptUrl });
 
       // Get any framework-specific head scripts from the adapter.
       const adapterHeadScripts = adapter.getHeadScripts({ isDev, basePath });
@@ -290,7 +294,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       const isDev = process.env.LITRO_DEV === 'true';
       // Same LITRO_DEV_LIVE_ENTRY gating as the happy path above.
       const liveEntry = isDev && process.env.LITRO_DEV_LIVE_ENTRY === '1';
-      const appScriptUrl = appEntryUrl({ basePath, liveEntry, override: options.appScriptUrl });
+      const appScriptUrl = appEntryUrl({ basePath, isDev, liveEntry, override: options.appScriptUrl });
       // Carry vary header through the fallback path too — the URL can still
       // be hit with Accept: application/json on retries.
       setResponseHeader(event, 'vary', 'Accept');

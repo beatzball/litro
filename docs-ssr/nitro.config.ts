@@ -12,7 +12,7 @@ export default defineNitroConfig({
   srcDir: 'server',
 
   publicAssets: [
-    { dir: '../dist/client',                                      baseURL: '/_litro/',           maxAge: 31536000 },
+    { dir: '../dist/client',                                      baseURL: '/_litro/' },
     // Reuse docs/ public directory — no duplicate static assets.
     // Paths resolve relative to srcDir ('server'), so '../..' goes up to the repo root.
     { dir: '../../docs/public',                                   baseURL: '/',                  maxAge: 0 },

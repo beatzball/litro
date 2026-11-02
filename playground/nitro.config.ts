@@ -33,7 +33,6 @@ export default defineNitroConfig({
       // Since srcDir='server', use '../dist/client' to reach <rootDir>/dist/client.
       dir: '../dist/client',
       baseURL: '/_litro/',
-      maxAge: 31536000, // 1 year — Vite writes content-hashed filenames
     },
     {
       // Similarly, '../public' resolves to <rootDir>/public.

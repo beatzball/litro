@@ -17,7 +17,6 @@ export default defineNitroConfig({
     {
       dir: '../dist/client',
       baseURL: '/_litro/',
-      maxAge: 31536000,
     },
     {
       dir: '../public',
