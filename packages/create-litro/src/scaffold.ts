@@ -10,7 +10,7 @@
 
 import { readdir, readFile, writeFile, mkdir, copyFile, stat } from 'node:fs/promises';
 import { join, dirname, extname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assertAdapterSupported } from './adapters.js';
 import type { LitroRecipe } from './types.js';
 
@@ -182,18 +182,83 @@ async function requireTemplateDir(dir: string, recipeName: string): Promise<stri
 // ---------------------------------------------------------------------------
 
 /**
+ * The specifier `import()` needs for a recipe config at `configPath`.
+ *
+ * An absolute path is NOT a valid specifier for `import()`. On Windows,
+ * `C:\...\recipe.config.js` parses as a URL with the scheme `c:`, and Node
+ * throws ERR_UNSUPPORTED_ESM_URL_SCHEME. On every OS, a `#` or `%` in the path
+ * is read as URL syntax, so a package installed under a folder such as `C#` cannot find
+ * the file. A `file://` URL means the same thing everywhere.
+ */
+export function recipeConfigSpecifier(configPath: string): string {
+  return pathToFileURL(configPath).href;
+}
+
+/** Called once for each recipe directory whose config failed to load. */
+export type RecipeSkipHandler = (name: string, error: unknown) => void;
+
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    return `${code ?? error.name}: ${error.message}`;
+  }
+  return String(error);
+}
+
+/**
+ * The default skip handler: one warning line per broken recipe, on stderr.
+ * Without it, a config that fails to load leaves no trace, and when every
+ * config fails the user sees only "no recipes available" (issue 218).
+ */
+export const warnSkippedRecipe: RecipeSkipHandler = (name, error) => {
+  console.error(`  Warning: skipped recipe "${name}": ${describeError(error)}`);
+};
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Import one recipe config. Returns null when the directory has no
+ * `recipe.config.js`: a directory of templates alone is not an error. Throws
+ * when the file exists but cannot be imported.
+ */
+async function importRecipeConfig(configPath: string): Promise<LitroRecipe | null> {
+  // The built package ships `recipe.config.js`. The source tree, which the
+  // unit tests import from, has only `recipe.config.ts`, and vite-node maps the
+  // `.js` specifier onto it. Either file means the recipe has a config.
+  const hasConfig =
+    (await fileExists(configPath)) ||
+    (await fileExists(configPath.replace(/\.js$/, '.ts')));
+  if (!hasConfig) return null;
+  const mod = await import(recipeConfigSpecifier(configPath)) as { default: LitroRecipe };
+  return mod.default;
+}
+
+/**
  * Return `LitroRecipe` objects for all recipe directories found under
  * dist/recipes/. Each recipe must have a `recipe.config.js` file that
  * exports a default `LitroRecipe`.
+ *
+ * A directory with no config is skipped quietly. A config that exists but
+ * fails to import is skipped too, so one bad recipe does not stop the CLI,
+ * but `onSkip` is told which one and why.
  */
-export async function listRecipes(recipesRoot?: string): Promise<LitroRecipe[]> {
+export async function listRecipes(
+  recipesRoot?: string,
+  onSkip: RecipeSkipHandler = warnSkippedRecipe,
+): Promise<LitroRecipe[]> {
   const dir = recipesRoot ?? recipesDir();
   let entries: { name: string; isDirectory(): boolean }[];
 
   try {
     entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    // No recipes directory — return empty list.
+  } catch (error) {
+    onSkip(`(recipes folder ${dir})`, error);
     return [];
   }
 
@@ -201,14 +266,11 @@ export async function listRecipes(recipesRoot?: string): Promise<LitroRecipe[]> 
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-
-    const configPath = join(dir, entry.name, 'recipe.config.js');
     try {
-      // Dynamic import resolves relative to CWD when given an absolute path.
-      const mod = await import(configPath) as { default: LitroRecipe };
-      recipes.push(mod.default);
-    } catch {
-      // Skip invalid/missing recipe configs silently.
+      const recipe = await importRecipeConfig(join(dir, entry.name, 'recipe.config.js'));
+      if (recipe) recipes.push(recipe);
+    } catch (error) {
+      onSkip(entry.name, error);
     }
   }
 
@@ -216,15 +278,18 @@ export async function listRecipes(recipesRoot?: string): Promise<LitroRecipe[]> 
 }
 
 /**
- * Load a single recipe by name. Returns null if not found.
+ * Load a single recipe by name. Returns null if it has no config file.
+ * Throws, naming the recipe, if the config exists but cannot be imported:
+ * "not found" would send the user looking for the wrong problem.
  */
 export async function loadRecipe(name: string, recipesRoot?: string): Promise<LitroRecipe | null> {
   const configPath = join(recipesRoot ?? recipesDir(), name, 'recipe.config.js');
   try {
-    const mod = await import(configPath) as { default: LitroRecipe };
-    return mod.default;
-  } catch {
-    return null;
+    return await importRecipeConfig(configPath);
+  } catch (error) {
+    throw new Error(`Could not load recipe "${name}" from ${configPath}: ${describeError(error)}`, {
+      cause: error,
+    });
   }
 }
 

@@ -9,8 +9,8 @@ const TMP = [tmpdir(), realpathSync(tmpdir())];
 export default defineConfig({
   server: {
     fs: {
-      // The scaffolder loads a recipe's config with a dynamic import of an
-      // absolute path. Tests build fixture recipes in a temp directory and
+      // The scaffolder loads a recipe's config with a dynamic import of a
+      // file:// URL. Tests build fixture recipes in a temp directory and
       // point the scaffolder at them, so vite-node has to be allowed to read
       // from there. Left at the default it serves only files under the project
       // root, and the import fails with "Does the file exist?".

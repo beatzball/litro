@@ -130,6 +130,37 @@ jobs:
       - name: Scaffold every recipe from packed tarballs and parse each bundle
         run: node scripts/verify-scaffolded-apps.mjs
 
+  # Issue 218: the published scaffolder printed "no recipes available" because
+  # it imported each recipe config by absolute path, which Node rejects on
+  # Windows (and on any OS when the path holds a `#`). Every other job runs on
+  # Linux from a plain temp path, so none of them could see it. This one runs
+  # the packed CLI on Windows too, from a folder named `C# 100%20 litro`.
+  create-litro-packed:
+    name: create-litro packed (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build litro-router
+        run: pnpm --filter litro-router build
+      - name: Build framework
+        run: pnpm --filter litro build
+      - name: Build create-litro
+        run: pnpm --filter create-litro build
+      - name: Run the packed scaffolder from a path with URL syntax in it
+        run: node scripts/verify-create-litro-packed.mjs
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
