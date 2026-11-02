@@ -189,6 +189,43 @@ describe('server render', () => {
   });
 });
 
+/* ── A shell chunk that fails to load ─────────────────────────────────── */
+
+describe('a shell chunk that fails to load', () => {
+  it('leaves every capability working on a plain web page', async () => {
+    vi.doMock('../adapters/shell.js', () => {
+      throw new Error('Failed to fetch dynamically imported module');
+    });
+    const vibrate = vi.fn();
+    vi.stubGlobal('window', {});
+    vi.stubGlobal('navigator', { userAgent: 'Browser', vibrate });
+    const { getBridge, haptics, notifications, platform } = await import('../index.js');
+
+    await expect(haptics.impact('light')).resolves.toBeUndefined();
+    expect(vibrate).toHaveBeenCalledWith(5);
+    expect(await notifications.schedule({ title: 't', at: 1 })).toBe('');
+    expect((await platform()).isNative).toBe(false);
+    expect((await getBridge()).id).toBe('web');
+  });
+
+  it('does not cache that answer, so a page inside a shell reaches it on a later call', async () => {
+    let fail = true;
+    vi.doMock('../adapters/shell.js', async (original) => {
+      if (fail) throw new Error('Failed to fetch dynamically imported module');
+      return original();
+    });
+    const shell = installShell({ capabilities: ['haptics'] });
+    const { getBridge } = await import('../index.js');
+
+    expect((await getBridge()).id).toBe('web');
+    expect(shell.sent).toEqual([]);
+
+    fail = false;
+    expect((await getBridge()).id).toBe('shell');
+    expect(methods(shell)).toEqual(['handshake']);
+  });
+});
+
 /* ── Detection and the handshake ──────────────────────────────────────── */
 
 describe('connecting', () => {
