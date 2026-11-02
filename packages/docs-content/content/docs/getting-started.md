@@ -8,7 +8,7 @@ date: 2026-01-01
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 20.19+ or 22.12+ (later releases, such as Node 24, work too)
 - pnpm 9+
 
 ## Create a New Project

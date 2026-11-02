@@ -181,7 +181,11 @@ async function main(): Promise<void> {
     }
     chosenRecipe = found;
   } else if (recipes.length === 0) {
-    console.error('\n  Error: no recipes available.\n');
+    console.error(
+      '\n  Error: no recipes available.\n' +
+        '  Any warning above says why. Please report it, with your OS and\n' +
+        '  Node version: https://github.com/beatzball/litro/issues\n',
+    );
     process.exit(1);
   } else if (recipes.length === 1) {
     chosenRecipe = recipes[0];
