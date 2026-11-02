@@ -274,6 +274,59 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
 
+      # The local-networking keys are Debug only, and the only place that is
+      # visible is the BUILT Info.plist. Apple lists NSAllowsLocalNetworking
+      # among the App Transport Security keys that need a written justification
+      # at review, so one shipping by accident is a reviewer question on every
+      # submission from every app built on this shell.
+      #
+      # Both halves are asserted. A Debug build missing them is a dev server
+      # that will not load; a Release build carrying them is the review
+      # problem. One without the other would pass if the preprocessor flag
+      # stopped working in either direction.
+      - name: Keep the local-networking keys out of a release build
+        run: |
+          debug_plist=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name Info.plist \
+            -path '*Debug-iphonesimulator/demo.app/*' 2>/dev/null | head -1)
+          if [ -z "$debug_plist" ]; then
+            echo "could not find the Debug Info.plist the previous step built" >&2
+            exit 1
+          fi
+          for key in NSAppTransportSecurity NSLocalNetworkUsageDescription; do
+            if ! plutil -extract "$key" raw -o - "$debug_plist" >/dev/null 2>&1; then
+              echo "the Debug build is missing $key, so a dev server cannot load" >&2
+              exit 1
+            fi
+          done
+          echo "Debug carries both keys, as it must"
+
+          # A Release build needs a shippable app.json, because the release
+          # guard refuses the demo app on purpose. Build/ is not committed, so
+          # editing it here affects nothing else.
+          python3 -c 'import json,pathlib; p=pathlib.Path("native/Build/Resources/app.json"); c=json.loads(p.read_text()); c["startURL"]="https://app.example.com/"; c["allowedOrigins"]=["https://app.example.com"]; p.write_text(json.dumps(c,indent=2)+chr(10))'
+
+          xcodebuild build \
+            -project native/LitroShell.xcodeproj \
+            -scheme LitroShell \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath release-dd \
+            CODE_SIGNING_ALLOWED=NO > release-plist.log 2>&1 \
+            || { echo "the Release build failed"; tail -40 release-plist.log; exit 1; }
+
+          release_plist=release-dd/Build/Products/Release-iphonesimulator/demo.app/Info.plist
+          plutil -lint "$release_plist"
+          for key in NSAppTransportSecurity NSLocalNetworkUsageDescription; do
+            if plutil -extract "$key" raw -o - "$release_plist" >/dev/null 2>&1; then
+              echo "$key shipped in a Release build; it needs a justification at review" >&2
+              exit 1
+            fi
+          done
+          echo "Release carries neither key, as it must"
+
+          # Put the development configuration back for the step after this one.
+          native/scripts/select-app.sh demo
+
       # The demo app is a development app: it starts at localhost, which is
       # exactly what must not reach a submission. A Release build of it has to
       # fail, and it failing here is what proves the guard is wired to the

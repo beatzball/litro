@@ -389,3 +389,40 @@ where it looked. A check that could not run is not a check that passed.
 
 The middle one is the test of the test. If it ever passes again, the check has
 gone back to proving nothing.
+
+## NATIVE-017 — the local-networking keys are Debug only
+
+**Trap.** `Info.plist` carried `NSAllowsLocalNetworking` in every configuration,
+with a comment saying it costs a shipped app nothing because it only relaxes
+App Transport Security for private addresses. The reasoning was sound and the
+conclusion was wrong: Apple lists that key among the ATS keys that **require a
+written justification at App Store review**. A shipped Litro app starts at a
+public `https` URL and never touches the local network, so the key buys a
+reviewer question on every submission from every app built on this shell, in
+exchange for nothing the app uses.
+
+`NSLocalNetworkUsageDescription` was missing entirely, which is the other half.
+Without it, iOS 18 and later may never show the local network prompt, and the
+connection fails with no explanation anywhere -- a black screen for thirty
+seconds and nothing in any log the developer will think to read.
+
+**Rule.** Both keys live behind `#if LITRO_DEBUG_NETWORKING` in
+`Support/Info.plist`. `Shell.xcconfig` sets `INFOPLIST_PREPROCESS = YES` and
+defines that symbol with `INFOPLIST_PREPROCESSOR_DEFINITIONS[config=Debug]`, so
+Debug gets both and nothing else does.
+
+The preprocessor, not a build phase that rewrites the built plist. A phase
+would have to declare a file the build already produces as its own output,
+which risks "multiple commands produce" and a fight with
+`ENABLE_USER_SCRIPT_SANDBOXING`. `INFOPLIST_PREPROCESS` is a first-class build
+setting with neither problem.
+
+The plist runs through the C preprocessor, so `//` inside it is a hazard. The
+`DOCTYPE` line contains `-//Apple//DTD` and a URL, and survives -- confirmed by
+`plutil -lint` on the built Release plist, not assumed. Check that again before
+adding any line with `//` in it.
+
+**Check.** The CI step `Keep the local-networking keys out of a release build`
+asserts **both** directions: Debug carries both keys, Release carries neither.
+One without the other would still pass if the flag stopped working in a single
+direction.

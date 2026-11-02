@@ -61,17 +61,33 @@
 			</array>
 		</dict>
 	</dict>
-	<!-- App Transport Security blocks plain http, which includes the Vite dev
-	     server a Litro app runs on during development. NSAllowsLocalNetworking
-	     permits http to the local network and to localhost ONLY; it does not
-	     weaken anything for a public host, so a shipped app that loads an https
-	     start URL is unaffected. The broader NSAllowsArbitraryLoads is
-	     deliberately not used: it would allow plain http anywhere and is a
-	     question at store review. -->
+	<!-- Everything below is DEBUG ONLY, through the Info.plist preprocessor.
+	     Shell.xcconfig defines LITRO_DEBUG_NETWORKING for the Debug
+	     configuration and for no other.
+
+	     A shipped Litro app starts at a public https URL and never touches the
+	     local network, so it needs neither key. Leaving them in is not free:
+	     Apple lists NSAllowsLocalNetworking among the App Transport Security
+	     keys that require a written justification at App Store review, so
+	     shipping it buys a reviewer question on every submission from every app
+	     built on this shell, in exchange for nothing a shipped app uses.
+
+	     In a Debug build both are needed. NSAllowsLocalNetworking permits the
+	     plain http of a Litro dev server, and without the usage description
+	     iOS 18 and later may never show the local network prompt at all and the
+	     connection simply fails -- which is a 30 second black screen and no
+	     explanation anywhere.
+
+	     The broader NSAllowsArbitraryLoads is deliberately never used, in any
+	     configuration: it allows plain http everywhere. -->
+#if LITRO_DEBUG_NETWORKING
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>A development build loads your Litro dev server from this network.</string>
+#endif
 </dict>
 </plist>

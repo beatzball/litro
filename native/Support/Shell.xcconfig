@@ -6,6 +6,11 @@
 // missing file, rather than produce an app with an empty bundle identifier.
 #include "../Build/App.xcconfig"
 
+// The Info.plist runs through the C preprocessor so the local-networking keys
+// can be Debug only. See the comment in Info.plist for why they must not ship.
+INFOPLIST_PREPROCESS = YES
+INFOPLIST_PREPROCESSOR_DEFINITIONS[config=Debug] = LITRO_DEBUG_NETWORKING=1
+
 SDKROOT = iphoneos
 IPHONEOS_DEPLOYMENT_TARGET = 17.0
 TARGETED_DEVICE_FAMILY = 1
