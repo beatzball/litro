@@ -260,6 +260,12 @@ jobs:
       - name: Select the demo app
         run: native/scripts/select-app.sh demo
 
+      # The release guard's own rules. It only ever runs during a Release
+      # build, which CI does not do and a person does once, so without this
+      # the rules would go years without being exercised.
+      - name: Check the release guard's rules
+        run: native/scripts/check-release-config.sh --self-test
+
       - name: Build the app for the simulator
         run: |
           xcodebuild build \
@@ -267,6 +273,33 @@ jobs:
             -scheme LitroShell \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
+
+      # The demo app is a development app: it starts at localhost, which is
+      # exactly what must not reach a submission. A Release build of it has to
+      # fail, and it failing here is what proves the guard is wired to the
+      # project rather than merely present in the repository.
+      - name: Refuse a release build of a development app
+        run: |
+          if xcodebuild build \
+            -project native/LitroShell.xcodeproj \
+            -scheme LitroShell \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO > release-attempt.log 2>&1; then
+            echo "a Release build of the demo app succeeded; the guard did not run" >&2
+            exit 1
+          fi
+          if ! grep -q "localhost on a device is the device itself" release-attempt.log; then
+            echo "the Release build failed, but not for the reason the guard gives" >&2
+            tail -40 release-attempt.log >&2
+            exit 1
+          fi
+          if ! grep -q "allowedOrigins has" release-attempt.log; then
+            echo "the guard refused the start URL but never read allowedOrigins" >&2
+            tail -40 release-attempt.log >&2
+            exit 1
+          fi
+          echo "the guard refused it, as it should"
 
   audit:
     name: Dependency Audit

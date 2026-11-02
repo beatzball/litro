@@ -259,6 +259,67 @@ window with no error anywhere.
 appears at all proves the manifest named a class that loaded. Confirming the
 fault itself is gone needs an iOS 27 device, because no simulator runtime
 through iOS 26.5 emits that line -- a quiet simulator log proves nothing here.
+## NATIVE-014 — a development start URL must not survive a Release build
+
+**Trap.** The demo app starts at `http://localhost:5173/`, which is correct: a
+Litro dev server runs there. On a device `localhost` is the device, so an app
+submitted with that start URL reaches nothing and the reviewer sees the load
+failure screen instead of the app. Nothing between "works on my Mac" and
+"uploaded" would have caught it, because every step before the upload is a
+Debug build where the address is right.
+
+**Rule.** `native/scripts/check-release-config.sh` runs as the app target's
+first build phase. Any build that is not Debug fails on a loopback or private
+address, a `.local` name, or plain `http`, and warns when `capabilities` is
+empty. Only Debug is skipped, because a future `Staging` or `AppStore`
+configuration is exactly the kind of build that must not carry a dev address.
+
+**Every URL in the configuration, not only `startURL`.** A reviewer found the
+guard read the start URL alone, so a Release build passed with
+`http://localhost:5173` and a LAN address still in `allowedOrigins`. That is
+the entry that matters for safety rather than for a rejection: `Info.plist`
+keeps `NSAllowsLocalNetworking` in Release, so plain http to a LAN address is
+still permitted in the shipped app, and whatever host holds that address on the
+user's current network would be served the bridge.
+
+**Normalize before matching.** Hosts are case-insensitive and DNS treats a
+trailing dot as the same name, and the authority ends at the first of `?`, `#`
+or `/`. Every one of these passed the guard until a reviewer wrote them down:
+
+    https://LOCALHOST/              case
+    https://my-mac.local./          trailing dot
+    https://localhost?x=1           the query stayed inside the host
+    https://localhost?u=a@example.com   the "@" strip then moved the host
+    https://2130706433/             an IPv4 address as one integer
+    https://[::ffff:127.0.0.1]/     IPv4-mapped IPv6
+    https://[FD00::1]/              case, in an IPv6 literal
+
+Errors and warnings are split on purpose: an unreachable start URL is certainly
+broken, and an app with no capabilities is only *likely* to be rejected under
+guideline 4.2. A guard that fails a build over a judgment gets disabled.
+
+Three things the wiring needs, each of which cost a build to learn:
+
+- The script must be in the phase's `inputPaths`, not just invoked by it.
+  `ENABLE_USER_SCRIPT_SANDBOXING` is on, so an undeclared read is denied and the
+  phase fails with `deny(1) file-read-data` naming the script itself.
+- Give the phase an `outputPaths` stamp rather than `alwaysOutOfDate = 1`.
+  Without an output, Xcode prints a note about the phase running every time, on
+  every build, which teaches everyone to ignore notes.
+- `plutil -extract` on an array prints its **element count**, not its elements.
+  Counting the lines of that output gives 1 whether the count is 0 or 20. That
+  is exactly the bug the capability warning shipped with for one build.
+- `plutil` reports a missing key on **stdout on some machines and stderr on
+  others** -- stderr on a current Mac, stdout on the CI runner. Silencing one
+  channel let the error text through as the value on the other, and the failure
+  appeared only in CI. Check the shape of what came back rather than trusting
+  the exit code and one redirect.
+
+**Check.** `native/scripts/check-release-config.sh --self-test`, and the two CI
+steps in the native job: one runs that self-test, the other attempts a Release
+build of the demo app and requires it to fail with the guard's own words. The
+second is what proves the guard is wired to the project rather than merely
+present in the repository.
 
 ## NATIVE-015 — a message handler is not scoped to a frame
 
