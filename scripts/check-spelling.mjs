@@ -33,7 +33,10 @@ const FIXTURE = 'scripts/__fixtures__/spelling-bad.md';
 
 /* ── What we scan ─────────────────────────────────────────────────────── */
 
-const TEXT_EXTS = /\.(md|mdx|ts|tsx|js|mjs|cjs|css|html|yml|yaml|txt)$/;
+// Swift and shell were missing, so nothing under native/ was ever checked and
+// two British spellings sat on main. A list of extensions silently skips what
+// it does not name.
+const TEXT_EXTS = /\.(md|mdx|ts|tsx|js|mjs|cjs|css|html|yml|yaml|txt|swift|sh)$/;
 const SKIP = [
   /(^|\/)CHANGELOG\.md$/,
   /(^|\/)(pnpm-lock\.yaml|package-lock\.json)$/,

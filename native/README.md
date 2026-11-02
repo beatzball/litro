@@ -76,6 +76,12 @@ native/scripts/serve-test-page.sh     # http://localhost:5173
 It runs every unattended method on load and leaves the two that need a person —
 the badge permission prompt and the share sheet — on buttons.
 
+Two servers start, not one. The second, one port up, is the outside origin the
+allowlist check navigates to. That check needs a destination that is reachable
+and not allowed: an unreachable one fails its own navigation, leaves the page
+in place, and reports success whether or not the allowlist runs. Never put the
+second port in an `allowedOrigins` — being refused is its entire job.
+
 On a real device, `localhost` is the device, so the default server is
 unreachable from it. Pass `--lan` instead, which binds every interface and
 prints the `startURL` and `allowedOrigins` to put in the app's `app.json`:

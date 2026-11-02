@@ -17,8 +17,15 @@
 # serves one static file out of a temporary directory, so nothing from this
 # repository is exposed, but it is still the reason the flag is opt-in.
 #
-# The page is copied to a temporary directory as index.html, so the server has
-# nothing else to serve.
+# Two servers run, not one. The second, one port up, is the outside origin the
+# page's allowlist check navigates to. That check needs a destination that is
+# REACHABLE and not allowed: an unreachable one fails its navigation on its own,
+# leaves the page in place, and reports success whether or not any allowlist
+# exists. Do not add the second port to an app.json's allowedOrigins -- being
+# refused is its entire job.
+#
+# Each page is copied to its own temporary directory as index.html, so neither
+# server has anything else to serve.
 
 set -euo pipefail
 
@@ -45,11 +52,38 @@ fi
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(mktemp -d)"
-trap 'rm -rf "$root"' EXIT
+outside="$(mktemp -d)"
+outside_port=$((port + 1))
+outside_pid=""
+# `exec` below used to replace this shell, so this trap never ran and every run
+# left its temporary directories behind. The server is now run as an ordinary
+# foreground command.
+cleanup() {
+  [ -n "$outside_pid" ] && kill "$outside_pid" 2>/dev/null
+  rm -rf "$root" "$outside"
+}
+trap cleanup EXIT
 
 cp "$here/bridge-test-page.html" "$root/index.html"
 
+# Loud on purpose. If the allowlist is not wired, the web view lands here and
+# the test page is gone, so this page is the only thing left to say so.
+cat > "$outside/index.html" <<'OUTSIDE'
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="background:#2b0000;color:#ff6b6b;font:700 22px/1.4 -apple-system,system-ui,sans-serif;padding:28px">
+ORIGIN POLICY FAILED
+<p style="font-weight:400;font-size:16px;color:#e8e8ea">
+The shell loaded an origin that is not in this app's allowedOrigins.
+The navigation allowlist is not running.
+</p>
+</body>
+</html>
+OUTSIDE
+
 echo "serving the bridge test page on http://$reach:$port"
+echo "  and the outside origin it must be refused, on http://$reach:$outside_port"
 if [ "$bind" = "0.0.0.0" ]; then
   echo
   echo "for a device test, an app.json needs both of these:"
@@ -61,5 +95,7 @@ if [ "$bind" = "0.0.0.0" ]; then
   echo
 fi
 
-cd "$root"
-exec python3 -m http.server "$port" --bind "$bind"
+python3 -m http.server "$outside_port" --bind "$bind" --directory "$outside" >/dev/null 2>&1 &
+outside_pid=$!
+
+python3 -m http.server "$port" --bind "$bind" --directory "$root"

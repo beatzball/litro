@@ -76,13 +76,20 @@ public extension JSONValue {
         return nil
     }
 
-    /// The number as an `Int`, or `nil` when this is not a whole number.
+    /// The number as an `Int`, or `nil` when this is not a whole number that an
+    /// `Int` can hold.
     ///
     /// JavaScript has one number type, so an integer parameter arrives as a
     /// `Double`. A fractional value is a caller mistake, not something to round.
+    ///
+    /// `Int(exactly:)` rather than `Int(_:)`. The plain conversion TRAPS for a
+    /// value outside `Int`'s range, and a trap here is the whole process: the
+    /// page sends `{"method":"badging.set","params":{"count":1e20}}` and the app
+    /// dies instead of answering `INVALID_PARAMS`. Every caller already treats
+    /// nil as a bad parameter, so returning nil is the behavior they expect.
     var intValue: Int? {
-        guard case let .number(n) = self, n.rounded() == n, n.isFinite else { return nil }
-        return Int(n)
+        guard case let .number(n) = self, n.isFinite else { return nil }
+        return Int(exactly: n)
     }
 
     /// The bool, or `nil` when this is not a bool.

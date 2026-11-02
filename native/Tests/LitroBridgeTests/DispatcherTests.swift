@@ -192,7 +192,12 @@ final class BadgingDispatchTests: XCTestCase {
                                    .object([:]),
                                    .object(["count": .number(-1)]),
                                    .object(["count": .number(1.5)]),
-                                   .object(["count": .string("3")])] {
+                                   .object(["count": .string("3")]),
+                                   // Reached `Int(_:)` before the >= 0 check and
+                                   // trapped, so one bridge message from any
+                                   // allowed page killed the app.
+                                   .object(["count": .number(1e20)]),
+                                   .object(["count": .number(-1e20)])] {
             let reply = await dispatcher.handle(message(method: .string("badging.set"), params: params))
             XCTAssertEqual(code(reply), .invalidParams, "params \(String(describing: params))")
         }

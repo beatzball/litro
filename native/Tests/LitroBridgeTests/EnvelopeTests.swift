@@ -186,6 +186,18 @@ final class JSONValueTests: XCTestCase {
         XCTAssertNil(JSONValue.number(3.5).intValue)
         XCTAssertNil(JSONValue.number(.nan).intValue)
         XCTAssertNil(JSONValue.number(.infinity).intValue)
+        // A whole number too big for an Int. `Int(_:)` traps on these, which
+        // kills the process, so the conversion has to be the checked one. The
+        // page can send any of them: JavaScript has one number type and no
+        // bound at Int.max.
+        XCTAssertNil(JSONValue.number(1e20).intValue)
+        XCTAssertNil(JSONValue.number(-1e20).intValue)
+        XCTAssertNil(JSONValue.number(9.3e18).intValue, "just above Int.max")
+        XCTAssertNil(JSONValue.number(-9.3e18).intValue, "just below Int.min")
+        // The largest and smallest that do fit still convert.
+        XCTAssertEqual(JSONValue.number(9007199254740992).intValue, 9007199254740992,
+                       "2^53, the largest integer a Double holds exactly")
+        XCTAssertEqual(JSONValue.number(-9007199254740992).intValue, -9007199254740992)
     }
 
     func testWholeNumbersPrintWithoutADecimalPoint() {
