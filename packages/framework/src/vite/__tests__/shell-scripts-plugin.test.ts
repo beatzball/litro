@@ -17,3 +17,17 @@ describe('litroShellScriptsPlugin', () => {
     );
   });
 });
+
+describe('assertShellScriptName', async () => {
+  const { assertShellScriptName } = await import('../shell-scripts.js');
+
+  it('accepts every shipped script', () => {
+    for (const s of SHELL_SCRIPTS) expect(() => assertShellScriptName(s)).not.toThrow();
+  });
+
+  it('fails when a source changed under its old name, and names the new one', () => {
+    const [first] = SHELL_SCRIPTS;
+    const changed = { ...first, source: first.source + ';' };
+    expect(() => assertShellScriptName(changed)).toThrow(/Rename it to litro-dsd-polyfill-[0-9a-f]{8}\.js/);
+  });
+});

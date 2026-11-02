@@ -241,17 +241,23 @@ export function buildShell(
   const includeDSD = options?.includeDSDPolyfill !== false;
   const dsdPolyfillBlock = includeDSD ? `\n  ${scriptTag(DSD_POLYFILL, { filesUrl })}` : '';
 
+  // NO STYLE ATTRIBUTES. The outlet's `outline:none` lives in the shell's
+  // <style> as `#_litro_main{outline:none}`, not in a `style="..."` attribute.
+  // An attribute falls under CSP's `style-src-attr`, which no element hash can
+  // allow, so it would force `'unsafe-hashes'` or `'unsafe-inline'` on every
+  // app that wants a strict policy (issue 290). The <style> element has a
+  // fixed body, so one hash covers it.
   const head = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title}</title>${dsdPolyfillBlock}${extraHead}${serverDataScript}${devReloadScript}
-  <style>.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999}.skip-link:focus{position:fixed;top:0.5rem;left:50%;transform:translateX(-50%);width:auto;height:auto;padding:0.5rem 1.5rem;background:#fff;color:#23262f;border:2px solid currentColor;border-radius:0.375rem;font-size:0.875rem;font-weight:600;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15)}.skip-link[hidden]{display:none}</style>
+  <style>.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999}.skip-link:focus{position:fixed;top:0.5rem;left:50%;transform:translateX(-50%);width:auto;height:auto;padding:0.5rem 1.5rem;background:#fff;color:#23262f;border:2px solid currentColor;border-radius:0.375rem;font-size:0.875rem;font-weight:600;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15)}.skip-link[hidden]{display:none}#_litro_main{outline:none}</style>
   ${scriptTag(SKIP_LINK_SCRIPT, { filesUrl, defer: true })}
 </head>
 <body${bodyAttrs}>${skipLinksHtml}
-<litro-outlet id="_litro_main" tabindex="-1" style="outline:none">
+<litro-outlet id="_litro_main" tabindex="-1">
 `;
 
   // Per-page synchronous body script. Emitted BEFORE the app-bundle script so

@@ -2,8 +2,19 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { missingShellScriptFiles, shellScriptsStatement } from '../shell-scripts.js';
-import { SHELL_SCRIPTS, LITRO_SHELL_SCRIPTS_GLOBAL } from '../../runtime/shell-scripts.js';
+import {
+  appSetsInlineScriptsFalse,
+  missingShellScriptFiles,
+  shellScriptFilesIn,
+  shellScriptsStatement,
+} from '../shell-scripts.js';
+import {
+  DEV_CONTENT_RELOAD_SCRIPT,
+  DSD_POLYFILL,
+  LITRO_SHELL_SCRIPTS_GLOBAL,
+  SKIP_LINK_SCRIPT,
+} from '../../runtime/shell-scripts.js';
+import type { ShellScript } from '../../runtime/shell-scripts.js';
 
 let dir: string;
 beforeEach(() => {
@@ -11,28 +22,47 @@ beforeEach(() => {
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-function writeAll(skip?: string) {
+function write(scripts: ShellScript[]) {
   mkdirSync(join(dir, 'assets'), { recursive: true });
-  for (const s of SHELL_SCRIPTS) {
-    if (s.fileName !== skip) writeFileSync(join(dir, 'assets', s.fileName), s.source);
-  }
+  for (const s of scripts) writeFileSync(join(dir, 'assets', s.fileName), s.source);
 }
 
 describe('shellScriptsStatement', () => {
-  it('marks the files present when every one is in assets/', () => {
-    writeAll();
+  it('marks the files present when both production files are in assets/', () => {
+    write([DSD_POLYFILL, SKIP_LINK_SCRIPT]);
     expect(missingShellScriptFiles(dir)).toEqual([]);
-    const statement = shellScriptsStatement(dir);
-    expect(statement).toContain(`globalThis["${LITRO_SHELL_SCRIPTS_GLOBAL}"] = true;`);
+    expect(shellScriptFilesIn(dir)).toBe('all');
+    expect(shellScriptsStatement(dir)).toContain(`globalThis["${LITRO_SHELL_SCRIPTS_GLOBAL}"] = true;`);
   });
 
-  it('says nothing when a file is missing', () => {
-    writeAll(SHELL_SCRIPTS[0].fileName);
-    expect(missingShellScriptFiles(dir)).toEqual([SHELL_SCRIPTS[0].fileName]);
-    expect(shellScriptsStatement(dir)).toBe('');
+  it('does not need the dev-only reload file', () => {
+    write([DSD_POLYFILL, SKIP_LINK_SCRIPT]);
+    expect(shellScriptFilesIn(dir)).toBe('all');
+  });
+
+  it('reports a partial build as false', () => {
+    write([SKIP_LINK_SCRIPT, DEV_CONTENT_RELOAD_SCRIPT]);
+    expect(missingShellScriptFiles(dir)).toEqual([DSD_POLYFILL.fileName]);
+    expect(shellScriptFilesIn(dir)).toBe('partial');
+    expect(shellScriptsStatement(dir)).toContain(`globalThis["${LITRO_SHELL_SCRIPTS_GLOBAL}"] = false;`);
   });
 
   it('says nothing for an empty client directory', () => {
+    expect(shellScriptFilesIn(dir)).toBe('none');
     expect(shellScriptsStatement(dir)).toBe('');
+  });
+});
+
+describe('appSetsInlineScriptsFalse', () => {
+  it('finds the option in a route file', async () => {
+    mkdirSync(join(dir, 'routes'), { recursive: true });
+    writeFileSync(join(dir, 'routes', '[...].ts'), 'createPageHandler({ route, inlineScripts: false });');
+    expect(await appSetsInlineScriptsFalse(dir)).toBe(true);
+  });
+
+  it('is false without it, and for a missing directory', async () => {
+    writeFileSync(join(dir, 'a.ts'), 'createPageHandler({ route });');
+    expect(await appSetsInlineScriptsFalse(dir)).toBe(false);
+    expect(await appSetsInlineScriptsFalse(join(dir, 'nope'))).toBe(false);
   });
 });

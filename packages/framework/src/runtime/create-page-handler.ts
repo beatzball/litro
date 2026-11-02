@@ -21,7 +21,8 @@ import type { EventHandler } from 'h3';
 import { buildShell } from './shell.js';
 import { appEntryUrl } from './app-entry.js';
 import type { AppScriptUrl } from './app-entry.js';
-import { shellScriptFilesPresent } from './shell-scripts.js';
+import { shellScriptFiles } from './shell-scripts.js';
+import type { ShellScriptFiles } from './shell-scripts.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
@@ -99,7 +100,7 @@ function warnOnce(key: string, log: (msg: string) => void, msg: string): void {
  */
 export function shellScriptOptions(
   inlineScripts: boolean | undefined,
-  env: { isDev: boolean; basePath: string; filesPresent?: boolean },
+  env: { isDev: boolean; basePath: string; files?: ShellScriptFiles },
 ): { inlineScripts?: false; scriptFilesUrl?: string } {
   if (inlineScripts !== false) return {};
   if (env.isDev) {
@@ -112,7 +113,18 @@ export function shellScriptOptions(
     );
     return {};
   }
-  if (!(env.filesPresent ?? shellScriptFilesPresent())) {
+  const files = env.files ?? shellScriptFiles();
+  if (files === 'partial') {
+    warnOnce(
+      'partial',
+      console.error,
+      "[litro] inlineScripts: false, but this build has only some of the shell script files, so the framework's " +
+        'scripts stay inline and a strict script-src blocks them. Rebuild the client (vite build) so ' +
+        'litroShellScriptsPlugin() writes every file to /_litro/assets/.',
+    );
+    return {};
+  }
+  if (files === 'none') {
     warnOnce(
       'missing',
       console.error,
@@ -198,8 +210,12 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       : `/__og${pagePath}.png`;
     setResponseHeader(event, 'x-nitro-prerender', ogRoute);
 
+    // Kept outside the try so the fallback shell can still ask whether the
+    // adapter needs the DSD polyfill. Undefined when resolving it threw.
+    let resolvedAdapter: FrameworkAdapter | undefined;
     try {
       const adapter = await getAdapter();
+      resolvedAdapter = adapter;
 
       // Resolve the page module. The preferred path is the pre-bundled module
       // from the #litro/page-manifest registry (pageModule option), which was
@@ -362,6 +378,9 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         appScriptUrl,
         skipLinks,
+        // An Elena page has no declarative shadow roots, so it skips the
+        // polyfill here as it does on the SSR path. Unknown adapter: include it.
+        includeDSDPolyfill: resolvedAdapter?.needsDSDPolyfill,
         ...shellScriptOptions(options.inlineScripts, { isDev, basePath }),
       });
 

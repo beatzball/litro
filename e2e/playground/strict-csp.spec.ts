@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -12,8 +13,9 @@ import type { Page } from '@playwright/test';
  *   default-src 'none'; script-src 'self'; ...
  *
  * and no `'unsafe-inline'` for scripts, and fails on any violation report.
- * `style-src` keeps `'unsafe-inline'`: Lit SSR writes a `<style>` into each
- * shadow root, which is out of scope here.
+ * Most tests keep `style-src 'unsafe-inline'`; the "styles too" test replaces
+ * it with a hash of every `<style>` on the page and no `'unsafe-inline'` at
+ * all, which works because the shell writes no `style` attribute.
  *
  * Production only. Under `litro dev` the framework's scripts stay inline.
  */
@@ -22,7 +24,7 @@ const POLICY = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self'",
   "font-src 'self'",
   "connect-src 'self'",
   "base-uri 'none'",
@@ -43,7 +45,17 @@ interface Violation {
  * skip link with a missing target, to observe the script's DOMContentLoaded
  * work.
  */
-async function serveWithPolicy(page: Page, options: { extraSkipLink?: boolean } = {}) {
+/** `'sha256-...'` for each distinct `<style>` body in `html`. */
+function styleHashes(html: string): string[] {
+  const bodies = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
+  const hashes = bodies.map((b) => `'sha256-${createHash('sha256').update(b).digest('base64')}'`);
+  return [...new Set(hashes)];
+}
+
+async function serveWithPolicy(
+  page: Page,
+  options: { extraSkipLink?: boolean; hashStyles?: boolean } = {},
+) {
   await page.route('**/*', async (route) => {
     if (route.request().resourceType() !== 'document') return route.continue();
     const response = await route.fetch();
@@ -51,10 +63,13 @@ async function serveWithPolicy(page: Page, options: { extraSkipLink?: boolean } 
     if (options.extraSkipLink) {
       body = body.replace('</nav>', `${MISSING_TARGET_LINK}\n</nav>`);
     }
+    const policy = options.hashStyles
+      ? POLICY.replace("style-src 'self' 'unsafe-inline'", `style-src 'self' ${styleHashes(body).join(' ')}`)
+      : POLICY;
     await route.fulfill({
       response,
       body,
-      headers: { ...response.headers(), 'content-security-policy': POLICY },
+      headers: { ...response.headers(), 'content-security-policy': policy },
     });
   });
 }
@@ -78,12 +93,6 @@ async function watch(page: Page) {
   });
   page.on('pageerror', (err) => errors.push(err.message));
   return { violations, errors };
-}
-
-async function shellScripts(page: Page): Promise<string[]> {
-  return page.$$eval('script', (els) =>
-    els.map((s) => s.outerHTML.replace(/>[\s\S]*<\/script>$/, '>')),
-  );
 }
 
 test.describe('strict CSP (production build, inlineScripts: false)', () => {
@@ -130,6 +139,32 @@ test.describe('strict CSP (production build, inlineScripts: false)', () => {
       // TEST-001: the router marks the outlet settled after the client swap,
       // which needs app.js and the page's chunks to have run.
       await page.waitForSelector('litro-outlet[data-litro-settled]');
+      expect(violations).toEqual([]);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  for (const path of ['/', '/blog', '/blog/hello-world', '/actions', '/forms']) {
+    test(`styles too: ${path} with hashed styles and no 'unsafe-inline' anywhere`, async ({ page, request }) => {
+      const html = await (await request.get(path)).text();
+      // The shell's outline rule lives in its <style>, not a style attribute,
+      // so style-src-attr needs nothing.
+      expect(html).not.toMatch(/<[a-z][^>]*\sstyle\s*=/i);
+
+      await serveWithPolicy(page, { hashStyles: true });
+      const { violations, errors } = await watch(page);
+      const res = await page.goto(path);
+      const policy = res?.headers()['content-security-policy'] ?? '';
+      expect(policy).not.toContain('unsafe');
+      expect(policy).toMatch(/style-src 'self' 'sha256-/);
+      await page.waitForSelector('litro-outlet[data-litro-settled]');
+      // Client navigation renders through adoptedStyleSheets, which CSP does
+      // not govern; navigate once to show it.
+      if (path === '/blog') {
+        await page.click('litro-link[href="/blog/hello-world"]');
+        await page.waitForURL('**/blog/hello-world');
+        await expect(page.locator('page-blog-slug')).toBeVisible();
+      }
       expect(violations).toEqual([]);
       expect(errors).toEqual([]);
     });

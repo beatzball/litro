@@ -2,11 +2,25 @@
  * The page shell's scripts under `inlineScripts: false` (issue 290).
  *
  * THE GUARD. A page served with `script-src 'self'` and no `'unsafe-inline'`
- * runs only scripts that have a `src`. These tests fail when the shell gains
- * a script that `inlineScripts: false` does not turn into a file: one test
- * renders `buildShell()` across its options, and one reads `shell.ts` itself,
- * so a script behind an option the first test does not set is still caught.
- * The fix for either failure is to put the script in `SHELL_SCRIPTS`
+ * runs only scripts that have a `src`. It also blocks inline event handlers
+ * (`onclick="..."`) and `javascript:` URLs, which no hash can allow. The
+ * tests below fail when framework-written HTML gains any of these:
+ *
+ * - the rendered shell, across every combination of its script options, with
+ *   `inlineScripts: false`;
+ * - each adapter's `getHeadScripts()`, which the page handler adds to the
+ *   shell's `head` (dev and production);
+ * - the `shell.ts` source itself, so a script behind an option the matrix
+ *   does not set is still caught.
+ *
+ * They also fail on a `style="..."` attribute in the shell, which CSP's
+ * `style-src-attr` governs and no element hash can allow.
+ *
+ * What they do NOT see: HTML the app passes in (`head`, `bodyScript`,
+ * `seoHead`), HTML a page component renders, and a future framework module
+ * that writes into the page outside `buildShell()` and `getHeadScripts()`.
+ *
+ * The fix for a failure is to put the script in `SHELL_SCRIPTS`
  * (runtime/shell-scripts.ts) and write it through `scriptTag()`.
  */
 
@@ -16,6 +30,9 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildShell, DEFAULT_SKIP_LINKS } from '../shell.js';
 import type { ShellOptions } from '../shell.js';
+import { litAdapter } from '../../adapter/lit/index.js';
+import { fastAdapter } from '../../adapter/fast/index.js';
+import { elenaAdapter } from '../../adapter/elena/index.js';
 import {
   SHELL_SCRIPTS,
   DSD_POLYFILL,
@@ -27,14 +44,33 @@ import {
 /** Data blocks. CSP does not apply to them. */
 const DATA_TYPES = new Set(['application/json', 'application/ld+json']);
 
-/** Every opening `<script ...>` tag in `html` that would run as inline code. */
-function inlineScripts(html: string): string[] {
-  const tags = html.match(/<script\b[^>]*>/gi) ?? [];
-  return tags.filter(tag => {
-    if (/\ssrc\s*=/i.test(tag)) return false;
+/**
+ * Everything in `html` that a strict policy (`script-src 'self'`, no
+ * `'unsafe-inline'`, no `'unsafe-hashes'`) would block: inline `<script>`
+ * elements, inline event handler attributes, `javascript:` URLs, and
+ * `style` attributes.
+ */
+function inlineCode(html: string): string[] {
+  const offenders: string[] = [];
+  for (const tag of html.match(/<script\b[^>]*>/gi) ?? []) {
+    if (/\ssrc\s*=/i.test(tag)) continue;
     const type = tag.match(/\stype\s*=\s*["']?([^"'\s>]+)/i)?.[1]?.toLowerCase();
-    return !(type && DATA_TYPES.has(type));
-  });
+    if (type && DATA_TYPES.has(type)) continue;
+    offenders.push(tag);
+  }
+  // Attributes only: look inside tags, not in script or style bodies.
+  const withoutBodies = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '<script>')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '<style>');
+  for (const tag of withoutBodies.match(/<[a-z][^>]*>/gi) ?? []) {
+    for (const m of tag.matchAll(/\s(on[a-z]+|style)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi)) {
+      offenders.push(`${m[1]}=${m[2]}`);
+    }
+    for (const m of tag.matchAll(/\s[a-z-]+\s*=\s*["']?\s*javascript:[^"'\s>]*/gi)) {
+      offenders.push(m[0].trim());
+    }
+  }
+  return offenders;
 }
 
 /** Every combination of the options that decide which scripts the shell writes. */
@@ -63,7 +99,25 @@ describe('inlineScripts: false — the guard', () => {
   it('writes no inline script for any combination of options', () => {
     for (const options of optionMatrix()) {
       const { head, foot } = buildShell('page-x', '', { ...options, inlineScripts: false });
-      expect(inlineScripts(head + foot), JSON.stringify(options)).toEqual([]);
+      expect(inlineCode(head + foot), JSON.stringify(options)).toEqual([]);
+    }
+  });
+
+  it.each([
+    ['lit', litAdapter],
+    ['fast', fastAdapter],
+    ['elena', elenaAdapter],
+  ] as const)('the %s adapter adds no inline code to the head', (_name, adapter) => {
+    for (const isDev of [false, true]) {
+      for (const basePath of ['', '/base']) {
+        const head = adapter.getHeadScripts({ isDev, basePath });
+        const shell = buildShell('page-x', '', {
+          head: head || undefined,
+          inlineScripts: false,
+          includeDSDPolyfill: adapter.needsDSDPolyfill,
+        });
+        expect(inlineCode(shell.head + shell.foot), JSON.stringify({ isDev, basePath })).toEqual([]);
+      }
     }
   });
 
@@ -81,12 +135,19 @@ describe('inlineScripts: false — the guard', () => {
         !/type="module" src=/.test(tag),
     );
     expect(offenders, 'write the script through scriptTag() from shell-scripts.ts').toEqual([]);
+    // No inline handler, javascript: URL or style attribute in a template.
+    expect(code.match(/\son[a-z]+=["'{$]|javascript:|\sstyle=["'$]/gi) ?? []).toEqual([]);
   });
 
-  it('the guard itself sees an inline script', () => {
-    expect(inlineScripts('<script>x()</script><script src="/a.js"></script>')).toEqual(['<script>']);
-    expect(inlineScripts('<script type="application/ld+json">{}</script>')).toEqual([]);
-    expect(inlineScripts('<script type="module">x()</script>')).toEqual(['<script type="module">']);
+  it('the guard itself sees each kind of inline code', () => {
+    expect(inlineCode('<script>x()</script><script src="/a.js"></script>')).toEqual(['<script>']);
+    expect(inlineCode('<script type="application/ld+json">{}</script>')).toEqual([]);
+    expect(inlineCode('<script type="module">x()</script>')).toEqual(['<script type="module">']);
+    expect(inlineCode('<a href="#" onclick="x()">a</a>')).toEqual(['onclick="x()"']);
+    expect(inlineCode('<a href="javascript:x()">a</a>')).toEqual(['href="javascript:x()']);
+    expect(inlineCode('<div style="outline:none"></div>')).toEqual(['style="outline:none"']);
+    // Text inside a script or style body is not an attribute.
+    expect(inlineCode('<style>a[onclick=x]{}</style><script src="/a.js"></script>')).toEqual([]);
   });
 });
 

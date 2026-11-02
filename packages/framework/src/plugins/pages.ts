@@ -31,7 +31,12 @@ import { fileToRoute, compareRoutes, assertUniqueComponentTags } from './path-to
 import { resolveAdapter } from '../adapter/resolve.js';
 import sideEffectsPlugin from './side-effects.js';
 import { computeAppVersion, resolveClientDir } from './app-version.js';
-import { shellScriptsStatement } from './shell-scripts.js';
+import {
+  appSetsInlineScriptsFalse,
+  missingShellScriptFiles,
+  shellScriptFilesIn,
+  shellScriptsStatement,
+} from './shell-scripts.js';
 import { LITRO_APP_VERSION_GLOBAL } from '../runtime/app-entry.js';
 import type { LitroRoute } from '../types/route.js';
 
@@ -371,9 +376,24 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
 
   // Shell script files — see plugins/shell-scripts.ts. Production only, like
   // the version: `litro dev` keeps the shell's scripts inline.
-  function shellScriptsFlagStatement(): string {
+  async function shellScriptsFlagStatement(): Promise<string> {
     if (nitro.options.dev) return '';
-    return shellScriptsStatement(servedClientDir());
+    const clientDir = servedClientDir();
+    const found = shellScriptFilesIn(clientDir);
+    if (found === 'partial') {
+      nitro.logger.warn(
+        `[litro] ${clientDir}/assets/ is missing ${missingShellScriptFiles(clientDir).join(', ')}, ` +
+          'so a page handler with inlineScripts: false keeps the shell scripts inline. ' +
+          'Rebuild the client (vite build) so litroShellScriptsPlugin() writes every file.',
+      );
+    } else if (found === 'none' && (await appSetsInlineScriptsFalse(nitro.options.srcDir))) {
+      nitro.logger.warn(
+        '[litro] The server sets inlineScripts: false, but the client build has no shell ' +
+          'script files, so the scripts stay inline and a strict script-src blocks them. ' +
+          'Add litroShellScriptsPlugin() from @beatzball/litro/vite to vite.config.ts.',
+      );
+    }
+    return shellScriptsStatement(clientDir);
   }
 
   // ---------------------------------------------------------------------------
@@ -403,7 +423,7 @@ export default async function pagesPlugin(nitro: Nitro): Promise<void> {
     const preamble =
       (adapter.manifestPreamble?.() ?? '') +
       (await appVersionStatement()) +
-      shellScriptsFlagStatement();
+      (await shellScriptsFlagStatement());
 
     if (pageFiles.length === 0) {
       nitro.logger.info('[litro] No page files found in pages/.');

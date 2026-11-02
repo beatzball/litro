@@ -109,18 +109,30 @@ export const SHELL_SCRIPTS: readonly ShellScript[] = [
   DEV_CONTENT_RELOAD_SCRIPT,
 ];
 
+/**
+ * The scripts a production page can load as files. The dev content reload is
+ * not one of them (production never writes it), so a build without its file
+ * still counts as complete.
+ */
+export const PRODUCTION_SHELL_SCRIPTS: readonly ShellScript[] = [DSD_POLYFILL, SKIP_LINK_SCRIPT];
+
 /** Directory, inside the client build, that the files are emitted to. */
 export const SHELL_SCRIPTS_DIR = 'assets';
 
 /**
- * The global the generated page manifest sets to `true` when the build found
- * every file in the client output (see plugins/pages.ts).
+ * The global the generated page manifest sets (see plugins/pages.ts): `true`
+ * when the build found every file in `PRODUCTION_SHELL_SCRIPTS`, `false` when
+ * it found only some. Unset when it found none.
  */
 export const LITRO_SHELL_SCRIPTS_GLOBAL = '__litro_shell_scripts__';
 
-/** True when the page manifest reported the files present in this build. */
-export function shellScriptFilesPresent(): boolean {
-  return (globalThis as Record<string, unknown>)[LITRO_SHELL_SCRIPTS_GLOBAL] === true;
+/** What the build found: every production file, only some, or none. */
+export type ShellScriptFiles = 'all' | 'partial' | 'none';
+
+/** Reads what the page manifest reported for this build. */
+export function shellScriptFiles(): ShellScriptFiles {
+  const v = (globalThis as Record<string, unknown>)[LITRO_SHELL_SCRIPTS_GLOBAL];
+  return v === true ? 'all' : v === false ? 'partial' : 'none';
 }
 
 /** How `scriptTag()` writes a script. */
