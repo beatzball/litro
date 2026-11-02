@@ -27,6 +27,7 @@ native/
   scripts/
     select-app.sh            copies one app's folder into the build
     serve-test-page.sh       serves the bridge test page, --lan for a device
+    check-release-config.sh  refuses a Release build of a dev configuration
     bridge-test-page.html    exercises every method against a running shell
   LitroShell.xcodeproj       hand-written, no generator needed
 ```
@@ -118,6 +119,49 @@ this code.
 `allowedOrigins` is compared as whole origins — scheme, host and port — not as
 string prefixes. A prefix match would let `https://app.example.com.attacker.test`
 through an allowlist naming `https://app.example.com`.
+
+## Shipping an app to the App Store
+
+Two things decide whether an app built from this shell is accepted, and neither
+is about the shell's code.
+
+**It must not ship a development configuration.** The demo app starts at
+`http://localhost:5173/`, which is correct for development and useless anywhere
+else: on a device, `localhost` is the device. An app submitted that way reaches
+nothing, and the reviewer sees the load failure screen rather than the app.
+
+A Release build refuses to proceed when the start URL is a loopback address, a
+private network address, a `.local` name, or plain `http`. That check is a build
+phase and runs before anything compiles:
+
+```sh
+native/scripts/check-release-config.sh --self-test   # the rules it enforces
+```
+
+**It must do something a browser cannot.** App Store guideline 4.2 rejects an
+app that is only a web view, and the test a reviewer applies is whether the
+whole app could be had by typing the URL into Safari. `capabilities` is the
+answer to that, and it is why the bridge exists at all — but an empty list is
+legal, and an app with an empty list is exactly the app that gets rejected.
+A Release build warns about it rather than failing, because that call is a
+judgment and not this project's to make.
+
+Reported in the build as warnings and errors, so they appear in Xcode's issue
+navigator rather than only in a log nobody opens.
+
+### What is already handled
+
+Recorded so it is not investigated twice:
+
+- Running the web app's JavaScript inside `WKWebView` is explicitly permitted.
+  The restriction on downloading executable code carves out code run by WebKit,
+  as long as it does not change what the app says it does.
+- The bridge is compiled into the binary. The shell downloads no code.
+- One app, one binary. The rules for containers that host many third-party
+  mini apps do not apply.
+- There is no third-party SDK, and no required-reason API: the shell uses no
+  `UserDefaults`, no `FileManager`, no uptime or disk-space calls. So there is
+  no privacy manifest obligation to satisfy.
 
 ## The rule that shapes the bridge
 

@@ -92,6 +92,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA000000000000000000000C /* Build configuration list for PBXNativeTarget "LitroShell" */;
 			buildPhases = (
+				AA000000000000000000001B /* Check the release configuration */,
 				AA0000000000000000000006 /* Sources */,
 				AA0000000000000000000007 /* Frameworks */,
 				AA0000000000000000000008 /* Resources */,
@@ -152,6 +153,30 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AA000000000000000000001B /* Check the release configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/check-release-config.sh",
+				"$(SRCROOT)/Build/Resources/app.json",
+			);
+			name = "Check the release configuration";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/check-release-config.stamp",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"$SRCROOT/scripts/check-release-config.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AA0000000000000000000006 /* Sources */ = {
