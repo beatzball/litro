@@ -23,9 +23,9 @@ Zero dependencies. Safe to import in a page that renders on the server.
 The web path is complete. The page side of the native shell is here too: inside
 the Litro iOS shell, each call goes to the shell for every capability that
 shell's build compiled in, and takes its web behavior for the rest. The shell
-itself, in `native/` in this repository, implements two of the six modules so
-far, haptics and badging; the other four take their web behavior until they
-land.
+itself, in `native/` in this repository, implements four of the six modules so
+far, haptics, badging, notifications and secure storage; share and review take
+their web behavior until they land.
 
 **Not published yet.** This package is in the repository and not on the
 registry. The release pipeline authenticates per package, and that cannot be set

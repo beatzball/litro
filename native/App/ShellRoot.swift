@@ -17,13 +17,20 @@ enum ShellRoot {
     static func make() -> UIViewController {
         do {
             let configuration = try AppConfiguration.load()
+            let enabled = configuration.capabilities
+            // One permission set for both modules that can prompt. iOS shows
+            // the prompt once, so they must ask for the same thing.
+            let scope = PermissionScope.forCapabilities(enabled)
             let dispatcher = BridgeDispatcher(
                 info: shellInfo(),
                 // A module the app did not turn on is never constructed. That
                 // single fact drives the handshake too, so a build cannot
                 // advertise a capability it cannot serve.
-                haptics: configuration.capabilities.contains(.haptics) ? HapticsModule() : nil,
-                badging: configuration.capabilities.contains(.badging) ? BadgingModule() : nil
+                haptics: enabled.contains(.haptics) ? HapticsModule() : nil,
+                badging: enabled.contains(.badging) ? BadgingModule(scope: scope) : nil,
+                notifications: enabled.contains(.notifications) ? NotificationsModule(scope: scope) : nil,
+                secureStorage: enabled.contains(.secureStorage)
+                    ? SecureStorageModule(bundleIdentifier: configuration.bundleIdentifier) : nil
             )
             return ShellViewController(configuration: configuration, dispatcher: dispatcher)
         } catch {

@@ -7,9 +7,10 @@ import LitroBridge
 /// The native badging path.
 ///
 /// Setting a badge needs the notification permission, so the first call may put
-/// a prompt in front of the user. The permission is asked for with `.badge`
-/// alone: asking for alerts here would request something the app did not want
-/// and raise a question at store review.
+/// a prompt in front of the user. What it asks for is `PermissionScope`, decided
+/// in Sources: `.badge` alone when the app has no notifications, and everything
+/// notifications need when it does. iOS shows that prompt once, so a badge-only
+/// request made first would leave notifications unable to show anything.
 ///
 /// This type holds nothing. `UNUserNotificationCenter` is not `Sendable` in
 /// every iOS SDK, so a stored `center` on a main-actor class cannot be handed to
@@ -20,8 +21,14 @@ import LitroBridge
 /// which compiles against every SDK rather than the newest one.
 @MainActor
 final class BadgingModule: BadgingHost {
+    private let scope: PermissionScope
+
+    init(scope: PermissionScope) {
+        self.scope = scope
+    }
+
     func set(count: Int) async -> Bool {
-        guard await Self.isAuthorized() else { return false }
+        guard await Self.isAuthorized(asking: scope.authorizationOptions) else { return false }
         do {
             try await Self.setBadgeCount(count)
             return true
@@ -42,7 +49,7 @@ final class BadgingModule: BadgingHost {
     /// `.notDetermined` is the only state that prompts. A previous denial is
     /// answered from the stored setting rather than by asking again, because iOS
     /// does not show a second prompt and the call would appear to hang.
-    private nonisolated static func isAuthorized() async -> Bool {
+    private nonisolated static func isAuthorized(asking options: UNAuthorizationOptions) async -> Bool {
         switch await authorizationStatus() {
         case .authorized, .provisional, .ephemeral:
             return true
@@ -50,7 +57,7 @@ final class BadgingModule: BadgingHost {
             return false
         case .notDetermined:
             let granted = try? await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.badge])
+                .requestAuthorization(options: options)
             return granted ?? false
         @unknown default:
             // A status this build does not know is treated as "not allowed".

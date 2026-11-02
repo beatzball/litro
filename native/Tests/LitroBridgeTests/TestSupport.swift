@@ -53,3 +53,74 @@ extension Result {
         return nil
     }
 }
+
+/// A notification center that records what it was handed.
+@MainActor
+final class RecordingNotifications: NotificationsHost {
+    /// What the stored settings say before anyone is asked.
+    var stored: NotificationAuthorization = .authorized(alerts: true)
+    /// What the person taps when a prompt is shown.
+    var grants = true
+    /// Runs while the prompt is open, so a test can move the clock.
+    var whilePrompting: () -> Void = {}
+    /// When set, the system refuses to schedule.
+    var refuses = false
+
+    var prompts = 0
+    var scheduled: [(NotificationRequest, NotificationTrigger)] = []
+    var canceled: [String] = []
+
+    func authorization() async -> NotificationAuthorization { stored }
+
+    func requestPermission() async -> Bool {
+        prompts += 1
+        whilePrompting()
+        stored = grants ? .authorized(alerts: true) : .denied
+        return grants
+    }
+
+    func schedule(_ request: NotificationRequest, trigger: NotificationTrigger) async throws {
+        if refuses { throw SecureStorageFailure(status: -1) }
+        scheduled.append((request, trigger))
+    }
+
+    func cancel(id: String) async { canceled.append(id) }
+}
+
+/// A keychain held in a dictionary.
+@MainActor
+final class MemorySecureStorage: SecureStorageHost {
+    var values: [String: String] = [:]
+    /// When set, every call fails with this status.
+    var failing: Int32?
+
+    func get(_ key: String) throws -> String? {
+        if let failing { throw SecureStorageFailure(status: failing) }
+        return values[key]
+    }
+
+    func set(_ key: String, value: String) throws {
+        if let failing { throw SecureStorageFailure(status: failing) }
+        values[key] = value
+    }
+
+    func remove(_ key: String) throws {
+        if let failing { throw SecureStorageFailure(status: failing) }
+        values[key] = nil
+    }
+}
+
+/// A clock a test can move.
+@MainActor
+final class TestClock {
+    var now: Date
+    init(_ now: Date = Date(timeIntervalSince1970: 1_800_000_000)) { self.now = now }
+    func advance(_ seconds: TimeInterval) { now = now.addingTimeInterval(seconds) }
+}
+
+/// A calendar fixed to UTC, so trigger components do not depend on the Mac.
+let utcCalendar: Calendar = {
+    var c = Calendar(identifier: .gregorian)
+    c.timeZone = TimeZone(identifier: "UTC")!
+    return c
+}()

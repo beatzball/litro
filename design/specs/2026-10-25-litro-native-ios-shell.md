@@ -443,6 +443,69 @@ that hold them. It reads the names from `protocol.ts`, and it refuses to pass if
 the adapter itself stops matching its patterns, since a check that matches
 nothing passes everything.
 
+### Notifications and secure storage
+
+The second pull request. Every decision is in `Sources/`, with tests;
+`App/Capabilities/NotificationsModule.swift` and `SecureStorageModule.swift`
+only call the system. Six decisions were made that nothing above settled.
+
+**One permission set for both prompting modules.** iOS shows the notification
+permission prompt once, and the first request's options are what the user
+grants. A badge-only request made first would leave an app with notifications
+compiled in unable to show one, with no prompt ever offered again. So
+`PermissionScope.forCapabilities` decides the set once, from the app's
+configuration, and both modules ask for it: the badge alone without
+notifications, badge, alerts and sound with them. A grant with alerts turned off
+is a denial for a notification, answered without a prompt, for the same reason.
+
+**The id reaches the page, or nothing is scheduled.** The order in the
+dispatcher is: validate, then the permission, then check the page still waits,
+then schedule. Validation is against the moment the call arrived, so a bad call
+is rejected before anyone sees a prompt, and a reminder is not rejected only
+because a person took a while to tap Allow. A prompt that outlasts the page's
+two-minute budget schedules nothing: the page has already rejected the call
+with `TIMEOUT`, and a notification scheduled then would carry an id it never
+learns and can never cancel. The shell gives up two seconds before the page
+does, to cover the reply's own trip back. That budget now exists in Swift as
+`interactiveTimeoutMilliseconds`, and the parity check holds it equal to
+`INTERACTIVE_TIMEOUT_MS`.
+
+**A one-off whose time passed during the prompt fires at once.** A calendar
+trigger for a past moment is accepted by the system and never fires, which is
+a silent loss. The person asked for the reminder and allowed it, so it fires in
+one second. A one-off already in the past when the call arrived is a page bug
+and is rejected.
+
+**A daily reminder repeats at the time of day of `at`,** in the device's
+calendar and time zone when it is scheduled, so a date in the past is the
+ordinary way to say "every day at 9".
+
+**The shell makes an id when the page gives none.** A page that passes an id
+gets that id back, and scheduling again with it replaces the earlier one, which
+is the system's rule for a repeated identifier. An empty id counts as none,
+because empty is what the web returns for "nothing scheduled".
+
+**The keychain item is this device only, after first unlock, never
+synchronized.** A generic password under the service
+`<bundleIdentifier>.secureStorage`. Readable once the phone has been unlocked
+after a restart, so a background task can read a token; never restored onto
+another device from a backup, and never put in iCloud Keychain. An update sets
+the accessibility too, so an item from an older build is moved to it. A write
+is update-then-add, never delete-then-add, so a failed write leaves the old
+value in place, as the contract promises. A keychain failure is reported with
+its status code and never with the key or the value, because the reply is
+evaluated in the page, where script can log it.
+
+The page-side rule is unchanged and still true: when `isNative` is true, a
+`secureStorage` write reaches this keychain or goes nowhere. Gate on `isNative`
+and nothing else.
+
+A keychain item outlives the app: iOS keeps it when the app is deleted, so a
+reinstall can find a token from before. That is recorded in `native/README.md`
+rather than worked around, because the usual workaround is a first-launch flag
+in `UserDefaults`, which is a required-reason API with a privacy manifest
+obligation.
+
 ## Risks
 
 - **All iOS upkeep is ours.** There is no upstream to absorb a yearly OS release, a new

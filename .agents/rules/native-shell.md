@@ -117,7 +117,9 @@ clean, passes both suites, and fails only on a device — one that updates on th
 App Store's schedule rather than ours.
 
 **Rule.** `scripts/check-bridge-parity.mjs` compares the version, the transport
-names, the method list in order, the capability list and every error code. It
+names, the method list in order, the capability list, every error code and the
+interactive timeout. The shell carries that one timeout so it can tell when the
+page has stopped waiting on a permission prompt. It
 runs in CI, and it has a `--self-test` that changes the sources eighteen ways:
 to prove the comparison still fires, that a harmless reformatting loses
 nothing, and that a shape the readers cannot consume stops the check. Change the protocol in both files in one

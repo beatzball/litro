@@ -90,7 +90,38 @@ const buttons = [
   ['bad count', () => show('bad count', 'badging.set', { count: -1 })],
   ['unknown method', () => show('unknown method', 'haptics.rumble')],
   ['share (absent)', () => show('share', 'share', { text: 'hello' }, 120000)],
+  // Notifications. The first tap on a fresh install shows the permission
+  // prompt, so these use the interactive budget the page itself uses.
+  ['notify in 5s', () => scheduleIn(5)],
+  ['notify in 10s', () => scheduleIn(10)],
+  ['cancel last', () => show('notifications.cancel', 'notifications.cancel', { id: lastNotificationId })],
+  // Secure storage. Write, force-quit the app, open it again, read: the value
+  // must still be there. That is the check only a device can make.
+  ['keychain write', () => show('secureStorage.set', 'secureStorage.set',
+    { key: 'bridge-test', value: 'written ' + new Date().toISOString() })],
+  ['keychain read', () => show('secureStorage.get', 'secureStorage.get', { key: 'bridge-test' })],
+  ['keychain remove', () => show('secureStorage.remove', 'secureStorage.remove', { key: 'bridge-test' })],
 ];
+
+// The id of the last notification scheduled, so `cancel last` has one to send.
+let lastNotificationId = '';
+
+async function scheduleIn(seconds) {
+  const label = `notifications.schedule +${seconds}s`;
+  try {
+    const reply = await call('notifications.schedule',
+      { title: 'Litro bridge test', body: `Scheduled ${seconds}s ago`, at: Date.now() + seconds * 1000 },
+      120000);
+    if ('error' in reply) {
+      say(`${label} -> error ${reply.error.code} ${reply.error.message}`, 'bad');
+      return;
+    }
+    lastNotificationId = reply.result;
+    say(`${label} -> result ${JSON.stringify(reply.result)}`, 'ok');
+  } catch (error) {
+    say(`${label} -> ${error.message}`, 'bad');
+  }
+}
 
 const controls = document.getElementById('controls');
 for (const [label, run] of buttons) {

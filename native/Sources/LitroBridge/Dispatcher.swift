@@ -36,6 +36,23 @@ public protocol BadgingHost: AnyObject {
     func set(count: Int) async -> Bool
 }
 
+/// What a build must provide to offer local notifications.
+///
+/// The decisions -- validation, which trigger, whether the page still waits --
+/// are in Notifications.swift. This is only what needs the system.
+@MainActor
+public protocol NotificationsHost: AnyObject {
+    /// The stored authorization, read without prompting.
+    func authorization() async -> NotificationAuthorization
+    /// Shows the permission prompt and answers whether the user allowed it.
+    /// Called only when `authorization()` said nobody has been asked.
+    func requestPermission() async -> Bool
+    /// Hands one notification to the system. Throws when the system refused.
+    func schedule(_ request: NotificationRequest, trigger: NotificationTrigger) async throws
+    /// Removes a pending or delivered notification. An unknown id is not an error.
+    func cancel(id: String) async
+}
+
 /// Main-actor bound, because the transport's messages arrive on the main thread
 /// and every capability module it calls is main-actor bound too. Declaring it
 /// here means a capability added later cannot quietly introduce a hop.
@@ -44,24 +61,50 @@ public final class BridgeDispatcher {
     private let info: ShellInfo
     private let haptics: HapticsHost?
     private let badging: BadgingHost?
+    private let notifications: NotificationsHost?
+    private let secureStorage: SecureStorageHost?
+    private let now: @MainActor () -> Date
+    private let calendar: @MainActor () -> Calendar
+    private let makeID: @MainActor () -> String
 
     /// Builds a dispatcher over the modules this build compiled in.
     ///
     /// A module that is absent is `nil`, and that single fact drives both the
     /// handshake's capability list and what happens to a call for it. Keeping one
     /// source means a build cannot advertise a capability it cannot serve.
-    public init(info: ShellInfo, haptics: HapticsHost? = nil, badging: BadgingHost? = nil) {
+    ///
+    /// `now`, `calendar` and `makeID` are seams for the tests. The calendar is
+    /// read per call rather than held, so a reminder scheduled after the user
+    /// changed time zone uses the new one.
+    public init(info: ShellInfo,
+                haptics: HapticsHost? = nil,
+                badging: BadgingHost? = nil,
+                notifications: NotificationsHost? = nil,
+                secureStorage: SecureStorageHost? = nil,
+                now: @escaping @MainActor () -> Date = { Date() },
+                calendar: @escaping @MainActor () -> Calendar = { Calendar.current },
+                makeID: @escaping @MainActor () -> String = { UUID().uuidString }) {
         self.info = info
         self.haptics = haptics
         self.badging = badging
+        self.notifications = notifications
+        self.secureStorage = secureStorage
+        self.now = now
+        self.calendar = calendar
+        self.makeID = makeID
     }
 
-    /// The capabilities this build reports in the handshake.
+    /// The capabilities this build reports in the handshake, in protocol order.
     public var capabilities: [Capability] {
-        var out: [Capability] = []
-        if haptics != nil { out.append(.haptics) }
-        if badging != nil { out.append(.badging) }
-        return out
+        Capability.allCases.filter { capability in
+            switch capability {
+            case .haptics: return haptics != nil
+            case .notifications: return notifications != nil
+            case .badging: return badging != nil
+            case .secureStorage: return secureStorage != nil
+            case .share, .review: return false
+            }
+        }
     }
 
     /// Whether this build can serve `capability`.
@@ -174,15 +217,120 @@ public final class BridgeDispatcher {
             }
             return .success(id: request.id, result: .null)
 
-        // Phase 5 fits these modules. Until then they are not compiled in, so
-        // the capability gate above has already answered them and this line is
-        // unreachable. It is spelled out rather than left to a `default`, so
-        // adding a method to the protocol fails to compile here instead of
-        // quietly falling into a wrong answer.
-        case .notificationsSchedule, .notificationsCancel,
-             .secureStorageGet, .secureStorageSet, .secureStorageRemove,
-             .canShare, .share, .requestReview:
+        case .notificationsSchedule:
+            return await schedule(request)
+
+        case .notificationsCancel:
+            guard let id = request.params["id"]?.stringValue else {
+                return .failure(id: request.id, code: .invalidParams, message: "id must be a string")
+            }
+            // An empty id is the "nothing was scheduled" answer. Canceling it
+            // is a no-op, not a mistake.
+            if !id.isEmpty { await notifications?.cancel(id: id) }
+            return .success(id: request.id, result: .null)
+
+        case .secureStorageGet:
+            return keychain(request) { host, key in
+                guard let value = try host.get(key) else { return .null }
+                return .string(value)
+            }
+
+        case .secureStorageSet:
+            switch SecureStorageParams.value(request.params) {
+            case let .failure(reason):
+                return .failure(id: request.id, code: .invalidParams, message: reason.message)
+            case let .success(value):
+                return keychain(request) { host, key in
+                    try host.set(key, value: value)
+                    return .null
+                }
+            }
+
+        case .secureStorageRemove:
+            return keychain(request) { host, key in
+                try host.remove(key)
+                return .null
+            }
+
+        // Phase 5's last pair. Until they are compiled in, the capability gate
+        // above has already answered them and this line is unreachable. It is
+        // spelled out rather than left to a `default`, so adding a method to
+        // the protocol fails to compile here instead of quietly falling into a
+        // wrong answer.
+        case .canShare, .share, .requestReview:
             return .success(id: request.id, result: Self.emptyResult(for: request.method))
+        }
+    }
+
+    /// `notifications.schedule`, in the order that keeps the id reachable.
+    ///
+    /// Validate first, against the moment the call arrived, so a bad call is
+    /// rejected before anyone is shown a prompt. Then the permission, which may
+    /// be a prompt a person reads for a long time. Then, before scheduling,
+    /// whether the page is still waiting: past its budget the page has already
+    /// rejected the call, and a notification scheduled now would carry an id
+    /// it never learns and can never cancel.
+    private func schedule(_ request: BridgeRequest) async -> BridgeResponse {
+        let arrived = now()
+        let parsed: NotificationRequest
+        switch NotificationRequest.parse(request.params, now: arrived, makeID: makeID) {
+        case let .failure(reason):
+            return .failure(id: request.id, code: .invalidParams, message: reason.message)
+        case let .success(value):
+            parsed = value
+        }
+        guard let notifications else {
+            return .success(id: request.id, result: Self.emptyResult(for: request.method))
+        }
+
+        var allowed: Bool
+        switch await notifications.authorization().stepForNotification {
+        case .allowed: allowed = true
+        case .denied: allowed = false
+        case .ask: allowed = await notifications.requestPermission()
+        }
+        guard allowed else {
+            return .failure(id: request.id, code: .permissionDenied,
+                            message: "the notification permission was declined")
+        }
+
+        let scheduling = now()
+        guard isStillAwaited(arrived: arrived, now: scheduling) else {
+            return .failure(id: request.id, code: .internalError,
+                            message: "the page stopped waiting before permission was given; nothing was scheduled")
+        }
+        do {
+            try await notifications.schedule(parsed, trigger: parsed.trigger(now: scheduling, calendar: calendar()))
+        } catch {
+            return .failure(id: request.id, code: .internalError,
+                            message: "the system refused to schedule the notification")
+        }
+        return .success(id: request.id, result: .string(parsed.id))
+    }
+
+    /// One keychain call: validate the key, run it, and map a refusal.
+    ///
+    /// The message carries the status code and never the key or the value. A
+    /// reply is evaluated in the page, and page script can log it.
+    private func keychain(_ request: BridgeRequest,
+                          _ body: (SecureStorageHost, String) throws -> JSONValue) -> BridgeResponse {
+        let key: String
+        switch SecureStorageParams.key(request.params) {
+        case let .failure(reason):
+            return .failure(id: request.id, code: .invalidParams, message: reason.message)
+        case let .success(value):
+            key = value
+        }
+        guard let secureStorage else {
+            return .success(id: request.id, result: Self.emptyResult(for: request.method))
+        }
+        do {
+            return .success(id: request.id, result: try body(secureStorage, key))
+        } catch let failure as SecureStorageFailure {
+            return .failure(id: request.id, code: .internalError,
+                            message: "the keychain refused the operation (status \(failure.status))")
+        } catch {
+            return .failure(id: request.id, code: .internalError, message: "the keychain refused the operation")
         }
     }
 

@@ -7,8 +7,8 @@
  * packages/litro-native/src/protocol.ts, and mirrored in Swift at
  * native/Sources/LitroBridge/Protocol.swift. The mirror is not avoidable: the
  * shell is an installed app and cannot import TypeScript. So the method names,
- * the capability names, the error codes, the transport names and the version
- * number exist twice, and two copies drift.
+ * the capability names, the error codes, the transport names, the version
+ * number and the interactive timeout exist twice, and two copies drift.
  *
  * Drift here is the expensive kind. A method renamed on one side builds clean,
  * passes every test on both sides, and fails only on a device — and the device
@@ -116,7 +116,16 @@ function readTypeScript(source) {
   )[1];
   const capabilities = readList(capsBlock, QUOTED, 'CAPABILITIES', file).map(unquote);
 
-  return { version, handlerName, globalName, methods, errorCodes, capabilities };
+  const interactiveTimeout = readMilliseconds(
+    must(source.match(/export const INTERACTIVE_TIMEOUT_MS = ([0-9_]+);/), 'INTERACTIVE_TIMEOUT_MS', file)[1]
+  );
+
+  return { version, handlerName, globalName, methods, errorCodes, capabilities, interactiveTimeout };
+}
+
+/** A numeric literal with optional `_` separators, which both languages allow. */
+function readMilliseconds(literal) {
+  return Number(literal.replace(/_/g, ''));
 }
 
 /* ── Reading the Swift side ───────────────────────────────────────────── */
@@ -176,7 +185,13 @@ function readSwift(source) {
   }
   const errorCodes = Object.fromEntries(codeCases.map(([caseName, raw]) => [caseName, Number(raw)]));
 
-  return { version, handlerName, globalName, methods, errorCodes, capabilities };
+  // The shell carries the page's interactive budget so it can tell when the
+  // page has stopped waiting, and schedule nothing it could never cancel.
+  const interactiveTimeout = readMilliseconds(
+    must(source.match(/public let interactiveTimeoutMilliseconds = ([0-9_]+)\b/), 'interactiveTimeoutMilliseconds', file)[1]
+  );
+
+  return { version, handlerName, globalName, methods, errorCodes, capabilities, interactiveTimeout };
 }
 
 /* ── Comparing ────────────────────────────────────────────────────────── */
@@ -206,6 +221,9 @@ function compare(ts, swift) {
   if (ts.version !== swift.version) say('protocol version differs', ts.version, swift.version);
   if (ts.handlerName !== swift.handlerName) say('handler name differs', ts.handlerName, swift.handlerName);
   if (ts.globalName !== swift.globalName) say('global name differs', ts.globalName, swift.globalName);
+  if (ts.interactiveTimeout !== swift.interactiveTimeout) {
+    say('interactive timeout differs', ts.interactiveTimeout, swift.interactiveTimeout);
+  }
 
   // Order matters for methods: both sides list them in protocol order, and a
   // reordering is a sign one side was edited without the other.
@@ -285,6 +303,18 @@ function selfTest(tsSource, swiftSource) {
     swift('a changed error code', (s) => s.replace('case permissionDenied = -32000', 'case permissionDenied = -32010')),
     swift('a dropped capability', (s) => s.replace('    case review\n', '')),
     swift('an added capability', (s) => s.replace('    case review\n', '    case review\n    case camera\n')),
+    swift('a changed interactive timeout', (s) =>
+      s.replace('interactiveTimeoutMilliseconds = 120_000', 'interactiveTimeoutMilliseconds = 60_000')),
+    {
+      what: 'an interactive timeout written without separators',
+      swift: (s) => s.replace('interactiveTimeoutMilliseconds = 120_000', 'interactiveTimeoutMilliseconds = 120000'),
+      expect: 'same',
+    },
+    {
+      what: 'a Swift interactive timeout the reader cannot find',
+      swift: (s) => s.replace('public let interactiveTimeoutMilliseconds = 120_000', 'public let interactiveTimeout = 120.0'),
+      expect: 'throw',
+    },
     swift('a dropped Swift error code', (s) => s.replace('    case permissionDenied = -32000\n', '')),
     {
       what: 'a dropped TypeScript error code',
@@ -401,5 +431,6 @@ if (problems.length > 0) {
 
 console.log(
   `check-bridge-parity: OK - version ${ts.version}, ${ts.methods.length} methods, ` +
-    `${ts.capabilities.length} capabilities, ${Object.keys(ts.errorCodes).length} error codes`
+    `${ts.capabilities.length} capabilities, ${Object.keys(ts.errorCodes).length} error codes, ` +
+    `interactive timeout ${ts.interactiveTimeout}ms`
 );

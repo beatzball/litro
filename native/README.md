@@ -75,8 +75,10 @@ app's `startURL` names and launch the app:
 native/scripts/serve-test-page.sh     # http://localhost:5173
 ```
 
-It runs every unattended method on load and leaves the two that need a person —
-the badge permission prompt and the share sheet — on buttons.
+It runs every unattended method on load and leaves the ones that need a person
+on buttons: the permission prompt that badging and notifications share, a
+notification firing, the share sheet, and a keychain value surviving a
+force-quit.
 
 Two servers start, not one. The second, one port up, is the outside origin the
 allowlist check navigates to. That check needs a destination that is reachable
@@ -175,9 +177,18 @@ the promise anyway, because the page may be an old deploy that cannot be fixed.
 
 ## What is not here yet
 
-Phase 4 built the host, the handshake, and two modules: haptics and badging. The
-page side, `packages/litro-native/src/adapters/shell.ts`, now speaks the
-protocol to this shell. The other four modules — notifications, secure storage,
-share and review — are still to come in Phase 5. Until then they are not
-compiled in, so the handshake omits them, and the page answers those calls
-itself without sending them.
+Four of the six modules are here: haptics, badging, notifications and secure
+storage. The page side, `packages/litro-native/src/adapters/shell.ts`, speaks
+the protocol to this shell. Share and review are still to come in Phase 5.
+Until then they are not compiled in, so the handshake omits them, and the page
+answers those calls itself without sending them.
+
+Two things about the modules that are already here and easy to trip on:
+
+- **The notification permission prompt is shown once.** Badging and
+  notifications both need it, and whichever asks first decides for both. So
+  both ask for the same set, `PermissionScope`: the badge alone for an app
+  without notifications, and badge, alerts and sound for one with them.
+- **A keychain value outlives the app.** iOS keeps keychain items when an app is
+  deleted, so a reinstall can find a token from before. An app that must start
+  signed out after a reinstall has to handle that itself.
