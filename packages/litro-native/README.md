@@ -85,11 +85,11 @@ Any script on the origin can read it and it shows up in developer tools. For
 anything that would matter if it leaked, such as a long-lived access token,
 check the platform first and keep the web build signed out.
 
-Inside the native shell, `secureStorage` never falls back to browser storage,
-even on a build that left the keychain module out. There it reads `null` and
-writes nothing. So `isNative` being true means a write either reaches the
-keychain or goes nowhere, and the check below is enough to keep a token out of
-browser storage:
+When `isNative` is true, a `secureStorage` write reaches the keychain or goes
+nowhere. It never falls back to browser storage, even on a shell build that
+left the keychain module out: there it reads `null` and writes nothing. A page
+inside the shell whose handshake failed gets the web bridge, which IS browser
+storage, but there `isNative` is false. So gate on `isNative` and nothing else:
 
 ```ts
 import { platform, secureStorage } from '@beatzball/litro-native';

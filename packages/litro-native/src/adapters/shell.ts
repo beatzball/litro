@@ -22,9 +22,13 @@
  * design/specs/2026-10-29-litro-native-bridge-protocol.md fixes the format and
  * deliberately leaves three things to the transport. They are decided here:
  *
- * - Ids are a counter shared by every transport in the page session, so a
- *   reply that arrives late for an abandoned transport can never match a call
- *   on a newer one.
+ * - Ids are a random prefix drawn once per connection, then a counter. The
+ *   prefix is what matters. The shell evaluates each reply in whatever
+ *   document is current when it finishes, and the next document of the same
+ *   app has the same global and its own receiver. A bare counter restarts at 1
+ *   on every full load, so a late reply for document A's call would settle
+ *   document B's call with the same number — a keychain value read for one
+ *   page handed to another, possibly on a different allowed origin.
  * - Calls are concurrent and unbounded. Replies are matched by id and may
  *   arrive in any order. There is no cap, because every call already carries
  *   its own timeout, which is what bounds the pending set; a cap would only add
@@ -112,15 +116,22 @@ export function findShellHost(win: unknown): ShellHost | null {
 /* ── The transport ────────────────────────────────────────────────────── */
 
 /**
- * Shared by every transport, not one per instance. A transport is abandoned
- * when its handshake fails, and a reply for one of its calls may still arrive;
- * restarting at 1 would let that reply resolve a different call.
+ * A prefix no other connection will draw: not one in an earlier document of
+ * this web view, not one in a second bundled copy of this package.
+ *
+ * Read at call time, never at module scope. A web view always has
+ * `crypto.getRandomValues`; the fallback exists so a missing one degrades to a
+ * weaker prefix rather than to no shell at all.
  */
-let lastId = 0;
-
-/** Exported for tests, which assert on exact ids. Nothing in an app calls it. */
-export function resetIdsForTests(): void {
-  lastId = 0;
+export function connectionPrefix(): string {
+  const bytes = new Uint8Array(8);
+  const c = (globalThis as { crypto?: { getRandomValues?(a: Uint8Array): Uint8Array } }).crypto;
+  if (typeof c?.getRandomValues === 'function') {
+    c.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 interface Pending {
@@ -140,8 +151,16 @@ interface Pending {
 export class ShellTransport {
   private readonly pending = new Map<string, Pending>();
   private closed = false;
+  private lastId = 0;
 
-  constructor(private readonly host: ShellHost) {}
+  /**
+   * @param prefix Starts every id this transport sends. Draw it with
+   *   {@link connectionPrefix}; a test passes a fixed one to assert on exact ids.
+   */
+  constructor(
+    private readonly host: ShellHost,
+    private readonly prefix: string = connectionPrefix(),
+  ) {}
 
   /** How many calls are waiting on a reply. For tests. */
   get pendingCount(): number {
@@ -162,7 +181,7 @@ export class ShellTransport {
       );
     }
 
-    const id = String(++lastId);
+    const id = `${this.prefix}-${++this.lastId}`;
     const message = request(id, method, wire);
 
     return new Promise<unknown>((resolve, reject) => {
@@ -401,9 +420,17 @@ export class ShellBridge implements NativeBridge {
       this.has('notifications') ? this.send('notifications.cancel', { id }) : this.web.notifications.cancel(id),
   };
 
+  /**
+   * The count is floored and clamped before it is sent, exactly as the web
+   * adapter does. The shell rejects anything but a whole number of 0 or more,
+   * and an unread count computed by arithmetic can land on -1 or 2.5 for one
+   * tick. The same call must not resolve on the web and reject on a device.
+   */
   badging = {
     set: (count: number): Promise<void> =>
-      this.has('badging') ? this.send('badging.set', { count }) : this.web.badging.set(count),
+      this.has('badging')
+        ? this.send('badging.set', { count: Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0 })
+        : this.web.badging.set(count),
     clear: (): Promise<void> => (this.has('badging') ? this.send('badging.clear') : this.web.badging.clear()),
   };
 

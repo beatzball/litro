@@ -368,9 +368,20 @@ protocol, and `bridge.ts` now resolves it in a browser. The protocol work left
 id generation, queueing and concurrency to this file on purpose. Seven decisions
 were made here that nothing above settled.
 
-**Ids are one counter for the whole page session.** Not one per transport. A
-transport is abandoned when its handshake fails, and a late reply for one of its
-calls could otherwise resolve a call on the next transport with the same id.
+**Ids are a random prefix per connection, then a counter.** Module state is
+not enough: a full document load re-evaluates the module, so a counter restarts
+at 1, and the shell evaluates each reply in whatever document is current when
+it finishes. The next document of the same app has the same global and its own
+receiver, so a late reply for document A's call would settle document B's call
+with the same number. `allowedOrigins` is a list, so B can be a different origin
+from A. The prefix is drawn from `crypto.getRandomValues` inside `connectShell`,
+never at module scope. It also keeps two bundled copies of this package from
+sharing ids. It does not stop the second copy from replacing the first one's
+receiver; that is still open.
+
+This was a review finding against the first version of this pull request,
+which used one module-level counter and claimed it was unique for the page
+session. It was unique only for one evaluation of the module.
 
 **Calls are concurrent, with no cap.** Replies are matched by id and may arrive
 in any order. Every call already has its own timeout, which is what bounds the
@@ -384,11 +395,14 @@ yet known, and there is no buffer to get wrong.
 **A missing capability takes its web behavior, except secure storage.** Where
 the handshake leaves a capability out, the call never reaches the wire and the
 web adapter answers it, so a share sheet the web view itself offers still works.
-Secure storage is the exception. Inside the shell `isNative` is true, and
-checking `isNative` is the documented way to keep a token out of browser
-storage. A build without the keychain module that quietly wrote to browser
-storage would pass that check and leak the token. So there `get` answers `null`,
-the writes do nothing, and `supports` leaves `secureStorage` out.
+Secure storage is the exception. When the shell bridge is in use, `isNative`
+is true, and checking `isNative` is the documented way to keep a token out of
+browser storage. A build without the keychain module that quietly wrote to
+browser storage would pass that check and leak the token. So there `get`
+answers `null`, the writes do nothing, and `supports` leaves `secureStorage`
+out. This does not cover a page inside the shell whose handshake failed: that
+page gets the web bridge, browser storage and `isNative` false. Gating on
+`isNative`, and nothing else, is safe in both cases.
 
 **An unknown capability name is dropped, not fatal.** `isHandshakeResult`
 rejects a name it does not know, which is right for the format. But adding a

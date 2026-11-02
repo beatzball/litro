@@ -115,7 +115,6 @@ async function load() {
   const bridge = await import('../bridge.js');
   const shell = await import('../adapters/shell.js');
   const index = await import('../index.js');
-  shell.resetIdsForTests();
   return { ...bridge, ...shell, ...index };
 }
 
@@ -325,7 +324,7 @@ describe('the transport', () => {
     const shell = fakeShell(options);
     const mod = await load();
     const host = mod.findShellHost(shell.win)!;
-    const t = new mod.ShellTransport(host);
+    const t = new mod.ShellTransport(host, 'p');
     shell.marker.receive = (m) => t.receive(m);
     return { shell, t };
   }
@@ -342,22 +341,53 @@ describe('the transport', () => {
     });
     const a = t.call('secureStorage.get', { key: 'a' });
     const b = t.call('secureStorage.get', { key: 'b' });
-    expect(held.map((r) => r.id)).toEqual(['1', '2']);
+    expect(held.map((r) => r.id)).toEqual(['p-1', 'p-2']);
 
-    shell.deliver(success('2', 'B'));
-    shell.deliver(success('1', 'A'));
+    shell.deliver(success('p-2', 'B'));
+    shell.deliver(success('p-1', 'A'));
     expect(await a).toBe('A');
     expect(await b).toBe('B');
     expect(t.pendingCount).toBe(0);
   });
 
-  it('never reuses an id across transports in one page session', async () => {
+  it('draws a different id prefix for every connection', async () => {
     const mod = await load();
-    const first = fakeShell({ answers: { 'haptics.selection': () => SILENT } });
-    const second = fakeShell({ answers: { 'haptics.selection': () => SILENT } });
-    void new mod.ShellTransport(mod.findShellHost(first.win)!).call('haptics.selection').catch(() => {});
-    void new mod.ShellTransport(mod.findShellHost(second.win)!).call('haptics.selection').catch(() => {});
-    expect([first.sent[0].id, second.sent[0].id]).toEqual(['1', '2']);
+    const prefixes = new Set(Array.from({ length: 50 }, () => mod.connectionPrefix()));
+    expect(prefixes.size).toBe(50);
+    for (const p of prefixes) expect(p).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it('never sends the same id from two documents, though each starts from fresh module state', async () => {
+    // A full document load re-evaluates this module, so module state is no
+    // protection. The shell delivers a reply into whatever document is
+    // current, so two documents must never use one id.
+    const first = installShell();
+    await (await load()).getBridge();
+    vi.resetModules();
+    const second = installShell();
+    await (await load()).getBridge();
+    expect(first.sent[0].id).not.toBe(second.sent[0].id);
+  });
+
+  it("does not let the previous document's late reply settle this document's call", async () => {
+    // Document A asked for a secret and navigated away before the reply.
+    const a = installShell({ answers: { 'secureStorage.get': () => SILENT } });
+    const docA = await load();
+    void docA.secureStorage.get('refreshToken');
+    await vi.waitFor(() => expect(a.sent).toHaveLength(2));
+    const staleId = a.sent[1].id;
+
+    // Document B, same app, same global name. Its own read is still pending.
+    vi.resetModules();
+    const b = installShell({ answers: { 'secureStorage.get': () => SILENT } });
+    const docB = await load();
+    const read = docB.secureStorage.get('displayName');
+    await vi.waitFor(() => expect(b.sent).toHaveLength(2));
+
+    // A's reply lands in B, under every id A could have used.
+    for (const id of [staleId, '1', '2']) b.deliver(success(id, 'the refresh token'));
+    b.deliver(success(b.sent[1].id, 'Ada'));
+    expect(await read).toBe('Ada');
   });
 
   it('rejects with the shell error, code and data intact', async () => {
@@ -429,7 +459,7 @@ describe('the transport', () => {
       },
     };
     const mod = await load();
-    const t = new mod.ShellTransport(mod.findShellHost(shell.win)!);
+    const t = new mod.ShellTransport(mod.findShellHost(shell.win)!, 'p');
     const err = (await t.call('haptics.selection').catch((e) => e)) as NativeBridgeError;
     expect(err.code).toBe(ERROR_CODES.INTERNAL_ERROR);
     expect(t.pendingCount).toBe(0);
@@ -539,6 +569,21 @@ describe('badging', () => {
     expect(shell.sent.slice(1).map(({ method, params }) => ({ method, params }))).toEqual([
       { method: 'badging.set', params: { count: 3 } },
       { method: 'badging.clear', params: undefined },
+    ]);
+  });
+
+  it('native: sends the count the web adapter would use, never one the shell rejects', async () => {
+    // The shell takes only a whole number of 0 or more. The web adapter floors
+    // and clamps, so the same call must not resolve there and reject here.
+    const shell = installShell({ capabilities: ['badging'] });
+    const { badging } = await load();
+    for (const n of [-1, 2.5, Number.NaN, Number.POSITIVE_INFINITY, 4]) await badging.set(n);
+    expect(shell.sent.slice(1).map((m) => m.params)).toEqual([
+      { count: 0 },
+      { count: 2 },
+      { count: 0 },
+      { count: 0 },
+      { count: 4 },
     ]);
   });
 
