@@ -137,9 +137,14 @@ export default defineEventHandler(async (event) => {
   // @lit-labs/ssr output with DSD + hydration shell.
   // pageModules[matched.filePath] provides the pre-bundled module so
   // createPageHandler can access pageData without a runtime .ts import.
+  // inlineScripts: false serves the framework's scripts as files, so the
+  // production build runs under a strict script-src (issue 290). The other
+  // playgrounds keep the default, so e2e covers both forms.
+  // e2e/playground/strict-csp.spec.ts checks it.
   const handler = createPageHandler({
     route: matched,
     pageModule: pageModules[matched.filePath],
+    inlineScripts: false,
   });
   return handler(event);
 });

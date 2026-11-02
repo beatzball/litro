@@ -262,3 +262,38 @@ from `packages/framework/src/plugins/app-version.ts`.
 `e2e/playground/client-entry-cache.spec.ts` checks the served headers in
 `pnpm test:e2e:preview`. `packages/create-litro/src/entry-cache.test.ts` fails
 when a recipe template brings back the `/_litro/**` rule or the `maxAge`.
+
+### BUILD-011 — Every framework script in the shell comes from `SHELL_SCRIPTS`
+
+A classic script that `buildShell()` writes goes in `SHELL_SCRIPTS`
+(`packages/framework/src/runtime/shell-scripts.ts`) and reaches the page
+through `scriptTag()`. Never write `<script>...</script>` source into
+`shell.ts`, and never return one from an adapter's `getHeadScripts()`. Never
+write an inline event handler (`onclick="..."`), a `javascript:` URL or a
+`style="..."` attribute into the shell. When you edit a script's source,
+rename its `fileName` to the new hash.
+
+**Why:** `createPageHandler({ inlineScripts: false })` lets an app run under
+`script-src 'self'` with no `'unsafe-inline'` (issue 290). It works only for
+scripts in the registry: `litroShellScriptsPlugin()` emits each one as
+`dist/client/assets/<fileName>`, and the shell writes `<script src>` for it.
+An inline script, handler or `javascript:` URL added beside them is blocked by
+the app's policy, and no hash can allow a handler. A `style` attribute is
+governed by `style-src-attr`, which no element hash can allow, so it forces
+`'unsafe-hashes'` or `'unsafe-inline'` on every app (the outlet's
+`outline:none` was one until it moved into the shell's `<style>`). All of
+these build green. The files are served `immutable` (BUILD-010), so a script
+whose source changed under its old name would stay cached in browsers for a
+year; the plugin fails the build instead.
+
+**Check:** `packages/framework/src/runtime/__tests__/shell-scripts.test.ts`
+renders `buildShell()` with `inlineScripts: false` across every combination of
+its script options, and once with each adapter's `getHeadScripts()` as the
+head, and fails on an inline `<script>`, an `on*=` attribute, a `javascript:`
+URL or a `style` attribute. It also reads the `shell.ts` source for the same
+things. It does NOT see HTML the app passes in (`head`, `bodyScript`,
+`seoHead`), HTML a page component renders, or a framework module that writes
+into the page outside `buildShell()` and `getHeadScripts()`. The Vite plugin
+fails the build when a `fileName` does not match its source.
+`e2e/playground/strict-csp.spec.ts` serves the playground under a strict
+policy in `pnpm test:e2e:preview`; CI does not run that suite.

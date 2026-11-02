@@ -21,6 +21,8 @@ import type { EventHandler } from 'h3';
 import { buildShell } from './shell.js';
 import { appEntryUrl } from './app-entry.js';
 import type { AppScriptUrl } from './app-entry.js';
+import { shellScriptFiles } from './shell-scripts.js';
+import type { ShellScriptFiles } from './shell-scripts.js';
 import type { SkipLink } from './shell.js';
 import type { LitroRoute } from '../types/route.js';
 import type { PageDataFetcher } from './page-data.js';
@@ -65,6 +67,74 @@ export interface PageHandlerOptions {
    * Ignored under `litro dev`, with either dev middleware.
    */
   appScriptUrl?: AppScriptUrl;
+  /**
+   * Write the framework's own scripts inline (the default), or as
+   * `<script src>` files so the page can run under a strict
+   * `Content-Security-Policy` with `script-src 'self'` and no
+   * `'unsafe-inline'`.
+   *
+   * `false` needs `litroShellScriptsPlugin()` from `@beatzball/litro/vite` in
+   * `vite.config.ts`, which writes the files to `dist/client/assets/`. A
+   * production build without them keeps the scripts inline and logs an error
+   * once. Under `litro dev` the scripts always stay inline.
+   *
+   * Scripts in `routeMeta.head`, `seoHead` and `bodyScript` are the app's own
+   * and are written as given.
+   *
+   * @default true
+   */
+  inlineScripts?: boolean;
+}
+
+/** One message per process, not one per request. */
+const warned = new Set<string>();
+function warnOnce(key: string, log: (msg: string) => void, msg: string): void {
+  if (warned.has(key)) return;
+  warned.add(key);
+  log(msg);
+}
+
+/**
+ * Resolves `inlineScripts` for this request into the shell's options: the
+ * script files' URL, or nothing for inline. Exported for tests.
+ */
+export function shellScriptOptions(
+  inlineScripts: boolean | undefined,
+  env: { isDev: boolean; basePath: string; files?: ShellScriptFiles },
+): { inlineScripts?: false; scriptFilesUrl?: string } {
+  if (inlineScripts !== false) return {};
+  if (env.isDev) {
+    warnOnce(
+      'dev',
+      console.info,
+      '[litro] inlineScripts: false applies to production builds only. Under litro dev the ' +
+        "framework's scripts stay inline, so a strict script-src blocks them. Test the policy " +
+        'with litro build and litro preview.',
+    );
+    return {};
+  }
+  const files = env.files ?? shellScriptFiles();
+  if (files === 'partial') {
+    warnOnce(
+      'partial',
+      console.error,
+      "[litro] inlineScripts: false, but this build has only some of the shell script files, so the framework's " +
+        'scripts stay inline and a strict script-src blocks them. Rebuild the client (vite build) so ' +
+        'litroShellScriptsPlugin() writes every file to /_litro/assets/.',
+    );
+    return {};
+  }
+  if (files === 'none') {
+    warnOnce(
+      'missing',
+      console.error,
+      "[litro] inlineScripts: false, but this build has no shell script files, so the framework's " +
+        'scripts stay inline and a strict script-src blocks them. Add litroShellScriptsPlugin() ' +
+        'from @beatzball/litro/vite to the plugins in vite.config.ts, then rebuild.',
+    );
+    return {};
+  }
+  return { inlineScripts: false, scriptFilesUrl: `${env.basePath}/_litro/assets` };
 }
 
 /**
@@ -140,8 +210,12 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
       : `/__og${pagePath}.png`;
     setResponseHeader(event, 'x-nitro-prerender', ogRoute);
 
+    // Kept outside the try so the fallback shell can still ask whether the
+    // adapter needs the DSD polyfill. Undefined when resolving it threw.
+    let resolvedAdapter: FrameworkAdapter | undefined;
     try {
       const adapter = await getAdapter();
+      resolvedAdapter = adapter;
 
       // Resolve the page module. The preferred path is the pre-bundled module
       // from the #litro/page-manifest registry (pageModule option), which was
@@ -238,6 +312,7 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         skipLinks,
         includeDSDPolyfill: adapter.needsDSDPolyfill,
         bodyScript: dynamicBodyScript || undefined,
+        ...shellScriptOptions(options.inlineScripts, { isDev, basePath }),
       });
 
       // Delegate rendering to the framework adapter. The adapter returns an
@@ -303,6 +378,10 @@ export function createPageHandler(options: PageHandlerOptions): EventHandler {
         head: typeof routeMeta?.head === 'string' ? routeMeta.head : undefined,
         appScriptUrl,
         skipLinks,
+        // An Elena page has no declarative shadow roots, so it skips the
+        // polyfill here as it does on the SSR path. Unknown adapter: include it.
+        includeDSDPolyfill: resolvedAdapter?.needsDSDPolyfill,
+        ...shellScriptOptions(options.inlineScripts, { isDev, basePath }),
       });
 
       // Client-only fallback: emit the shell with a bare component tag.

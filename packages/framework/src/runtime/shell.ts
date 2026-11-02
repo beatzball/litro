@@ -11,7 +11,7 @@
  *
  * Script loading order in <head> is CRITICAL for hydration correctness:
  *
- *   1. DSD polyfill (inline, synchronous) — included only when the adapter
+ *   1. DSD polyfill (synchronous classic script, inline by default) — only when the adapter
  *      sets `needsDSDPolyfill: true` (Shadow DOM frameworks like Lit/FAST).
  *      Must run as the parser encounters <template shadowrootmode> elements.
  *      Omitted for light DOM adapters (Elena).
@@ -26,50 +26,12 @@
  * can transform the module on the fly (no pre-built bundle required).
  */
 
-/** Minified MutationObserver-based DSD polyfill.
- *
- * Targets the ~4% of browsers that do not yet support the native
- * Declarative Shadow DOM `shadowrootmode` attribute (pre-Firefox 119,
- * pre-Safari 16.4). The polyfill watches for newly added <template> elements
- * with a `shadowrootmode` attribute and promotes them to real shadow roots.
- *
- * Source (expanded for reference):
- *   if (!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')) {
- *     const observer = new MutationObserver(mutations => {
- *       for (const mutation of mutations) {
- *         for (const node of mutation.addedNodes) {
- *           if (node instanceof HTMLTemplateElement && node.getAttribute('shadowrootmode')) {
- *             const mode = node.getAttribute('shadowrootmode');
- *             const parent = node.parentNode;
- *             if (parent) {
- *               const shadow = parent.attachShadow({ mode });
- *               shadow.appendChild(node.content.cloneNode(true));
- *               node.remove();
- *             }
- *           }
- *         }
- *       }
- *     });
- *     observer.observe(document.documentElement, { childList: true, subtree: true });
- *   }
- */
-const DSD_POLYFILL =
-  `(function(){if(!HTMLTemplateElement.prototype.hasOwnProperty('shadowRootMode')){const t=new MutationObserver(e=>{for(const n of e)for(const o of n.addedNodes)if(o instanceof HTMLTemplateElement&&o.getAttribute('shadowrootmode')){const e=o.getAttribute('shadowrootmode'),t=o.parentNode;if(t){const n=t.attachShadow({mode:e});n.appendChild(o.content.cloneNode(!0));o.remove()}}});t.observe(document.documentElement,{childList:!0,subtree:!0})}})();`;
-
-/** Inline script that powers skip links across shadow DOM boundaries.
- *
- * Three responsibilities:
- * 1. Click handler — walks shadow roots to find the target element and focuses it.
- * 2. Visibility — hides skip links (via `hidden`) when their target doesn't exist
- *    on the current page. "Skip to navigation" is hidden on pages without a sidebar.
- * 3. SPA reactivity — a MutationObserver on `<litro-outlet>` re-checks visibility
- *    after each SPA page swap so skip links stay in sync during client navigation.
- *
- * Recipe/site layers can handle special skip link actions (e.g. opening a search
- * modal) by listening for click events on their own skip link anchors.
- */
-const SKIP_LINK_SCRIPT =
-  `(function(){function f(r,id){var s='#'+CSS.escape(id),d=r.querySelector(s);if(d)return d;var a=r.querySelectorAll('*');for(var i=0;i<a.length;i++){if(a[i].shadowRoot){var x=f(a[i].shadowRoot,id);if(x)return x}}return null}function u(){var ls=document.querySelectorAll('.skip-link[href^=\"#\"]');for(var i=0;i<ls.length;i++){var id=ls[i].getAttribute('href').slice(1);if(id==='_litro_main')continue;var t=document.getElementById(id)||f(document,id);if(t)ls[i].removeAttribute('hidden');else ls[i].setAttribute('hidden','')}}document.addEventListener('click',function(e){var l=e.target.closest('.skip-link');if(!l||l.hasAttribute('hidden'))return;var h=l.getAttribute('href');if(!h||h[0]!=='#')return;var id=h.slice(1);e.preventDefault();var t=document.getElementById(id)||f(document,id);if(t){if(!t.hasAttribute('tabindex'))t.setAttribute('tabindex','-1');t.focus({preventScroll:true});t.scrollIntoView()}});document.addEventListener('DOMContentLoaded',function(){requestAnimationFrame(u);var o=document.querySelector('litro-outlet');if(o)new MutationObserver(function(){requestAnimationFrame(u)}).observe(o,{childList:true})})})();`;
+import {
+  DSD_POLYFILL,
+  SKIP_LINK_SCRIPT,
+  DEV_CONTENT_RELOAD_SCRIPT,
+  scriptTag,
+} from './shell-scripts.js';
 
 /**
  * A single skip link rendered at the top of the document body, inside the
@@ -164,6 +126,28 @@ export interface ShellOptions {
    * framework escaping is applied.
    */
   bodyScript?: string;
+  /**
+   * Whether the framework's own scripts (the DSD polyfill, the skip-link
+   * script and the dev content reload) are written inline.
+   *
+   * `false` writes each as a `<script src>` that names a content-hashed file
+   * in `scriptFilesUrl`, so the page needs no `'unsafe-inline'` in its
+   * `script-src`. The DSD polyfill stays a synchronous classic script; the
+   * skip-link script gets `defer`. The files come from
+   * `litroShellScriptsPlugin()` in the client build.
+   *
+   * `head` and `bodyScript` are the app's own HTML and are written as given.
+   *
+   * @default true
+   */
+  inlineScripts?: boolean;
+  /**
+   * URL of the directory that serves the script files when `inlineScripts`
+   * is false, without a trailing slash.
+   *
+   * @default '/_litro/assets'
+   */
+  scriptFilesUrl?: string;
 }
 
 /**
@@ -203,8 +187,12 @@ export function buildShell(
     ? `\n  <script type="application/json" id="__litro_data__">${safeJson}</script>`
     : '';
   const appScriptUrl = options?.appScriptUrl ?? '/_litro/app.js';
+  // Every framework script goes through scriptTag(), which writes it inline
+  // or, with `inlineScripts: false`, as a `<script src>` (see shell-scripts.ts).
+  const filesUrl =
+    options?.inlineScripts === false ? (options.scriptFilesUrl ?? '/_litro/assets') : undefined;
   const devReloadScript = options?.contentDevPolling
-    ? `\n  <script>(function(){var v=null;setInterval(function(){fetch('/_litro/_litro-version.json?_t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(v===null){v=d.v}else if(v!==d.v){location.reload()}}).catch(function(){})},2500)})();</script>`
+    ? `\n  ${scriptTag(DEV_CONTENT_RELOAD_SCRIPT, { filesUrl })}`
     : '';
 
   // Skip links go inside a labeled navigation landmark.
@@ -243,26 +231,33 @@ export function buildShell(
   // pre-Safari 16.4) that do not natively support Declarative Shadow DOM (the
   // shadowrootmode attribute).
   //
-  // It must be a plain synchronous inline <script>. A type="module" script is
-  // deferred by the browser and arrives after the parser has already processed
-  // the DSD templates, which is too late to upgrade them.
+  // It must be a plain synchronous classic <script>: inline, or a
+  // `<script src>` with no `defer`, `async` or `type="module"`. A deferred or
+  // module script runs after the parser has already processed the DSD
+  // templates, which is too late to upgrade them.
   //
   // The rationale is a TypeScript comment, not an HTML comment in the emitted
   // string: every byte here ships on every page of every Litro app.
   const includeDSD = options?.includeDSDPolyfill !== false;
-  const dsdPolyfillBlock = includeDSD ? `\n  <script>${DSD_POLYFILL}</script>` : '';
+  const dsdPolyfillBlock = includeDSD ? `\n  ${scriptTag(DSD_POLYFILL, { filesUrl })}` : '';
 
+  // NO STYLE ATTRIBUTES. The outlet's `outline:none` lives in the shell's
+  // <style> as `#_litro_main{outline:none}`, not in a `style="..."` attribute.
+  // An attribute falls under CSP's `style-src-attr`, which no element hash can
+  // allow, so it would force `'unsafe-hashes'` or `'unsafe-inline'` on every
+  // app that wants a strict policy (issue 290). The <style> element has a
+  // fixed body, so one hash covers it.
   const head = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title}</title>${dsdPolyfillBlock}${extraHead}${serverDataScript}${devReloadScript}
-  <style>.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999}.skip-link:focus{position:fixed;top:0.5rem;left:50%;transform:translateX(-50%);width:auto;height:auto;padding:0.5rem 1.5rem;background:#fff;color:#23262f;border:2px solid currentColor;border-radius:0.375rem;font-size:0.875rem;font-weight:600;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15)}.skip-link[hidden]{display:none}</style>
-  <script>${SKIP_LINK_SCRIPT}</script>
+  <style>.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999}.skip-link:focus{position:fixed;top:0.5rem;left:50%;transform:translateX(-50%);width:auto;height:auto;padding:0.5rem 1.5rem;background:#fff;color:#23262f;border:2px solid currentColor;border-radius:0.375rem;font-size:0.875rem;font-weight:600;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15)}.skip-link[hidden]{display:none}#_litro_main{outline:none}</style>
+  ${scriptTag(SKIP_LINK_SCRIPT, { filesUrl, defer: true })}
 </head>
 <body${bodyAttrs}>${skipLinksHtml}
-<litro-outlet id="_litro_main" tabindex="-1" style="outline:none">
+<litro-outlet id="_litro_main" tabindex="-1">
 `;
 
   // Per-page synchronous body script. Emitted BEFORE the app-bundle script so

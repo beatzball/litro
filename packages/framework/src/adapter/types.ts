@@ -56,8 +56,17 @@ export interface FrameworkAdapter {
   /**
    * Raw HTML to inject into <head> for hydration and framework bootstrap.
    *
-   * Called once per HTML response by shell.ts. Lit emits the hydrate-support
-   * script; Elena emits nothing; FAST emits its command buffer bootstrap.
+   * Called once per HTML response by create-page-handler.ts, which passes the
+   * result to the shell as part of `head`. All three adapters return '' today:
+   * Lit's hydrate support is the first import in the client bundle, FAST's
+   * runtime is in the bundle too, and Elena needs nothing.
+   *
+   * Do not return an inline `<script>` here. An app served with
+   * `script-src 'self'` (`inlineScripts: false`, issue 290) blocks it, and no
+   * file form exists for it. A script the framework needs belongs in
+   * `SHELL_SCRIPTS` (runtime/shell-scripts.ts). The guard in
+   * runtime/__tests__/shell-scripts.test.ts renders every adapter's result and
+   * fails on any inline script, event handler or `javascript:` URL (BUILD-011).
    *
    * The app bundle `<script type="module">` is handled separately by shell.ts —
    * this method only returns framework-specific head content.

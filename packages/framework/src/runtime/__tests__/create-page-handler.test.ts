@@ -595,3 +595,50 @@ describe('createPageHandler — client entry URL', () => {
     delete g.__litro_app_version__;
   });
 });
+
+describe('shellScriptOptions (inlineScripts)', async () => {
+  const { shellScriptOptions } = await import('../create-page-handler.js');
+
+  it('is inline by default', () => {
+    expect(shellScriptOptions(undefined, { isDev: false, basePath: '', files: 'all' })).toEqual({});
+    expect(shellScriptOptions(true, { isDev: false, basePath: '', files: 'all' })).toEqual({});
+  });
+
+  it('serves files under the base path in production when the build has them', () => {
+    expect(shellScriptOptions(false, { isDev: false, basePath: '/b', files: 'all' })).toEqual({
+      inlineScripts: false,
+      scriptFilesUrl: '/b/_litro/assets',
+    });
+  });
+
+  it('stays inline in dev, and in a build without the files', () => {
+    expect(shellScriptOptions(false, { isDev: true, basePath: '', files: 'all' })).toEqual({});
+    expect(shellScriptOptions(false, { isDev: false, basePath: '', files: 'none' })).toEqual({});
+    expect(shellScriptOptions(false, { isDev: false, basePath: '', files: 'partial' })).toEqual({});
+  });
+});
+
+describe('fallback shell — DSD polyfill', () => {
+  it('follows the adapter, so an Elena-like adapter gets no polyfill on SSR failure', async () => {
+    mockRequestHeaders.current = {};
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(buildShell).mockClear();
+    const handler = createPageHandler({
+      route: makeRoute('page-fallback'),
+      adapter: {
+        name: 'elena',
+        renderPage: () => {
+          throw new Error('ssr blew up');
+        },
+        getHeadScripts: () => '',
+        needsDSDPolyfill: false,
+      } as unknown as import('../../adapter/types.js').FrameworkAdapter,
+    });
+
+    await callHandlerWithResult(handler);
+
+    const calls = vi.mocked(buildShell).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[calls.length - 1][2]?.includeDSDPolyfill).toBe(false);
+  });
+});
