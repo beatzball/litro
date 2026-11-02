@@ -1,0 +1,32 @@
+// Build settings shared by every app built from this project.
+//
+// The per-app half is written by native/scripts/select-app.sh into
+// ../Build/App.xcconfig. The include is deliberately NOT the optional
+// `#include?` form: a build with no app selected must fail here, naming the
+// missing file, rather than produce an app with an empty bundle identifier.
+#include "../Build/App.xcconfig"
+
+SDKROOT = iphoneos
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+TARGETED_DEVICE_FAMILY = 1
+SWIFT_VERSION = 6.0
+
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+
+INFOPLIST_FILE = $(SRCROOT)/Support/Info.plist
+// The keys this project sets in Info.plist by hand must not also be generated,
+// or the two disagree and the generated one wins.
+GENERATE_INFOPLIST_FILE = NO
+
+// The device build signs with whatever development team is configured locally.
+// No team identifier is committed: it is a per-machine value, and a wrong one
+// in the project file makes every checkout fail to sign.
+CODE_SIGN_STYLE = Automatic
+
+CLANG_ENABLE_OBJC_ARC = YES
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+SWIFT_STRICT_CONCURRENCY = complete
+
+// The project is new, so there is no legacy header search behavior to keep.
+ALWAYS_SEARCH_USER_PATHS = NO

@@ -1,0 +1,7 @@
+{
+  "name": "Litro Demo",
+  "bundleIdentifier": "dev.litro.shell.demo",
+  "startURL": "http://localhost:5173/",
+  "allowedOrigins": ["http://localhost:5173"],
+  "capabilities": ["haptics", "badging"]
+}

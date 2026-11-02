@@ -1,0 +1,11 @@
+# Written by scripts/select-app.sh. Which app is selected is a local choice,
+# never a committed one.
+Build/
+
+# Swift Package Manager's working directories.
+.build/
+.swiftpm/
+
+# Per-user Xcode state: window layout, breakpoints, the last scheme run.
+xcuserdata/
+*.xcuserstate

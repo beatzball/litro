@@ -84,6 +84,16 @@ jobs:
       - name: Verify export maps
         run: node scripts/check-exports.mjs
 
+      # The native bridge protocol is written once in TypeScript and mirrored
+      # in Swift, because the shell is an installed app and cannot import
+      # TypeScript. Two copies drift, and this drift is the expensive kind: a
+      # renamed method builds clean, passes both suites, and fails only on a
+      # device -- one that updates on the App Store's schedule, not ours.
+      - name: Verify bridge protocol parity (self-test)
+        run: node scripts/check-bridge-parity.mjs --self-test
+      - name: Verify bridge protocol parity
+        run: node scripts/check-bridge-parity.mjs
+
   # Builds every recipe the way a real user gets it: packed tarballs installed
   # into a fresh scaffold, NOT the workspace symlink every other job uses.
   #
@@ -210,6 +220,53 @@ jobs:
       # like the checker above, so it belongs in this install-free job.
       - name: Check e2e isolation
         run: node scripts/check-e2e-isolation.mjs
+
+  # The native shell's Swift half. A macOS runner, because nothing else has
+  # Xcode on it.
+  #
+  # The protocol and the app configuration are pure Foundation, so `swift test`
+  # covers them with no simulator. The app target is then built for the
+  # simulator, which is what proves the Xcode project and the selection script
+  # still produce something that compiles -- a test suite alone would not.
+  native:
+    name: Native shell
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Printed because this runner's Swift is usually OLDER than a current
+      # Mac's, and the older one is stricter about main-actor isolation. A
+      # failure here that does not reproduce locally is almost always that
+      # difference; see NATIVE-009 in .agents/rules/native-shell.md.
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # Every rule of the bridge protocol, and the origin policy, with no
+      # simulator and no signing.
+      - name: Test the bridge and the shell kit
+        run: swift test --package-path native
+
+      # A typo in an app name must stop the build rather than produce a shell
+      # with the wrong app inside it.
+      - name: Reject an unknown app
+        run: |
+          if native/scripts/select-app.sh no-such-app; then
+            echo "select-app accepted an app that does not exist" >&2
+            exit 1
+          fi
+
+      - name: Select the demo app
+        run: native/scripts/select-app.sh demo
+
+      - name: Build the app for the simulator
+        run: |
+          xcodebuild build \
+            -project native/LitroShell.xcodeproj \
+            -scheme LitroShell \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
 
   audit:
     name: Dependency Audit
