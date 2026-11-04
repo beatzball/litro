@@ -1,5 +1,13 @@
 # @beatzball/litro-agent
 
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [bade93f]
+- Updated dependencies [4056e98]
+  - @beatzball/litro@0.18.0
+
 ## 0.7.2
 
 ### Patch Changes
