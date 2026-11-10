@@ -452,6 +452,11 @@ The plist runs through the C preprocessor, so `//` inside it is a hazard. The
 `plutil -lint` on the built Release plist, not assumed. Check that again before
 adding any line with `//` in it.
 
+An apostrophe is the same hazard. "app's" in a comment there produced
+`warning: missing terminating ' character`, because the preprocessor reads a
+lone `'` as an unclosed character literal. Write comments in that file without
+apostrophes.
+
 **Check.** The CI step `Keep the local-networking keys out of a release build`
 asserts **both** directions: Debug carries both keys, Release carries neither.
 One without the other would still pass if the flag stopped working in a single

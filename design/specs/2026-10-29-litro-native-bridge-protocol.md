@@ -151,8 +151,8 @@ is the hardest thing to get subtly wrong.
 | `secureStorage.set` | `secureStorage` | `{ key, value }` | `null` |
 | `secureStorage.remove` | `secureStorage` | `{ key }` | `null` |
 | `canShare` | `share` | `SharePayload` | a boolean |
-| `share` | `share` | `SharePayload` | `null` |
-| `requestReview` | `review` | — | `null` |
+| `share` | `share` | `SharePayload` | `null` once the sheet closes, shared or not; no budget |
+| `requestReview` | `review` | — | `null` at once; says nothing about a prompt |
 
 `notifications.schedule` returning an empty string means nothing was scheduled. Callers
 that store the id treat an empty one as "no reminder set".
@@ -197,7 +197,8 @@ A dropped message must never leave a promise pending for the life of the page.
 |---|---|---|
 | handshake | 2s | `handshake` |
 | default | 10s | every call that does not wait on a person |
-| interactive | 120s | `badging.set`, `badging.clear`, `notifications.schedule`, `share`, `requestReview` |
+| interactive | 120s | `badging.set`, `badging.clear`, `notifications.schedule` |
+| none | — | `share` |
 
 The shell keeps no copy of these numbers. Where it needs one, the page sends it with the
 call, as `notifications.schedule` sends `budgetMs`: an installed app cannot be updated
@@ -206,8 +207,12 @@ when the page changes a budget or which methods it applies to.
 The handshake is shortest because startup queues behind it, and a shell that cannot answer
 that fast is treated as absent. The default is shorter than the MCP Apps bridge's 30
 seconds because every call here is a local device operation with no network work behind it.
-`share` and `requestReview` open something a person reads, so a long wait there is not a
-failure. `badging.set`, `badging.clear` and `notifications.schedule` ask for the
+`share` has no budget. It waits for a person to finish with the sheet, including a message
+written in a target such as Mail, so a long wait there is not a failure, and any budget
+would report one for a message that was sent. The shell answers every other way the sheet
+can end, so the one wait left open is a person still using it.
+`requestReview` is not interactive: the shell answers it at once, before any prompt, and
+never learns whether one appeared. `badging.set`, `badging.clear` and `notifications.schedule` ask for the
 notification permission the first time, and that prompt is read by a person too. With
 the default budget, the page failed the call while the shell went on to do the work: a
 notification scheduled with an id the page never learned, so it could never be canceled.

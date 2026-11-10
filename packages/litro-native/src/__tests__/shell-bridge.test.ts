@@ -467,6 +467,30 @@ describe('the transport', () => {
     expect(() => shell.deliver(success(shell.sent[0].id, null))).not.toThrow();
   });
 
+  it('never times out a share: a ten-minute compose is answered with what happened', async () => {
+    fakeTimers();
+    const { shell, t } = await transport({ answers: { share: () => SILENT } });
+    let settled = false;
+    const call = t.call('share', { text: 'x' }).then((v) => {
+      settled = true;
+      return v;
+    });
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(settled).toBe(false);
+    expect(t.pendingCount).toBe(1);
+
+    shell.deliver(success(shell.sent.find((m) => m.method === 'share')!.id, null));
+    expect(await call).toBeNull();
+    expect(t.pendingCount).toBe(0);
+  });
+
+  it('still rejects a pending share when the transport closes', async () => {
+    const { t } = await transport({ answers: { share: () => SILENT } });
+    const settled = t.call('share', { text: 'x' }).catch((e: NativeBridgeError) => e);
+    t.close();
+    expect(((await settled) as NativeBridgeError).code).toBe(ERROR_CODES.INTERNAL_ERROR);
+  });
+
   it('fails a call at once when its reply is malformed but names it', async () => {
     // The page-side twin of NATIVE-003: read the id before judging the reply,
     // so a bad reply fails its call now instead of at the timeout.
@@ -616,7 +640,7 @@ describe('notifications', () => {
     await untilSent(shell);
     await vi.advanceTimersByTimeAsync(1);
     await untilSent(shell, 2);
-    await vi.advanceTimersByTimeAsync(timeoutFor('notifications.schedule'));
+    await vi.advanceTimersByTimeAsync(timeoutFor('notifications.schedule') as number);
     const err = (await settled) as NativeBridgeError;
     expect(err.isTimeout).toBe(true);
     expect(err.data).toEqual({ id: (shell.sent[1].params as { id: string }).id });
@@ -801,6 +825,34 @@ describe('share', () => {
       { method: 'canShare', params: { url: 'https://example.com/' } },
       { method: 'share', params: { title: 'T', url: 'https://example.com/' } },
     ]);
+  });
+
+  it('native: resolves a relative url against the page before sending it', async () => {
+    const shell = installShell({
+      capabilities: ['share'],
+      answers: { canShare: (req) => success(req.id, true) },
+    });
+    vi.stubGlobal('location', { href: 'https://app.example/blog/post-1' });
+    const { canShare, share } = await load();
+    await canShare({ url: '../about' });
+    await share({ url: '/feed', text: 't' });
+    // An absolute url, and a payload with no url, are sent as they are.
+    await share({ url: 'https://other.example/x' });
+    await share({ text: 'only text' });
+    expect(shell.sent.slice(1).map(({ params }) => params)).toEqual([
+      { url: 'https://app.example/about' },
+      { url: 'https://app.example/feed', text: 't' },
+      { url: 'https://other.example/x' },
+      { text: 'only text' },
+    ]);
+  });
+
+  it('native: sends a url it cannot resolve unchanged, for the shell to refuse', async () => {
+    const shell = installShell({ capabilities: ['share'] });
+    const { share } = await load();
+    // No document and no location: nothing to resolve against.
+    await share({ url: '/feed' });
+    expect(shell.sent[1]?.params).toEqual({ url: '/feed' });
   });
 
   it('fallback: uses the web share sheet when the web view has one, and sends nothing', async () => {

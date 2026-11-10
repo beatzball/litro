@@ -24,6 +24,7 @@ import {
   HANDSHAKE_TIMEOUT_MS,
   INTERACTIVE_METHODS,
   INTERACTIVE_TIMEOUT_MS,
+  UNBUDGETED_METHODS,
   METHODS,
   MIN_SUPPORTED_SHELL_VERSION,
   capabilityFor,
@@ -168,15 +169,22 @@ describe('timeouts', () => {
     for (const m of INTERACTIVE_METHODS) expect(timeoutFor(m)).toBe(INTERACTIVE_TIMEOUT_MS);
   });
 
+  it('gives requestReview the default, because the shell answers it before any prompt', () => {
+    expect(timeoutFor('requestReview')).toBe(DEFAULT_TIMEOUT_MS);
+  });
+
   it('gives every other method the default', () => {
     for (const m of METHODS) {
-      if (m === 'handshake' || INTERACTIVE_METHODS.includes(m)) continue;
+      if (m === 'handshake' || INTERACTIVE_METHODS.includes(m) || UNBUDGETED_METHODS.includes(m)) continue;
       expect(timeoutFor(m)).toBe(DEFAULT_TIMEOUT_MS);
     }
   });
 
   it('never returns zero or a negative budget, which would fail every call at once', () => {
-    for (const m of METHODS) expect(timeoutFor(m)).toBeGreaterThan(0);
+    for (const m of METHODS) {
+      const budget = timeoutFor(m);
+      if (budget !== null) expect(budget).toBeGreaterThan(0);
+    }
   });
 
   it('gives every call that can raise a permission prompt the interactive budget', () => {
@@ -190,8 +198,16 @@ describe('timeouts', () => {
 
   it('names exactly the interactive methods, so one cannot join or leave unnoticed', () => {
     expect([...INTERACTIVE_METHODS].sort()).toEqual(
-      ['badging.clear', 'badging.set', 'notifications.schedule', 'requestReview', 'share'],
+      ['badging.clear', 'badging.set', 'notifications.schedule'],
     );
+  });
+
+  it('gives share no budget, because a compose in a target can take minutes', () => {
+    expect(timeoutFor('share')).toBeNull();
+    expect([...UNBUDGETED_METHODS]).toEqual(['share']);
+    for (const m of METHODS) {
+      if (m !== 'share') expect(timeoutFor(m)).not.toBeNull();
+    }
   });
 
   it('treats canShare as a plain call, not an interactive one', () => {

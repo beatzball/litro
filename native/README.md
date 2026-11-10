@@ -77,8 +77,13 @@ native/scripts/serve-test-page.sh     # http://localhost:5173
 
 It runs every unattended method on load and leaves the ones that need a person
 on buttons: the permission prompt that badging and notifications share, a
-notification firing, the share sheet, and a keychain value surviving a
-force-quit.
+notification firing, how a share sheet closes, the review prompt, and a
+keychain value surviving a force-quit. Whether a share sheet appears needs
+nobody, so the unattended run checks it last and leaves the sheet up.
+
+Each line the page prints is also requested from the serving script as
+`/__log?<line>`, so the terminal running `serve-test-page.sh` holds the whole
+report even while the share sheet covers the page.
 
 Two servers start, not one. The second, one port up, is the outside origin the
 allowlist check navigates to. That check needs a destination that is reachable
@@ -175,15 +180,13 @@ with an error. There is deliberately no error code meaning "not available here".
 The page is supposed to gate these calls and never send them. The shell holds
 the promise anyway, because the page may be an old deploy that cannot be fixed.
 
-## What is not here yet
+## The modules
 
-Four of the six modules are here: haptics, badging, notifications and secure
-storage. The page side, `packages/litro-native/src/adapters/shell.ts`, speaks
-the protocol to this shell. Share and review are still to come in Phase 5.
-Until then they are not compiled in, so the handshake omits them, and the page
-answers those calls itself without sending them.
+All six modules are here: haptics, badging, notifications, secure storage,
+share and review. The page side, `packages/litro-native/src/adapters/shell.ts`,
+speaks the protocol to this shell. Phase 6, a second app and CI, is next.
 
-Two things about the modules that are already here and easy to trip on:
+Things about the modules that are easy to trip on:
 
 - **The notification permission prompt is shown once.** Badging and
   notifications both need it, and whichever asks first decides for both. So
@@ -198,6 +201,18 @@ Two things about the modules that are already here and easy to trip on:
   nothing once `budgetMs` has passed on its own monotonic clock, and keeps no
   copy of the page's timeouts. iOS keeps at most 64 pending notifications per
   app and drops the rest without an error.
+- **`share` resolving does not mean anything was shared.** It means the sheet
+  closed. A cancel answers the same as a share; a failed target, or a sheet
+  that could not be shown, is an error. The page waits with no timeout,
+  because a message written in a target such as Mail can take minutes, and
+  the shell answers every other way the sheet can end.
+- **Never judge the share sheet from the line after `present`.** An animated
+  present is not on screen yet there, and the first version answered "could
+  not be shown" to every share that way. `ShareSheetRun` in `Sources/` decides
+  presentation, under `swift test`; `App/` only reports what UIKit says.
+- **`requestReview` is answered at once and says nothing.** The system decides
+  whether a prompt appears, never shows one in a TestFlight build, and does not
+  tell the app. A development build shows it every time, which proves nothing.
 - **A keychain value outlives the app.** iOS keeps keychain items when an app is
   deleted, so a reinstall can find a token from before. An app that must start
   signed out after a reinstall has to handle that itself.
