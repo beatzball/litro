@@ -4,6 +4,21 @@ import { normalizePathname } from '@beatzball/litro';
 import type { LitroRoute } from '@beatzball/litro';
 import { routes, pageModules } from '#litro/page-manifest';
 
+/**
+ * Escapes text for an HTML element or a quoted attribute. `&` goes first, so
+ * the entities the other four write are not escaped a second time. The 404
+ * page below writes the request path with it (issue 295): the path comes
+ * from the client, and only escaping keeps it text.
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function matchRoute(
   pathname: string,
 ): { route: LitroRoute; params: Record<string, string> } | undefined {
@@ -59,7 +74,7 @@ export default defineEventHandler(async (event) => {
     setResponseHeader(event, 'content-type', 'text/html; charset=utf-8');
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" /><title>404</title></head>
-<body><h1>404 — Not Found</h1><p>No page matched <code>${pathname}</code>.</p></body>
+<body><h1>404 — Not Found</h1><p>No page matched <code>${escapeHtml(pathname)}</code>.</p></body>
 </html>`;
   }
 
