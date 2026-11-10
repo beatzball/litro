@@ -145,7 +145,7 @@ Changes to `nitro.config.ts` or `vite.config.ts` require a full restart of `litr
 
 ### Dev Error Overlay
 
-SSR errors are caught by `create-page-handler.ts` and logged to the server console. The client receives a client-only HTML shell instead of a 500, so the page remains interactive. Route-not-found requests return a 404 page listing all registered routes.
+SSR errors are caught by `create-page-handler.ts` and logged to the server console. The client receives a client-only HTML shell instead of a 500, so the page remains interactive. Route-not-found requests get a 404 status and a small page from the catch-all handler (`server/routes/[...].ts`) that shows the requested path. The path comes from the client, so the handler writes it through its own `escapeHtml()` (`&`, `<`, `>`, `"` and `'`); `scripts/check-catch-all-escape.mjs` fails CI if any catch-all handler writes a value into that page unescaped.
 
 ---
 
