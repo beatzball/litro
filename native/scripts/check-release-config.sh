@@ -11,9 +11,15 @@
 #
 # Every URL in the configuration is checked, not only the start URL. A leftover
 # allowedOrigins entry is the one that matters for safety rather than for a
-# rejection: Info.plist keeps NSAllowsLocalNetworking in Release, so plain http
-# to a LAN address is still permitted in the shipped app, and whatever host
-# holds that address on the user's current network would be served the bridge.
+# rejection: an allowed origin is served the bridge. Plain http to it is refused
+# at run time in a Release build, because NSAllowsLocalNetworking is Debug only
+# (NATIVE-017), but an https LAN or .local name would still load, and whatever
+# host holds that name on the user's current network would be served the bridge.
+#
+# The app icon is checked too, as far as this phase can see: whether the icon
+# set is there. App Store Connect refuses an upload with no 1024-point icon. The
+# pixels -- present, 1024 by 1024, no alpha channel -- are checked by
+# select-app.sh, which runs outside the sandbox (NATIVE-019).
 #
 # This runs as the first build phase of the app target. A Debug build is left
 # alone, because a Debug build is where a loopback address belongs.
@@ -122,6 +128,21 @@ host_problem() {
     *)
       echo "" ;;
   esac
+}
+
+# Why a build cannot ship for want of an icon, or empty when it has one.
+#
+# <resources> is Build/Resources, <name> the ASSETCATALOG_COMPILER_APPICON_NAME
+# the build sees. Existence only, by stat: the phase runs sandboxed and may not
+# read a file it has not declared, and declaring the icon set would fail the
+# demo, which has none, with "build input file cannot be found".
+icon_problem() {
+  local resources="$1" name="$2"
+  if [ -z "$name" ]; then
+    echo "the app has no icon: its folder has no Assets.xcassets/AppIcon.appiconset"
+  elif [ ! -f "$resources/Assets.xcassets/$name.appiconset/Contents.json" ]; then
+    echo "the icon set $name.appiconset is not in Build/Resources/Assets.xcassets"
+  fi
 }
 
 # Why a URL cannot ship, or empty when it can.
@@ -263,6 +284,28 @@ self_test() {
   count_check origin "two"     '{"allowedOrigins":["https://a.test","https://b.test"]}' 2
   count_check origin "missing" '{}'                                         0
 
+  # The icon, against real folders.
+  icon_check() {
+    local label="$1" name="$2" make="$3" expected="$4" got
+    rm -rf "$dir/res"
+    mkdir -p "$dir/res"
+    if [ "$make" = "yes" ]; then
+      mkdir -p "$dir/res/Assets.xcassets/AppIcon.appiconset"
+      printf '{}' > "$dir/res/Assets.xcassets/AppIcon.appiconset/Contents.json"
+    fi
+    if [ -n "$(icon_problem "$dir/res" "$name")" ]; then got="reject"; else got="accept"; fi
+    if [ "$got" != "$expected" ]; then
+      echo "  FAIL icon $label -> $got, wanted $expected" >&2
+      failures=$((failures + 1))
+    else
+      echo "  ok   icon $label -> $got"
+    fi
+  }
+  icon_check "set and present"       AppIcon yes accept
+  icon_check "no icon setting"       ""      yes reject
+  icon_check "setting, no icon set"  AppIcon no  reject
+  icon_check "another name"          Other   yes reject
+
   if [ "$failures" -ne 0 ]; then
     echo "check-release-config: self-test FAILED, $failures of them" >&2
     exit 1
@@ -318,6 +361,13 @@ while [ "$index" -lt "$origins" ]; do
   fi
   index=$((index + 1))
 done
+
+problem="$(icon_problem "$(dirname "$config")" "${ASSETCATALOG_COMPILER_APPICON_NAME:-}")"
+if [ -n "$problem" ]; then
+  echo "error: this $configuration build cannot be uploaded: $problem." >&2
+  echo "note: App Store Connect refuses an app with no 1024-point icon. See native/README.md, Adding an app." >&2
+  status=1
+fi
 
 capabilities="$(capability_count "$config")"
 if [ "$capabilities" -eq 0 ]; then

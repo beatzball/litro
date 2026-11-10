@@ -20,6 +20,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- The shell uses only the system HTTPS stack, which is exempt from export
+	     reporting. Without this key App Store Connect asks the encryption
+	     question on every upload. Write comments here without apostrophes:
+	     this file runs through the C preprocessor (NATIVE-017). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchScreen</key>

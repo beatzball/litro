@@ -687,6 +687,76 @@ answered before anyone could close it`.
 - CI's older Swift, which is stricter about main-actor isolation (NATIVE-009);
   the native CI job is the evidence.
 
+## Phase 6, as built
+
+Phase 6 is the first real app, qdoku, in two pull requests: the shell learns
+what a store app needs, then qdoku calls the bridge and CI builds both apps.
+This section grows with each.
+
+### A real app folder
+
+**qdoku.** `native/Apps/qdoku/`: bundle identifier `com.qdoku.app`, start URL
+`https://qdoku.com/`, one allowed origin, `https://qdoku.com`. The origin was
+confirmed against the qdoku repository (`docs/DEPLOY.md`: production is
+https://qdoku.com, deployed by Coolify) and live: `/api/health` answered
+`{"status":"ok"}`.
+
+**Capabilities: haptics, share, review.** Each is one qdoku will call, in its
+own pull request: haptics where qdoku already calls the Vibration API on a mark
+and on a wrong placement, which iOS Safari ignores; share from the
+level-complete screen; review after a milestone. Notifications, badging and
+secure storage are off: qdoku has no reminder, count or secret to keep, and a
+capability turned on that the page never calls shows a reviewer nothing.
+
+**Version and build number are per app, in `app.json`.** Both were shared in
+`Support/Shell.xcconfig`. In `app.json` rather than only on a command line, so
+the number that shipped is in the history; a command-line setting still
+overrides either for one build, because it outranks an xcconfig.
+`select-app.sh` refuses a selection without them, or with a value that is not
+one to three whole numbers.
+
+**The icon is compiled from `Build/Resources/`.** The app folder carries
+`Assets.xcassets/AppIcon.appiconset` with one 1024x1024 image, rendered from
+the same vector art qdoku uses for its web icons, square and with no alpha
+channel. `select-app.sh` copies the catalog with `app.json` and sets
+`ASSETCATALOG_COMPILER_APPICON_NAME`. Measured, not assumed: the built app
+carries `Assets.car`, and its Info.plist names `CFBundleIconName = AppIcon`. On
+the simulator the home screen shows the crown. NATIVE-019 records the trap.
+
+**Only `app.json` and `Assets.xcassets` are shipped.** `select-app.sh` copied the
+whole folder; it now copies an allowlist and names what it left out.
+
+**An icon is checked down to its pixels, at selection.** The first version
+checked only that the icon set's `Contents.json` existed, in both
+`select-app.sh` and the release guard. A review built a device Release with the
+named image missing, which shipped no icon at all, and one with an alpha
+channel, which App Store Connect refuses; both succeeded. `select-app.sh` now
+requires exactly one image, named, present, 1024 by 1024 and with no alpha
+channel, and refuses the selection otherwise. The release guard, sandboxed,
+still checks only that the set exists. A Release build of qdoku passes for a
+device; the demo still fails on its start URL, its allowed origin and its
+missing icon.
+
+**Values are read by type.** `plutil -extract raw` turns an array into its
+length and a real into `1.500000`, so `"build": [99]` selected build 1. Every
+value is now type-checked first: `version` must be text, `build` text or a
+whole number. `select-app.sh` also refuses a bundle identifier App Store
+Connect would refuse, an empty `name`, and a `startURL` whose origin is not in
+`allowedOrigins`. It does not check capability names, because a third copy of
+that list would drift (NATIVE-008).
+
+**Left alone on purpose:** a stale selection. Editing `app.json` without running
+`select-app.sh` builds the previous values. TestFlight refuses a duplicate
+build number loudly, and closing it would put per-app logic in the project
+file.
+
+**`ITSAppUsesNonExemptEncryption` is false** in `Support/Info.plist`, shared by
+every app: the shell uses only the system HTTPS stack.
+
+**Seen while checking, and not the shell's:** qdoku's how-to-play dialog runs
+off the right edge on an iPhone 17 Pro screen. Mobile Safari on the same
+simulator shows the same, so it is qdoku's layout, not the web view's.
+
 ## Risks
 
 - **All iOS upkeep is ours.** There is no upstream to absorb a yearly OS release, a new

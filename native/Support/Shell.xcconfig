@@ -16,8 +16,10 @@ IPHONEOS_DEPLOYMENT_TARGET = 17.0
 TARGETED_DEVICE_FAMILY = 1
 SWIFT_VERSION = 6.0
 
-MARKETING_VERSION = 0.1.0
-CURRENT_PROJECT_VERSION = 1
+// MARKETING_VERSION and CURRENT_PROJECT_VERSION are per app: select-app.sh
+// writes them from the app's app.json into Build/App.xcconfig. Two apps do not
+// share a version, and TestFlight refuses a second upload with a build number
+// it has already seen.
 
 INFOPLIST_FILE = $(SRCROOT)/Support/Info.plist
 // The keys this project sets in Info.plist by hand must not also be generated,

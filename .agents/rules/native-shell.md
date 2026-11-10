@@ -482,3 +482,42 @@ faults send the reader to different lines. The check is in `load`, not in the
 decoder, so tests can still build a configuration with an empty list.
 
 **Check.** `swift test --package-path native --filter AppConfigurationValidationTests`.
+
+## NATIVE-019 — an icon is checked at selection; the guard may only stat it
+
+**Trap.** There was no asset catalog anywhere, so the first real app would have
+reached App Store Connect with no icon and been refused at upload, after every
+build and check had passed.
+
+The first fix was not enough, and the way it fell short is the trap. The
+release guard and `select-app.sh` both decided "has an icon" from the presence
+of `AppIcon.appiconset/Contents.json`. A review built two shapes for a device
+in Release and both succeeded: a `Contents.json` naming an image that is not
+there (one warning, then no `Assets.car` and no `CFBundleIconName` -- and, in
+derived data shared with another app, that app's compiled icon in this one's
+bundle), and a 1024 image with an alpha channel, which App Store Connect
+refuses. The self-test's own icon fixture was `{}`, which is exactly the shape
+that passed everything.
+
+**Rule.** The pixels are checked in `select-app.sh`, which runs outside the build
+sandbox: exactly one image, named in `Contents.json`, present, 1024 by 1024,
+`hasAlpha: no`, each read with `plutil` and `sips`. A failure refuses the
+selection, so the message arrives before any archive. Each rejecting shape has
+a self-test fixture that is a real PNG, and the fixture checks the reason as
+well as the refusal, because two checks can refuse the same file.
+
+The release guard keeps only an existence check (`[ -f ]`, a stat, which the
+sandbox allows), so a Release build of an app with no icon set is still
+refused. It cannot read the image: an undeclared read is denied by
+`ENABLE_USER_SCRIPT_SANDBOXING`, and declaring the set as an input fails the
+demo, which has none, with "build input file cannot be found".
+
+The catalog lives in the app's folder. `select-app.sh` copies it into
+`Build/Resources/`, the synchronized group the app target already compiles, and
+writes `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`. Xcode runs `actool` on it
+from there; that was measured: the built app holds `Assets.car` and its
+Info.plist names `CFBundleIconName = AppIcon`.
+
+**Check.** `native/scripts/select-app.sh --self-test` and
+`native/scripts/check-release-config.sh --self-test`, and the CI step that
+builds qdoku for Release and asserts `CFBundleIconName` and `Assets.car`.

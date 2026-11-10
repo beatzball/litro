@@ -20,7 +20,8 @@ native/
   App/                       UIKit and WebKit: the scene, the host, the transport,
                              the modules
   Apps/
-    demo/app.json            one app, as plain data
+    demo/app.json            the development app, as plain data
+    qdoku/                   a store app: app.json and its icon
   Support/
     Shell.xcconfig           build settings shared by every app
     Info.plist               reads the per-app values as build settings
@@ -106,26 +107,83 @@ the address it could not reach, which is the fastest way to notice.
 
 ## Adding an app
 
-Make a folder under `Apps/` with an `app.json`:
+Make a folder under `Apps/` with an `app.json`, and an icon if it will ship.
+`Apps/qdoku/` is the real example:
+
+```
+Apps/qdoku/
+  app.json
+  Assets.xcassets/
+    Contents.json
+    AppIcon.appiconset/
+      Contents.json      one 1024x1024 universal image
+      icon-1024.png      square, opaque, no alpha channel
+```
 
 ```json
 {
-  "name": "Litro Demo",
-  "bundleIdentifier": "dev.litro.shell.demo",
-  "startURL": "https://app.example.com/",
-  "allowedOrigins": ["https://app.example.com"],
-  "capabilities": ["haptics", "badging"]
+  "name": "Qdoku",
+  "bundleIdentifier": "com.qdoku.app",
+  "startURL": "https://qdoku.com/",
+  "allowedOrigins": ["https://qdoku.com"],
+  "version": "1.0.0",
+  "build": "1",
+  "capabilities": ["haptics", "share", "review"]
 }
 ```
 
 `capabilities` is the whole mechanism. A module left out is never constructed,
 so it is absent from the handshake, and the page degrades that one capability on
 its own. Two apps can therefore want opposite things and share every line of
-this code.
+this code. Turn on only what the page calls: a capability the page never uses
+does nothing a reviewer can see.
 
 `allowedOrigins` is compared as whole origins — scheme, host and port — not as
 string prefixes. A prefix match would let `https://app.example.com.attacker.test`
 through an allowlist naming `https://app.example.com`.
+
+`version` and `build` are per app and required. They become
+`CFBundleShortVersionString` and `CFBundleVersion`: one to three whole numbers
+each. TestFlight refuses an upload whose build number it has seen, so raise
+`build` for every upload and commit it, which keeps the number that shipped in
+the history. One build can override either from the command line, because a
+command-line setting outranks the xcconfig:
+
+```sh
+xcodebuild archive ... MARKETING_VERSION=1.0.1 CURRENT_PROJECT_VERSION=8
+```
+
+The two values also ride inside the `app.json` that ships in the bundle, and
+after an override they disagree with `Info.plist`. Nothing reads them there --
+the shell's configuration has no field for either -- so `Info.plist` is the
+one to trust.
+
+`version` must be text and `build` text or a whole number. Any other JSON type
+is refused, because `plutil` would otherwise convert it silently: `[99]` became
+build 1.
+
+The icon is the asset catalog's `AppIcon` set. `select-app.sh` checks it down
+to the pixels -- exactly one image, named in `Contents.json`, present, 1024 by
+1024, with no alpha channel -- and refuses the selection otherwise. Each of
+those shapes once built and shipped with no usable icon. It then copies the
+catalog into `Build/Resources/` and sets `ASSETCATALOG_COMPILER_APPICON_NAME`,
+and Xcode compiles it from there: the built app carries `Assets.car` and
+`CFBundleIconName = AppIcon`.
+
+An app folder with no icon set still selects and builds for Debug. A Release
+build of it is refused by the release guard, which can only see whether the set
+is there; the pixels were checked at selection.
+
+`select-app.sh` also refuses a bundle identifier App Store Connect would refuse,
+an empty `name`, and a `startURL` whose origin is not in `allowedOrigins`.
+Capability names are not checked there: that would be a third copy of the
+protocol's list (NATIVE-008). A typo in one fails at launch, on the startup
+failure screen.
+
+Only `app.json` and `Assets.xcassets` reach the bundle. Anything else in the
+folder -- a README, a source image -- is listed as `not shipped` and left out.
+
+`select-app.sh --self-test` checks these rules against throwaway folders.
 
 ## Shipping an app to the App Store
 
@@ -166,6 +224,9 @@ Recorded so it is not investigated twice:
 - The bridge is compiled into the binary. The shell downloads no code.
 - One app, one binary. The rules for containers that host many third-party
   mini apps do not apply.
+- The export-compliance question is answered in `Support/Info.plist`:
+  `ITSAppUsesNonExemptEncryption` is false, because the shell uses only the
+  system HTTPS stack. Without it App Store Connect asks on every upload.
 - There is no third-party SDK, and no required-reason API: the shell uses no
   `UserDefaults`, no `FileManager`, no uptime or disk-space calls. So there is
   no privacy manifest obligation to satisfy.

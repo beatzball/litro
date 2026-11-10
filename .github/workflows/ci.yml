@@ -316,6 +316,10 @@ jobs:
       - name: Check the release guard's rules
         run: native/scripts/check-release-config.sh --self-test
 
+      # What an app folder must hold, and what is left out of the bundle.
+      - name: Check the app selection rules
+        run: native/scripts/select-app.sh --self-test
+
       - name: Build the app for the simulator
         run: |
           xcodebuild build \
@@ -350,10 +354,11 @@ jobs:
           done
           echo "Debug carries both keys, as it must"
 
-          # A Release build needs a shippable app.json, because the release
-          # guard refuses the demo app on purpose. Build/ is not committed, so
-          # editing it here affects nothing else.
-          python3 -c 'import json,pathlib; p=pathlib.Path("native/Build/Resources/app.json"); c=json.loads(p.read_text()); c["startURL"]="https://app.example.com/"; c["allowedOrigins"]=["https://app.example.com"]; p.write_text(json.dumps(c,indent=2)+chr(10))'
+          # A Release build needs a shippable app, because the release guard
+          # refuses the demo on purpose. qdoku is one: an https origin and an
+          # icon. Its Release build passing is also the proof that a real app
+          # gets through the guard, rather than a patched demo.
+          native/scripts/select-app.sh qdoku
 
           xcodebuild build \
             -project native/LitroShell.xcodeproj \
@@ -364,7 +369,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO > release-plist.log 2>&1 \
             || { echo "the Release build failed"; tail -40 release-plist.log; exit 1; }
 
-          release_plist=release-dd/Build/Products/Release-iphonesimulator/demo.app/Info.plist
+          release_plist=release-dd/Build/Products/Release-iphonesimulator/qdoku.app/Info.plist
           plutil -lint "$release_plist"
           for key in NSAppTransportSecurity NSLocalNetworkUsageDescription; do
             if plutil -extract "$key" raw -o - "$release_plist" >/dev/null 2>&1; then
@@ -373,6 +378,16 @@ jobs:
             fi
           done
           echo "Release carries neither key, as it must"
+
+          # The icon was compiled from the catalog select-app copied into
+          # Build/Resources, and the export-compliance answer is there.
+          icon=$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw -o - "$release_plist")
+          [ "$icon" = "AppIcon" ] || { echo "the Release build has no app icon (got '$icon')" >&2; exit 1; }
+          [ -f release-dd/Build/Products/Release-iphonesimulator/qdoku.app/Assets.car ] \
+            || { echo "no compiled asset catalog in the Release build" >&2; exit 1; }
+          encryption=$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$release_plist")
+          [ "$encryption" = "false" ] || { echo "ITSAppUsesNonExemptEncryption is '$encryption'" >&2; exit 1; }
+          echo "Release has its icon and its encryption answer"
 
           # Put the development configuration back for the step after this one.
           native/scripts/select-app.sh demo
@@ -399,6 +414,11 @@ jobs:
           fi
           if ! grep -q "allowedOrigins has" release-attempt.log; then
             echo "the guard refused the start URL but never read allowedOrigins" >&2
+            tail -40 release-attempt.log >&2
+            exit 1
+          fi
+          if ! grep -q "the app has no icon" release-attempt.log; then
+            echo "the guard did not refuse an app with no icon" >&2
             tail -40 release-attempt.log >&2
             exit 1
           fi
