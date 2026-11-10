@@ -226,7 +226,8 @@ left out is a permission not requested and a review question not raised.
 
 Each app is one folder holding a configuration file and an asset catalog. A script copies
 the chosen app's folder into the Xcode project's resources before the build. CI builds
-every app from one matrix over that script.
+every app through that script, one after the other. It is not a matrix; Phase 6, as
+built, says why.
 
 The per-app configuration names the app, its bundle identifier, its start URL, the
 origins the web view may load, and which capability modules are on. Two apps therefore
@@ -279,8 +280,8 @@ native work starts.
    A local build that loads one app and answers a bridge call.
 5. **Remaining modules and the shell adapter.** The other four modules, and
    `adapters/shell.ts` wired to the real protocol with the per-capability degradation.
-6. **Second app and CI.** A second configuration folder, the selection script, and the
-   build matrix. The second app is the test that the shape generalizes.
+6. **Second app and CI.** A second configuration folder, the selection script, and CI
+   that builds both. The second app is the test that the shape generalizes.
 7. **Store submission.** One app first, end to end, before the second is submitted.
 
 ## Phase 4, as built
@@ -689,9 +690,9 @@ answered before anyone could close it`.
 
 ## Phase 6, as built
 
-Phase 6 is the first real app, qdoku, in two pull requests: the shell learns
-what a store app needs, then qdoku calls the bridge and CI builds both apps.
-This section grows with each.
+Phase 6 is the first real app, qdoku: the shell learns what a store app needs,
+qdoku calls the bridge in its own repository, and CI checks the identity a
+Release build carries. This section grows with each.
 
 ### A real app folder
 
@@ -752,6 +753,35 @@ file.
 
 **`ITSAppUsesNonExemptEncryption` is false** in `Support/Info.plist`, shared by
 every app: the shell uses only the system HTTPS stack.
+
+### qdoku calls the bridge
+
+In the qdoku repository, not this one, because the shell loads the live site:
+the capabilities reach the app when that change is deployed, not when the app
+is built. qdoku uses two. Haptics: a light impact for a mark or a correct
+crown, an error notification for a lost life, a success notification for the
+crown that solves the board. Share: "Share this win" on the level-complete
+screen, shown only when `canShare` answers yes, asked in the browser after the
+first render. `review` stays declared and unused; when to ask for a review is
+its own design question.
+
+### CI: no matrix
+
+The plan said to build every app from one matrix. Measured against the job as
+it is, a matrix adds almost nothing and costs a second checkout:
+`select-app.sh` begins with `rm -rf native/Build`, so two apps cannot build in
+parallel from one tree. Both apps are already built: the demo for Debug, qdoku
+for Release, and the demo again for a Release the guard must refuse. The two
+self-tests are fixture driven and do not depend on the app selected. qdoku has
+no Debug build, but nothing in a Debug build is per app except the values a
+Release build also compiles.
+
+What was really missing is that nothing read the identity out of the product.
+A Release build of qdoku with the wrong bundle identifier and no version or
+build number at all succeeds, and passed every check the job had. The job now
+compares `CFBundleIdentifier`, `CFBundleShortVersionString` and
+`CFBundleVersion` in the built Info.plist with `app.json`, and the bundled
+`app.json` with the source one.
 
 **Seen while checking, and not the shell's:** qdoku's how-to-play dialog runs
 off the right edge on an iPhone 17 Pro screen. Mobile Safari on the same
