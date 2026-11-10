@@ -23,9 +23,8 @@ Zero dependencies. Safe to import in a page that renders on the server.
 The web path is complete. The page side of the native shell is here too: inside
 the Litro iOS shell, each call goes to the shell for every capability that
 shell's build compiled in, and takes its web behavior for the rest. The shell
-itself, in `native/` in this repository, implements four of the six modules so
-far, haptics, badging, notifications and secure storage; share and review take
-their web behavior until they land.
+itself, in `native/` in this repository, implements all six modules: haptics,
+badging, notifications, secure storage, share and review.
 
 **Not published yet.** This package is in the repository and not on the
 registry. The release pipeline authenticates per package, and that cannot be set
@@ -149,9 +148,10 @@ try {
 
 `isTimeout` is true when the shell did not answer in time. Every call has a
 budget, so no promise is ever left pending: ten seconds for most calls, two
-minutes for the calls that can wait on a person -- the share sheet, the review
-prompt, and the badging and notification calls, which can show the
-notification permission prompt.
+minutes for the calls that can wait on a person -- the share sheet, and the
+badging and notification calls, which can show the notification permission
+prompt. `requestReview` is a ten-second call: the shell answers it at once, and
+never learns whether a prompt appeared.
 
 A timed-out `notifications.schedule` may still have scheduled the reminder,
 right at the end of the wait. Its error carries the id in `err.data.id`. Cancel

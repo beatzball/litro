@@ -30,7 +30,9 @@ enum ShellRoot {
                 badging: enabled.contains(.badging) ? BadgingModule(scope: scope) : nil,
                 notifications: enabled.contains(.notifications) ? NotificationsModule(scope: scope) : nil,
                 secureStorage: enabled.contains(.secureStorage)
-                    ? SecureStorageModule(bundleIdentifier: configuration.bundleIdentifier) : nil
+                    ? SecureStorageModule(bundleIdentifier: configuration.bundleIdentifier) : nil,
+                share: enabled.contains(.share) ? ShareModule() : nil,
+                review: enabled.contains(.review) ? ReviewModule() : nil
             )
             return ShellViewController(configuration: configuration, dispatcher: dispatcher)
         } catch {

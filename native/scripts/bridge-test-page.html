@@ -89,7 +89,23 @@ const buttons = [
   ['bad style', () => show('bad style', 'haptics.impact', { style: 'rumble' })],
   ['bad count', () => show('bad count', 'badging.set', { count: -1 })],
   ['unknown method', () => show('unknown method', 'haptics.rumble')],
-  ['share (absent)', () => show('share', 'share', { text: 'hello' }, 120000)],
+  // Share and review need a person and a real device. Every way the sheet
+  // closes answers differently: pick a target and finish, or close it, and
+  // both should say `result null`; a target that fails says `error -32603`.
+  // On an iPad the sheet must open centered rather than stop the app.
+  ['share text', () => show('share', 'share', { title: 'Litro', text: 'Shared from the bridge test page' }, 120000)],
+  ['share link', () => show('share', 'share',
+    { title: 'Litro', url: location.origin + '/' }, 120000)],
+  // The second call arrives while the first sheet is open and must be refused
+  // at once with error -32603, not wait out its budget.
+  ['share twice', () => {
+    show('share (first)', 'share', { text: 'first' }, 120000);
+    show('share (second)', 'share', { text: 'second' }, 10000);
+  }],
+  // Always `result null`, at once. In a development build the prompt appears
+  // (and does nothing); in a TestFlight build it never does. Neither changes
+  // the answer, because the system does not tell the app.
+  ['request review', () => show('requestReview', 'requestReview', undefined, 10000)],
   // Notifications. The first tap on a fresh install shows the permission
   // prompt, so these use the interactive budget the page itself uses, and
   // send it as budgetMs as the page adapter does. Half a second checks that a
@@ -137,9 +153,9 @@ for (const [label, run] of buttons) {
 }
 
 // The checks that need nobody run by themselves, in order, so a screenshot
-// taken after launch is a whole report rather than one line. The two that put
-// something in front of a person -- the badge permission prompt and the share
-// sheet -- stay on their buttons.
+// taken after launch is a whole report rather than one line. The ones that put
+// something in front of a person -- the badge permission prompt, the share
+// sheet and the review prompt -- stay on their buttons.
 // Proves the shell's origin allowlist is actually wired to the web view.
 //
 // Worth its own check because the failure is silent: a navigation delegate
@@ -188,7 +204,13 @@ async function runUnattended() {
   await show('bad style', 'haptics.impact', { style: 'rumble' });
   await show('bad count', 'badging.set', { count: -1 });
   await show('unknown method', 'haptics.rumble');
-  await show('share, module absent', 'share', { text: 'hello' }, 10000);
+  // canShare opens nothing, so it runs here. With the share module compiled
+  // in: a link says true, a payload `share` would refuse says false.
+  await show('canShare link', 'canShare', { url: location.origin + '/' });
+  await show('canShare empty', 'canShare', {});
+  await show('canShare javascript: url', 'canShare', { url: 'javascript:void 0' });
+  // Refused before any sheet opens, so it needs nobody: error -32602.
+  await show('share bad url', 'share', { url: '/relative' });
   await checkOriginPolicy();
   say('unattended checks done');
 }

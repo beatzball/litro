@@ -803,6 +803,34 @@ describe('share', () => {
     ]);
   });
 
+  it('native: resolves a relative url against the page before sending it', async () => {
+    const shell = installShell({
+      capabilities: ['share'],
+      answers: { canShare: (req) => success(req.id, true) },
+    });
+    vi.stubGlobal('location', { href: 'https://app.example/blog/post-1' });
+    const { canShare, share } = await load();
+    await canShare({ url: '../about' });
+    await share({ url: '/feed', text: 't' });
+    // An absolute url, and a payload with no url, are sent as they are.
+    await share({ url: 'https://other.example/x' });
+    await share({ text: 'only text' });
+    expect(shell.sent.slice(1).map(({ params }) => params)).toEqual([
+      { url: 'https://app.example/about' },
+      { url: 'https://app.example/feed', text: 't' },
+      { url: 'https://other.example/x' },
+      { text: 'only text' },
+    ]);
+  });
+
+  it('native: sends a url it cannot resolve unchanged, for the shell to refuse', async () => {
+    const shell = installShell({ capabilities: ['share'] });
+    const { share } = await load();
+    // No document and no location: nothing to resolve against.
+    await share({ url: '/feed' });
+    expect(shell.sent[1]?.params).toEqual({ url: '/feed' });
+  });
+
   it('fallback: uses the web share sheet when the web view has one, and sends nothing', async () => {
     const webShare = vi.fn(async () => {});
     const shell = installShell({ capabilities: [] }, { share: webShare });

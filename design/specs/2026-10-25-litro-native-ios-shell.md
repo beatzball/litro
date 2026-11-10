@@ -357,9 +357,8 @@ checks, and neither is covered by anything above.
 
 ## Phase 5, as built
 
-Phase 5 lands in three pull requests: the page-side shell adapter first, then
-notifications with secure storage, then share with review. This section grows
-with each one.
+Phase 5 landed in three pull requests: the page-side shell adapter first, then
+notifications with secure storage, then share with review.
 
 ### The shell adapter
 
@@ -552,6 +551,103 @@ reinstall can find a token from before. That is recorded in `native/README.md`
 rather than worked around, because the usual workaround is a first-launch flag
 in `UserDefaults`, which is a required-reason API with a privacy manifest
 obligation.
+
+### Share and review
+
+The last two modules, which close Phase 5. Every decision is in
+`native/Sources/LitroBridge/ShareAndReview.swift` and `Dispatcher.swift`, with
+tests in `ShareAndReviewTests.swift`. `App/Capabilities/ShareModule.swift` and
+`ReviewModule.swift` only present a sheet and ask the system.
+
+**A share sheet closes four ways, and the page is told three things.**
+
+| how it closed | the page is told |
+|---|---|
+| a target was picked and finished | `null` |
+| closed without sharing, from the sheet or from the target's own screen | `null` |
+| the picked target reported an error | `INTERNAL_ERROR` |
+| the sheet never appeared | `INTERNAL_ERROR` |
+
+`null` means "the sheet is closed". It never means "something was shared".
+`share()` is `Promise<void>` and was already documented to resolve when the
+person dismisses the sheet, and the web adapter swallows the browser's
+`AbortError` the same way. So a cancel is not an error, and it is not reported
+as a share either: neither answer claims one. The shell does tell completed from
+dismissed internally (`ShareOutcome`), so if the contract ever wants to expose
+it, only the mapping in `Dispatcher.swift` changes. Exposing it is a change to
+the published API, and is left to the owner.
+
+A target that failed, and a sheet that never appeared, are errors because the
+person either tried and it did not work, or saw nothing. Both are retryable.
+
+**A sheet that never appeared is answered at once.** UIKit refuses to present
+while another presentation is in progress, logs it, and never calls the
+completion handler, so the page would wait out its whole two-minute budget for a
+sheet nobody saw. Two guards:
+
+- The dispatcher refuses a second `share` while one sheet is open, before it
+  reaches UIKit.
+- After `present`, a sheet that has no presenting controller was refused, and
+  is answered `notPresented` there and then (`ShareOutcome.afterPresenting`).
+
+The sheet is presented from the topmost presented controller, so a popover the
+page opened itself does not block it.
+
+**The completion handler answers once.** It is not promised to run once, and a
+continuation resumed twice stops the app. `SingleAnswer` keeps the first answer
+and drops the rest.
+
+**On an iPad the sheet is anchored to the middle of the view, with no arrow.** A
+popover with no anchor stops the app. The page sends no element position, so
+there is nothing better to point at. The shell is iPhone only today
+(`TARGETED_DEVICE_FAMILY = 1`), so this is for the day it is not.
+
+**What may be shared.** `title`, `text` and `url`, each an optional string, an
+empty string counted as absent. At least one is required, or the call is
+`INVALID_PARAMS`. `url` must be an absolute `http` or `https` URL: a share sheet
+hands it to whatever the person picks, and nothing a Litro page shares is a
+`javascript:` or `file:` URL. The title is offered as the subject line to
+targets that have one, and is shared as the text only when there is neither text
+nor a link, so the sheet is never empty.
+
+A browser resolves a relative `url` against the page; the shell has no page to
+resolve against. So the page adapter resolves it before sending
+(`withAbsoluteURL` in `adapters/shell.ts`), and a URL it cannot resolve is sent
+unchanged for the shell to refuse. This is the one page-side change share
+needed.
+
+**`canShare` is a question and never an error.** It answers `true` exactly when
+`share` would accept the payload, and `false` for anything `share` would refuse,
+including a wrong type, as the browser's own check does. It opens nothing.
+
+**`requestReview` answers `null`, at once, and that means "passed on".** The
+system rate-limits the prompt, shows it in a development build, never shows it
+in a TestFlight build, and never tells the app whether it appeared. A page told
+anything more would be told a guess. The shell asks the foreground window scene
+with `AppStore.requestReview(in:)`; with no foreground scene there is nowhere to
+show it, and the answer is the same `null`. Params are ignored.
+
+**`requestReview` left the interactive budget.** It was in
+`INTERACTIVE_METHODS` because it opens system UI. But the system call returns at
+once without waiting for the prompt, so the shell's reply never waits on a
+person. A two-minute budget there would only hide a dropped message for two
+minutes, which is the same reason `canShare` is not interactive. `share` stays:
+its reply waits for the person to close the sheet. The shell keeps no copy of
+either list (NATIVE-008).
+
+**An absent module answers with the documented empty behavior**, unchanged:
+`canShare` is `false`, `share` and `requestReview` are `null`, and params are
+not validated. `AbsentCapabilityTests` holds it.
+
+**Every rejection carries the call's id** (NATIVE-003). A share whose target
+failed, whose sheet never appeared, or whose params were bad, is answered on its
+own id.
+
+**Not verified yet, and needing a person on a device:** what iOS 27 reports when
+a person picks a target and cancels inside it, whether the completion handler
+ever fires twice on iOS 27, and the iPad anchor. The bridge test page has
+buttons for all of them: `share text`, `share link`, `share twice` and
+`request review`.
 
 ## Risks
 

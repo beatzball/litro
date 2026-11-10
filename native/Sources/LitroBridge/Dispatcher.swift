@@ -65,6 +65,12 @@ public final class BridgeDispatcher {
     private let badging: BadgingHost?
     private let notifications: NotificationsHost?
     private let secureStorage: SecureStorageHost?
+    private let sharing: ShareHost?
+    private let review: ReviewHost?
+    /// Whether a share sheet is on screen now. A second `share` while one is
+    /// open would be refused by UIKit without a word and without a callback,
+    /// so the page would wait out its whole budget for a sheet nobody saw.
+    private var shareSheetOpen = false
     private let now: @MainActor () -> Date
     private let monotonic: @MainActor () -> ContinuousClock.Instant
     private let calendar: @MainActor () -> Calendar
@@ -87,6 +93,8 @@ public final class BridgeDispatcher {
                 badging: BadgingHost? = nil,
                 notifications: NotificationsHost? = nil,
                 secureStorage: SecureStorageHost? = nil,
+                share: ShareHost? = nil,
+                review: ReviewHost? = nil,
                 now: @escaping @MainActor () -> Date = { Date() },
                 monotonic: @escaping @MainActor () -> ContinuousClock.Instant = { ContinuousClock.now },
                 calendar: @escaping @MainActor () -> Calendar = { Calendar.current },
@@ -96,6 +104,8 @@ public final class BridgeDispatcher {
         self.badging = badging
         self.notifications = notifications
         self.secureStorage = secureStorage
+        self.sharing = share
+        self.review = review
         self.now = now
         self.monotonic = monotonic
         self.calendar = calendar
@@ -110,7 +120,8 @@ public final class BridgeDispatcher {
             case .notifications: return notifications != nil
             case .badging: return badging != nil
             case .secureStorage: return secureStorage != nil
-            case .share, .review: return false
+            case .share: return sharing != nil
+            case .review: return review != nil
             }
         }
     }
@@ -263,13 +274,63 @@ public final class BridgeDispatcher {
                 return .null
             }
 
-        // Phase 5's last pair. Until they are compiled in, the capability gate
-        // above has already answered them and this line is unreachable. It is
-        // spelled out rather than left to a `default`, so adding a method to
-        // the protocol fails to compile here instead of quietly falling into a
-        // wrong answer.
-        case .canShare, .share, .requestReview:
+        case .canShare:
+            // A question, not a request: a payload `share` would refuse is a
+            // no, never an error. The browser's own check answers the same way.
+            guard case .success = ShareContent.parse(request.params) else {
+                return .success(id: request.id, result: .bool(false))
+            }
+            return .success(id: request.id, result: .bool(true))
+
+        case .share:
+            return await share(request)
+
+        case .requestReview:
+            // Answered at once, and with nothing. The system decides whether a
+            // prompt appears, rate-limits it, and does not say. So the reply
+            // means "the request was passed on", never "a prompt was shown".
+            review?.requestReview()
+            return .success(id: request.id, result: .null)
+        }
+    }
+
+    /// `share`, with each way the sheet can close answered deliberately.
+    ///
+    /// Completed and dismissed both answer `null`. The page's `share()` is
+    /// `Promise<void>` and is documented to resolve when the sheet closes, so
+    /// `null` says "the sheet is closed" and never "something was shared". A
+    /// cancel is not an error: the person changed their mind, and the web
+    /// adapter swallows the browser's `AbortError` for the same reason.
+    ///
+    /// A target that failed, and a sheet that never appeared, are errors: the
+    /// person tried, or saw nothing, and the page may want to offer another way.
+    private func share(_ request: BridgeRequest) async -> BridgeResponse {
+        let content: ShareContent
+        switch ShareContent.parse(request.params) {
+        case let .failure(reason):
+            return .failure(id: request.id, code: .invalidParams, message: reason.message)
+        case let .success(value):
+            content = value
+        }
+        guard let sharing else {
             return .success(id: request.id, result: Self.emptyResult(for: request.method))
+        }
+        guard !shareSheetOpen else {
+            return .failure(id: request.id, code: .internalError,
+                            message: "a share sheet is already open; nothing was shown")
+        }
+        shareSheetOpen = true
+        defer { shareSheetOpen = false }
+
+        switch await sharing.share(content) {
+        case .completed, .dismissed:
+            return .success(id: request.id, result: .null)
+        case .failed:
+            return .failure(id: request.id, code: .internalError,
+                            message: "the chosen share target reported an error")
+        case .notPresented:
+            return .failure(id: request.id, code: .internalError,
+                            message: "the share sheet could not be shown; nothing was shown")
         }
     }
 

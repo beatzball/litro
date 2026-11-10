@@ -168,6 +168,10 @@ describe('timeouts', () => {
     for (const m of INTERACTIVE_METHODS) expect(timeoutFor(m)).toBe(INTERACTIVE_TIMEOUT_MS);
   });
 
+  it('gives requestReview the default, because the shell answers it before any prompt', () => {
+    expect(timeoutFor('requestReview')).toBe(DEFAULT_TIMEOUT_MS);
+  });
+
   it('gives every other method the default', () => {
     for (const m of METHODS) {
       if (m === 'handshake' || INTERACTIVE_METHODS.includes(m)) continue;
@@ -190,7 +194,7 @@ describe('timeouts', () => {
 
   it('names exactly the interactive methods, so one cannot join or leave unnoticed', () => {
     expect([...INTERACTIVE_METHODS].sort()).toEqual(
-      ['badging.clear', 'badging.set', 'notifications.schedule', 'requestReview', 'share'],
+      ['badging.clear', 'badging.set', 'notifications.schedule', 'share'],
     );
   });
 

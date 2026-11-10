@@ -491,12 +491,46 @@ export class ShellBridge implements NativeBridge {
 
   canShare = async (p: SharePayload): Promise<boolean> => {
     if (!this.has('share')) return this.web.canShare(p);
-    const result = await this.transport.call('canShare', { ...p });
+    const result = await this.transport.call('canShare', withAbsoluteURL(p));
     if (typeof result !== 'boolean') throw unexpected('canShare', result);
     return result;
   };
 
-  share = (p: SharePayload): Promise<void> => (this.has('share') ? this.send('share', { ...p }) : this.web.share(p));
+  /**
+   * Resolves once the sheet has closed, whether the person shared or closed
+   * it. A target that fails, or a sheet that could not be shown, rejects.
+   */
+  share = (p: SharePayload): Promise<void> =>
+    this.has('share') ? this.send('share', withAbsoluteURL(p)) : this.web.share(p);
 
+  /**
+   * Resolves once the shell has passed the request to the system, which is at
+   * once. It never says whether a prompt appeared: the system does not tell
+   * the app, and usually shows nothing.
+   */
   requestReview = (): Promise<void> => (this.has('review') ? this.send('requestReview') : this.web.requestReview());
+}
+
+/**
+ * The payload with a relative `url` resolved against the page, as a browser's
+ * own share does.
+ *
+ * The shell has no document to resolve against: it accepts only an absolute
+ * `http` or `https` URL. A URL that cannot be resolved is sent unchanged, so
+ * the shell refuses it the same way it refuses any other bad payload, rather
+ * than this side guessing.
+ */
+function withAbsoluteURL(p: SharePayload): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...p };
+  if (typeof p.url !== 'string' || p.url === '') return out;
+  const doc = (globalThis as { document?: { baseURI?: unknown } }).document;
+  const loc = (globalThis as { location?: { href?: unknown } }).location;
+  const base = typeof doc?.baseURI === 'string' ? doc.baseURI : loc?.href;
+  if (typeof base !== 'string') return out;
+  try {
+    out.url = new URL(p.url, base).href;
+  } catch {
+    // Left as it was. The shell answers it.
+  }
+  return out;
 }

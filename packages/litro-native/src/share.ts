@@ -4,6 +4,14 @@
  * Opens the platform share sheet. A browser without one does nothing. The user
  * dismissing the sheet is not an error and does not reject.
  *
+ * So the promise resolving means the sheet has closed, and nothing more. It
+ * does not say that anything was shared. It rejects when the target the person
+ * picked fails, or when the sheet could not be shown at all, such as a second
+ * share while one sheet is still open.
+ *
+ * A relative `url` is resolved against the page before it is shared, as the
+ * browser does. In the native app only `http` and `https` links are shared.
+ *
  * This capability is a single verb, so it is a function rather than a namespace.
  * See the naming rule in the package README.
  */

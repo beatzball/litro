@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Both names come from the selected app's app.json, through the xcconfig
+	<!-- Both names come from the app.json of the selected app, through the xcconfig
 	     that native/scripts/select-app.sh writes. Nothing per-app is typed here. -->
 	<key>CFBundleDisplayName</key>
 	<string>$(LITRO_APP_DISPLAY_NAME)</string>

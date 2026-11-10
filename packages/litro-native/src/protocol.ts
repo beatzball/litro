@@ -202,7 +202,7 @@ export const INTERACTIVE_TIMEOUT_MS = 120_000;
 /**
  * Methods that can wait on a human and therefore use {@link INTERACTIVE_TIMEOUT_MS}.
  *
- * Not only the two that open system UI. Setting a badge and scheduling a
+ * `share` waits for the person to close the sheet. Setting a badge and scheduling a
  * notification both ask for the notification permission the first time, and a
  * person may read that prompt for longer than ten seconds. A shorter budget
  * there fails the call while the shell goes on to do the work: the badge is
@@ -214,8 +214,12 @@ export const INTERACTIVE_METHODS: readonly Method[] = [
   'badging.clear',
   'notifications.schedule',
   'share',
-  'requestReview',
 ];
+
+// `requestReview` is NOT here. It opens system UI, but the shell answers it at
+// once: the system call returns without waiting for the prompt, and whether a
+// prompt appears is never reported. A two-minute budget there would only hide
+// a dropped message for two minutes.
 
 /** The timeout that applies to `method`. */
 export function timeoutFor(method: Method): number {
