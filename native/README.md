@@ -77,8 +77,13 @@ native/scripts/serve-test-page.sh     # http://localhost:5173
 
 It runs every unattended method on load and leaves the ones that need a person
 on buttons: the permission prompt that badging and notifications share, a
-notification firing, the share sheet, and a keychain value surviving a
-force-quit.
+notification firing, how a share sheet closes, the review prompt, and a
+keychain value surviving a force-quit. Whether a share sheet appears needs
+nobody, so the unattended run checks it last and leaves the sheet up.
+
+Each line the page prints is also requested from the serving script as
+`/__log?<line>`, so the terminal running `serve-test-page.sh` holds the whole
+report even while the share sheet covers the page.
 
 Two servers start, not one. The second, one port up, is the outside origin the
 allowlist check navigates to. That check needs a destination that is reachable
@@ -198,7 +203,13 @@ Things about the modules that are easy to trip on:
   app and drops the rest without an error.
 - **`share` resolving does not mean anything was shared.** It means the sheet
   closed. A cancel answers the same as a share; a failed target, or a sheet
-  that could not be shown, is an error.
+  that could not be shown, is an error. The page waits with no timeout,
+  because a message written in a target such as Mail can take minutes, and
+  the shell answers every other way the sheet can end.
+- **Never judge the share sheet from the line after `present`.** An animated
+  present is not on screen yet there, and the first version answered "could
+  not be shown" to every share that way. `ShareSheetRun` in `Sources/` decides
+  presentation, under `swift test`; `App/` only reports what UIKit says.
 - **`requestReview` is answered at once and says nothing.** The system decides
   whether a prompt appears, never shows one in a TestFlight build, and does not
   tell the app. A development build shows it every time, which proves nothing.

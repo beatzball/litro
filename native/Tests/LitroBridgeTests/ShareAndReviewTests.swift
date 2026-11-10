@@ -255,19 +255,32 @@ final class ShareContentTests: XCTestCase {
 }
 
 final class ShareOutcomeTests: XCTestCase {
-    /// The four combinations UIKit's completion handler can report.
+    /// What UIKit's completion handler can report, and what each means.
     func testMapsTheSystemCallback() {
-        XCTAssertEqual(ShareOutcome(completed: true, failed: false), .completed)
-        XCTAssertEqual(ShareOutcome(completed: false, failed: false), .dismissed)
-        XCTAssertEqual(ShareOutcome(completed: false, failed: true), .failed)
-        // An error wins: a target that reports one did not finish.
-        XCTAssertEqual(ShareOutcome(completed: true, failed: true), .failed)
+        XCTAssertEqual(ShareOutcome(completed: true, errorDomain: nil, errorCode: nil), .completed)
+        XCTAssertEqual(ShareOutcome(completed: false, errorDomain: nil, errorCode: nil), .dismissed)
+        XCTAssertEqual(ShareOutcome(completed: false, errorDomain: "SomeDomain", errorCode: 7), .failed)
     }
 
-    /// A sheet UIKit refused to present is answered at once; one on screen waits.
-    func testARefusedPresentationIsAnsweredAtOnce() {
-        XCTAssertEqual(ShareOutcome.afterPresenting(isOnScreen: false), .notPresented)
-        XCTAssertNil(ShareOutcome.afterPresenting(isOnScreen: true))
+    /// `completed` wins over an error. Apple documents it as "the service was
+    /// performed": telling the page it failed would invite a second send.
+    func testCompletedWinsOverAnError() {
+        XCTAssertEqual(ShareOutcome(completed: true, errorDomain: "SomeDomain", errorCode: 7), .completed)
+    }
+
+    /// A target that reports the person canceled is a cancel, not a failure.
+    func testAUserCanceledErrorIsADismissal() {
+        XCTAssertEqual(ShareOutcome(completed: false, errorDomain: "NSCocoaErrorDomain", errorCode: 3072), .dismissed)
+        // The same code in another domain is not a cancel.
+        XCTAssertEqual(ShareOutcome(completed: false, errorDomain: "OtherDomain", errorCode: 3072), .failed)
+        XCTAssertEqual(ShareOutcome(completed: false, errorDomain: "NSCocoaErrorDomain", errorCode: 3071), .failed)
+    }
+
+    func testThePresenterState() {
+        XCTAssertEqual(ShareSheetPresenterState(inWindow: true, transitioning: false), .ready)
+        XCTAssertEqual(ShareSheetPresenterState(inWindow: true, transitioning: true), .transitioning)
+        XCTAssertEqual(ShareSheetPresenterState(inWindow: false, transitioning: false), .none)
+        XCTAssertEqual(ShareSheetPresenterState(inWindow: false, transitioning: true), .none)
     }
 
     /// The iPad popover anchor is inside the view, so the sheet never lacks one.
@@ -278,6 +291,245 @@ final class ShareOutcomeTests: XCTestCase {
         let zero = ShareAnchor(width: -5, height: 0)
         XCTAssertEqual(zero.x, 0)
         XCTAssertEqual(zero.y, 0)
+    }
+}
+
+final class ShareItemTests: XCTestCase {
+    private func items(_ params: [String: JSONValue]) -> [ShareItem]? {
+        (try? ShareContent.parse(params).get())?.items
+    }
+
+    /// No title, no subject source. Its placeholder is what the sheet uses to
+    /// choose which targets to offer.
+    func testNoSubjectWithoutATitle() {
+        XCTAssertEqual(items(["url": .string("https://a.example/")]), [.url(URL(string: "https://a.example/")!)])
+        XCTAssertEqual(items(["text": .string("hi")]), [.text("hi")])
+    }
+
+    func testATitleIsTheSubjectAndTheTextAndLinkFollow() {
+        XCTAssertEqual(items(["title": .string("T"), "text": .string("hi"), "url": .string("https://a.example/")]),
+                       [.subject("T"), .text("hi"), .url(URL(string: "https://a.example/")!)])
+    }
+
+    func testATitleAloneIsTheSubjectAndTheText() {
+        XCTAssertEqual(items(["title": .string("T")]), [.subject("T"), .text("T")])
+    }
+}
+
+/// A share sheet whose UIKit behavior is a script on a virtual clock.
+///
+/// Like a real animated `present`, it is NOT on screen on the line after
+/// `present` returns. It arrives `presentsAfter` later.
+@MainActor
+final class ScriptedSheet: ShareSheetUI {
+    var inWindow = true
+    var transitioning = false
+    /// When the presentation completes. nil: UIKit refused, silently.
+    var presentsAfter: Duration? = .milliseconds(300)
+    /// When the completion handler fires, and with what.
+    var closes: (after: Duration, completed: Bool, domain: String?, code: Int?)?
+    /// When the sheet leaves the screen with no completion handler.
+    var leavesAfter: Duration?
+    /// Fire the completion handler twice.
+    var handlerTwice = false
+
+    private(set) var presentCalls = 0
+    private(set) var now = Duration.zero
+    private(set) var isOnScreen = false
+    private var presentedAt: Duration?
+    private var onPresented: (@MainActor () -> Void)?
+    private var onClosed: (@MainActor (Bool, String?, Int?) -> Void)?
+    private var closed = false
+
+    func presenterFacts() -> (inWindow: Bool, transitioning: Bool) { (inWindow, transitioning) }
+
+    func present(onPresented: @escaping @MainActor () -> Void,
+                 onClosed: @escaping @MainActor (Bool, String?, Int?) -> Void) {
+        presentCalls += 1
+        presentedAt = now
+        self.onPresented = onPresented
+        self.onClosed = onClosed
+        // Nothing synchronous: the sheet is not on screen yet.
+    }
+
+    /// Virtual time after which the script gives up on the run and answers
+    /// for it, so a run that would never answer fails its test instead of
+    /// hanging the suite. Shows up as `.failed`, which no test expects.
+    static let giveUp = Duration.seconds(3600)
+
+    /// The test's `sleep`: time passes, and whatever was due happens.
+    func advance(_ d: Duration) {
+        now += d
+        if now >= Self.giveUp, !closed, let call = onClosed {
+            closed = true
+            call(false, "ScriptedSheet.neverAnswered", -1)
+            return
+        }
+        guard let start = presentedAt else { return }
+        if let p = presentsAfter, let call = onPresented, now - start >= p {
+            onPresented = nil
+            isOnScreen = true
+            call()
+        }
+        if let l = leavesAfter, now - start >= l { isOnScreen = false }
+        if let c = closes, !closed, now - start >= c.after {
+            closed = true
+            isOnScreen = false
+            onClosed?(c.completed, c.domain, c.code)
+            if handlerTwice { onClosed?(true, nil, nil) }
+        }
+    }
+}
+
+@MainActor
+final class ShareSheetRunTests: XCTestCase {
+    private func run(_ sheet: ScriptedSheet) async -> ShareOutcome {
+        await ShareSheetRun.run(sheet, sleep: { d in
+            sheet.advance(d)
+            await Task.yield()
+        })
+    }
+
+    /// The round 2 defect. A real animated `present` leaves the sheet off
+    /// screen on the next line, and the first version answered "could not be
+    /// shown" right there, for every share. A sheet that arrives a moment later
+    /// and is then used must be answered by its completion handler.
+    func testASheetThatArrivesAfterPresentReturnsIsAnsweredByItsHandler() async {
+        let sheet = ScriptedSheet()
+        sheet.closes = (.seconds(10), true, nil, nil)
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .completed)
+        XCTAssertEqual(sheet.now, .seconds(10), "answered before the person closed the sheet")
+    }
+
+    func testAPersonClosingTheSheetIsADismissal() async {
+        let sheet = ScriptedSheet()
+        sheet.closes = (.seconds(4), false, nil, nil)
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .dismissed)
+    }
+
+    /// No page budget: a ten-minute compose in a target is still answered with
+    /// what happened, when it happened.
+    func testALongComposeIsAnsweredWhenItEnds() async {
+        let sheet = ScriptedSheet()
+        sheet.closes = (.seconds(600), true, nil, nil)
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .completed)
+        XCTAssertEqual(sheet.now, .seconds(600))
+    }
+
+    /// UIKit refused, said nothing, and will never call back. Answered once
+    /// the grace has passed, not left to wait forever.
+    func testARefusedPresentationIsAnsweredAfterTheGrace() async {
+        let sheet = ScriptedSheet()
+        sheet.presentsAfter = nil
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .notPresented)
+        XCTAssertEqual(sheet.now, ShareSheetTiming.standard.presentGrace)
+    }
+
+    func testNoWindowIsAnsweredAtOnceAndNothingIsPresented() async {
+        let sheet = ScriptedSheet()
+        sheet.inWindow = false
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .notPresented)
+        XCTAssertEqual(sheet.presentCalls, 0)
+    }
+
+    func testAPresenterInATransitionIsAnsweredAtOnce() async {
+        let sheet = ScriptedSheet()
+        sheet.transitioning = true
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .notPresented)
+        XCTAssertEqual(sheet.presentCalls, 0)
+    }
+
+    /// Presented, then gone without a completion handler -- a controller
+    /// beneath it was dismissed. Answered `dismissed`, which is `null` on the
+    /// wire and claims only that the sheet closed.
+    func testASheetAbandonedWithoutACallbackIsADismissal() async {
+        let sheet = ScriptedSheet()
+        sheet.leavesAfter = .seconds(20)
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .dismissed)
+        XCTAssertLessThanOrEqual(sheet.now, .seconds(22), "an abandoned sheet was not noticed promptly")
+    }
+
+    /// A handler that fires before the presentation completes still answers.
+    func testAHandlerBeforeThePresentationCompletesAnswers() async {
+        let sheet = ScriptedSheet()
+        sheet.presentsAfter = .seconds(5)
+        sheet.closes = (.milliseconds(500), false, nil, nil)
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .dismissed)
+    }
+
+    /// A handler that fires twice answers once. A continuation resumed twice
+    /// stops the process, so this test would crash rather than fail.
+    func testAHandlerFiringTwiceAnswersOnce() async {
+        let sheet = ScriptedSheet()
+        sheet.closes = (.seconds(2), false, nil, nil)
+        sheet.handlerTwice = true
+        let outcome = await run(sheet)
+        XCTAssertEqual(outcome, .dismissed)
+    }
+}
+
+/// The dispatcher over a real `ShareSheetRun`, as the app wires it.
+@MainActor
+final class ScriptedShareHost: ShareHost {
+    var next: @MainActor () -> ScriptedSheet = { ScriptedSheet() }
+    func share(_ content: ShareContent) async -> ShareOutcome {
+        let sheet = next()
+        return await ShareSheetRun.run(sheet, sleep: { d in
+            sheet.advance(d)
+            await Task.yield()
+        })
+    }
+}
+
+@MainActor
+final class ShareSheetDispatchTests: XCTestCase {
+    private func share(_ d: BridgeDispatcher, id: String) async -> BridgeResponse {
+        await d.handle(BridgeRequest(id: id, method: .share, params: ["text": .string("hi")]))
+    }
+
+    /// An ordinary share is answered `null`, not "could not be shown".
+    func testAnOrdinaryShareSucceeds() async {
+        let host = ScriptedShareHost()
+        host.next = {
+            let s = ScriptedSheet()
+            s.closes = (.seconds(3), true, nil, nil)
+            return s
+        }
+        let reply = await share(BridgeDispatcher(info: testInfo, share: host), id: "a")
+        guard case let .success(id, value) = reply else { return XCTFail("\(reply)") }
+        XCTAssertEqual(id, "a")
+        XCTAssertEqual(value, .null)
+    }
+
+    /// A sheet lost without a callback releases the one-sheet guard, so the
+    /// next share is shown rather than refused as "already open" forever.
+    func testAnAbandonedSheetDoesNotBlockTheNextShare() async {
+        let host = ScriptedShareHost()
+        host.next = {
+            let s = ScriptedSheet()
+            s.leavesAfter = .seconds(5)
+            return s
+        }
+        let dispatcher = BridgeDispatcher(info: testInfo, share: host)
+        let first = await share(dispatcher, id: "first")
+        guard case .success = first else { return XCTFail("\(first)") }
+
+        host.next = {
+            let s = ScriptedSheet()
+            s.closes = (.seconds(1), true, nil, nil)
+            return s
+        }
+        let second = await share(dispatcher, id: "second")
+        guard case let .success(id, _) = second else { return XCTFail("refused after an abandoned sheet: \(second)") }
+        XCTAssertEqual(id, "second")
     }
 }
 

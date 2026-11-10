@@ -146,11 +146,16 @@ try {
 }
 ```
 
-`isTimeout` is true when the shell did not answer in time. Every call has a
-budget, so no promise is ever left pending: ten seconds for most calls, two
-minutes for the calls that can wait on a person -- the share sheet, and the
-badging and notification calls, which can show the notification permission
-prompt. `requestReview` is a ten-second call: the shell answers it at once, and
+`isTimeout` is true when the shell did not answer in time. Every call but one
+has a budget: ten seconds for most calls, two minutes for the badging and
+notification calls, which can show the notification permission prompt.
+
+`share` has no budget. It settles when the person is done with the share
+sheet, and that includes writing a message in a target such as Mail, which can
+take minutes; a timeout there would report a failure for a message that was
+sent. The shell answers every other way the sheet can end, including a sheet
+that was never shown or was lost without a callback, so the one wait left open
+is a person still using it. `requestReview` is a ten-second call: the shell answers it at once, and
 never learns whether a prompt appeared.
 
 A timed-out `notifications.schedule` may still have scheduled the reminder,

@@ -6,8 +6,13 @@
  *
  * So the promise resolving means the sheet has closed, and nothing more. It
  * does not say that anything was shared. It rejects when the target the person
- * picked fails, or when the sheet could not be shown at all, such as a second
- * share while one sheet is still open.
+ * picked fails without finishing, or when the sheet could not be shown at all,
+ * such as a second share while one sheet is still open.
+ *
+ * In the native app the promise has no timeout. It settles when the person is
+ * done, and that includes writing a message in a target the sheet opened,
+ * such as Mail, which can take minutes. Do not race it against a timer of your
+ * own and treat the timer as a failure: the message may well have been sent.
  *
  * A relative `url` is resolved against the page before it is shared, as the
  * browser does. In the native app only `http` and `https` links are shared.

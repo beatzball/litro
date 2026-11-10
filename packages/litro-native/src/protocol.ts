@@ -191,19 +191,18 @@ export const DEFAULT_TIMEOUT_MS = 10_000;
 export const HANDSHAKE_TIMEOUT_MS = 2_000;
 
 /**
- * How long a share sheet or permission prompt may sit open.
+ * How long a permission prompt may sit open.
  *
- * These are the calls that can legitimately wait on a human, so they are
- * exempt from {@link DEFAULT_TIMEOUT_MS}. A person reading a share sheet for
- * twenty seconds is not a failure.
+ * These are the calls that can legitimately wait on a human reading a prompt,
+ * so they are exempt from {@link DEFAULT_TIMEOUT_MS}. A person reading a
+ * prompt for twenty seconds is not a failure.
  */
 export const INTERACTIVE_TIMEOUT_MS = 120_000;
 
 /**
  * Methods that can wait on a human and therefore use {@link INTERACTIVE_TIMEOUT_MS}.
  *
- * `share` waits for the person to close the sheet. Setting a badge and scheduling a
- * notification both ask for the notification permission the first time, and a
+ * Setting a badge and scheduling a notification both ask for the notification permission the first time, and a
  * person may read that prompt for longer than ten seconds. A shorter budget
  * there fails the call while the shell goes on to do the work: the badge is
  * set, or the notification is scheduled with an id the page never learns, so
@@ -213,17 +212,31 @@ export const INTERACTIVE_METHODS: readonly Method[] = [
   'badging.set',
   'badging.clear',
   'notifications.schedule',
-  'share',
 ];
+
+/**
+ * Methods the page waits on with no budget at all.
+ *
+ * `share` waits for a person to finish with the share sheet, and that
+ * includes writing a message in a target the sheet opened, such as Mail. Three
+ * minutes there is ordinary, and any budget would turn it into a TIMEOUT for a
+ * message that was sent. So there is no page timer. That is honest only
+ * because the shell answers every other way the sheet can end: closed, a
+ * target failing, never shown, and shown then lost without a callback. The
+ * one wait left open is a sheet still on screen, which is a person still
+ * deciding.
+ */
+export const UNBUDGETED_METHODS: readonly Method[] = ['share'];
 
 // `requestReview` is NOT here. It opens system UI, but the shell answers it at
 // once: the system call returns without waiting for the prompt, and whether a
 // prompt appears is never reported. A two-minute budget there would only hide
 // a dropped message for two minutes.
 
-/** The timeout that applies to `method`. */
-export function timeoutFor(method: Method): number {
+/** The timeout that applies to `method`, or `null` for no timeout. */
+export function timeoutFor(method: Method): number | null {
   if (method === 'handshake') return HANDSHAKE_TIMEOUT_MS;
+  if (UNBUDGETED_METHODS.includes(method)) return null;
   return INTERACTIVE_METHODS.includes(method) ? INTERACTIVE_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
 }
 

@@ -50,6 +50,7 @@ import {
   isVersionSupported,
   request,
   timeoutFor,
+  INTERACTIVE_TIMEOUT_MS,
   type BridgeRequest,
   type BridgeResponse,
   type HandshakeResult,
@@ -138,7 +139,8 @@ export function connectionPrefix(): string {
 interface Pending {
   resolve(value: unknown): void;
   reject(error: NativeBridgeError): void;
-  timer: ReturnType<typeof setTimeout>;
+  /** Absent for a method with no budget (`UNBUDGETED_METHODS`). */
+  timer: ReturnType<typeof setTimeout> | undefined;
 }
 
 /**
@@ -186,10 +188,14 @@ export class ShellTransport {
     const message = request(id, method, wire);
 
     return new Promise<unknown>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        reject(new NativeBridgeError(ERROR_CODES.TIMEOUT, `${method} got no reply in ${timeoutFor(method)}ms`));
-      }, timeoutFor(method));
+      const budget = timeoutFor(method);
+      const timer =
+        budget === null
+          ? undefined
+          : setTimeout(() => {
+              this.pending.delete(id);
+              reject(new NativeBridgeError(ERROR_CODES.TIMEOUT, `${method} got no reply in ${budget}ms`));
+            }, budget);
       this.pending.set(id, { resolve, reject, timer });
 
       try {
@@ -442,7 +448,7 @@ export class ShellBridge implements NativeBridge {
       const method = 'notifications.schedule';
       let result: unknown;
       try {
-        result = await this.transport.call(method, { ...n, id, budgetMs: timeoutFor(method) });
+        result = await this.transport.call(method, { ...n, id, budgetMs: timeoutFor(method) ?? INTERACTIVE_TIMEOUT_MS });
       } catch (error) {
         if (error instanceof NativeBridgeError && error.isTimeout) {
           throw new NativeBridgeError(error.code, error.message, { id });

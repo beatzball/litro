@@ -305,15 +305,19 @@ public final class BridgeDispatcher {
     /// A target that failed, and a sheet that never appeared, are errors: the
     /// person tried, or saw nothing, and the page may want to offer another way.
     private func share(_ request: BridgeRequest) async -> BridgeResponse {
+        // Absence first. The capability gate in `handle` already answers an
+        // absent module, so this is unreachable today; it is ordered so that if
+        // the gate ever moves, an absent module with a bad payload still gets
+        // the empty answer and never INVALID_PARAMS (NATIVE-004).
+        guard let sharing else {
+            return .success(id: request.id, result: Self.emptyResult(for: request.method))
+        }
         let content: ShareContent
         switch ShareContent.parse(request.params) {
         case let .failure(reason):
             return .failure(id: request.id, code: .invalidParams, message: reason.message)
         case let .success(value):
             content = value
-        }
-        guard let sharing else {
-            return .success(id: request.id, result: Self.emptyResult(for: request.method))
         }
         guard !shareSheetOpen else {
             return .failure(id: request.id, code: .internalError,
