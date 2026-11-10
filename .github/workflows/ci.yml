@@ -389,6 +389,26 @@ jobs:
           [ "$encryption" = "false" ] || { echo "ITSAppUsesNonExemptEncryption is '$encryption'" >&2; exit 1; }
           echo "Release has its icon and its encryption answer"
 
+          # The identity in the product is the one app.json asks for. Nothing
+          # else here would notice if it were not: a Release build with the
+          # wrong bundle identifier and no version or build number at all still
+          # succeeds, and every check above still passes. The bundled app.json
+          # is the one the shell reads its start URL from at launch.
+          app_json=native/Apps/qdoku/app.json
+          same_as_app_json() { # <Info.plist key> <app.json key>
+            want=$(plutil -extract "$2" raw -o - "$app_json" 2>/dev/null || true)
+            got=$(plutil -extract "$1" raw -o - "$release_plist" 2>/dev/null || true)
+            # Empty on both sides would compare equal and prove nothing.
+            [ -n "$want" ] || { echo "app.json has no $2 to compare" >&2; exit 1; }
+            [ "$got" = "$want" ] || { echo "$1 is '$got', but app.json says '$want'" >&2; exit 1; }
+          }
+          same_as_app_json CFBundleIdentifier bundleIdentifier
+          same_as_app_json CFBundleShortVersionString version
+          same_as_app_json CFBundleVersion build
+          cmp -s "$app_json" release-dd/Build/Products/Release-iphonesimulator/qdoku.app/app.json \
+            || { echo "the bundled app.json is not qdoku's" >&2; exit 1; }
+          echo "Release carries the identity app.json asks for"
+
           # Put the development configuration back for the step after this one.
           native/scripts/select-app.sh demo
 
