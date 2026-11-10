@@ -3,5 +3,7 @@
   "bundleIdentifier": "dev.litro.shell.demo",
   "startURL": "http://localhost:5173/",
   "allowedOrigins": ["http://localhost:5173"],
+  "version": "0.1.0",
+  "build": "1",
   "capabilities": ["haptics", "notifications", "badging", "secureStorage", "share", "review"]
 }

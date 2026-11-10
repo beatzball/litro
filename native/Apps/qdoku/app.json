@@ -1,0 +1,9 @@
+{
+  "name": "Qdoku",
+  "bundleIdentifier": "com.qdoku.app",
+  "startURL": "https://qdoku.com/",
+  "allowedOrigins": ["https://qdoku.com"],
+  "version": "1.0.0",
+  "build": "1",
+  "capabilities": ["haptics", "share", "review"]
+}
