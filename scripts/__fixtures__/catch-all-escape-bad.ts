@@ -17,3 +17,22 @@ export function page(pathname: string, url: URL): string {
 <p>${url.search}</p>
 <p>${String(escapeHtml(pathname))}</p></body>`;
 }
+
+// Starts with escapeHtml( and ends with ), but the value is not escaped.
+export function suffix(pathname: string, url: URL): string {
+  return `<p>${escapeHtml(pathname) + pathname.slice()}</p>
+<p>${escapeHtml(pathname) || String(url.search)}</p>`;
+}
+
+// HTML the lint cannot follow: it must fail closed, not pass.
+export function quoted(pathname: string): string {
+  return '<p>' + pathname + '</p>';
+}
+
+export function replaced(pathname: string): string {
+  return `<p>__PATH__</p>`.replace('__PATH__', pathname);
+}
+
+export function hidden(pathname: string): string {
+  return `\x3cp>${escapeHtml(pathname)}\x3c/p>`;
+}

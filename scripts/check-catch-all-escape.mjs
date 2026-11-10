@@ -1,30 +1,42 @@
 #!/usr/bin/env node
 /**
- * check-catch-all-escape.mjs — keep the request path out of the 404 page's
- * markup.
+ * check-catch-all-escape.mjs — a lint for the one shape the catch-all 404
+ * pages use. It is NOT a proof that a handler is safe.
  *
  * Usage:
- *   node scripts/check-catch-all-escape.mjs              # scan tracked handlers
- *   node scripts/check-catch-all-escape.mjs --self-test  # prove the scanner fires
+ *   node scripts/check-catch-all-escape.mjs              # lint tracked handlers
+ *   node scripts/check-catch-all-escape.mjs --self-test  # prove the lint fires
  *
  * Every app in this repository, and every app create-litro scaffolds, carries a
  * catch-all page handler at `server/routes/[...].ts`. On a miss it writes a 404
  * page with a template literal, and that page shows the request path. Issue 295:
- * the path went in as `${pathname}`, unescaped. A browser percent-encodes `<`,
- * `>` and `"` in a path, so it stayed text by luck, not by design. `&` and `'`
- * were never encoded, and a proxy or runtime that decodes the path would have
- * made the rest reachable too.
+ * the path went in as `${pathname}`, unescaped. h3's getRequestURL() parses the
+ * path with `new URL(path, base)`, which percent-encodes `<`, `>` and `"`, so it
+ * stayed text by luck, not by design. `&` and `'` were never encoded, and a
+ * proxy or runtime that hands the handler a decoded path would make the rest
+ * reachable.
  *
- * THE RULE, for every tracked `server/routes/[...].ts`:
+ * WHERE THE REAL CHECK LIVES. `packages/create-litro/src/catch-all-handler.test.ts`
+ * RUNS every tracked handler with hostile paths and asserts on the HTML it
+ * returns. That is the behavioral net. This script is a fast, install-free lint
+ * that catches the obvious regression (someone drops `escapeHtml(` again) and
+ * keeps the 17 helper copies identical. It has known blind spots, tracked in
+ * issue 299.
  *
- *   1. Every `${…}` inside a template literal that holds HTML is a call to
- *      `escapeHtml(…)`. Strict on purpose: a constant passes through the
- *      helper unchanged, so the rule costs nothing to follow, and a reader
- *      never has to decide which value came from the request.
+ * WHAT IT CHECKS, for every tracked `server/routes/[...].ts`:
+ *
+ *   1. Every `${…}` inside a template literal that holds HTML is exactly one
+ *      call, `escapeHtml(…)`, with nothing before or after it. A constant
+ *      passes through the helper unchanged, so the rule costs nothing to follow.
  *   2. A file that calls `escapeHtml` defines it with exactly the canonical
- *      body below. The handler is copied into 17 places and scaffolded into
- *      every new app, so the copies must stay identical character for
- *      character — a copy that drops the `'` line, or escapes `&` last, fails.
+ *      body below. The copies must stay identical character for character — a
+ *      copy that drops the `'` line, or escapes `&` last, fails.
+ *
+ * WHERE IT FAILS CLOSED. HTML built in a way this lint cannot follow is
+ * reported, not passed: markup in a quoted string, an HTML template joined
+ * with `+` or passed through `.replace()` / `.concat()`, and a template that
+ * spells `<` as an escape (`\x3c`, `\u003c`). Write the page as one template
+ * literal instead.
  *
  * The scanner walks the source the way a tokenizer does, skipping comments,
  * quoted strings and regex literals, because the handlers' route matcher holds
@@ -70,6 +82,9 @@ function trackedHandlers() {
  */
 export function templatesIn(source) {
   const found = [];
+  /** Quoted ('…' and "…") string bodies, for the fail-closed check. */
+  const quoted = [];
+  found.quoted = quoted;
   const lineOf = (index) => source.slice(0, index).split('\n').length;
 
   // A `/` starts a regex literal, not a division, after one of these.
@@ -77,12 +92,14 @@ export function templatesIn(source) {
 
   function skipQuoted(i) {
     const quote = source[i];
+    const open = i;
     i += 1;
     while (i < source.length && source[i] !== quote) {
       if (source[i] === '\\') i += 1;
       else if (source[i] === '\n') break;
       i += 1;
     }
+    quoted.push({ line: lineOf(open), text: source.slice(open + 1, i) });
     return i + 1;
   }
 
@@ -144,7 +161,7 @@ export function templatesIn(source) {
 
   /** Walk one template body from `start`; return the index after its close. */
   function walkTemplate(start) {
-    const tpl = { line: lineOf(start), text: '', exprs: [] };
+    const tpl = { line: lineOf(start), start: start - 1, end: -1, text: '', exprs: [] };
     found.push(tpl);
     let i = start;
     while (i < source.length) {
@@ -160,7 +177,10 @@ export function templatesIn(source) {
         i = end;
         continue;
       }
-      if (c === '`') return i + 1;
+      if (c === '`') {
+        tpl.end = i + 1;
+        return i + 1;
+      }
       tpl.text += c;
       i += 1;
     }
@@ -174,17 +194,97 @@ export function templatesIn(source) {
 /** A template that holds markup: a tag opener, a closing tag, or a doctype. */
 const HOLDS_HTML = /<[a-zA-Z!/]/;
 
-/** `escapeHtml(<anything>)` and nothing around it. */
-const ESCAPED = /^escapeHtml\(([\s\S]*)\)$/;
+/**
+ * True when `expr` is one `escapeHtml(…)` call and nothing else.
+ *
+ * A regex on the first and last characters is not enough:
+ * `escapeHtml(a) + b.slice()` starts and ends right. So this finds the
+ * parenthesis that closes the call, skipping strings and nested templates,
+ * and requires it to be the last character.
+ */
+export function isWholeEscapeCall(expr) {
+  if (!expr.startsWith('escapeHtml(')) return false;
+  return closeOf(expr, 'escapeHtml'.length) === expr.length - 1;
+}
+
+/** Index of the `)` matching the `(` at `open`, or -1. */
+function closeOf(s, open) {
+  let depth = 0;
+  for (let i = open; i < s.length; i++) {
+    const c = s[i];
+    if (c === "'" || c === '"') {
+      i += 1;
+      while (i < s.length && s[i] !== c) i += s[i] === '\\' ? 2 : 1;
+    } else if (c === '`') {
+      i = skipTemplate(s, i) - 1;
+    } else if (c === '(') {
+      depth += 1;
+    } else if (c === ')') {
+      depth -= 1;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+/** Index after the template that opens at `i`. */
+function skipTemplate(s, i) {
+  i += 1;
+  while (i < s.length) {
+    if (s[i] === '\\') i += 2;
+    else if (s[i] === '`') return i + 1;
+    else if (s.startsWith('${', i)) {
+      let depth = 1;
+      i += 2;
+      while (i < s.length && depth > 0) {
+        if (s[i] === '`') {
+          i = skipTemplate(s, i);
+          continue;
+        }
+        if (s[i] === '{') depth += 1;
+        else if (s[i] === '}') depth -= 1;
+        i += 1;
+      }
+    } else i += 1;
+  }
+  return i;
+}
+
+/** `<` written as an escape, which hides markup from HOLDS_HTML. */
+const ESCAPED_LT = /\\(x3c|u003c|u\{3c\})/i;
 
 export function problemsIn(source) {
   const problems = [];
-  for (const tpl of templatesIn(source)) {
+  const templates = templatesIn(source);
+  for (const tpl of templates) {
+    if (ESCAPED_LT.test(tpl.text)) {
+      problems.push({
+        line: tpl.line,
+        text: 'template spells < as an escape; this lint cannot analyze it (fail closed)',
+      });
+      continue;
+    }
     if (!HOLDS_HTML.test(tpl.text)) continue;
     for (const { line, expr } of tpl.exprs) {
-      if (!ESCAPED.test(expr)) {
-        problems.push({ line, text: `\${${expr}} is written into HTML without escapeHtml()` });
+      if (!isWholeEscapeCall(expr)) {
+        problems.push({ line, text: `\${${expr}} is written into HTML but is not one whole escapeHtml() call` });
       }
+    }
+    const before = source.slice(0, tpl.start).trimEnd();
+    const after = source.slice(tpl.end).trimStart();
+    if (before.endsWith('+') || /^(\+|\.\s*(replace|replaceAll|concat)\b)/.test(after)) {
+      problems.push({
+        line: tpl.line,
+        text: 'HTML template is joined or rewritten after it is built; this lint cannot analyze it (fail closed)',
+      });
+    }
+  }
+  for (const q of templates.quoted) {
+    if (HOLDS_HTML.test(q.text)) {
+      problems.push({
+        line: q.line,
+        text: 'HTML in a quoted string; this lint only analyzes template literals (fail closed)',
+      });
     }
   }
   if (/\bescapeHtml\(/.test(source) && !source.includes(CANONICAL_HELPER)) {
@@ -228,6 +328,11 @@ if (process.argv.includes('--self-test')) {
     '${pathname} is written',
     '${url.search} is written',
     '${String(escapeHtml(pathname))} is written',
+    '${escapeHtml(pathname) + pathname.slice()} is written',
+    '${escapeHtml(pathname) || String(url.search)} is written',
+    'HTML in a quoted string',
+    'joined or rewritten after it is built',
+    'spells < as an escape',
     'differs from the canonical helper',
   ];
   const blob = bad.map((p) => p.text).join('\n');
@@ -249,14 +354,19 @@ if (files.length === 0) {
 }
 const problems = scan(files);
 if (problems.length === 0) {
-  console.log(`check-catch-all-escape: OK — ${files.length} catch-all handlers escape what they write.`);
+  console.log(
+    `check-catch-all-escape: OK — lint passed for ${files.length} catch-all handlers: each 404 ` +
+      'template interpolation is one escapeHtml() call and each helper is the canonical copy. ' +
+      'This is a lint for one shape, not a proof of safety; the behavioral check is ' +
+      'packages/create-litro/src/catch-all-handler.test.ts.',
+  );
   process.exit(0);
 }
 console.error(`check-catch-all-escape: ${problems.length} problem(s)\n`);
 for (const p of problems) console.error(`  ${p.file}:${p.line}  ${p.text}`);
 console.error(
-  '\nA catch-all handler writes the request path into its 404 page, so every\n' +
-    'interpolation in its HTML goes through escapeHtml(), and escapeHtml() is the\n' +
-    'canonical helper in scripts/check-catch-all-escape.mjs, copied exactly (issue 295).',
+  '\nA catch-all handler writes the request path into its 404 page. Build that page\n' +
+    'as one template literal, put every interpolation through one escapeHtml() call,\n' +
+    'and copy escapeHtml() exactly from scripts/check-catch-all-escape.mjs (issue 295).',
 );
 process.exit(1);

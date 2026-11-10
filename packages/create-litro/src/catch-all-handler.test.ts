@@ -35,7 +35,20 @@ import { normalizePathname, DEFAULT_SKIP_LINKS } from '@beatzball/litro';
 
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
 
-const SKIP = new Set(['node_modules', 'dist', '.nitro', '.litro', '.output', '.git']);
+// `.claude` and `.airig` hold agent worktrees and review scratch: other
+// checkouts of this repository, often at older commits. Walking into them
+// tests their handlers, not this checkout's, and a pre-fix copy there turns a
+// local run red while CI (which has none) stays green.
+const SKIP = new Set([
+  'node_modules',
+  'dist',
+  '.nitro',
+  '.litro',
+  '.output',
+  '.git',
+  '.claude',
+  '.airig',
+]);
 
 /** Every `server/routes/[...].ts` under the repository root. */
 async function catchAllHandlers(dir: string): Promise<string[]> {
@@ -213,6 +226,15 @@ describe('catch-all page handlers', () => {
           // An entity in the path is shown as typed, not interpreted.
           const entity = await render404(handler, '/a&lt;b&gt;');
           expect(codeText(entity.body)).toBe('/a&amp;lt;b&amp;gt;');
+        });
+
+        it('shows an invalid percent-escape as typed, with a 404', async () => {
+          // Pins the handler against a future decodeURIComponent() of the
+          // path, which throws URIError on `%ZZ` and would answer 500.
+          const handler = await loadHandler(file);
+          const { status, body } = await render404(handler, '/bad%ZZ%2');
+          expect(status).toBe(404);
+          expect(codeText(body)).toBe('/bad%ZZ%2');
         });
       });
     });
