@@ -1,5 +1,5 @@
 ---
-'@beatzball/litro-native': patch
+'@beatzball/litro-native': minor
 ---
 
 Share and review now reach the native shell.
