@@ -726,11 +726,29 @@ the simulator the home screen shows the crown. NATIVE-019 records the trap.
 **Only `app.json` and `Assets.xcassets` are shipped.** `select-app.sh` copied the
 whole folder; it now copies an allowlist and names what it left out.
 
-**The release guard refuses an app with no icon.** App Store Connect refuses the
-upload, and nothing before it would say so. The guard checks existence only,
-because its phase is sandboxed and may not read an undeclared file. A Release
-build of qdoku passes; the demo still fails, on its start URL, its allowed
-origin and its missing icon.
+**An icon is checked down to its pixels, at selection.** The first version
+checked only that the icon set's `Contents.json` existed, in both
+`select-app.sh` and the release guard. A review built a device Release with the
+named image missing, which shipped no icon at all, and one with an alpha
+channel, which App Store Connect refuses; both succeeded. `select-app.sh` now
+requires exactly one image, named, present, 1024 by 1024 and with no alpha
+channel, and refuses the selection otherwise. The release guard, sandboxed,
+still checks only that the set exists. A Release build of qdoku passes for a
+device; the demo still fails on its start URL, its allowed origin and its
+missing icon.
+
+**Values are read by type.** `plutil -extract raw` turns an array into its
+length and a real into `1.500000`, so `"build": [99]` selected build 1. Every
+value is now type-checked first: `version` must be text, `build` text or a
+whole number. `select-app.sh` also refuses a bundle identifier App Store
+Connect would refuse, an empty `name`, and a `startURL` whose origin is not in
+`allowedOrigins`. It does not check capability names, because a third copy of
+that list would drift (NATIVE-008).
+
+**Left alone on purpose:** a stale selection. Editing `app.json` without running
+`select-app.sh` builds the previous values. TestFlight refuses a duplicate
+build number loudly, and closing it would put per-app logic in the project
+file.
 
 **`ITSAppUsesNonExemptEncryption` is false** in `Support/Info.plist`, shared by
 every app: the shell uses only the system HTTPS stack.

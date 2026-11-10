@@ -16,8 +16,10 @@
 # (NATIVE-017), but an https LAN or .local name would still load, and whatever
 # host holds that name on the user's current network would be served the bridge.
 #
-# The app icon is checked too. App Store Connect refuses an upload with no
-# 1024-point icon, and nothing before the upload would say so.
+# The app icon is checked too, as far as this phase can see: whether the icon
+# set is there. App Store Connect refuses an upload with no 1024-point icon. The
+# pixels -- present, 1024 by 1024, no alpha channel -- are checked by
+# select-app.sh, which runs outside the sandbox (NATIVE-019).
 #
 # This runs as the first build phase of the app target. A Debug build is left
 # alone, because a Debug build is where a loopback address belongs.

@@ -153,11 +153,32 @@ command-line setting outranks the xcconfig:
 xcodebuild archive ... MARKETING_VERSION=1.0.1 CURRENT_PROJECT_VERSION=8
 ```
 
-The icon is the asset catalog's `AppIcon` set. `select-app.sh` copies the
+The two values also ride inside the `app.json` that ships in the bundle, and
+after an override they disagree with `Info.plist`. Nothing reads them there --
+the shell's configuration has no field for either -- so `Info.plist` is the
+one to trust.
+
+`version` must be text and `build` text or a whole number. Any other JSON type
+is refused, because `plutil` would otherwise convert it silently: `[99]` became
+build 1.
+
+The icon is the asset catalog's `AppIcon` set. `select-app.sh` checks it down
+to the pixels -- exactly one image, named in `Contents.json`, present, 1024 by
+1024, with no alpha channel -- and refuses the selection otherwise. Each of
+those shapes once built and shipped with no usable icon. It then copies the
 catalog into `Build/Resources/` and sets `ASSETCATALOG_COMPILER_APPICON_NAME`,
 and Xcode compiles it from there: the built app carries `Assets.car` and
-`CFBundleIconName = AppIcon`. An app with no icon still builds for Debug, and a
-Release build of it is refused, because App Store Connect refuses the upload.
+`CFBundleIconName = AppIcon`.
+
+An app folder with no icon set still selects and builds for Debug. A Release
+build of it is refused by the release guard, which can only see whether the set
+is there; the pixels were checked at selection.
+
+`select-app.sh` also refuses a bundle identifier App Store Connect would refuse,
+an empty `name`, and a `startURL` whose origin is not in `allowedOrigins`.
+Capability names are not checked there: that would be a third copy of the
+protocol's list (NATIVE-008). A typo in one fails at launch, on the startup
+failure screen.
 
 Only `app.json` and `Assets.xcassets` reach the bundle. Anything else in the
 folder -- a README, a source image -- is listed as `not shipped` and left out.
