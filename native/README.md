@@ -185,6 +185,38 @@ folder -- a README, a source image -- is listed as `not shipped` and left out.
 
 `select-app.sh --self-test` checks these rules against throwaway folders.
 
+## What the page must know about its window
+
+One thing, and it is not obvious: **the page sizes itself with `100%`, never with
+`vh`.**
+
+The web view's scroll view holds back the safe areas as a content inset, which
+is the right default -- the alternative puts content under the Dynamic Island
+and the home indicator. That inset shrinks the layout viewport the page is laid
+out in, and `vh` does not follow it: `vh` resolves against the whole screen.
+
+So `body { min-height: 100vh }` makes a page taller than the area it can
+occupy. On an iPhone 17 Pro Max that is 956px against a visible 860px, the 96px
+being a 62px top inset and a 34px bottom one. The symptom is a page that
+scrolls with nothing to show, and a drag meant for the app moving the whole
+page instead.
+
+```css
+html { height: 100%; }
+body { min-height: 100%; }
+```
+
+`svh` is not the fix. Those units exist for a browser's own chrome, and a web
+view has none, so there is nothing for them to subtract. `100%` resolves
+against the layout viewport itself, which is exactly what the inset changes.
+
+A page that wants the insets reads `env(safe-area-inset-*)`, which is what that
+is for.
+
+This matters to a page meant to fit the screen exactly. A scrolling document is
+only 96px longer than it meant to be and nobody notices. NATIVE-020 in
+`.agents/rules/native-shell.md` has the measurements.
+
 ## Shipping an app to the App Store
 
 Two things decide whether an app built from this shell is accepted, and neither
