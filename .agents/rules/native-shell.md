@@ -521,3 +521,52 @@ Info.plist names `CFBundleIconName = AppIcon`.
 **Check.** `native/scripts/select-app.sh --self-test` and
 `native/scripts/check-release-config.sh --self-test`, and the CI step that
 builds qdoku for Release and asserts `CFBundleIconName` and `Assets.car`.
+
+## NATIVE-020 — `vh` is not the height the web view gives the page
+
+**Trap.** The first store app set `body { min-height: 100vh }` and scrolled on a
+device with nothing to show. A drag anywhere the page owned, rather than the
+board, moved the whole app under the finger.
+
+Measured from the device itself, which reported its own numbers on every touch:
+`document.documentElement.scrollHeight` was 956px against a `clientHeight` of
+860px, on 721 readings out of 722, from load, with no zoom involved. The 96px
+difference is that phone's safe areas, 62px at the top and 34px at the bottom.
+
+The web view's scroll view applies the safe area as a content inset --
+`contentInsetAdjustmentBehavior` is `.automatic`, which is the right default,
+because the alternative puts content under the Dynamic Island and the home
+indicator. That inset shrinks the layout viewport the page is laid out in. `vh`
+does not follow it: it resolves against the whole screen. So a page sized in
+`vh` is taller than the area it can occupy.
+
+`svh` is not the fix, and reaching for it is the second half of the trap. The
+`svh` and `lvh` units exist for a browser's own chrome, which a web view does
+not have, so there is nothing for them to subtract. Whether either tracks a
+content inset was not measured; what was measured is that the root element's
+`clientHeight` is the inset height, and `100%` resolves against the initial
+containing block, which is that same layout viewport. After the change the same
+device reported 860 against 860 with the scroll position at zero.
+
+**Rule.** A page sizes itself with `100%` -- `html { height: 100% }` and
+`body { min-height: 100% }` -- not with `vh`, `svh`, `lvh`, `dvh` or the `vmin`
+and `vmax` family. `100%` is the layout viewport itself, so it is correct in the
+shell, in a phone browser and in a desktop window alike. A page that needs the
+inset itself reads `env(safe-area-inset-*)`, which is what that is for.
+
+Do not change `contentInsetAdjustmentBehavior` in
+`native/App/ShellViewController.swift` to make `vh` correct. That trades a
+scroll with nothing to show for content hidden under the hardware.
+
+This bites a page meant to fit the screen exactly, which is the shape a game or
+a tool has. A scrolling document is only 96px longer than it meant to be, so
+the recipes that lay out docs sites in `vh` are not wrong today -- but an app
+built from one and put in the shell inherits a page that cannot sit still.
+
+**Check.** Assert the stylesheet, because that is where the mistake is made,
+and say in the test that the engine cannot reproduce the device. Chromium
+applies no safe-area content insets, and `Emulation.setSafeAreaInsetsOverride`
+does exist but only changes what `env(safe-area-inset-*)` reports, leaving the
+layout viewport whole -- measured, not assumed. A window-fit test must assert
+both axes: one that checked height alone passed while the page was 96px too
+tall.
