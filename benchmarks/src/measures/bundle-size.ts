@@ -97,3 +97,16 @@ export async function measureBundleSize(mode: 'ssg' | 'ssr'): Promise<BundleSize
 
   return result;
 }
+
+/** On-disk output, counted once; all JS/CSS here is publicly served client code. */
+export async function measureStaticBundleSize(outputDir: string): Promise<BundleSizeBreakdown> {
+  const files = await walkDir(outputDir);
+  if (!files.length) throw new Error('Static build output is missing or empty');
+  return {
+    clientJS: sumByExt(files, ['.js', '.mjs', '.cjs']),
+    clientCSS: sumByExt(files, ['.css']),
+    serverBundle: 0,
+    staticHTML: sumByExt(files, ['.html']),
+    totalOutput: sumAll(files),
+  };
+}

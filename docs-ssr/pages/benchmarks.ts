@@ -66,6 +66,8 @@ interface LighthouseRoute {
   cls: number;
   tbt: number;
   speedIndex: number;
+  runCount?: number;
+  statistics?: Record<string, Stats>;
 }
 
 interface StreamingRoute {
@@ -73,11 +75,16 @@ interface StreamingRoute {
   ttlb: number;
   delta: number;
   totalBytes: number;
+  runCount?: number;
+  statistics?: Record<string, Stats>;
 }
 
 interface FrameworkResult {
   name: string;
   version: string;
+  versions?: Record<string, string>;
+  bundleSize?: BundleSize;
+  httpPerf?: Record<string, HttpRoute>;
   buildTime: Stats;
   outputSize: number;
   pageWeight: Record<string, PageWeightRoute>;
@@ -93,6 +100,10 @@ interface BenchmarkResults {
     cpuModel: string;
     cpuCount: number;
     memoryGB: number;
+    osVersion?: string;
+    pnpmVersion?: string;
+    context?: string;
+    loadAverage?: number[];
     commitSha: string;
     commitMessage: string;
   };
@@ -144,7 +155,7 @@ export const pageData = definePageData(async (_event) => {
   const seoTitle = 'Benchmarks — Litro';
   const seoHead = buildSeoHead({
     title: seoTitle,
-    description: 'Performance benchmarks: Litro vs Nuxt vs Next.js, plus SSG vs SSR internals. Build time, output size, page weight, TTFB, Lighthouse, and streaming metrics.',
+    description: 'Performance benchmarks: Litro vs Next.js vs Nuxt vs TanStack Start, plus SSG vs SSR internals. Build time, output size, page weight, TTFB, Lighthouse, and streaming metrics.',
     path: '/benchmarks',
     type: 'website',
   }) + buildJsonLd({
@@ -302,8 +313,8 @@ export class BenchmarksPage extends LitroPage {
   /* ── Helpers ──────────────────────────────────────────────────────── */
 
   private _formatBytes(bytes: number): string {
-    if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
-    return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MiB`;
+    return `${(bytes / 1024).toFixed(1)} KiB`;
   }
 
   private _formatMs(ms: number): string {
@@ -379,16 +390,25 @@ export class BenchmarksPage extends LitroPage {
           <h1>Benchmarks</h1>
           <p class="intro">
             Real-world performance numbers for Litro and competing frameworks,
-            measured on the same hardware with identical page content.
+            measured on the same hardware with equivalent visible content.
           </p>
           ${r.meta.timestamp ? html`
             <p class="meta">
-              <code>${new Date(r.meta.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</code>
+              <code>${new Date(r.meta.timestamp).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' })}</code>
               &middot; commit <code>${r.meta.commitSha}</code>
               &middot; ${r.meta.nodeVersion}
               &middot; ${r.meta.cpuModel} (${r.meta.cpuCount} cores, ${r.meta.memoryGB} GB)
+              ${r.meta.osVersion ? html`&middot; macOS ${r.meta.osVersion}` : ''}
+              ${r.meta.pnpmVersion ? html`&middot; pnpm ${r.meta.pnpmVersion}` : ''}
+              ${r.meta.context ? html`<br />Run context: ${r.meta.context}` : ''}
             </p>
           ` : ''}
+
+          <p class="note">
+            <a href="https://github.com/beatzball/litro/blob/main/benchmarks/README.md">Install, build, run, add a framework, and read the complete measurement tables</a>.
+            The linked report includes run counts, spread, exact package versions, and the historical Next.js/Nuxt comparison.
+            Comparison HTTP measures static serving; only the docs SSR streaming test measures TTFB.
+          </p>
 
           ${hasCross ? this._crossFrameworkSection(fw) : this._crossFrameworkPlaceholder()}
 
@@ -435,10 +455,10 @@ export class BenchmarksPage extends LitroPage {
       <h2>Framework Comparison</h2>
       <p class="note">
         Identical minimal apps (2 routes, same content) built in SSG mode.
-        Litro uses Lit + Nitro, Nuxt uses Vue + Nitro, Next.js uses React.
+        Litro uses Lit + Nitro, Nuxt uses Vue + Nitro, and Next.js and TanStack Start use React.
         Build times are cold builds that transpile only: caches are cleared
         before every run, and Next.js type checking is turned off so that all
-        three do the same work.
+        apps omit a separate type-check pass.
       </p>
 
       <section class="summary-section" aria-label="Cross-framework summary">
@@ -453,6 +473,9 @@ export class BenchmarksPage extends LitroPage {
         ${this._fwBuildTab(frameworks, buildWinnerIdx)}
         ${this._fwOutputSizeTab(frameworks, sizeWinnerIdx)}
         ${routes.length > 0 ? this._fwPageWeightTab(frameworks, routes) : ''}
+        ${frameworks.some(fw => Object.keys(fw.lighthouse ?? {}).length) ? this._fwLighthouseTab(frameworks, routes) : ''}
+        ${this._fwHttpTab(frameworks)}
+        ${this._fwVersionsTab(frameworks)}
       </litro-tabs>
     `;
   }
@@ -462,7 +485,7 @@ export class BenchmarksPage extends LitroPage {
       <h2>Framework Comparison</h2>
       <p class="note">
         Cross-framework benchmarks have not been run yet. Run
-        <code>pnpm bench:cross</code> to compare Litro against Nuxt and Next.js.
+        <code>pnpm bench:cross</code> to compare Litro, Next.js, Nuxt, and TanStack Start.
       </p>
     `;
   }
@@ -471,7 +494,7 @@ export class BenchmarksPage extends LitroPage {
    * SECTION 2: HN Benchmark (realistic app, SSG only)
    * TODO: Add SSR benchmark section once --hn-ssr is implemented in the
    * runner. Would show per-request TTFB, throughput, and latency p99
-   * across all 5 frameworks using measureHttpPerf().
+   * across the configured frameworks using measureHttpPerf().
    * ════════════════════════════════════════════════════════════════════ */
 
   private _hnSizeAnnotations: Record<string, string> = {
@@ -484,7 +507,7 @@ export class BenchmarksPage extends LitroPage {
 
   private _fwNameWithAnnotation(name: string, annotations?: Record<string, string>) {
     const sym = annotations?.[name];
-    return sym ? html`${name}<sup class="annotation-marker">${sym}</sup>` : html`${name}`;
+    return sym ? html`${this._fwLabel(name)}<sup class="annotation-marker">${sym}</sup>` : html`${this._fwLabel(name)}`;
   }
 
   private _hnBenchmarkSection(frameworks: FrameworkResult[]) {
@@ -508,12 +531,12 @@ export class BenchmarksPage extends LitroPage {
     return html`
       <h2 id="hn-lighthouse">HN Clone Benchmark</h2>
       <p class="note">
-        Five identical Hacker News clones (3 Litro adapters + Next.js + Nuxt),
+        ${frameworks.length} equivalent Hacker News clones (Litro adapters, Next.js, Nuxt, and TanStack Start when measured),
         same fixture data, same routes (~100 pages), SSG mode. Tests realistic app
         complexity with data fetching, dynamic routes, and nested comment trees.
         Build times are cold builds that transpile only: caches are cleared
         before every run, and Next.js type checking is turned off so that all
-        five do the same work.
+        apps omit a separate type-check pass.
       </p>
 
       <section class="summary-section" aria-label="HN benchmark summary">
@@ -526,7 +549,7 @@ export class BenchmarksPage extends LitroPage {
 
       <div class="annotation-legend">
         <p><span class="annotation-marker">\u2020</span> Next.js output includes RSC payload files (<code>.txt</code>) alongside HTML, inflating total on-disk size.</p>
-        <p><span class="annotation-marker">\u2021</span> Nuxt produces the smallest page weight because it does not duplicate data for hydration. Litro inlines a <code>__litro_data__</code> JSON blob (~14 KB on the index page) and Next.js inlines RSC scripts (~25 KB) — both ship serialized data alongside rendered HTML so the client can hydrate. Nuxt prerenders the HTML and ships only a minimal metadata stub (~160 bytes), relying on the server-rendered markup without client re-rendering.</p>
+        <p><span class="annotation-marker">\u2021</span> HTML weight excludes separately fetched assets and hydration payloads. Nuxt can extract data to <code>_payload.json</code>; Litro and React frameworks serialize data differently. Smaller HTML alone does not establish a smaller full page download or the absence of hydration.</p>
       </div>
 
       <litro-tabs>
@@ -534,12 +557,14 @@ export class BenchmarksPage extends LitroPage {
         ${this._fwOutputSizeTab(frameworks, sizeTiedWinners, sizeAnn)}
         ${routes.length > 0 ? this._fwPageWeightTab(frameworks, routes, weightAnn) : ''}
         ${hasLighthouse ? this._fwLighthouseTab(frameworks, routes) : ''}
+        ${this._fwHttpTab(frameworks)}
+        ${this._fwVersionsTab(frameworks)}
       </litro-tabs>
 
       <p class="note">
-        These benchmarks measure static prerendering (SSG) only. Per-request SSR
-        benchmarks — measuring TTFB, throughput, and latency under load — are
-        planned for a future update.
+        These comparisons measure prerendered output. HTTP load results use the
+        same static file server for every app; they do not measure framework SSR.
+        Streaming is N/A for these apps and is measured only for the docs SSR site.
       </p>
     `;
   }
@@ -549,7 +574,7 @@ export class BenchmarksPage extends LitroPage {
       <h2>HN Clone Benchmark</h2>
       <p class="note">
         HN clone benchmarks have not been run yet. Run
-        <code>pnpm bench:hn</code> to compare all 5 HN clones.
+        <code>pnpm bench:hn</code> to compare all configured HN clones, including TanStack Start.
       </p>
     `;
   }
@@ -577,7 +602,7 @@ export class BenchmarksPage extends LitroPage {
     const isTie = winners.size > 1;
     const winnerName = frameworks[firstWinnerIdx]?.name ?? '';
     const winnerSym = annotations?.[winnerName];
-    const tieNames = isTie ? [...winners].map(i => frameworks[i]?.name).join(' & ') : winnerName;
+    const tieNames = isTie ? [...winners].map(i => this._fwLabel(frameworks[i]?.name ?? '')).join(' & ') : this._fwLabel(winnerName);
 
     return html`
       <litro-card title="${title}">
@@ -590,7 +615,7 @@ export class BenchmarksPage extends LitroPage {
           `)}
         </div>
         <div class="card-badge">
-          <litro-badge variant="${winnerSym ? 'caution' : 'tip'}" text="${isTie ? `${tieNames} tied` : `${winnerName} wins`}${winnerSym ? ` ${winnerSym}` : ''}"></litro-badge>
+          <litro-badge variant="${winnerSym ? 'caution' : 'tip'}" text="${isTie ? `${tieNames} tied` : `${this._fwLabel(winnerName)} wins`}${winnerSym ? ` ${winnerSym}` : ''}"></litro-badge>
         </div>
       </litro-card>
     `;
@@ -606,8 +631,8 @@ export class BenchmarksPage extends LitroPage {
               Time to complete a full production build
               (${frameworks[0]?.buildTime.runs?.length ?? '?'} runs each).
               Every run is a cold build &mdash; each framework's build caches are
-              deleted first &mdash; and all three transpile only, with no type
-              checking.
+              deleted first &mdash; and comparison apps transpile without a separate
+              type-check pass.
             </caption>
             <thead>
               <tr>
@@ -616,18 +641,18 @@ export class BenchmarksPage extends LitroPage {
                 <th scope="col">Mean</th>
                 <th scope="col">Median</th>
                 <th scope="col">p95</th>
-                <th scope="col">Std Dev</th>
+                <th scope="col">Std Dev</th><th scope="col">Runs</th><th scope="col">Min</th><th scope="col">Max</th>
               </tr>
             </thead>
             <tbody>
               ${frameworks.map((fw, i) => html`
                 <tr>
-                  <th scope="row">${fw.name}</th>
+                  <th scope="row">${this._fwLabel(fw.name)}</th>
                   <td>${fw.version}</td>
                   <td class="${i === buildWinnerIdx ? 'winner-cell' : ''}">${this._formatMs(fw.buildTime.mean)}</td>
                   <td>${this._formatMs(fw.buildTime.median)}</td>
                   <td>${this._formatMs(fw.buildTime.p95)}</td>
-                  <td>${this._formatMs(fw.buildTime.stddev)}</td>
+                  <td>${this._formatMs(fw.buildTime.stddev)}</td><td>${fw.buildTime.runs.length}</td><td>${this._formatMs(fw.buildTime.min)}</td><td>${this._formatMs(fw.buildTime.max)}</td>
                 </tr>
               `)}
             </tbody>
@@ -646,11 +671,12 @@ export class BenchmarksPage extends LitroPage {
         <h3>Build Output Size</h3>
         <div class="table-wrap">
           <table>
-            <caption>Total size of production build output on disk.</caption>
+            <caption>One observation after the final build; static output on disk. Other payload and asset files can make the total larger than the listed categories.</caption>
             <thead>
               <tr>
                 <th scope="col">Framework</th>
                 <th scope="col">Total Size</th>
+                <th scope="col">JS</th><th scope="col">CSS</th><th scope="col">HTML</th><th scope="col">Server</th>
                 <th scope="col">Relative</th>
               </tr>
             </thead>
@@ -661,6 +687,7 @@ export class BenchmarksPage extends LitroPage {
                   <tr>
                     <th scope="row">${this._fwNameWithAnnotation(fw.name, annotations)}</th>
                     <td class="${winners.has(i) ? 'winner-cell' : ''}">${this._formatBytes(fw.outputSize)}</td>
+                    ${(['clientJS', 'clientCSS', 'staticHTML', 'serverBundle'] as const).map(key => html`<td>${fw.bundleSize ? this._formatBytes(fw.bundleSize[key]) : 'not recorded'}</td>`)}
                     <td>
                       <span class="bar" style="width: ${pct.toFixed(1)}%"></span>
                       <span class="bar-label">${pct.toFixed(0)}%</span>
@@ -681,7 +708,7 @@ export class BenchmarksPage extends LitroPage {
         <h3>HTML Response Size</h3>
         <div class="table-wrap">
           <table>
-            <caption>Raw and gzip-compressed HTML payload per route.</caption>
+            <caption>One HTML response per route, raw and locally gzip-compressed; excludes other fetched resources.</caption>
             <thead>
               <tr>
                 <th scope="col">Route</th>
@@ -715,75 +742,66 @@ export class BenchmarksPage extends LitroPage {
   }
 
   private _fwLighthouseTab(frameworks: FrameworkResult[], routes: string[]) {
-    const withLh = frameworks.filter(fw => fw.lighthouse && Object.keys(fw.lighthouse).length > 0);
-    const perfScores = frameworks.map(fw => {
-      if (!fw.lighthouse) return 0;
-      const vals = routes.map(rt => fw.lighthouse?.[rt]?.performance ?? 0);
-      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
-    });
-    const maxPerf = Math.max(...perfScores);
-
+    const metrics = [
+      ['performance', 'Score (0–100)'], ['fcp', 'FCP (ms)'], ['lcp', 'LCP (ms)'],
+      ['cls', 'CLS'], ['tbt', 'TBT (ms)'], ['speedIndex', 'SI (ms)'],
+    ] as const;
     return html`
       <litro-tab-item label="Lighthouse">
         <h3>Lighthouse Performance</h3>
         <p class="note">
-          Headless Chrome Lighthouse audit on the statically prerendered output,
-          median of 3 runs per route. All five apps serve the same HN content,
-          so differences are architecture-driven rather than data-driven.
+          Headless Chrome audits of prerendered output use default mobile simulated throttling.
+          Values come from the audit selected by median performance score.
+          Loading strategy, hydration, and browser conditions affect these scores;
+          these measurements do not establish equivalent post-hydration interaction speed.
         </p>
-        <p class="note">
-          <strong>Loading strategy skews the score more than runtime speed does.</strong>
-          Next.js emits every JS bundle as <code>&lt;script async&gt;</code>, so its
-          ~450&nbsp;KB of chunks loads outside Lighthouse's measurement window and
-          contributes 0&nbsp;ms to TBT. Litro emits <code>&lt;script type="module"&gt;</code>
-          — ES modules are implicitly deferred, and the browser waits for
-          module fetch-and-evaluate before firing paint events, which adds
-          roughly half a second to FCP. Lit's shadow-DOM materialization adds
-          another ~100&nbsp;ms. Nuxt hydrates a payload at parse time, producing
-          measurable TBT on list-heavy pages. Post-hydration, the in-browser
-          experience is comparable across all five — but Lighthouse weights
-          FCP/LCP/TBT inside a narrow window, and what loads in that window
-          dominates the result.
-        </p>
-        <div class="table-wrap">
-          <table>
-            <caption>Lighthouse Performance category (median of ${withLh[0]?.lighthouse?.[routes[0]] ? '3' : '?'} runs per route).</caption>
-            <thead>
-              <tr>
-                <th scope="col">Route</th>
-                ${frameworks.map(fw => html`<th scope="col">${fw.name}</th>`)}
-              </tr>
-            </thead>
-            <tbody>
-              ${routes.map(rt => {
-                const scores = frameworks.map(fw => fw.lighthouse?.[rt]?.performance);
-                const validScores = scores.filter((s): s is number => typeof s === 'number' && s > 0);
-                const maxScore = validScores.length ? Math.max(...validScores) : 0;
-                return html`
-                  <tr>
-                    <th scope="row"><code>${rt}</code></th>
-                    ${frameworks.map((fw, i) => {
-                      const s = scores[i];
-                      if (s === undefined) return html`<td>-</td>`;
-                      const isWinner = s > 0 && s === maxScore;
-                      return html`<td class="${isWinner ? 'winner-cell' : ''}">${s.toFixed(0)}</td>`;
-                    })}
-                  </tr>
-                `;
+        <div class="table-wrap"><table>
+          <caption>All recorded routes and metrics. Spread is min–max across audits; legacy results may omit it.</caption>
+          <thead><tr><th scope="col">Framework</th><th scope="col">Route</th><th scope="col">Runs</th>
+            ${metrics.map(([, title]) => html`<th scope="col">${title} (min–max)</th>`)}
+          </tr></thead>
+          <tbody>${frameworks.flatMap(fw => routes.map(route => {
+            const lh = fw.lighthouse?.[route];
+            if (!lh) return html``;
+            return html`<tr><th scope="row">${this._fwLabel(fw.name)}</th><td><code>${route}</code></td><td>${lh.runCount ?? 'not recorded'}</td>
+              ${metrics.map(([key]) => {
+                const spread = lh.statistics?.[key];
+                return html`<td>${lh[key].toFixed(key === 'cls' ? 3 : 1)} ${spread ? html`(${spread.min.toFixed(3)}–${spread.max.toFixed(3)})` : ''}</td>`;
               })}
-              <tr>
-                <th scope="row">Average</th>
-                ${frameworks.map((_fw, i) => {
-                  const avg = perfScores[i];
-                  const isWinner = avg > 0 && avg === maxPerf;
-                  return html`<td class="${isWinner ? 'winner-cell' : ''}"><strong>${avg.toFixed(0)}</strong></td>`;
-                })}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            </tr>`;
+          }))}</tbody>
+        </table></div>
       </litro-tab-item>
     `;
+  }
+
+  private _fwLabel(name: string): string {
+    return ({ litro: 'Litro (Lit)', 'litro-lit': 'Litro (Lit)', 'litro-fast': 'Litro (FAST)', 'litro-elena': 'Litro (Elena)', nextjs: 'Next.js', nuxt: 'Nuxt', tanstack: 'TanStack Start' } as Record<string, string>)[name] ?? name;
+  }
+
+  private _fwVersionsTab(frameworks: FrameworkResult[]) {
+    return html`<litro-tab-item label="Versions">
+      <h3>Exact Installed Versions</h3>
+      <div class="table-wrap"><table>
+        <caption>Resolved from each app at measurement time.</caption>
+        <thead><tr><th scope="col">Framework</th><th scope="col">Headline</th><th scope="col">Stack</th></tr></thead>
+        <tbody>${frameworks.map(fw => html`<tr><th scope="row">${this._fwLabel(fw.name)}</th><td>${fw.version}</td><td>${Object.entries(fw.versions ?? {}).map(([pkg, version]) => `${pkg}@${version}`).join(', ') || 'not recorded'}</td></tr>`)}</tbody>
+      </table></div>
+    </litro-tab-item>`;
+  }
+
+  private _fwHttpTab(frameworks: FrameworkResult[]) {
+    if (!frameworks.some(fw => Object.keys(fw.httpPerf ?? {}).length)) return html``;
+    return html`<litro-tab-item label="Static HTTP">
+      <h3>Static File Serving Under Load</h3>
+      <p class="note">One autocannon load run per route. Duration is the configured limit; rates come from autocannon samples. Latency covers the whole response; percentiles describe requests within that run. This measures the shared static server and payload, not framework SSR.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Framework</th><th scope="col">Route</th><th scope="col">Configured duration (s)</th><th scope="col">Connections</th><th scope="col">Requests/s</th><th scope="col">Bytes/s</th><th scope="col">Mean (ms)</th><th scope="col">p99 (ms)</th><th scope="col">Max (ms)</th><th scope="col">Errors / timeouts</th></tr></thead>
+        <tbody>${frameworks.flatMap(fw => Object.entries(fw.httpPerf ?? {}).map(([route, h]) => html`<tr>
+          <th scope="row">${this._fwLabel(fw.name)}</th><td><code>${route}</code></td><td>${h.duration}</td><td>${h.connections}</td><td>${h.requests.mean.toFixed(1)}</td><td>${h.throughput.mean.toFixed(1)}</td><td>${h.latency.mean.toFixed(3)}</td><td>${h.latency.p99.toFixed(3)}</td><td>${h.latency.max.toFixed(3)}</td><td>${h.errors} / ${h.timeouts}</td>
+        </tr>`))}</tbody>
+      </table></div>
+    </litro-tab-item>`;
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -825,7 +843,7 @@ export class BenchmarksPage extends LitroPage {
         <litro-card-grid>
           ${this._ssgSsrCard('Build Time', this._formatMs(r.buildTime.ssg.mean), this._formatMs(r.buildTime.ssr.mean), buildWinner)}
           ${this._ssgSsrCard('Output Size', this._formatBytes(r.bundleSize.ssg.totalOutput), this._formatBytes(r.bundleSize.ssr.totalOutput), sizeWinner)}
-          ${this._ssgSsrCard('Avg TTFB', this._formatMs(avgTtfbSsg), this._formatMs(avgTtfbSsr), ttfbWinner)}
+          ${this._ssgSsrCard('Avg response latency', this._formatMs(avgTtfbSsg), this._formatMs(avgTtfbSsr), ttfbWinner)}
         </litro-card-grid>
       </section>
 
@@ -927,7 +945,7 @@ export class BenchmarksPage extends LitroPage {
         <h3>Latency Under Load</h3>
         <div class="table-wrap">
           <table>
-            <caption>autocannon: ${r.httpPerf.ssg[routes[0]]?.connections ?? 10} connections, ${r.httpPerf.ssg[routes[0]]?.duration ?? 10}s per route.</caption>
+            <caption>autocannon: ${r.httpPerf.ssg[routes[0]]?.connections ?? 10} connections, configured ${r.httpPerf.ssg[routes[0]]?.duration ?? 10}s limit per route.</caption>
             <thead>
               <tr>
                 <th scope="col">Route</th>
@@ -997,7 +1015,7 @@ export class BenchmarksPage extends LitroPage {
         <h3>HTML Response Size</h3>
         <div class="table-wrap">
           <table>
-            <caption>Raw and gzip-compressed HTML payload per route.</caption>
+            <caption>One HTML response per route, raw and locally gzip-compressed; excludes other fetched resources.</caption>
             <thead>
               <tr>
                 <th scope="col">Route</th>
@@ -1099,10 +1117,11 @@ export class BenchmarksPage extends LitroPage {
         </p>
         <div class="table-wrap">
           <table>
-            <caption>Measured with raw HTTP requests (median of 5 runs).</caption>
+            <caption>Raw HTTP requests; per-route run counts are shown. Timing spread is in the complete report.</caption>
             <thead>
               <tr>
                 <th scope="col">Route</th>
+                <th scope="col">Runs</th>
                 <th scope="col">TTFB</th>
                 <th scope="col">TTLB</th>
                 <th scope="col">Delta</th>
@@ -1115,6 +1134,7 @@ export class BenchmarksPage extends LitroPage {
                 return html`
                   <tr>
                     <th scope="row"><code>${rt}</code></th>
+                    <td>${s.runCount ?? 'not recorded'}</td>
                     <td>${this._formatMs(s.ttfb)}</td>
                     <td>${this._formatMs(s.ttlb)}</td>
                     <td>${this._formatMs(s.delta)}</td>

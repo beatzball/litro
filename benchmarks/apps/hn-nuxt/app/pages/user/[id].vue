@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { fetchUser, timeAgo } from '../../../../hn-shared/api';
+import { fetchUser } from '../../../../hn-shared/api';
 
 const route = useRoute();
-const id = route.params.id as string;
+const id = computed(() => route.params.id as string);
 
-const user = await fetchUser(id);
-if (!user) {
-  throw createError({ statusCode: 404, statusMessage: 'User not found' });
-}
+const { data: user, error } = await useAsyncData(() => `hn:user:${id.value}`, async () => {
+  const user = await fetchUser(id.value);
+  if (!user) {
+    throw createError({ statusCode: 404, statusMessage: 'User not found' });
+  }
+  return user;
+});
+if (error.value) throw createError(error.value);
 
-const createdDate = new Date(user.created * 1000).toLocaleDateString('en-US', {
+const createdDate = computed(() => new Date(user.value!.created * 1000).toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
-});
+}));
 </script>
 
 <template>

@@ -17,8 +17,12 @@ import {
   HN_FRAMEWORK_CONFIGS,
   HN_ROUTE_CHECKS,
   MOCK_API_PORT,
+  LIGHTHOUSE_RUNS,
+  STREAMING_RUNS,
+  AUTOCANNON_CONNECTIONS,
+  AUTOCANNON_DURATION,
 } from './config.js';
-import { startServer, waitForReady, stopServer } from './utils/server-lifecycle.js';
+import { startServer, waitForReady, stopAllServers, assertPortAvailable } from './utils/server-lifecycle.js';
 import { measureBuildTime } from './measures/build-time.js';
 import { measureBundleSize } from './measures/bundle-size.js';
 import { measurePageWeight } from './measures/page-weight.js';
@@ -27,37 +31,67 @@ import { measureLighthouse } from './measures/lighthouse.js';
 import { measureStreaming } from './measures/streaming.js';
 import { measureFramework } from './measures/cross-framework.js';
 import { startMockApi, stopMockApi } from './utils/mock-api.js';
+import { sanitizeContext } from './utils/context.js';
+import { collectToolVersions } from './utils/tool-versions.js';
 
 // --- CLI flags ---
 const args = process.argv.slice(2);
 const skipLighthouse = args.includes('--skip-lighthouse');
 const crossFramework = args.includes('--cross-framework');
 const hnBenchmark = args.includes('--hn');
-const runsFlag = args.find((_, i) => args[i - 1] === '--runs');
-const buildRuns = runsFlag ? parseInt(runsFlag, 10) : BUILD_RUNS;
+const runsIndex = args.indexOf('--runs');
+const runsFlag = runsIndex === -1 ? undefined : args[runsIndex + 1];
+const buildRuns = runsIndex === -1 ? BUILD_RUNS : Number(runsFlag);
+if (!Number.isSafeInteger(buildRuns) || buildRuns < 1) {
+  throw new Error('--runs must be a positive integer');
+}
 
 async function collectMeta(): Promise<BenchmarkResults['meta']> {
   const cpus = os.cpus();
   let commitSha = 'unknown';
-  let commitMessage = '';
+  let pnpmVersion = 'unknown';
+  let osVersion = os.release();
   try {
     commitSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-    commitMessage = execSync('git log -1 --format=%s', { encoding: 'utf-8' }).trim();
-  } catch {
-    // not in a git repo
+  } catch { /* optional outside a checkout */ }
+  try {
+    const version = execSync('pnpm --version', { encoding: 'utf-8' }).trim();
+    if (/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(version)) pnpmVersion = version;
+  } catch { /* record unavailable tooling */ }
+  if (os.platform() === 'darwin') {
+    const version = execSync('sw_vers -productVersion', { encoding: 'utf-8' }).trim();
+    if (/^\d+(?:\.\d+)+$/.test(version)) osVersion = version;
   }
 
   return {
     timestamp: new Date().toISOString(),
     nodeVersion: process.version,
     platform: os.platform(),
+    osVersion,
+    pnpmVersion,
+    toolVersions: await collectToolVersions(!skipLighthouse),
+    context: sanitizeContext(process.env.BENCH_CONTEXT ?? 'Local run; background activity not controlled'),
     arch: os.arch(),
     cpuModel: cpus[0]?.model ?? 'unknown',
     cpuCount: cpus.length,
     memoryGB: Math.round(os.totalmem() / (1024 ** 3)),
     loadAverage: os.loadavg() as [number, number, number],
     commitSha,
-    commitMessage,
+    // A free-form commit subject can contain personal data. The SHA identifies the source.
+    commitMessage: '',
+    settings: {
+      buildRuns,
+      lighthouseRuns: skipLighthouse ? 0 : LIGHTHOUSE_RUNS,
+      streamingRuns: STREAMING_RUNS,
+      httpConnections: AUTOCANNON_CONNECTIONS,
+      httpDurationSeconds: AUTOCANNON_DURATION,
+      httpRunsPerRoute: 1,
+      crossFramework,
+      hn: hnBenchmark,
+      buildCache: 'cold',
+      comparisonServing: 'static files via serve',
+      lighthousePreset: 'default mobile simulated throttling',
+    },
   };
 }
 
@@ -74,8 +108,9 @@ function printSummary(results: BenchmarkResults): void {
   console.log('========================================\n');
 
   console.log(`Timestamp:  ${results.meta.timestamp}`);
-  console.log(`Commit:     ${results.meta.commitSha} — ${results.meta.commitMessage}`);
-  console.log(`Node:       ${results.meta.nodeVersion}`);
+  console.log(`Commit:     ${results.meta.commitSha}`);
+  console.log(`Node:       ${results.meta.nodeVersion}; pnpm: ${results.meta.pnpmVersion}; OS: ${results.meta.osVersion}`);
+  console.log(`Context:    ${results.meta.context}`);
   console.log(`Platform:   ${results.meta.platform}/${results.meta.arch}`);
   console.log(`CPU:        ${results.meta.cpuModel} (${results.meta.cpuCount} cores)`);
   console.log(`Memory:     ${results.meta.memoryGB} GB`);
@@ -89,13 +124,13 @@ function printSummary(results: BenchmarkResults): void {
   console.log(`  SSG total: ${formatBytes(results.bundleSize.ssg.totalOutput)}`);
   console.log(`  SSR total: ${formatBytes(results.bundleSize.ssr.totalOutput)}\n`);
 
-  console.log('--- Avg TTFB (autocannon) ---');
-  const ssgTtfb = Object.values(results.httpPerf.ssg);
-  const ssrTtfb = Object.values(results.httpPerf.ssr);
-  const avgSsgTtfb = ssgTtfb.reduce((s, r) => s + r.latency.mean, 0) / ssgTtfb.length;
-  const avgSsrTtfb = ssrTtfb.reduce((s, r) => s + r.latency.mean, 0) / ssrTtfb.length;
-  console.log(`  SSG: ${avgSsgTtfb.toFixed(1)}ms`);
-  console.log(`  SSR: ${avgSsrTtfb.toFixed(1)}ms\n`);
+  console.log('--- Avg full response latency (autocannon) ---');
+  const ssgLatency = Object.values(results.httpPerf.ssg);
+  const ssrLatency = Object.values(results.httpPerf.ssr);
+  const avgSsgLatency = ssgLatency.reduce((s, r) => s + r.latency.mean, 0) / ssgLatency.length;
+  const avgSsrLatency = ssrLatency.reduce((s, r) => s + r.latency.mean, 0) / ssrLatency.length;
+  console.log(`  SSG: ${avgSsgLatency.toFixed(1)}ms`);
+  console.log(`  SSR: ${avgSsrLatency.toFixed(1)}ms\n`);
 
   if (!skipLighthouse) {
     console.log('--- Lighthouse Performance (SSG only) ---');
@@ -129,6 +164,11 @@ async function main(): Promise<void> {
 
   // 1. Collect metadata
   const meta = await collectMeta();
+  const ports = [SSG_PORT, SSR_PORT,
+    ...(crossFramework ? FRAMEWORK_CONFIGS.map(config => config.previewPort) : []),
+    ...(hnBenchmark ? [MOCK_API_PORT, ...HN_FRAMEWORK_CONFIGS.map(config => config.previewPort)] : []),
+  ];
+  for (const port of ports) await assertPortAvailable(port);
 
   // 2. Build phase (sequential — builds cannot overlap)
   console.log('\n=== BUILD PHASE ===\n');
@@ -148,16 +188,16 @@ async function main(): Promise<void> {
   // 3. Start servers
   console.log('\n=== SERVER PHASE ===\n');
 
-  console.log(`Starting SSG preview server on port ${SSG_PORT}...`);
-  const ssgProc = await startServer('ssg');
-
-  console.log(`Starting SSR preview server on port ${SSR_PORT}...`);
-  const ssrProc = await startServer('ssr');
-
   try {
+    console.log(`Starting SSG preview server on port ${SSG_PORT}...`);
+    const ssgProc = await startServer('ssg');
+
+    console.log(`Starting SSR preview server on port ${SSR_PORT}...`);
+    const ssrProc = await startServer('ssr');
+
     await Promise.all([
-      waitForReady(SSG_BASE_URL),
-      waitForReady(SSR_BASE_URL),
+      waitForReady(SSG_BASE_URL, undefined, ssgProc),
+      waitForReady(SSR_BASE_URL, undefined, ssrProc),
     ]);
     console.log('Both servers ready.\n');
 
@@ -179,9 +219,8 @@ async function main(): Promise<void> {
     console.log('\n[streaming] SSR');
     const ssrStreaming = await measureStreaming(SSR_BASE_URL, ROUTES);
 
-    // Lighthouse runs on SSG only — the SSR preview serves the same HTML the
-    // SSG build produces, so measuring both is redundant. HN benchmark phase
-    // captures per-adapter Lighthouse for a cross-framework comparison.
+    // Audit prerendered docs and every enabled comparison app. Streaming is
+    // measured separately on per-request docs SSR; comparison apps are static.
     let ssgLighthouse: Record<string, import('./types.js').LighthouseResult> = {};
 
     if (!skipLighthouse) {
@@ -205,7 +244,7 @@ async function main(): Promise<void> {
       console.log('\n=== CROSS-FRAMEWORK PHASE ===\n');
       const frameworkResults = [];
       for (const config of FRAMEWORK_CONFIGS) {
-        const result = await measureFramework(config, APPS_DIR, buildRuns);
+        const result = await measureFramework(config, APPS_DIR, buildRuns, undefined, undefined, !skipLighthouse);
         frameworkResults.push(result);
       }
       results.crossFramework = frameworkResults;
@@ -232,6 +271,8 @@ async function main(): Promise<void> {
       }
     }
 
+    results.meta.loadAverageEnd = os.loadavg() as [number, number, number];
+
     // 6. Write results
     await mkdir(RESULTS_DIR, { recursive: true });
     const outputPath = join(RESULTS_DIR, 'latest.json');
@@ -242,9 +283,15 @@ async function main(): Promise<void> {
   } finally {
     // 5. Teardown
     console.log('Stopping servers...');
-    await Promise.all([stopServer(ssgProc), stopServer(ssrProc)]);
+    await stopAllServers();
     console.log('Done.');
   }
+}
+
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    void stopAllServers().finally(() => process.exit(signal === 'SIGINT' ? 130 : 143));
+  });
 }
 
 main().then(() => {

@@ -122,7 +122,7 @@ Elena produces the smallest static HTML because it uses light DOM (no `<template
 Where an adapter limitation requires a workaround, it currently lives in the **app**, not the framework — users need to know what they'll own.
 
 - **FAST `:innerHTML` fill** — the [HN benchmark app](https://github.com/beatzball/litro/tree/main/benchmarks/apps/hn-litro-fast) fills `:innerHTML` content via a post-build Nitro `compiled` hook that reads the serialized `__litro_data__` and replaces empty markers in the static HTML. This keeps the benchmark comparison fair, but the underlying adapter limitation still applies to any FAST project — teams must add their own post-build step (or avoid `:innerHTML` for SSG-critical content) until a framework-level fix lands.
-- **Lit, Elena, Next.js, Nuxt** — needed no app-level workarounds in the HN benchmark. Elena's `unsafeHTML()` is the standard public API for raw HTML (not a workaround); Next.js's `output: 'export'` and Nuxt's `prerender.routes` are first-class static export config.
+- **Lit, Elena, Next.js, Nuxt, TanStack Start** — need no app-level raw-HTML workarounds in the HN benchmark. Elena's `unsafeHTML()` is the standard public API for raw HTML (not a workaround); Next.js's `output: 'export'` and Nuxt's `prerender.routes` are first-class static export config.
 
 **Scope caveat:** the HN benchmark is intentionally narrow — list pages, param routes, nested comments, no forms, no streaming SSR, no user input. "No workarounds needed" is a claim about this scope, not a proof of full adapter parity under every real-world workload.
 
@@ -137,4 +137,4 @@ Where an adapter limitation requires a workaround, it currently lives in the **a
 
 ## Adapter Benchmarks
 
-All three adapters are benchmarked with identical Hacker News clones (~100 pages each) alongside Next.js and Nuxt. Current benchmarks cover static prerendering (SSG) — build times, output sizes, and page weight comparisons. Per-request SSR benchmarks (TTFB, throughput, latency) are planned for a future update. See the [benchmarks page](/benchmarks) for results.
+All three adapters are benchmarked with identical Hacker News clones (~100 pages each) alongside Next.js, Nuxt, and TanStack Start. Current comparisons cover static prerendering (SSG): build time, output size, HTML page weight, static HTTP throughput and latency, and Lighthouse. Per-request framework SSR comparisons remain future work; the separate docs SSR test measures streaming TTFB and TTLB. See the [benchmarks page](/benchmarks) for results.
