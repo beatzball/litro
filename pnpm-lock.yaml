@@ -572,6 +572,9 @@ importers:
       '@beatzball/litro-native':
         specifier: workspace:^
         version: link:../packages/litro-native
+      '@beatzball/sandpiper':
+        specifier: file:vendor/sandpiper
+        version: file:playground/vendor/sandpiper
       '@lit-labs/ssr':
         specifier: ^3.3.0
         version: 3.3.1
@@ -603,6 +606,9 @@ importers:
       vite:
         specifier: ^8.1.6
         version: 8.3.5(@types/node@22.19.13)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.13)(jiti@2.6.1)(jsdom@25.0.1)(lightningcss@1.33.0)(terser@5.46.0)(tsx@4.21.0)
 
   playground-11ty:
     dependencies:
@@ -846,6 +852,10 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@beatzball/sandpiper@file:playground/vendor/sandpiper':
+    resolution: {directory: playground/vendor/sandpiper, type: directory}
+    engines: {node: '>=22'}
 
   '@changesets/apply-release-plan@7.1.0':
     resolution: {integrity: sha512-yq8ML3YS7koKQ/9bk1PqO0HMzApIFNwjlwCnwFEXMzNe8NpzeeYYKCmnhWJGkN8g7E51MnWaSbqRcTcdIxUgnQ==}
@@ -5631,6 +5641,8 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@beatzball/sandpiper@file:playground/vendor/sandpiper': {}
 
   '@changesets/apply-release-plan@7.1.0':
     dependencies:

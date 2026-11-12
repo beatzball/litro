@@ -32,6 +32,7 @@
  * layer, the handshake and the schemas; this module owns only the mapping from
  * a Litro tool to an MCP tool.
  */
+import type { H3Event } from 'h3';
 import { AgentError } from '../errors.js';
 import type { ResolvedAgent } from '../runtime/agent.js';
 import { runTool, type ToolCallOutcome } from '../runtime/tool-call.js';
@@ -200,6 +201,8 @@ export interface CreateServerOptions {
   /** Cap on the JSON one call may answer with. */
   maxResultBytes?: number;
   log?: LogLine;
+  /** The HTTP request after transport gates and the agent access guard. Absent on stdio. */
+  event?: H3Event;
 }
 
 /**
@@ -275,6 +278,7 @@ export function createMcpServer(options: CreateServerOptions): InstanceType<McpS
       timeoutMs,
       maxResultBytes,
       log,
+      event: options.event,
     });
     return result as unknown as Record<string, unknown>;
   });
@@ -287,19 +291,16 @@ interface CallDeps {
   timeoutMs: number;
   maxResultBytes: number;
   log: LogLine;
+  event?: H3Event;
 }
 
 /**
  * Runs one tool and shapes the answer.
  *
- * `ctx.event` is `undefined`, and that is not a gap being papered over: over
- * stdio there is no request, so a tool that reads a cookie or a header has
- * nothing to read. `ToolContext.event` is already `H3Event | undefined` for
- * exactly this case.
- *
- * `session` is a fixed, non-persisted id. There is no session store on this
- * path — a tool that uses `session.seq` for a cache key still works, and one
- * that expects a conversation does not have one.
+ * HTTP tools receive the request that passed the transport gates and agent
+ * access guard. Stdio has no request and leaves event undefined. The synthetic
+ * session is not an identity or a persistent conversation; tools that allocate
+ * caller resources must establish identity from the validated request.
  */
 export async function callTool(
   tool: ResolvedTool,
@@ -313,7 +314,7 @@ export async function callTool(
     race = await withTimeout(
       deps.timeoutMs,
       runTool(tool.config, tool.name, args, {
-        event: undefined,
+        event: deps.event,
         session: { id: 'mcp', seq: 0 },
       }),
     );

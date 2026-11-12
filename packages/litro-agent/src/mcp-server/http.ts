@@ -381,6 +381,7 @@ async function handleMcpRequest(
 
   const mcp = createMcpServer({
     resolved: server,
+    event,
     sdk,
     serverInfo: deps.serverInfo ?? { name: `litro-${server.agent.name}`, version: '0.0.0' },
     timeoutMs: deps.timeoutMs,

@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "paths": {
+      "@beatzball/litro-agent": [
+        "../../packages/litro-agent/src/index.ts"
+      ],
+      "@beatzball/litro-agent/ui": [
+        "../../packages/litro-agent/src/ui/index.ts"
+      ],
+      "@beatzball/litro-agent/client": [
+        "../../packages/litro-agent/src/client.ts"
+      ],
+      "@beatzball/litro-agent/providers/*": [
+        "../../packages/litro-agent/src/providers/*.ts"
+      ],
+      "@beatzball/litro-agent/sessions/file": [
+        "../../packages/litro-agent/src/sessions/file.ts"
+      ]
+    }
+  },
+  "include": [
+    "*.ts",
+    "../agents/coder/**/*.ts",
+    "../components/run-output.ts",
+    "../pages/coder.ts",
+    "../server/machines.ts"
+  ]
+}
