@@ -29,7 +29,7 @@ flowchart LR
     tool --> bind --> client
   end
 
-  subgraph host["Linux KVM host (Lima VM on a Mac)"]
+  subgraph host["Linux KVM host (Lima VM on a Mac)<br/>sandboxed mode: root, SANDPIPER_UNSANDBOXED unset"]
     direction TB
     daemon["sandpiperd<br/>API · event log · cgroups<br/>wall check · nftables"]
     subgraph jail["Per machine: sandboxed VMM"]
@@ -56,9 +56,10 @@ flowchart LR
   `CODER_ACCESS_TOKENS` for separate people.
 - **Which machine:** a chat session keeps one machine per principal and
   session. MCP calls the tool directly, without the agent loop or chat
-  history: each MCP `run-code` call gets a fresh machine, and the tool
-  destroys it when the call settles. If that destroy fails, the machine stays
-  counted against the limits until sandpiperd removes it.
+  history: each MCP `run-code` call gets a fresh machine. The tool attempts to
+  destroy it when the underlying execution settles, which can be after an MCP
+  timeout response. If that destroy fails, the machine stays counted against
+  the limits until sandpiperd removes it.
 - **What stays on the server:** `SANDPIPER_URL` and `SANDPIPER_TOKEN`. They
   never reach the browser, the model or the machine.
 - **What comes back:** the model gets the last 8000 / 4000 characters of
@@ -68,7 +69,10 @@ flowchart LR
   user with no network device; the VMM runs in its own sandbox; and
   sandpiperd checks every machine's walls before it hands the machine out.
   The playground does not check which mode the daemon runs in. An unsandboxed
-  daemon is for development only and gives none of these walls.
+  daemon is for development only: it skips the host-side VMM sandbox, cgroups,
+  firewall setup and wall checks. The guest-side limits stay: workload
+  commands still run as uid 1000 under the guest's seccomp filter, with no
+  network device.
 
 ## Run code
 
