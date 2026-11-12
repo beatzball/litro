@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import childProcess from 'node:child_process';
 import { test } from 'node:test';
 import { createServer } from 'node:net';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
@@ -123,4 +124,94 @@ test('comparison builds clear caches each time, validate routes and tear down on
     assert.equal(await readFile(join(dir, 'runs'), 'utf8'), '11');
     await assertPortAvailable(port);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+
+test('cleanup ignores a vanished group only after verifying membership and the port', { skip: process.platform === 'win32' }, async t => {
+  const port = await unusedPort();
+  const proc = await startCommand(process.execPath, ['-e', 'setInterval(()=>{},1000)'], process.cwd(), port, 'test');
+  const snapshot = childProcess.execFileSync('ps', ['-axo', 'pid=,pgid=,uid=,stat=,lstart='], { encoding: 'utf8' });
+  proc.kill('SIGTERM');
+  await new Promise<void>(resolve => proc.once('exit', () => resolve()));
+  let reads = 0;
+  t.mock.method(childProcess, 'execFileSync', () => reads++ === 0 ? snapshot : '');
+  const kill = t.mock.method(process, 'kill', () => {
+    throw Object.assign(new Error('kill EPERM'), { code: 'EPERM' });
+  });
+  try {
+    await stopServer(proc);
+    assert.equal(kill.mock.callCount(), 1);
+    assert.ok(reads >= 2);
+    await stopServer(proc);
+    assert.equal(kill.mock.callCount(), 1);
+    await assertPortAvailable(port);
+  } finally { t.mock.restoreAll(); }
+});
+
+test('cleanup skips zombie groups without sending a signal', { skip: process.platform === 'win32' }, async t => {
+  const port = await unusedPort();
+  const proc = await startCommand(process.execPath, ['-e', 'setInterval(()=>{},1000)'], process.cwd(), port, 'test');
+  proc.kill('SIGTERM');
+  await new Promise<void>(resolve => proc.once('exit', () => resolve()));
+  t.mock.method(childProcess, 'execFileSync', () => `${proc.pid} ${proc.pid} ${process.getuid?.()} Z Thu Jan 1 00:00:00 1970`);
+  const kill = t.mock.method(process, 'kill', () => { throw new Error('must not signal zombies'); });
+  try {
+    await stopServer(proc);
+    assert.equal(kill.mock.callCount(), 0);
+    await assertPortAvailable(port);
+  } finally { t.mock.restoreAll(); }
+});
+
+test('cleanup rejects a live group permission error and a reused group identity', { skip: process.platform === 'win32' }, async t => {
+  const port = await unusedPort();
+  const proc = await startCommand(process.execPath, ['-e', "require('node:http').createServer((req,res)=>res.end('ok')).listen(Number(process.env.PORT))"], process.cwd(), port, 'test');
+  try {
+    await waitForReady(`http://localhost:${port}`, 5000, proc);
+    const kill = t.mock.method(process, 'kill', () => {
+      throw Object.assign(new Error('kill EPERM'), { code: 'EPERM' });
+    });
+    await assert.rejects(stopServer(proc), { code: 'EPERM' });
+    assert.equal((await fetch(`http://localhost:${port}`)).status, 200);
+    kill.mock.restore();
+    const snapshot = childProcess.execFileSync('ps', ['-axo', 'pid=,pgid=,uid=,stat=,lstart='], { encoding: 'utf8' });
+    t.mock.method(childProcess, 'execFileSync', () => snapshot.split('\n').map(line => `${line} changed`).join('\n'));
+    const noKill = t.mock.method(process, 'kill', () => { throw new Error('must not signal a reused group'); });
+    await assert.rejects(stopServer(proc), /identity changed/);
+    assert.equal(noKill.mock.callCount(), 0);
+  } finally {
+    t.mock.restoreAll();
+    await stopServer(proc);
+  }
+  await assertPortAvailable(port);
+});
+
+test('cleanup fails if the reserved port remains occupied without signaling its new owner', { skip: process.platform === 'win32' }, async t => {
+  const port = await unusedPort();
+  const proc = await startCommand(process.execPath, ['-e', 'setInterval(()=>{},1000)'], process.cwd(), port, 'test');
+  proc.kill('SIGTERM');
+  await new Promise<void>(resolve => proc.once('exit', () => resolve()));
+  const unrelated = createServer();
+  await new Promise<void>(resolve => unrelated.listen(port, resolve));
+  const kill = t.mock.method(process, 'kill', () => { throw new Error('must not signal an unrelated listener'); });
+  try {
+    await assert.rejects(stopServer(proc), /already in use/);
+    assert.equal(kill.mock.callCount(), 0);
+  } finally {
+    t.mock.restoreAll();
+    await new Promise<void>(resolve => unrelated.close(() => resolve()));
+    await stopServer(proc);
+  }
+  await assertPortAvailable(port);
+});
+
+test('cleanup escalates when a server ignores SIGTERM', { skip: process.platform === 'win32' }, async () => {
+  const port = await unusedPort();
+  const proc = await startCommand(process.execPath, ['-e', "process.on('SIGTERM',()=>{});require('node:http').createServer((req,res)=>res.end('ok')).listen(Number(process.env.PORT))"], process.cwd(), port, 'test');
+  try { await waitForReady(`http://localhost:${port}`, 5000, proc); }
+  finally { await stopServer(proc); }
+  if (proc.exitCode === null && proc.signalCode === null) {
+    await new Promise<void>(resolve => proc.once('exit', () => resolve()));
+  }
+  assert.equal(proc.signalCode, 'SIGKILL');
+  await assertPortAvailable(port);
 });

@@ -4,7 +4,7 @@ The minimal suite compares Litro (Lit), Next.js, Nuxt, and TanStack Start. The H
 
 ## Install and build
 
-Use Node 24.22.3 (Nuxt requires at least 24.15 on the Node 24 line), pnpm, npm, and an installed Chrome or Chromium browser for Lighthouse. Use the package manager versions recorded in the results when reproducing a run. Run these commands from the repository root:
+Use Node 24.22.3 (Nuxt requires at least 24.15 on the Node 24 line), pnpm, npm, and an installed Chrome or Chromium browser for Lighthouse. Use the package manager versions recorded in the results when reproducing a run. Saved metadata also records npm, Chrome, Lighthouse, and the benchmark tool versions. Run these commands from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile

@@ -55,7 +55,7 @@ const LITRO_VERSION_PKGS = [
   '@lit-labs/ssr-client',
   ...LITRO_BUILD_PKGS,
 ] as const;
-const NUXT_VERSION_PKGS = ['nuxt', 'vue', 'vite'] as const;
+const NUXT_VERSION_PKGS = ['nuxt', 'vue', 'nitropack', 'vite'] as const;
 const NEXT_VERSION_PKGS = ['next', 'react', 'react-dom'] as const;
 const TANSTACK_VERSION_PKGS = ['@tanstack/react-start', '@tanstack/react-router', 'react', 'react-dom', 'vite'] as const;
 

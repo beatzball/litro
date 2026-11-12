@@ -32,6 +32,7 @@ export interface BenchmarkResults {
     platform: string;
     osVersion: string;
     pnpmVersion: string;
+    toolVersions: Record<string, string>;
     context: string;
     loadAverageEnd?: [number, number, number];
     settings: {

@@ -32,6 +32,7 @@ import { measureStreaming } from './measures/streaming.js';
 import { measureFramework } from './measures/cross-framework.js';
 import { startMockApi, stopMockApi } from './utils/mock-api.js';
 import { sanitizeContext } from './utils/context.js';
+import { collectToolVersions } from './utils/tool-versions.js';
 
 // --- CLI flags ---
 const args = process.argv.slice(2);
@@ -68,6 +69,7 @@ async function collectMeta(): Promise<BenchmarkResults['meta']> {
     platform: os.platform(),
     osVersion,
     pnpmVersion,
+    toolVersions: await collectToolVersions(!skipLighthouse),
     context: sanitizeContext(process.env.BENCH_CONTEXT ?? 'Local run; background activity not controlled'),
     arch: os.arch(),
     cpuModel: cpus[0]?.model ?? 'unknown',
