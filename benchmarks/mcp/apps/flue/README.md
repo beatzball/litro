@@ -14,3 +14,8 @@ npm run verify
 This is a direct tool execution check. Flue's native MCP APIs connect an agent to remote servers; they do not expose the tool as an MCP server. `createMcpConnection` creates an SDK client, discovers remote tools, and adapts them for Flue. Its transport union is `streamable-http | sse`. These are client capabilities. See the pinned [MCP guide](https://github.com/withastro/flue/blob/v2.3.0/apps/docs/src/content/docs/guide/mcp.md), [implementation](https://github.com/withastro/flue/blob/v2.3.0/packages/runtime/src/mcp.ts), [public exports](https://github.com/withastro/flue/blob/v2.3.0/packages/runtime/src/index.ts), and [tool implementation](https://github.com/withastro/flue/blob/v2.3.0/packages/runtime/src/tool.ts).
 
 MCP server HTTP, stdio, legacy SSE, protocol latency, server idle memory, and MCP Apps resource size are **N/A** for this fixture. There is no `dist/server.mjs`; the build emits `dist/weather.mjs` and `dist/verify.mjs`. Install/build costs here describe a native tool sample and must not be presented as Flue MCP server measurements. An SDK server wrapper would measure a different implementation.
+
+The fixture overrides Flue's pinned outbound MCP client 2.0.0 to 2.4.0 to
+resolve the dependency audit findings. This affects install size and is
+recorded in the fixture manifest/lock and measurements. It does not create
+an MCP server; the directly executed weather tool makes no MCP connection.

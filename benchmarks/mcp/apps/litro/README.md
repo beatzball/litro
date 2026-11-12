@@ -22,3 +22,8 @@ The suite's official SDK v2 client uses legacy negotiation for this v1 server.
 Run the protocol, validation and resource checks from the suite with
 `node run.mjs --verify-only --app litro`. The browser check is separate from
 all timing samples.
+
+The fixture pins h3 1.15.9 and overrides transitive fflate to 0.7.5 and glob
+to 14.0.2 to resolve the dependency audit findings. These choices affect the
+install tree and are included in the committed measurements. The native Litro
+package versions remain unchanged.

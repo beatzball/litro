@@ -14,7 +14,7 @@ Research checked November 12, 2026. Feature claims below target the published pa
 | --- | --- | --- | --- |
 | Litro | `@beatzball/litro-agent@0.7.3`, `@beatzball/litro@0.18.0`. [Manifests][l-package] [framework][l-framework] | `2d75f0bbe00e43f8f33dce0d8585bb6e2c3692f3` | Optional `@modelcontextprotocol/sdk` 1.x peer; fixture pins `1.32.2`. [Peer contract][l-package] |
 | Mastra | `@mastra/mcp@2.8.0`, `@mastra/core@1.82.0`. [Manifests][m-package] [core][m-corepackage] | `6e8dfcb83facb0861ebefa4fee384429a113acf4` | Split MCP client/server/core `2.4.0`, Node adapter `2.1.2`, ext-apps `^2.0.3`. [Dependencies][m-package] |
-| Flue | `@flue/runtime@2.3.0`. [Manifest][f-package] | `deee93b40d275ecc9a50c50af2158f20089d54bc` | Split MCP client `2.0.0`; MCP server is a development dependency, not a published server API. [Manifest][f-package] [client implementation][f-mcp] |
+| Flue | `@flue/runtime@2.3.0`. [Manifest][f-package] | `deee93b40d275ecc9a50c50af2158f20089d54bc` | Upstream pins MCP client `2.0.0`; fixture overrides it to `2.4.0` for audit fixes. MCP server is a development dependency, not a published server API. [Manifest][f-package] [client implementation][f-mcp] |
 | Eve | `eve@1.0.0-rc.10`. [Manifest][e-package] | `746a74163d712c3a06ff907199ae9ccca1d0e749` | Compiled/vendor MCP server SDK; manifest development input `@modelcontextprotocol/server@2.3.0`. [Manifest][e-package] [import boundary][e-server] |
 
 The release commits resolve the corresponding Git tags: `@beatzball/litro-agent@0.7.3`, `@beatzball/litro@0.18.0`, `@mastra/mcp@2.8.0`, `@mastra/core@1.82.0`, `v2.3.0`, and `eve@1.0.0-rc.10`. Later main-branch source is excluded. In particular, Mastra main's `2.9.0-alpha.4` is not the subject of the feature matrix. Published tarballs were also inspected for the referenced server/app entry points. Mastra's installed `dist/index.js` confirms `appResources`, the MCP Apps MIME type, `startHTTP`, `startStdio`, and the `legacy` default shown by its [release implementation][m-server].
@@ -64,20 +64,20 @@ Versions are release identifiers, not scores for reliability. Dates below come f
 
 ## Measurements
 
-Captured November 12, 2026, 19:35:13–19:36:05 UTC on an Apple M4 Max,
+Captured November 12, 2026, 19:42:34–19:43:26 UTC on an Apple M4 Max,
 16 logical CPUs, 128 GiB RAM, Darwin 25.3.0 arm64, Node 24.7.0 and npm 11.5.1.
 The host was shared with other benchmark/development jobs; load averages at
-capture start were 10.58 / 9.33 / 7.39. Per-process load context is retained.
+capture start were 5.76 / 7.87 / 7.42. Per-process load context is retained.
 These are exploratory fixture measurements under that background work.
 
 | Framework | Transport | Install MiB | Build ms | Cold ms | Idle RSS MiB | list p50 / p95 ms | call p50 / p95 ms | UI bytes |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | ---: |
-| litro | http | 190.81 | 336.37 [330.21–652.99] | 124.94 [116.53–128.64] | 85.39 [85.02–85.84] | 0.54 [0.46–0.59] / 0.74 [0.68–0.87] | 0.55 [0.48–0.61] / 0.81 [0.70–0.95] | 9935 |
-| litro | stdio | 190.81 | 336.37 [330.21–652.99] | 115.50 [109.95–122.58] | 88.23 [88.02–88.86] | 0.06 [0.06–0.44] / 0.10 [0.08–1.02] | 0.07 [0.07–0.53] / 0.12 [0.10–1.22] | 9935 |
-| mastra | http | 186.47 | 346.93 [322.36–616.41] | 159.46 [155.50–277.05] | 115.91 [115.59–117.14] | 0.50 [0.42–0.65] / 0.84 [0.74–1.14] | 0.52 [0.45–0.68] / 0.88 [0.68–1.14] | 664825 |
-| mastra | stdio | 186.47 | 346.93 [322.36–616.41] | 307.36 [296.30–313.87] | 115.70 [115.58–117.23] | 0.14 [0.13–0.17] / 0.23 [0.18–0.35] | 0.17 [0.16–0.21] / 0.25 [0.22–0.44] | 664825 |
-| flue | N/A (client only) | 107.99 | 304.14 [288.83–566.14] | N/A | N/A | N/A | N/A | N/A |
-| eve | http | 92.21 | 1497.38 [1492.10–2029.70] | 209.50 [207.41–231.42] | 135.00 [134.56–135.92] | 0.84 [0.68–0.93] / 1.23 [0.95–1.38] | 1.00 [0.85–1.17] / 1.46 [1.12–1.70] | N/A |
+| litro | http | 185.80 | 359.72 [339.94–430.92] | 132.05 [122.15–146.53] | 85.52 [85.00–86.16] | 0.55 [0.47–0.67] / 0.88 [0.73–0.96] | 0.58 [0.51–0.68] / 0.91 [0.87–0.99] | 9935 |
+| litro | stdio | 185.80 | 359.72 [339.94–430.92] | 117.90 [114.65–138.24] | 88.45 [86.45–88.63] | 0.06 [0.05–0.07] / 0.11 [0.08–0.12] | 0.07 [0.06–0.09] / 0.12 [0.10–0.15] | 9935 |
+| mastra | http | 186.47 | 336.25 [321.60–366.11] | 167.83 [161.09–172.68] | 117.22 [115.97–117.77] | 0.56 [0.50–0.72] / 0.94 [0.75–1.42] | 0.60 [0.52–0.75] / 0.98 [0.75–1.47] | 664825 |
+| mastra | stdio | 186.47 | 336.25 [321.60–366.11] | 306.93 [296.22–329.78] | 115.91 [115.56–116.63] | 0.15 [0.14–0.19] / 0.27 [0.20–0.31] | 0.19 [0.17–0.22] / 0.34 [0.24–0.39] | 664825 |
+| flue | N/A (client only) | 108.73 | 310.94 [293.01–571.80] | N/A | N/A | N/A | N/A | N/A |
+| eve | http | 92.21 | 1562.89 [1477.76–2031.91] | 222.85 [203.25–234.75] | 135.27 [134.11–135.89] | 0.81 [0.74–1.11] / 1.13 [0.98–1.89] | 1.01 [0.90–1.31] / 1.37 [1.12–2.15] | N/A |
 
 Each cell is the median across runs [minimum–maximum]. Latency spreads describe per-run percentiles.
 5 clean builds per app; 7 fresh processes per supported transport; 100 timed requests per method per process, after 10 warmups. Serial concurrency 1; client list cache bypassed. MiB = 1,048,576 bytes.
@@ -144,6 +144,7 @@ The final results must preserve the machine's OS, CPU, architecture, Node/npm ve
 - **Different validation work:** Mastra requires its optional output schema to return plain-value `structuredContent`, so this fixture includes one and pays its validation cost. Litro does not publish output schemas; Eve returns object structured content without one. Eve also applies its raw JSON Schema bounds before the authored Zod transform: an 80-character city padded with spaces is rejected before trimming, while ordinary ` Lisbon ` trims correctly. The native behavior is retained and documented in the [Eve fixture](../benchmarks/mcp/apps/eve/README.md). These implementations return the same measured weather response but perform different validation work.
 - **Different wire protocols:** Mastra/Eve use modern per-request envelopes, Litro the legacy SDK handshake path. HTTP response encoding and discovery work can differ. Do not present the numbers as a controlled experiment isolating framework overhead.
 - **UI implementation choices:** Litro builds a static shell through native `buildMcpAppDocument`; Mastra supplies HTML with the official ext-apps browser bridge. Both can contain initial markup. This is not a Lit-vs-React rendering test, and it cannot establish a universal SSR advantage. Bundle size reflects the selected bridge entry point and bundler configuration as well as framework behavior.
+- **Dependency audit fixes:** The Litro fixture pins h3 `1.15.9` and overrides transitive fflate to `0.7.5` and glob to `14.0.2`; Flue overrides its outbound MCP client from `2.0.0` to `2.4.0`. These resolve the initial CI audit findings without suppressing advisories. They affect install/build costs and are recorded in manifests, locks and raw results. The framework packages remain at the selected release versions.
 - **Development dependency size:** Full install trees include esbuild, schemas, adapters, optional peers and any fixture-specific diagnostics. They do not isolate production deployment size or the marginal cost of adding MCP to an existing app.
 - **Auth is outside the workload:** Local fixtures use local/public settings and loopback listeners; no OAuth round trip, remote proxy, TLS or authentication-provider latency is measured. Feature-table security gates remain relevant to real deployments.
 - **App retrieval versus host rendering:** SDK retrieval and browser verification are separate. This suite also loads both exact resources in MCP Inspector and asserts the rendered result in its actual iframe; versions and artifact hashes are recorded below. It does not claim support in every desktop host or measure browser paint latency.

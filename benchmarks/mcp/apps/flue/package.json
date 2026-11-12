@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2"
+  },
+  "overrides": {
+    "@modelcontextprotocol/client": "2.4.0"
   }
 }
