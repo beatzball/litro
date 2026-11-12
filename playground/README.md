@@ -3,6 +3,59 @@
 The weather demo at `/agent` works without an API key. The separate coder demo
 at `/coder` runs commands in sandpiper microVMs. It requires authenticated access and isolates caller state.
 
+## Coder architecture
+
+```mermaid
+flowchart LR
+  subgraph mac["Playground server (Node.js)"]
+    direction TB
+    page["/coder page<br/>&lt;run-output&gt;"]
+    login["POST /api/coder/session<br/>bearer secret → signed session ID + cookie"]
+    route["Chat route<br/>/__litro/agent/coder/:session"]
+    mcp["MCP route<br/>/__litro/mcp/coder"]
+    guard["Access guard<br/>coder-auth.ts"]
+    agent["Coder agent<br/>scripted or LLM"]
+    tool["run-code tool<br/>argv only, 10 s timeout"]
+    bind["Machine bindings<br/>machines.ts<br/>principal + agent + session + transport<br/>live and rate limits"]
+    store[("Coder history<br/>bounded logs")]
+    client["sandpiper client<br/>vendor/sandpiper"]
+    page --> login --> route
+    route --> guard
+    mcp --> guard
+    guard --> agent --> tool --> bind --> client
+    agent --- store
+  end
+
+  subgraph host["Linux KVM host (Lima VM on a Mac)"]
+    direction TB
+    daemon["sandpiperd<br/>API · event log · cgroups<br/>wall check · nftables"]
+    subgraph jail["Per machine: sandboxed VMM"]
+      vmm["VMM process<br/>own uid · namespaces · seccomp<br/>relay decodes guest frames"]
+    end
+    subgraph vm["microVM (Node template)"]
+      guest["guest agent<br/>vsock"]
+      work["your command<br/>uid 1000 · no network"]
+    end
+    daemon -->|"spawns, limits, kills"| vmm
+    vmm -->|vsock| guest --> work
+  end
+
+  client -->|"HTTP + SANDPIPER_TOKEN<br/>127.0.0.1:7171"| daemon
+```
+
+- **Who may run code:** only callers with a coder credential. The guard runs
+  on both routes. Session IDs are signed and bound to the caller, so knowing
+  another session's ID is not enough.
+- **Which machine:** chat sessions keep one machine per caller and session.
+  Each MCP call gets a fresh machine that is destroyed after the call.
+- **What stays on the server:** `SANDPIPER_URL` and `SANDPIPER_TOKEN`. They
+  never reach the browser, the model or the machine.
+- **What comes back:** the model gets the last 8000 / 4000 characters of
+  stdout / stderr; the page gets at most 64 KiB per stream, rendered as text.
+- **The walls:** the guest runs as an unprivileged user with no network
+  device. The VMM runs in its own sandbox, and sandpiperd checks every
+  machine's walls before it hands the machine out.
+
 ## Run code
 
 Use Node.js 22.12 or later and pnpm. From the repository root:
