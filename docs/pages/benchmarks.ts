@@ -793,9 +793,9 @@ export class BenchmarksPage extends LitroPage {
     if (!frameworks.some(fw => Object.keys(fw.httpPerf ?? {}).length)) return html``;
     return html`<litro-tab-item label="Static HTTP">
       <h3>Static File Serving Under Load</h3>
-      <p class="note">One autocannon load run per route. Latency covers the whole response; percentiles describe requests within that run. This measures the shared static server and payload, not framework SSR.</p>
+      <p class="note">One autocannon load run per route. Duration is the configured limit; rates come from autocannon samples. Latency covers the whole response; percentiles describe requests within that run. This measures the shared static server and payload, not framework SSR.</p>
       <div class="table-wrap"><table>
-        <thead><tr><th scope="col">Framework</th><th scope="col">Route</th><th scope="col">Duration (s)</th><th scope="col">Connections</th><th scope="col">Requests/s</th><th scope="col">Bytes/s</th><th scope="col">Mean (ms)</th><th scope="col">p99 (ms)</th><th scope="col">Max (ms)</th><th scope="col">Errors / timeouts</th></tr></thead>
+        <thead><tr><th scope="col">Framework</th><th scope="col">Route</th><th scope="col">Configured duration (s)</th><th scope="col">Connections</th><th scope="col">Requests/s</th><th scope="col">Bytes/s</th><th scope="col">Mean (ms)</th><th scope="col">p99 (ms)</th><th scope="col">Max (ms)</th><th scope="col">Errors / timeouts</th></tr></thead>
         <tbody>${frameworks.flatMap(fw => Object.entries(fw.httpPerf ?? {}).map(([route, h]) => html`<tr>
           <th scope="row">${this._fwLabel(fw.name)}</th><td><code>${route}</code></td><td>${h.duration}</td><td>${h.connections}</td><td>${h.requests.mean.toFixed(1)}</td><td>${h.throughput.mean.toFixed(1)}</td><td>${h.latency.mean.toFixed(3)}</td><td>${h.latency.p99.toFixed(3)}</td><td>${h.latency.max.toFixed(3)}</td><td>${h.errors} / ${h.timeouts}</td>
         </tr>`))}</tbody>
@@ -944,7 +944,7 @@ export class BenchmarksPage extends LitroPage {
         <h3>Latency Under Load</h3>
         <div class="table-wrap">
           <table>
-            <caption>autocannon: ${r.httpPerf.ssg[routes[0]]?.connections ?? 10} connections, ${r.httpPerf.ssg[routes[0]]?.duration ?? 10}s per route.</caption>
+            <caption>autocannon: ${r.httpPerf.ssg[routes[0]]?.connections ?? 10} connections, configured ${r.httpPerf.ssg[routes[0]]?.duration ?? 10}s limit per route.</caption>
             <thead>
               <tr>
                 <th scope="col">Route</th>

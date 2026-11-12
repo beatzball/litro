@@ -45,6 +45,43 @@ jobs:
       # repo's ES2022 target ran fine and was caught only by a reviewer.
       - name: Type-check playground MCP server
         run: pnpm --filter playground typecheck
+      - name: Type-check benchmark runner
+        run: pnpm --filter @beatzball/litro-benchmarks typecheck
+
+  tanstack-benchmarks:
+    name: TanStack benchmark smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npm ci --prefix benchmarks/apps/tanstack
+      - run: npm ci --prefix benchmarks/apps/hn-tanstack
+      - name: Build and type-check minimal app
+        run: |
+          npm run build --prefix benchmarks/apps/tanstack
+          npm run typecheck --prefix benchmarks/apps/tanstack
+      - name: Build and type-check HN app with fixture API
+        env:
+          HN_API_BASE: http://localhost:4100/v0
+        run: |
+          node benchmarks/mock-api/server.ts > "$RUNNER_TEMP/hn-api.log" 2>&1 &
+          mock_pid=$!
+          trap 'kill "$mock_pid" 2>/dev/null || true; wait "$mock_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..50}; do
+            if curl --max-time 1 -fsS "$HN_API_BASE/topstories.json" > /dev/null; then break; fi
+            if ! kill -0 "$mock_pid" 2>/dev/null; then cat "$RUNNER_TEMP/hn-api.log"; exit 1; fi
+            sleep 0.2
+          done
+          curl --max-time 1 -fsS "$HN_API_BASE/topstories.json" > /dev/null
+          npm run build --prefix benchmarks/apps/hn-tanstack
+          npm run typecheck --prefix benchmarks/apps/hn-tanstack
 
   build:
     name: Build

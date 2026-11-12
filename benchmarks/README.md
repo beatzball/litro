@@ -48,7 +48,7 @@ All commands below run from the repository root. Each includes the docs-site sui
 | `pnpm bench:all` | Minimal and HN | Skipped |
 | `pnpm bench:all:full` | Minimal and HN | Included |
 
-Use `pnpm bench:all:full` for publishable results. After the full measurement succeeds, this command automatically regenerates the root README and the detailed report. Each invocation replaces all of `results/latest.json`; consecutive partial runs do not merge. To override the default three build repetitions while keeping all phases, use `pnpm --filter @beatzball/litro-benchmarks exec tsx src/runner.ts --cross-framework --hn --runs 5`. Lighthouse uses three audits per route; docs SSR streaming uses five requests per route. HTTP uses one 10-second autocannon run per route with ten connections. The saved metadata and per-route settings are authoritative if defaults change.
+Use `pnpm bench:all:full` for publishable results. After the full measurement succeeds, this command automatically regenerates the root README and the detailed report. Each invocation replaces all of `results/latest.json`; consecutive partial runs do not merge. To override the default three build repetitions while keeping all phases, use `pnpm --filter @beatzball/litro-benchmarks exec tsx src/runner.ts --cross-framework --hn --runs 5`. Lighthouse uses three audits per route; docs SSR streaming uses five requests per route. HTTP uses one autocannon run per route with ten connections and a configured 10-second limit. Rates come directly from autocannon samples; actual elapsed duration is not recorded. The saved metadata and per-route settings are authoritative if defaults change.
 
 Keep the machine free of other build, test, browser, and benchmark workloads during measurement. Record other active workloads in run context. The runner manages preview servers and the HN mock API; ensure their configured ports are free before starting. Minimal previews use ports 4001–4004, HN previews 4010–4015, the mock API 4100, and docs previews 3033–3034.
 
@@ -151,7 +151,7 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 ### Minimal comparison: HTTP load
 
-| App | Route | Load runs | Duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
+| App | Route | Load runs | Configured duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Litro (Lit) | / | 1 | 10 | 10 | 156158 | 15617.6 | 55571251.2 | 0.05 | 0 | 1 | 1 | 16 | 0 | 0 | 0 |
 | Litro (Lit) | /blog/hello | 1 | 10 | 10 | 171886 | 15626.55 | 54989172.37 | 0.05 | 0 | 1 | 1 | 5 | 0 | 0 | 0 |
@@ -336,7 +336,7 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 ### HN comparison: HTTP load
 
-| App | Route | Load runs | Duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
+| App | Route | Load runs | Configured duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Litro (Lit) | / | 1 | 10 | 10 | 133212 | 13321.8 | 606955110.4 | 0.12 | 0 | 1 | 1 | 211 | 0 | 0 | 0 |
 | Litro (Lit) | /ask | 1 | 10 | 10 | 129661 | 12966.4 | 720896000 | 0.13 | 0 | 1 | 2 | 29 | 0 | 0 | 0 |
@@ -724,7 +724,7 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 ### Docs: HTTP load
 
-| App | Route | Load runs | Duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
+| App | Route | Load runs | Configured duration (s) | Connections | Requests | Requests/s (mean) | Bytes/s (mean) | Latency mean (ms) | p50 (ms) | p97.5 (ms) | p99 (ms) | Max (ms) | Non-2xx | Errors | Timeouts |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Litro docs SSG | / | 1 | 10 | 10 | 121643 | 11059.28 | 2018365812.37 | 0.17 | 0 | 1 | 2 | 8 | 0 | 0 | 0 |
 | Litro docs SSG | /docs/introduction | 1 | 10 | 10 | 149445 | 14945.6 | 1273600409.6 | 0.07 | 0 | 1 | 1 | 10 | 0 | 0 | 0 |
