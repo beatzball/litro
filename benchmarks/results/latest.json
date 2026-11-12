@@ -1,81 +1,121 @@
 {
   "meta": {
-    "timestamp": "2026-10-14T14:30:59.957Z",
-    "nodeVersion": "v24.7.0",
+    "timestamp": "2026-11-12T20:13:48.811Z",
+    "nodeVersion": "v24.22.3",
     "platform": "darwin",
+    "osVersion": "26.3",
+    "pnpmVersion": "10.28.0",
+    "toolVersions": {
+      "lighthouse": "12.8.2",
+      "chrome-launcher": "1.2.1",
+      "serve": "14.2.6",
+      "autocannon": "8.0.0",
+      "tsx": "4.21.0",
+      "npm": "11.5.1",
+      "chrome": "154.0.8037.93"
+    },
+    "context": "Browser, terminal, editor, sync services, local model servers, and other coding sessions remained open. Task-owned helpers and preview servers were stopped before timed work. Shared workstation; no claim of an idle or isolated run.",
     "arch": "arm64",
     "cpuModel": "Apple M4 Max",
     "cpuCount": 16,
     "memoryGB": 128,
     "loadAverage": [
-      3.8623046875,
-      4.9228515625,
-      5.42724609375
+      4.0263671875,
+      5.44921875,
+      6.3544921875
     ],
-    "commitSha": "95b6336",
-    "commitMessage": "fix(deps): patch six advisories, baseline braces and two unfixable mediums (#232)"
+    "commitSha": "8fa3cf1",
+    "commitMessage": "",
+    "settings": {
+      "buildRuns": 3,
+      "lighthouseRuns": 3,
+      "streamingRuns": 5,
+      "httpConnections": 10,
+      "httpDurationSeconds": 10,
+      "httpRunsPerRoute": 1,
+      "crossFramework": true,
+      "hn": true,
+      "buildCache": "cold",
+      "comparisonServing": "static files via serve",
+      "lighthousePreset": "default mobile simulated throttling"
+    },
+    "loadAverageEnd": [
+      5.14013671875,
+      6.21533203125,
+      6.52099609375
+    ]
   },
   "buildTime": {
     "ssg": {
       "runs": [
-        12862,
-        12262,
-        12168
+        10070,
+        9892,
+        9313
       ],
-      "mean": 12431,
-      "median": 12262,
-      "p95": 12862,
-      "stddev": 307,
-      "min": 12168,
-      "max": 12862
+      "mean": 9758,
+      "median": 9892,
+      "p95": 10070,
+      "stddev": 323,
+      "min": 9313,
+      "max": 10070
     },
     "ssr": {
       "runs": [
-        5179,
-        5152,
-        5123
+        3864,
+        3841,
+        3819
       ],
-      "mean": 5151,
-      "median": 5152,
-      "p95": 5179,
-      "stddev": 23,
-      "min": 5123,
-      "max": 5179
+      "mean": 3841,
+      "median": 3841,
+      "p95": 3864,
+      "stddev": 18,
+      "min": 3819,
+      "max": 3864
     }
   },
   "bundleSize": {
     "ssg": {
-      "clientJS": 1304330,
+      "clientJS": 1305760,
       "clientCSS": 14205,
       "serverBundle": 0,
-      "staticHTML": 8020366,
-      "totalOutput": 14780501
+      "staticHTML": 8195307,
+      "totalOutput": 14941817
     },
     "ssr": {
-      "clientJS": 1327504,
+      "clientJS": 1329055,
       "clientCSS": 0,
-      "serverBundle": 6901077,
+      "serverBundle": 7072972,
       "staticHTML": 0,
-      "totalOutput": 14530917
+      "totalOutput": 14722892
     }
   },
   "httpPerf": {
     "ssg": {
       "/": {
         "latency": {
-          "mean": 1.39,
-          "p50": 1,
-          "p97_5": 3,
-          "p99": 4,
-          "max": 11
+          "mean": 0.17,
+          "min": 1,
+          "stddev": 0.47,
+          "p50": 0,
+          "p97_5": 1,
+          "p99": 2,
+          "max": 8
         },
         "requests": {
-          "mean": 5014.8,
-          "total": 50142
+          "mean": 11059.28,
+          "total": 121643,
+          "min": 9871,
+          "max": 11500,
+          "stddev": 489.61
         },
         "throughput": {
-          "mean": 915144704
+          "mean": 2018365812.37,
+          "min": 1801645049,
+          "max": 2098968500,
+          "stddev": 89147768.16
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -83,19 +123,29 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 0.57,
+          "mean": 0.07,
+          "min": 1,
+          "stddev": 0.28,
           "p50": 0,
-          "p97_5": 2,
-          "p99": 4,
-          "max": 60
+          "p97_5": 1,
+          "p99": 1,
+          "max": 10
         },
         "requests": {
-          "mean": 8375.21,
-          "total": 83748
+          "mean": 14945.6,
+          "total": 149445,
+          "min": 14236,
+          "max": 15571,
+          "stddev": 389.3
         },
         "throughput": {
-          "mean": 713411788.8
+          "mean": 1273600409.6,
+          "min": 1213106504,
+          "max": 1326867194,
+          "stddev": 33401548.68
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -103,19 +153,29 @@
       },
       "/blog": {
         "latency": {
-          "mean": 2.47,
-          "p50": 2,
-          "p97_5": 5,
-          "p99": 6,
-          "max": 19
+          "mean": 0.86,
+          "min": 1,
+          "stddev": 0.52,
+          "p50": 1,
+          "p97_5": 2,
+          "p99": 2,
+          "max": 16
         },
         "requests": {
-          "mean": 3339.8,
-          "total": 33392
+          "mean": 8293.4,
+          "total": 82927,
+          "min": 7999,
+          "max": 8748,
+          "stddev": 197.75
         },
         "throughput": {
-          "mean": 932026777.6
+          "mean": 2314626662.4,
+          "min": 2233088829,
+          "max": 2442187908,
+          "stddev": 55237566.46
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -123,19 +183,29 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 0.11,
+          "mean": 0.04,
+          "min": 1,
+          "stddev": 0.2,
           "p50": 0,
           "p97_5": 1,
-          "p99": 2,
+          "p99": 1,
           "max": 8
         },
         "requests": {
-          "mean": 13988,
-          "total": 139876
+          "mean": 20670.41,
+          "total": 206722,
+          "min": 19800,
+          "max": 22085,
+          "stddev": 676.98
         },
         "throughput": {
-          "mean": 432354099.2
+          "mean": 639421644.8,
+          "min": 612433800,
+          "max": 683111135,
+          "stddev": 20824795.92
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -145,19 +215,29 @@
     "ssr": {
       "/": {
         "latency": {
-          "mean": 405.76,
-          "p50": 403,
-          "p97_5": 466,
-          "p99": 567,
-          "max": 758
+          "mean": 336.36,
+          "min": 267,
+          "stddev": 35.74,
+          "p50": 332,
+          "p97_5": 423,
+          "p99": 452,
+          "max": 555
         },
         "requests": {
-          "mean": 24.2,
-          "total": 242
+          "mean": 29.2,
+          "total": 292,
+          "min": 25,
+          "max": 31,
+          "stddev": 1.99
         },
         "throughput": {
-          "mean": 4796313.6
+          "mean": 5788057.6,
+          "min": 4955825,
+          "max": 6145223,
+          "stddev": 394745.62
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -165,19 +245,29 @@
       },
       "/docs/introduction": {
         "latency": {
-          "mean": 93.36,
-          "p50": 90,
-          "p97_5": 112,
-          "p99": 196,
-          "max": 674
+          "mean": 76.26,
+          "min": 8,
+          "stddev": 23.31,
+          "p50": 75,
+          "p97_5": 91,
+          "p99": 149,
+          "max": 494
         },
         "requests": {
-          "mean": 106.1,
-          "total": 1061
+          "mean": 129.81,
+          "total": 1298,
+          "min": 118,
+          "max": 150,
+          "stddev": 9.47
         },
         "throughput": {
-          "mean": 9855590.4
+          "mean": 12058624,
+          "min": 10962790,
+          "max": 13935750,
+          "stddev": 879915.76
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -185,19 +275,29 @@
       },
       "/blog": {
         "latency": {
-          "mean": 152.29,
-          "p50": 148,
-          "p97_5": 190,
-          "p99": 282,
-          "max": 832
+          "mean": 119.76,
+          "min": 10,
+          "stddev": 31.33,
+          "p50": 117,
+          "p97_5": 146,
+          "p99": 155,
+          "max": 627
         },
         "requests": {
-          "mean": 65,
-          "total": 715
+          "mean": 82.6,
+          "total": 826,
+          "min": 74,
+          "max": 88,
+          "stddev": 4.18
         },
         "throughput": {
-          "mean": 20306478.55
+          "mean": 25808076.8,
+          "min": 23122188,
+          "max": 27496656,
+          "stddev": 1305590.99
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -205,19 +305,29 @@
       },
       "/blog/welcome": {
         "latency": {
-          "mean": 18.63,
-          "p50": 18,
-          "p97_5": 35,
-          "p99": 39,
-          "max": 132
+          "mean": 14.38,
+          "min": 3,
+          "stddev": 4.5,
+          "p50": 13,
+          "p97_5": 27,
+          "p99": 30,
+          "max": 131
         },
         "requests": {
-          "mean": 522.21,
-          "total": 5222
+          "mean": 671.2,
+          "total": 6712,
+          "min": 627,
+          "max": 722,
+          "stddev": 29.86
         },
         "throughput": {
-          "mean": 17601331.2
+          "mean": 22636134.4,
+          "min": 21146829,
+          "max": 24350894,
+          "stddev": 1007274.95
         },
+        "runCount": 1,
+        "non2xx": 0,
         "errors": 0,
         "timeouts": 0,
         "duration": 10,
@@ -228,45 +338,45 @@
   "pageWeight": {
     "ssg": {
       "/": {
-        "rawBytes": 182299,
-        "gzipBytes": 32517,
+        "rawBytes": 182317,
+        "gzipBytes": 32526,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 85001,
-        "gzipBytes": 16861,
+        "rawBytes": 85021,
+        "gzipBytes": 16871,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 278931,
-        "gzipBytes": 52539,
+        "rawBytes": 278951,
+        "gzipBytes": 52554,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 30727,
-        "gzipBytes": 8123,
+        "rawBytes": 30747,
+        "gzipBytes": 8134,
         "statusCode": 200
       }
     },
     "ssr": {
       "/": {
-        "rawBytes": 187420,
-        "gzipBytes": 33035,
+        "rawBytes": 187438,
+        "gzipBytes": 33045,
         "statusCode": 200
       },
       "/docs/introduction": {
-        "rawBytes": 85555,
-        "gzipBytes": 16978,
+        "rawBytes": 85575,
+        "gzipBytes": 16991,
         "statusCode": 200
       },
       "/blog": {
-        "rawBytes": 301518,
-        "gzipBytes": 53201,
+        "rawBytes": 301538,
+        "gzipBytes": 53216,
         "statusCode": 200
       },
       "/blog/welcome": {
-        "rawBytes": 32165,
-        "gzipBytes": 8250,
+        "rawBytes": 32185,
+        "gzipBytes": 8263,
         "statusCode": 200
       }
     }
@@ -274,174 +384,1792 @@
   "lighthouse": {
     "ssg": {
       "/": {
-        "performance": 60,
-        "fcp": 5725.614750000001,
-        "lcp": 10550.152999999998,
+        "performance": 61,
+        "fcp": 5415.745800000001,
+        "lcp": 10380.8687,
         "cls": 0,
-        "tbt": 69.5,
-        "speedIndex": 5725.614750000001
+        "tbt": 42,
+        "speedIndex": 5415.745800000001,
+        "runCount": 3,
+        "statistics": {
+          "performance": {
+            "runs": [
+              61,
+              61,
+              61
+            ],
+            "mean": 61,
+            "median": 61,
+            "p95": 61,
+            "stddev": 0,
+            "min": 61,
+            "max": 61
+          },
+          "fcp": {
+            "runs": [
+              5415.4564,
+              5415.745800000001,
+              5429.072
+            ],
+            "mean": 5420.0914,
+            "median": 5415.7458,
+            "p95": 5429.072,
+            "stddev": 6.351342,
+            "min": 5415.4564,
+            "max": 5429.072
+          },
+          "lcp": {
+            "runs": [
+              10380.1846,
+              10380.8687,
+              10407.358
+            ],
+            "mean": 10389.470433,
+            "median": 10380.8687,
+            "p95": 10407.358,
+            "stddev": 12.651503,
+            "min": 10380.1846,
+            "max": 10407.358
+          },
+          "cls": {
+            "runs": [
+              0,
+              0,
+              0
+            ],
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "stddev": 0,
+            "min": 0,
+            "max": 0
+          },
+          "tbt": {
+            "runs": [
+              39,
+              42,
+              41
+            ],
+            "mean": 40.666667,
+            "median": 41,
+            "p95": 42,
+            "stddev": 1.247219,
+            "min": 39,
+            "max": 42
+          },
+          "speedIndex": {
+            "runs": [
+              5415.4564,
+              5415.745800000001,
+              5429.072
+            ],
+            "mean": 5420.0914,
+            "median": 5415.7458,
+            "p95": 5429.072,
+            "stddev": 6.351342,
+            "min": 5415.4564,
+            "max": 5429.072
+          }
+        }
       },
       "/docs/introduction": {
-        "performance": 62,
-        "fcp": 5145.502850000001,
-        "lcp": 9800.003799999999,
+        "performance": 63,
+        "fcp": 4816.1633999999995,
+        "lcp": 9931.4951,
         "cls": 0,
-        "tbt": 56.5,
-        "speedIndex": 5145.502850000001
+        "tbt": 33.5,
+        "speedIndex": 4816.1633999999995,
+        "runCount": 3,
+        "statistics": {
+          "performance": {
+            "runs": [
+              63,
+              63,
+              62
+            ],
+            "mean": 62.666667,
+            "median": 63,
+            "p95": 63,
+            "stddev": 0.471405,
+            "min": 62,
+            "max": 63
+          },
+          "fcp": {
+            "runs": [
+              4816.1633999999995,
+              4816.028,
+              4992.364625
+            ],
+            "mean": 4874.852008,
+            "median": 4816.1634,
+            "p95": 4992.364625,
+            "stddev": 83.093987,
+            "min": 4816.028,
+            "max": 4992.364625
+          },
+          "lcp": {
+            "runs": [
+              9931.4951,
+              9931.291999999998,
+              9954.8195
+            ],
+            "mean": 9939.2022,
+            "median": 9931.4951,
+            "p95": 9954.8195,
+            "stddev": 11.04341,
+            "min": 9931.292,
+            "max": 9954.8195
+          },
+          "cls": {
+            "runs": [
+              0,
+              0,
+              0
+            ],
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "stddev": 0,
+            "min": 0,
+            "max": 0
+          },
+          "tbt": {
+            "runs": [
+              33.5,
+              34.5,
+              33.5
+            ],
+            "mean": 33.833333,
+            "median": 33.5,
+            "p95": 34.5,
+            "stddev": 0.471405,
+            "min": 33.5,
+            "max": 34.5
+          },
+          "speedIndex": {
+            "runs": [
+              4816.1633999999995,
+              4816.028,
+              4992.364625
+            ],
+            "mean": 4874.852008,
+            "median": 4816.1634,
+            "p95": 4992.364625,
+            "stddev": 83.093987,
+            "min": 4816.028,
+            "max": 4992.364625
+          }
+        }
       },
       "/blog": {
-        "performance": 70,
-        "fcp": 3708.3119,
-        "lcp": 5737.186499999999,
+        "performance": 72,
+        "fcp": 3315.249,
+        "lcp": 5805.18575,
         "cls": 0,
         "tbt": 0,
-        "speedIndex": 3708.3119
+        "speedIndex": 3315.249,
+        "runCount": 3,
+        "statistics": {
+          "performance": {
+            "runs": [
+              72,
+              72,
+              70
+            ],
+            "mean": 71.333333,
+            "median": 72,
+            "p95": 72,
+            "stddev": 0.942809,
+            "min": 70,
+            "max": 72
+          },
+          "fcp": {
+            "runs": [
+              3315.249,
+              3314.5728,
+              3483.917275
+            ],
+            "mean": 3371.246358,
+            "median": 3315.249,
+            "p95": 3483.917275,
+            "stddev": 79.670847,
+            "min": 3314.5728,
+            "max": 3483.917275
+          },
+          "lcp": {
+            "runs": [
+              5805.18575,
+              5803.877400000001,
+              6196.20465
+            ],
+            "mean": 5935.089267,
+            "median": 5805.18575,
+            "p95": 6196.20465,
+            "stddev": 184.637231,
+            "min": 5803.8774,
+            "max": 6196.20465
+          },
+          "cls": {
+            "runs": [
+              0,
+              0,
+              0
+            ],
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "stddev": 0,
+            "min": 0,
+            "max": 0
+          },
+          "tbt": {
+            "runs": [
+              0,
+              0,
+              0
+            ],
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "stddev": 0,
+            "min": 0,
+            "max": 0
+          },
+          "speedIndex": {
+            "runs": [
+              3315.249,
+              3314.5728,
+              3483.917275
+            ],
+            "mean": 3371.246358,
+            "median": 3315.249,
+            "p95": 3483.917275,
+            "stddev": 79.670847,
+            "min": 3314.5728,
+            "max": 3483.917275
+          }
+        }
       },
       "/blog/welcome": {
-        "performance": 63,
-        "fcp": 4810.36725,
-        "lcp": 9469.823,
+        "performance": 64,
+        "fcp": 4440.309,
+        "lcp": 9479.963500000002,
         "cls": 0,
-        "tbt": 52.5,
-        "speedIndex": 4810.36725
+        "tbt": 31.5,
+        "speedIndex": 4440.309,
+        "runCount": 3,
+        "statistics": {
+          "performance": {
+            "runs": [
+              63,
+              64,
+              64
+            ],
+            "mean": 63.666667,
+            "median": 64,
+            "p95": 64,
+            "stddev": 0.471405,
+            "min": 63,
+            "max": 64
+          },
+          "fcp": {
+            "runs": [
+              4612.1195,
+              4440.309,
+              4614.499400000001
+            ],
+            "mean": 4555.642633,
+            "median": 4612.1195,
+            "p95": 4614.4994,
+            "stddev": 81.558982,
+            "min": 4440.309,
+            "max": 4614.4994
+          },
+          "lcp": {
+            "runs": [
+              9499.826,
+              9479.963500000002,
+              9351.9992
+            ],
+            "mean": 9443.929567,
+            "median": 9479.9635,
+            "p95": 9499.826,
+            "stddev": 65.508391,
+            "min": 9351.9992,
+            "max": 9499.826
+          },
+          "cls": {
+            "runs": [
+              0,
+              0,
+              0
+            ],
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "stddev": 0,
+            "min": 0,
+            "max": 0
+          },
+          "tbt": {
+            "runs": [
+              31,
+              31.5,
+              31.5
+            ],
+            "mean": 31.333333,
+            "median": 31.5,
+            "p95": 31.5,
+            "stddev": 0.235702,
+            "min": 31,
+            "max": 31.5
+          },
+          "speedIndex": {
+            "runs": [
+              4612.1195,
+              4440.309,
+              4614.499400000001
+            ],
+            "mean": 4555.642633,
+            "median": 4612.1195,
+            "p95": 4614.4994,
+            "stddev": 81.558982,
+            "min": 4440.309,
+            "max": 4614.4994
+          }
+        }
       }
     }
   },
   "streaming": {
     "ssr": {
       "/": {
-        "ttfb": 29,
-        "ttlb": 41,
-        "delta": 12,
-        "totalBytes": 187420
+        "ttfb": 24,
+        "ttlb": 34,
+        "delta": 10,
+        "totalBytes": 187438,
+        "runCount": 5,
+        "statistics": {
+          "ttfb": {
+            "runs": [
+              63.46475000001374,
+              25.980790999994497,
+              23.924165999997058,
+              23.225917000003392,
+              22.4565419999999
+            ],
+            "mean": 31.81,
+            "median": 23.924,
+            "p95": 63.465,
+            "stddev": 15.87,
+            "min": 22.457,
+            "max": 63.465
+          },
+          "ttlb": {
+            "runs": [
+              73.77404200000456,
+              37.70874999999069,
+              33.936625000002095,
+              31.746292000010726,
+              31.911625000007916
+            ],
+            "mean": 41.815,
+            "median": 33.937,
+            "p95": 73.774,
+            "stddev": 16.123,
+            "min": 31.746,
+            "max": 73.774
+          },
+          "delta": {
+            "runs": [
+              10.309291999990819,
+              11.72795899999619,
+              10.012459000005038,
+              8.520375000007334,
+              9.455083000008017
+            ],
+            "mean": 10.005,
+            "median": 10.012,
+            "p95": 11.728,
+            "stddev": 1.055,
+            "min": 8.52,
+            "max": 11.728
+          },
+          "totalBytes": {
+            "runs": [
+              187438,
+              187438,
+              187438,
+              187438,
+              187438
+            ],
+            "mean": 187438,
+            "median": 187438,
+            "p95": 187438,
+            "stddev": 0,
+            "min": 187438,
+            "max": 187438
+          }
+        }
       },
       "/docs/introduction": {
-        "ttfb": 1,
-        "ttlb": 10,
-        "delta": 9,
-        "totalBytes": 85555
+        "ttfb": 0,
+        "ttlb": 7,
+        "delta": 7,
+        "totalBytes": 85575,
+        "runCount": 5,
+        "statistics": {
+          "ttfb": {
+            "runs": [
+              0.5833330000023125,
+              0.4859589999978198,
+              0.4561669999966398,
+              0.4223750000091968,
+              0.6454999999987194
+            ],
+            "mean": 0.519,
+            "median": 0.486,
+            "p95": 0.645,
+            "stddev": 0.083,
+            "min": 0.422,
+            "max": 0.645
+          },
+          "ttlb": {
+            "runs": [
+              6.562042000005022,
+              6.305208999998285,
+              6.520082999995793,
+              6.514290999999503,
+              6.69962499999383
+            ],
+            "mean": 6.52,
+            "median": 6.52,
+            "p95": 6.7,
+            "stddev": 0.127,
+            "min": 6.305,
+            "max": 6.7
+          },
+          "delta": {
+            "runs": [
+              5.978709000002709,
+              5.819250000000466,
+              6.063915999999153,
+              6.091915999990306,
+              6.054124999995111
+            ],
+            "mean": 6.002,
+            "median": 6.054,
+            "p95": 6.092,
+            "stddev": 0.099,
+            "min": 5.819,
+            "max": 6.092
+          },
+          "totalBytes": {
+            "runs": [
+              85575,
+              85575,
+              85575,
+              85575,
+              85575
+            ],
+            "mean": 85575,
+            "median": 85575,
+            "p95": 85575,
+            "stddev": 0,
+            "min": 85575,
+            "max": 85575
+          }
+        }
       },
       "/blog": {
-        "ttfb": 2,
-        "ttlb": 18,
-        "delta": 16,
-        "totalBytes": 301518
+        "ttfb": 1,
+        "ttlb": 11,
+        "delta": 10,
+        "totalBytes": 301538,
+        "runCount": 5,
+        "statistics": {
+          "ttfb": {
+            "runs": [
+              1.3328340000007302,
+              1.3286250000091968,
+              1.3998330000031274,
+              1.1800829999992857,
+              1.2403750000084983
+            ],
+            "mean": 1.296,
+            "median": 1.329,
+            "p95": 1.4,
+            "stddev": 0.077,
+            "min": 1.18,
+            "max": 1.4
+          },
+          "ttlb": {
+            "runs": [
+              10.661250000004657,
+              10.589167000012822,
+              10.643792000002577,
+              10.565333000005921,
+              10.62537500000326
+            ],
+            "mean": 10.617,
+            "median": 10.625,
+            "p95": 10.661,
+            "stddev": 0.035,
+            "min": 10.565,
+            "max": 10.661
+          },
+          "delta": {
+            "runs": [
+              9.328416000003926,
+              9.260542000003625,
+              9.24395899999945,
+              9.385250000006636,
+              9.384999999994761
+            ],
+            "mean": 9.321,
+            "median": 9.328,
+            "p95": 9.385,
+            "stddev": 0.06,
+            "min": 9.244,
+            "max": 9.385
+          },
+          "totalBytes": {
+            "runs": [
+              301538,
+              301538,
+              301538,
+              301538,
+              301538
+            ],
+            "mean": 301538,
+            "median": 301538,
+            "p95": 301538,
+            "stddev": 0,
+            "min": 301538,
+            "max": 301538
+          }
+        }
       },
       "/blog/welcome": {
         "ttfb": 0,
         "ttlb": 2,
         "delta": 2,
-        "totalBytes": 32165
+        "totalBytes": 32185,
+        "runCount": 5,
+        "statistics": {
+          "ttfb": {
+            "runs": [
+              0.34191599999030586,
+              0.25575000001117587,
+              0.20795900000666734,
+              0.27000000000407454,
+              0.16804099999717437
+            ],
+            "mean": 0.249,
+            "median": 0.256,
+            "p95": 0.342,
+            "stddev": 0.059,
+            "min": 0.168,
+            "max": 0.342
+          },
+          "ttlb": {
+            "runs": [
+              1.6494999999995343,
+              1.5096250000060536,
+              1.4052499999961583,
+              1.5650840000016615,
+              1.355916000000434
+            ],
+            "mean": 1.497,
+            "median": 1.51,
+            "p95": 1.649,
+            "stddev": 0.106,
+            "min": 1.356,
+            "max": 1.649
+          },
+          "delta": {
+            "runs": [
+              1.3075840000092285,
+              1.2538749999948777,
+              1.197290999989491,
+              1.295083999997587,
+              1.1878750000032596
+            ],
+            "mean": 1.248,
+            "median": 1.254,
+            "p95": 1.308,
+            "stddev": 0.049,
+            "min": 1.188,
+            "max": 1.308
+          },
+          "totalBytes": {
+            "runs": [
+              32185,
+              32185,
+              32185,
+              32185,
+              32185
+            ],
+            "mean": 32185,
+            "median": 32185,
+            "p95": 32185,
+            "stddev": 0,
+            "min": 32185,
+            "max": 32185
+          }
+        }
       }
     }
   },
   "crossFramework": [
     {
       "name": "litro",
-      "version": "0.17.2",
+      "version": "0.18.0",
       "versions": {
-        "@beatzball/litro": "0.17.2",
-        "@beatzball/litro-router": "0.3.1",
+        "@beatzball/litro": "0.18.0",
+        "@beatzball/litro-router": "0.3.2",
         "lit": "3.3.2",
         "@lit-labs/ssr": "3.3.1",
         "@lit-labs/ssr-client": "1.1.8",
         "nitropack": "2.13.4",
-        "vite": "8.0.16"
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          1591,
-          1385,
-          1382
+          1271,
+          939,
+          961
         ],
-        "mean": 1453,
-        "median": 1385,
-        "p95": 1591,
-        "stddev": 98,
-        "min": 1382,
-        "max": 1591
+        "mean": 1057,
+        "median": 961,
+        "p95": 1271,
+        "stddev": 152,
+        "min": 939,
+        "max": 1271
       },
-      "outputSize": 38355,
+      "outputSize": 39687,
+      "bundleSize": {
+        "clientJS": 33001,
+        "clientCSS": 0,
+        "serverBundle": 0,
+        "staticHTML": 6454,
+        "totalOutput": 39687
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.33,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 16
+          },
+          "requests": {
+            "mean": 15617.6,
+            "total": 156158,
+            "min": 13680,
+            "max": 16320,
+            "stddev": 780.5
+          },
+          "throughput": {
+            "mean": 55571251.2,
+            "min": 48687120,
+            "max": 58082880,
+            "stddev": 2776909.66
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/blog/hello": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 5
+          },
+          "requests": {
+            "mean": 15626.55,
+            "total": 171886,
+            "min": 14444,
+            "max": 16109,
+            "stddev": 429.37
+          },
+          "throughput": {
+            "mean": 54989172.37,
+            "min": 50828436,
+            "max": 56687571,
+            "stddev": 1506244.38
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
-          "rawBytes": 3242,
-          "gzipBytes": 1550,
+          "rawBytes": 3247,
+          "gzipBytes": 1549,
           "statusCode": 200
         },
         "/blog/hello": {
-          "rawBytes": 3202,
-          "gzipBytes": 1537,
+          "rawBytes": 3207,
+          "gzipBytes": 1533,
           "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 837.5358749999999,
+          "lcp": 1368.07175,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 837.5358749999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                848.844,
+                837.5358749999999,
+                1065.2193499999998
+              ],
+              "mean": 917.199742,
+              "median": 848.844,
+              "p95": 1065.21935,
+              "stddev": 104.767431,
+              "min": 837.535875,
+              "max": 1065.21935
+            },
+            "lcp": {
+              "runs": [
+                925.4128000000001,
+                1368.07175,
+                1368.1705
+              ],
+              "mean": 1220.551683,
+              "median": 1368.07175,
+              "p95": 1368.1705,
+              "stddev": 208.69471,
+              "min": 925.4128,
+              "max": 1368.1705
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                848.844,
+                837.5358749999999,
+                1065.2193499999998
+              ],
+              "mean": 917.199742,
+              "median": 848.844,
+              "p95": 1065.21935,
+              "stddev": 104.767431,
+              "min": 837.535875,
+              "max": 1065.21935
+            }
+          }
+        },
+        "/blog/hello": {
+          "performance": 100,
+          "fcp": 837.649875,
+          "lcp": 1368.29975,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 837.649875,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                751.4317000000001,
+                837.649875,
+                1062.1099749999998
+              ],
+              "mean": 883.730517,
+              "median": 837.649875,
+              "p95": 1062.109975,
+              "stddev": 130.952451,
+              "min": 751.4317,
+              "max": 1062.109975
+            },
+            "lcp": {
+              "runs": [
+                1357.5792500000002,
+                1368.29975,
+                1365.01425
+              ],
+              "mean": 1363.631083,
+              "median": 1365.01425,
+              "p95": 1368.29975,
+              "stddev": 4.484577,
+              "min": 1357.57925,
+              "max": 1368.29975
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                751.4317000000001,
+                837.649875,
+                1062.1099749999998
+              ],
+              "mean": 883.730517,
+              "median": 837.649875,
+              "p95": 1062.109975,
+              "stddev": 130.952451,
+              "min": 751.4317,
+              "max": 1062.109975
+            }
+          }
         }
       }
     },
     {
       "name": "nuxt",
-      "version": "4.6.1",
+      "version": "4.6.4",
       "versions": {
-        "nuxt": "4.6.1",
-        "vue": "3.5.44",
-        "vite": "8.3.4"
+        "nuxt": "4.6.4",
+        "vue": "3.5.45",
+        "nitropack": "2.13.6",
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          5884,
-          2454,
-          2433
+          3413,
+          2362,
+          1903
         ],
-        "mean": 3590,
-        "median": 2454,
-        "p95": 5884,
-        "stddev": 1622,
-        "min": 2433,
-        "max": 5884
+        "mean": 2559,
+        "median": 2362,
+        "p95": 3413,
+        "stddev": 632,
+        "min": 1903,
+        "max": 3413
       },
-      "outputSize": 211132,
+      "outputSize": 214130,
+      "bundleSize": {
+        "clientJS": 203892,
+        "clientCSS": 4652,
+        "serverBundle": 0,
+        "staticHTML": 5272,
+        "totalOutput": 214130
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.15,
+            "min": 1,
+            "stddev": 0.96,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 2,
+            "max": 80
+          },
+          "requests": {
+            "mean": 13333.6,
+            "total": 133328,
+            "min": 8595,
+            "max": 15187,
+            "stddev": 1868.54
+          },
+          "throughput": {
+            "mean": 25253068.8,
+            "min": 16278930,
+            "max": 28764178,
+            "stddev": 3535497.73
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/blog/hello": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.22,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 3
+          },
+          "requests": {
+            "mean": 15392,
+            "total": 153912,
+            "min": 14833,
+            "max": 15787,
+            "stddev": 326.05
+          },
+          "throughput": {
+            "mean": 29243801.6,
+            "min": 28182700,
+            "max": 29995300,
+            "stddev": 619358.55
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
           "rawBytes": 1582,
-          "gzipBytes": 756,
+          "gzipBytes": 758,
           "statusCode": 200
         },
         "/blog/hello": {
           "rawBytes": 1588,
-          "gzipBytes": 754,
+          "gzipBytes": 755,
           "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 1351.2812,
+          "lcp": 1651.2812,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1351.2812,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1352.4041,
+                1351.2812,
+                1351.1729
+              ],
+              "mean": 1351.6194,
+              "median": 1351.2812,
+              "p95": 1352.4041,
+              "stddev": 0.556625,
+              "min": 1351.1729,
+              "max": 1352.4041
+            },
+            "lcp": {
+              "runs": [
+                1652.4041000000002,
+                1651.2812,
+                1651.1729
+              ],
+              "mean": 1651.6194,
+              "median": 1651.2812,
+              "p95": 1652.4041,
+              "stddev": 0.556625,
+              "min": 1651.1729,
+              "max": 1652.4041
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1352.4041,
+                1351.2812,
+                1351.1729
+              ],
+              "mean": 1351.6194,
+              "median": 1351.2812,
+              "p95": 1352.4041,
+              "stddev": 0.556625,
+              "min": 1351.1729,
+              "max": 1352.4041
+            }
+          }
+        },
+        "/blog/hello": {
+          "performance": 100,
+          "fcp": 1351.7667,
+          "lcp": 1651.7667,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1351.7667,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1201.4658,
+                1351.7667,
+                1351.1269
+              ],
+              "mean": 1301.453133,
+              "median": 1351.1269,
+              "p95": 1351.7667,
+              "stddev": 70.702204,
+              "min": 1201.4658,
+              "max": 1351.7667
+            },
+            "lcp": {
+              "runs": [
+                1651.4658,
+                1651.7667,
+                1651.1269
+              ],
+              "mean": 1651.453133,
+              "median": 1651.4658,
+              "p95": 1651.7667,
+              "stddev": 0.261351,
+              "min": 1651.1269,
+              "max": 1651.7667
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1201.4658,
+                1351.7667,
+                1351.1269
+              ],
+              "mean": 1301.453133,
+              "median": 1351.1269,
+              "p95": 1351.7667,
+              "stddev": 70.702204,
+              "min": 1201.4658,
+              "max": 1351.7667
+            }
+          }
         }
       }
     },
     {
       "name": "nextjs",
-      "version": "16.4.0",
+      "version": "16.4.6",
       "versions": {
-        "next": "16.4.0",
-        "react": "19.3.0",
-        "react-dom": "19.3.0"
+        "next": "16.4.6",
+        "react": "19.3.1",
+        "react-dom": "19.3.1"
       },
       "buildTime": {
         "runs": [
-          3653,
-          3372,
-          3955
+          2303,
+          2020,
+          2003
         ],
-        "mean": 3660,
-        "median": 3653,
-        "p95": 3955,
-        "stddev": 238,
-        "min": 3372,
-        "max": 3955
+        "mean": 2109,
+        "median": 2020,
+        "p95": 2303,
+        "stddev": 138,
+        "min": 2003,
+        "max": 2303
       },
-      "outputSize": 636618,
+      "outputSize": 637904,
+      "bundleSize": {
+        "clientJS": 578555,
+        "clientCSS": 0,
+        "serverBundle": 0,
+        "staticHTML": 25566,
+        "totalOutput": 637904
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 9
+          },
+          "requests": {
+            "mean": 15777.46,
+            "total": 173550,
+            "min": 14434,
+            "max": 16403,
+            "stddev": 580.22
+          },
+          "throughput": {
+            "mean": 86885841.46,
+            "min": 79488038,
+            "max": 90331321,
+            "stddev": 3201472.29
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/blog/hello": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.22,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 9
+          },
+          "requests": {
+            "mean": 14528.37,
+            "total": 159798,
+            "min": 13946,
+            "max": 14873,
+            "stddev": 236.2
+          },
+          "throughput": {
+            "mean": 94452270.55,
+            "min": 90662946,
+            "max": 96689373,
+            "stddev": 1534690.49
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
           "rawBytes": 5195,
-          "gzipBytes": 1789,
+          "gzipBytes": 1786,
           "statusCode": 200
         },
         "/blog/hello": {
           "rawBytes": 6189,
-          "gzipBytes": 1880,
+          "gzipBytes": 1878,
           "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 610.88405,
+          "lcp": 1857.7681,
+          "cls": 0,
+          "tbt": 5.999999999999773,
+          "speedIndex": 610.88405,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                616.78955,
+                610.88405,
+                610.9823
+              ],
+              "mean": 612.8853,
+              "median": 610.9823,
+              "p95": 616.78955,
+              "stddev": 2.761013,
+              "min": 610.88405,
+              "max": 616.78955
+            },
+            "lcp": {
+              "runs": [
+                1859.5791,
+                1857.7681,
+                1857.9646
+              ],
+              "mean": 1858.437267,
+              "median": 1857.9646,
+              "p95": 1859.5791,
+              "stddev": 0.811374,
+              "min": 1857.7681,
+              "max": 1859.5791
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                6,
+                5.999999999999773,
+                5.999999999999773
+              ],
+              "mean": 6,
+              "median": 6,
+              "p95": 6,
+              "stddev": 0,
+              "min": 6,
+              "max": 6
+            },
+            "speedIndex": {
+              "runs": [
+                616.78955,
+                610.88405,
+                610.9823
+              ],
+              "mean": 612.8853,
+              "median": 610.9823,
+              "p95": 616.78955,
+              "stddev": 2.761013,
+              "min": 610.88405,
+              "max": 616.78955
+            }
+          }
+        },
+        "/blog/hello": {
+          "performance": 100,
+          "fcp": 614.06585,
+          "lcp": 1859.1317,
+          "cls": 0,
+          "tbt": 7,
+          "speedIndex": 614.06585,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                613.95755,
+                614.06585,
+                614.03625
+              ],
+              "mean": 614.019883,
+              "median": 614.03625,
+              "p95": 614.06585,
+              "stddev": 0.045703,
+              "min": 613.95755,
+              "max": 614.06585
+            },
+            "lcp": {
+              "runs": [
+                1501.9151,
+                1859.1317,
+                1860.0725
+              ],
+              "mean": 1740.3731,
+              "median": 1859.1317,
+              "p95": 1860.0725,
+              "stddev": 168.615706,
+              "min": 1501.9151,
+              "max": 1860.0725
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                4,
+                7,
+                7.999999999999773
+              ],
+              "mean": 6.333333,
+              "median": 7,
+              "p95": 8,
+              "stddev": 1.699673,
+              "min": 4,
+              "max": 8
+            },
+            "speedIndex": {
+              "runs": [
+                613.95755,
+                614.06585,
+                614.03625
+              ],
+              "mean": 614.019883,
+              "median": 614.03625,
+              "p95": 614.06585,
+              "stddev": 0.045703,
+              "min": 613.95755,
+              "max": 614.06585
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "tanstack",
+      "version": "1.169.5",
+      "versions": {
+        "@tanstack/react-start": "1.169.5",
+        "@tanstack/react-router": "1.170.46",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "vite": "8.3.8"
+      },
+      "buildTime": {
+        "runs": [
+          862,
+          581,
+          574
+        ],
+        "mean": 672,
+        "median": 581,
+        "p95": 862,
+        "stddev": 134,
+        "min": 574,
+        "max": 862
+      },
+      "outputSize": 345956,
+      "bundleSize": {
+        "clientJS": 341679,
+        "clientCSS": 0,
+        "serverBundle": 0,
+        "staticHTML": 4277,
+        "totalOutput": 345956
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 13
+          },
+          "requests": {
+            "mean": 15480,
+            "total": 154782,
+            "min": 14281,
+            "max": 16090,
+            "stddev": 605.77
+          },
+          "throughput": {
+            "mean": 37869977.6,
+            "min": 34945607,
+            "max": 39372230,
+            "stddev": 1482316.54
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/blog/hello": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.22,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 8
+          },
+          "requests": {
+            "mean": 15924,
+            "total": 159232,
+            "min": 15159,
+            "max": 16347,
+            "stddev": 360.61
+          },
+          "throughput": {
+            "mean": 39079116.8,
+            "min": 37200186,
+            "max": 40115538,
+            "stddev": 885154.61
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 2135,
+          "gzipBytes": 1135,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 2142,
+          "gzipBytes": 1144,
+          "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 616.81745,
+          "lcp": 1501.6349,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 616.81745,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                615.45555,
+                616.81745,
+                617.16465
+              ],
+              "mean": 616.479217,
+              "median": 616.81745,
+              "p95": 617.16465,
+              "stddev": 0.737589,
+              "min": 615.45555,
+              "max": 617.16465
+            },
+            "lcp": {
+              "runs": [
+                1502.9111,
+                1501.6349,
+                1502.3293
+              ],
+              "mean": 1502.291767,
+              "median": 1502.3293,
+              "p95": 1502.9111,
+              "stddev": 0.521682,
+              "min": 1501.6349,
+              "max": 1502.9111
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                615.45555,
+                616.81745,
+                617.16465
+              ],
+              "mean": 616.479217,
+              "median": 616.81745,
+              "p95": 617.16465,
+              "stddev": 0.737589,
+              "min": 615.45555,
+              "max": 617.16465
+            }
+          }
+        },
+        "/blog/hello": {
+          "performance": 100,
+          "fcp": 614.87655,
+          "lcp": 1501.7531,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 614.87655,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                616.23005,
+                614.87655,
+                616.4744
+              ],
+              "mean": 615.860333,
+              "median": 616.23005,
+              "p95": 616.4744,
+              "stddev": 0.702756,
+              "min": 614.87655,
+              "max": 616.4744
+            },
+            "lcp": {
+              "runs": [
+                1502.4601,
+                1501.7531,
+                1502.9488
+              ],
+              "mean": 1502.387333,
+              "median": 1502.4601,
+              "p95": 1502.9488,
+              "stddev": 0.490847,
+              "min": 1501.7531,
+              "max": 1502.9488
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                616.23005,
+                614.87655,
+                616.4744
+              ],
+              "mean": 615.860333,
+              "median": 616.23005,
+              "p95": 616.4744,
+              "stddev": 0.702756,
+              "min": 614.87655,
+              "max": 616.4744
+            }
+          }
         }
       }
     }
@@ -449,471 +2177,3962 @@
   "hnBenchmark": [
     {
       "name": "litro-lit",
-      "version": "0.17.2",
+      "version": "0.18.0",
       "versions": {
-        "@beatzball/litro": "0.17.2",
-        "@beatzball/litro-router": "0.3.1",
+        "@beatzball/litro": "0.18.0",
+        "@beatzball/litro-router": "0.3.2",
         "lit": "3.3.2",
         "@lit-labs/ssr": "3.3.1",
         "@lit-labs/ssr-client": "1.1.8",
         "nitropack": "2.13.4",
-        "vite": "8.0.16"
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          1969,
-          1977,
-          1964
+          1467,
+          1302,
+          1330
         ],
-        "mean": 1970,
-        "median": 1969,
-        "p95": 1977,
-        "stddev": 5,
-        "min": 1964,
-        "max": 1977
+        "mean": 1366,
+        "median": 1330,
+        "p95": 1467,
+        "stddev": 72,
+        "min": 1302,
+        "max": 1467
       },
-      "outputSize": 2437500,
+      "outputSize": 2439507,
+      "bundleSize": {
+        "clientJS": 44041,
+        "clientCSS": 8070,
+        "serverBundle": 0,
+        "staticHTML": 2387164,
+        "totalOutput": 2439507
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.12,
+            "min": 1,
+            "stddev": 1.77,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 211
+          },
+          "requests": {
+            "mean": 13321.8,
+            "total": 133212,
+            "min": 5918,
+            "max": 15055,
+            "stddev": 2550.96
+          },
+          "throughput": {
+            "mean": 606955110.4,
+            "min": 269653670,
+            "max": 685981075,
+            "stddev": 116239421.34
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.13,
+            "min": 1,
+            "stddev": 0.57,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 2,
+            "max": 29
+          },
+          "requests": {
+            "mean": 12966.4,
+            "total": 129661,
+            "min": 11460,
+            "max": 14054,
+            "stddev": 833.48
+          },
+          "throughput": {
+            "mean": 720896000,
+            "min": 637107240,
+            "max": 781318076,
+            "stddev": 46334869.69
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.13,
+            "min": 1,
+            "stddev": 0.37,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 4
+          },
+          "requests": {
+            "mean": 11741.46,
+            "total": 129150,
+            "min": 10766,
+            "max": 12274,
+            "stddev": 432.24
+          },
+          "throughput": {
+            "mean": 810859054.55,
+            "min": 743478428,
+            "max": 847617892,
+            "stddev": 29760365.15
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.08,
+            "min": 1,
+            "stddev": 0.3,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 14
+          },
+          "requests": {
+            "mean": 13332,
+            "total": 133322,
+            "min": 12626,
+            "max": 13667,
+            "stddev": 293.75
+          },
+          "throughput": {
+            "mean": 832988774.4,
+            "min": 788809350,
+            "max": 853845825,
+            "stddev": 18377098.4
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.88,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 111
+          },
+          "requests": {
+            "mean": 15506.8,
+            "total": 155055,
+            "min": 13492,
+            "max": 16849,
+            "stddev": 822.32
+          },
+          "throughput": {
+            "mean": 186423705.6,
+            "min": 162227808,
+            "max": 202592376,
+            "stddev": 9870478.76
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
-          "rawBytes": 45247,
-          "gzipBytes": 8789,
+          "rawBytes": 45252,
+          "gzipBytes": 8794,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 55276,
-          "gzipBytes": 15188,
+          "rawBytes": 55281,
+          "gzipBytes": 15189,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 68740,
-          "gzipBytes": 18649,
+          "rawBytes": 68745,
+          "gzipBytes": 18653,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 62157,
-          "gzipBytes": 14877,
+          "rawBytes": 62162,
+          "gzipBytes": 14876,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 11706,
+          "rawBytes": 11711,
           "gzipBytes": 5399,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
-          "performance": 100,
-          "fcp": 1071.71055,
-          "lcp": 1225.9474,
-          "cls": 0,
+          "performance": 97,
+          "fcp": 1372.7794999999999,
+          "lcp": 1521.9353999999998,
+          "cls": 0.102547405939323,
           "tbt": 0,
-          "speedIndex": 1071.71055
+          "speedIndex": 1372.7794999999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                97,
+                100,
+                97
+              ],
+              "mean": 98,
+              "median": 97,
+              "p95": 100,
+              "stddev": 1.414214,
+              "min": 97,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1205.1398,
+                1218.4702,
+                1372.7794999999999
+              ],
+              "mean": 1265.463167,
+              "median": 1218.4702,
+              "p95": 1372.7795,
+              "stddev": 76.079,
+              "min": 1205.1398,
+              "max": 1372.7795
+            },
+            "lcp": {
+              "runs": [
+                1508.7096999999999,
+                1521.7052999999999,
+                1521.9353999999998
+              ],
+              "mean": 1517.450133,
+              "median": 1521.7053,
+              "p95": 1521.9354,
+              "stddev": 6.181134,
+              "min": 1508.7097,
+              "max": 1521.9354
+            },
+            "cls": {
+              "runs": [
+                0.102547405939323,
+                0,
+                0.102547405939323
+              ],
+              "mean": 0.068365,
+              "median": 0.102547,
+              "p95": 0.102547,
+              "stddev": 0.048341,
+              "min": 0,
+              "max": 0.102547
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1205.1398,
+                1218.4702,
+                1372.7794999999999
+              ],
+              "mean": 1265.463167,
+              "median": 1218.4702,
+              "p95": 1372.7795,
+              "stddev": 76.079,
+              "min": 1205.1398,
+              "max": 1372.7795
+            }
+          }
         },
         "/ask": {
-          "performance": 100,
-          "fcp": 1222.2322,
-          "lcp": 1376.3096,
+          "performance": 99,
+          "fcp": 1367.4715999999999,
+          "lcp": 1670.7073999999998,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1222.2322
+          "speedIndex": 1367.4715999999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                100,
+                88
+              ],
+              "mean": 95.666667,
+              "median": 99,
+              "p95": 100,
+              "stddev": 5.436502,
+              "min": 88,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1367.4715999999999,
+                1215.23305,
+                1518.089
+              ],
+              "mean": 1366.931217,
+              "median": 1367.4716,
+              "p95": 1518.089,
+              "stddev": 123.641014,
+              "min": 1215.23305,
+              "max": 1518.089
+            },
+            "lcp": {
+              "runs": [
+                1670.7073999999998,
+                1671.4660999999999,
+                1667.7068
+              ],
+              "mean": 1669.9601,
+              "median": 1670.7074,
+              "p95": 1671.4661,
+              "stddev": 1.623151,
+              "min": 1667.7068,
+              "max": 1671.4661
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0.2215066504372035
+              ],
+              "mean": 0.073836,
+              "median": 0,
+              "p95": 0.221507,
+              "stddev": 0.104419,
+              "min": 0,
+              "max": 0.221507
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1367.4715999999999,
+                1215.23305,
+                1518.089
+              ],
+              "mean": 1366.931217,
+              "median": 1367.4716,
+              "p95": 1518.089,
+              "stddev": 123.641014,
+              "min": 1215.23305,
+              "max": 1518.089
+            }
+          }
         },
         "/show": {
-          "performance": 100,
-          "fcp": 1208.60085,
-          "lcp": 1363.4678000000001,
+          "performance": 99,
+          "fcp": 1366.0133999999998,
+          "lcp": 1669.5200999999997,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1208.60085
+          "speedIndex": 1366.0133999999998,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                97,
+                100
+              ],
+              "mean": 98.666667,
+              "median": 99,
+              "p95": 100,
+              "stddev": 1.247219,
+              "min": 97,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1366.0133999999998,
+                1354.3674,
+                1216.89915
+              ],
+              "mean": 1312.42665,
+              "median": 1354.3674,
+              "p95": 1366.0134,
+              "stddev": 67.715261,
+              "min": 1216.89915,
+              "max": 1366.0134
+            },
+            "lcp": {
+              "runs": [
+                1669.5200999999997,
+                1657.5511000000001,
+                1672.7982999999997
+              ],
+              "mean": 1666.623167,
+              "median": 1669.5201,
+              "p95": 1672.7983,
+              "stddev": 6.553037,
+              "min": 1657.5511,
+              "max": 1672.7983
+            },
+            "cls": {
+              "runs": [
+                0,
+                0.09781526674371306,
+                0
+              ],
+              "mean": 0.032605,
+              "median": 0,
+              "p95": 0.097815,
+              "stddev": 0.046111,
+              "min": 0,
+              "max": 0.097815
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1366.0133999999998,
+                1354.3674,
+                1216.89915
+              ],
+              "mean": 1312.42665,
+              "median": 1354.3674,
+              "p95": 1366.0134,
+              "stddev": 67.715261,
+              "min": 1216.89915,
+              "max": 1366.0134
+            }
+          }
         },
         "/story/47760529": {
-          "performance": 100,
-          "fcp": 1150.9426,
-          "lcp": 1380.2568,
-          "cls": 0,
+          "performance": 88,
+          "fcp": 1279.57,
+          "lcp": 1657.8549999999998,
+          "cls": 0.2355986530337245,
           "tbt": 0,
-          "speedIndex": 1150.9426
+          "speedIndex": 1279.57,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                88,
+                88
+              ],
+              "mean": 92,
+              "median": 88,
+              "p95": 100,
+              "stddev": 5.656854,
+              "min": 88,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1222.5568999999998,
+                1293.757,
+                1279.57
+              ],
+              "mean": 1265.294633,
+              "median": 1279.57,
+              "p95": 1293.757,
+              "stddev": 30.770149,
+              "min": 1222.5569,
+              "max": 1293.757
+            },
+            "lcp": {
+              "runs": [
+                1677.2403999999997,
+                1672.1354999999999,
+                1657.8549999999998
+              ],
+              "mean": 1669.076967,
+              "median": 1672.1355,
+              "p95": 1677.2404,
+              "stddev": 8.204243,
+              "min": 1657.855,
+              "max": 1677.2404
+            },
+            "cls": {
+              "runs": [
+                0,
+                0.2355986530337245,
+                0.2355986530337245
+              ],
+              "mean": 0.157066,
+              "median": 0.235599,
+              "p95": 0.235599,
+              "stddev": 0.111062,
+              "min": 0,
+              "max": 0.235599
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1222.5568999999998,
+                1293.757,
+                1279.57
+              ],
+              "mean": 1265.294633,
+              "median": 1279.57,
+              "p95": 1293.757,
+              "stddev": 30.770149,
+              "min": 1222.5569,
+              "max": 1293.757
+            }
+          }
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1131.5859,
-          "lcp": 1360.7812000000001,
+          "fcp": 988.490375,
+          "lcp": 1669.5769000000003,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1131.5859
+          "speedIndex": 988.490375,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                100,
+                100
+              ],
+              "mean": 99.666667,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0.471405,
+              "min": 99,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1443.8537500000002,
+                988.490375,
+                988.708625
+              ],
+              "mean": 1140.350917,
+              "median": 988.708625,
+              "p95": 1443.85375,
+              "stddev": 214.60893,
+              "min": 988.490375,
+              "max": 1443.85375
+            },
+            "lcp": {
+              "runs": [
+                1670.6245000000004,
+                1669.5769000000003,
+                1671.1007
+              ],
+              "mean": 1670.434033,
+              "median": 1670.6245,
+              "p95": 1671.1007,
+              "stddev": 0.636501,
+              "min": 1669.5769,
+              "max": 1671.1007
+            },
+            "cls": {
+              "runs": [
+                0.00644447668208794,
+                0,
+                0
+              ],
+              "mean": 0.002148,
+              "median": 0,
+              "p95": 0.006444,
+              "stddev": 0.003038,
+              "min": 0,
+              "max": 0.006444
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1443.8537500000002,
+                988.490375,
+                988.708625
+              ],
+              "mean": 1140.350917,
+              "median": 988.708625,
+              "p95": 1443.85375,
+              "stddev": 214.60893,
+              "min": 988.490375,
+              "max": 1443.85375
+            }
+          }
         }
       }
     },
     {
       "name": "litro-fast",
-      "version": "0.17.2",
+      "version": "0.18.0",
       "versions": {
-        "@beatzball/litro": "0.17.2",
-        "@beatzball/litro-router": "0.3.1",
+        "@beatzball/litro": "0.18.0",
+        "@beatzball/litro-router": "0.3.2",
         "@microsoft/fast-element": "2.10.3",
         "@microsoft/fast-ssr": "1.0.0-beta.39",
         "nitropack": "2.13.4",
-        "vite": "8.0.16"
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          1952,
-          1793,
-          1766
+          1449,
+          1383,
+          1330
         ],
-        "mean": 1837,
-        "median": 1793,
-        "p95": 1952,
-        "stddev": 82,
-        "min": 1766,
-        "max": 1952
+        "mean": 1387,
+        "median": 1383,
+        "p95": 1449,
+        "stddev": 49,
+        "min": 1330,
+        "max": 1449
       },
-      "outputSize": 2133660,
+      "outputSize": 2134561,
+      "bundleSize": {
+        "clientJS": 79386,
+        "clientCSS": 8070,
+        "serverBundle": 0,
+        "staticHTML": 2046873,
+        "totalOutput": 2134561
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.29,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 12
+          },
+          "requests": {
+            "mean": 14337.1,
+            "total": 157690,
+            "min": 12656,
+            "max": 15016,
+            "stddev": 738.16
+          },
+          "throughput": {
+            "mean": 548786548.37,
+            "min": 484560272,
+            "max": 574917592,
+            "stddev": 28278900.58
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 11
+          },
+          "requests": {
+            "mean": 14165.46,
+            "total": 155816,
+            "min": 13329,
+            "max": 14767,
+            "stddev": 372.73
+          },
+          "throughput": {
+            "mean": 688509300.37,
+            "min": 647882703,
+            "max": 717779569,
+            "stddev": 18236140.85
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 12
+          },
+          "requests": {
+            "mean": 14048,
+            "total": 140471,
+            "min": 13256,
+            "max": 14527,
+            "stddev": 403.07
+          },
+          "throughput": {
+            "mean": 831992627.2,
+            "min": 785152880,
+            "max": 860434210,
+            "stddev": 24028411.33
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.36,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 17
+          },
+          "requests": {
+            "mean": 14026.55,
+            "total": 154287,
+            "min": 11504,
+            "max": 14482,
+            "stddev": 813.21
+          },
+          "throughput": {
+            "mean": 736839121.46,
+            "min": 604351136,
+            "max": 760797388,
+            "stddev": 42825320.93
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.24,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 14
+          },
+          "requests": {
+            "mean": 15675.28,
+            "total": 172428,
+            "min": 15252,
+            "max": 16032,
+            "stddev": 233.78
+          },
+          "throughput": {
+            "mean": 184376599.28,
+            "min": 179409276,
+            "max": 188584416,
+            "stddev": 2739041.71
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
-          "rawBytes": 37969,
-          "gzipBytes": 8387,
+          "rawBytes": 37974,
+          "gzipBytes": 8389,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 48289,
+          "rawBytes": 48294,
           "gzipBytes": 14907,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 58912,
-          "gzipBytes": 17599,
+          "rawBytes": 58917,
+          "gzipBytes": 17605,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 52216,
+          "rawBytes": 52221,
           "gzipBytes": 11300,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 11445,
-          "gzipBytes": 5288,
+          "rawBytes": 11450,
+          "gzipBytes": 5287,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
-          "performance": 100,
-          "fcp": 1296.6784499999999,
-          "lcp": 1522.9045999999998,
+          "performance": 99,
+          "fcp": 1371.0574,
+          "lcp": 1671.7432,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1296.6784499999999
+          "speedIndex": 1371.0574,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                99,
+                99
+              ],
+              "mean": 99.333333,
+              "median": 99,
+              "p95": 100,
+              "stddev": 0.471405,
+              "min": 99,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1355.482,
+                1370.5311000000002,
+                1371.0574
+              ],
+              "mean": 1365.690167,
+              "median": 1370.5311,
+              "p95": 1371.0574,
+              "stddev": 7.221461,
+              "min": 1355.482,
+              "max": 1371.0574
+            },
+            "lcp": {
+              "runs": [
+                1658.976,
+                1671.3748,
+                1671.7432
+              ],
+              "mean": 1667.364667,
+              "median": 1671.3748,
+              "p95": 1671.7432,
+              "stddev": 5.933589,
+              "min": 1658.976,
+              "max": 1671.7432
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1355.482,
+                1370.5311000000002,
+                1371.0574
+              ],
+              "mean": 1365.690167,
+              "median": 1370.5311,
+              "p95": 1371.0574,
+              "stddev": 7.221461,
+              "min": 1355.482,
+              "max": 1371.0574
+            }
+          }
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1445.0567,
-          "lcp": 1671.0756000000001,
+          "fcp": 1506.6910500000001,
+          "lcp": 1811.9214000000002,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1445.0567
+          "speedIndex": 1506.6910500000001,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1505.1895,
+                1506.6910500000001,
+                1518.55045
+              ],
+              "mean": 1510.143667,
+              "median": 1506.69105,
+              "p95": 1518.55045,
+              "stddev": 5.976017,
+              "min": 1505.1895,
+              "max": 1518.55045
+            },
+            "lcp": {
+              "runs": [
+                1808.586,
+                1811.9214000000002,
+                1819.4006
+              ],
+              "mean": 1813.302667,
+              "median": 1811.9214,
+              "p95": 1819.4006,
+              "stddev": 4.521786,
+              "min": 1808.586,
+              "max": 1819.4006
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1505.1895,
+                1506.6910500000001,
+                1518.55045
+              ],
+              "mean": 1510.143667,
+              "median": 1506.69105,
+              "p95": 1518.55045,
+              "stddev": 5.976017,
+              "min": 1505.1895,
+              "max": 1518.55045
+            }
+          }
         },
         "/show": {
           "performance": 99,
-          "fcp": 1434.8687,
-          "lcp": 1667.4916,
+          "fcp": 1505.6631,
+          "lcp": 1809.5508,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1434.8687
+          "speedIndex": 1505.6631,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1507.54745,
+                1505.6631,
+                1522.7138
+              ],
+              "mean": 1511.974783,
+              "median": 1507.54745,
+              "p95": 1522.7138,
+              "stddev": 7.632499,
+              "min": 1505.6631,
+              "max": 1522.7138
+            },
+            "lcp": {
+              "runs": [
+                1813.3966,
+                1809.5508,
+                1823.6183999999998
+              ],
+              "mean": 1815.521933,
+              "median": 1813.3966,
+              "p95": 1823.6184,
+              "stddev": 5.936448,
+              "min": 1809.5508,
+              "max": 1823.6184
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1507.54745,
+                1505.6631,
+                1522.7138
+              ],
+              "mean": 1511.974783,
+              "median": 1507.54745,
+              "p95": 1522.7138,
+              "stddev": 7.632499,
+              "min": 1505.6631,
+              "max": 1522.7138
+            }
+          }
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1303.82645,
-          "lcp": 1530.7686,
+          "fcp": 1293.9998,
+          "lcp": 1519.6664,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1303.82645
+          "speedIndex": 1293.9998,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1298.06685,
+                1293.9998,
+                1295.93035
+              ],
+              "mean": 1295.999,
+              "median": 1295.93035,
+              "p95": 1298.06685,
+              "stddev": 1.661076,
+              "min": 1293.9998,
+              "max": 1298.06685
+            },
+            "lcp": {
+              "runs": [
+                1519.7558,
+                1519.6664,
+                1521.5738000000001
+              ],
+              "mean": 1520.332,
+              "median": 1519.7558,
+              "p95": 1521.5738,
+              "stddev": 0.878843,
+              "min": 1519.6664,
+              "max": 1521.5738
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1298.06685,
+                1293.9998,
+                1295.93035
+              ],
+              "mean": 1295.999,
+              "median": 1295.93035,
+              "p95": 1298.06685,
+              "stddev": 1.661076,
+              "min": 1293.9998,
+              "max": 1298.06685
+            }
+          }
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1294.58365,
-          "lcp": 1520.7782,
+          "fcp": 1281.4852,
+          "lcp": 1511.3136,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1294.58365
+          "speedIndex": 1281.4852,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1293.3717000000001,
+                1281.4852,
+                1216.665125
+              ],
+              "mean": 1263.840675,
+              "median": 1281.4852,
+              "p95": 1293.3717,
+              "stddev": 33.709263,
+              "min": 1216.665125,
+              "max": 1293.3717
+            },
+            "lcp": {
+              "runs": [
+                1517.4956000000002,
+                1511.3136,
+                1517.6642000000002
+              ],
+              "mean": 1515.491133,
+              "median": 1517.4956,
+              "p95": 1517.6642,
+              "stddev": 2.954764,
+              "min": 1511.3136,
+              "max": 1517.6642
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1293.3717000000001,
+                1281.4852,
+                1216.665125
+              ],
+              "mean": 1263.840675,
+              "median": 1281.4852,
+              "p95": 1293.3717,
+              "stddev": 33.709263,
+              "min": 1216.665125,
+              "max": 1293.3717
+            }
+          }
         }
       }
     },
     {
       "name": "litro-elena",
-      "version": "0.17.2",
+      "version": "0.18.0",
       "versions": {
-        "@beatzball/litro": "0.17.2",
-        "@beatzball/litro-router": "0.3.1",
+        "@beatzball/litro": "0.18.0",
+        "@beatzball/litro-router": "0.3.2",
         "@elenajs/core": "1.0.0",
         "@elenajs/ssr": "1.0.0-alpha.10",
         "nitropack": "2.13.4",
-        "vite": "8.0.16"
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          1792,
-          1590,
-          1606
+          1156,
+          1137,
+          1129
         ],
-        "mean": 1663,
-        "median": 1606,
-        "p95": 1792,
-        "stddev": 92,
-        "min": 1590,
-        "max": 1792
+        "mean": 1141,
+        "median": 1137,
+        "p95": 1156,
+        "stddev": 11,
+        "min": 1129,
+        "max": 1156
       },
-      "outputSize": 1891681,
+      "outputSize": 1892627,
+      "bundleSize": {
+        "clientJS": 28611,
+        "clientCSS": 8070,
+        "serverBundle": 0,
+        "staticHTML": 1855714,
+        "totalOutput": 1892627
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 6
+          },
+          "requests": {
+            "mean": 14932.8,
+            "total": 149337,
+            "min": 13412,
+            "max": 15471,
+            "stddev": 571.1
+          },
+          "throughput": {
+            "mean": 443626291.2,
+            "min": 398416872,
+            "max": 459581526,
+            "stddev": 17030000.91
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.25,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 14
+          },
+          "requests": {
+            "mean": 14692.73,
+            "total": 161610,
+            "min": 13935,
+            "max": 15170,
+            "stddev": 328.82
+          },
+          "throughput": {
+            "mean": 606911022.55,
+            "min": 575654850,
+            "max": 626672700,
+            "stddev": 13560643.35
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.29,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 9
+          },
+          "requests": {
+            "mean": 14112.8,
+            "total": 141136,
+            "min": 12643,
+            "max": 14567,
+            "stddev": 561.41
+          },
+          "throughput": {
+            "mean": 714866688,
+            "min": 640355307,
+            "max": 737803983,
+            "stddev": 28507964.15
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 12
+          },
+          "requests": {
+            "mean": 14332,
+            "total": 143306,
+            "min": 13840,
+            "max": 14822,
+            "stddev": 275.16
+          },
+          "throughput": {
+            "mean": 703856640,
+            "min": 679682400,
+            "max": 727908420,
+            "stddev": 13568832.75
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.04,
+            "min": 1,
+            "stddev": 0.2,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 5
+          },
+          "requests": {
+            "mean": 15897.6,
+            "total": 158972,
+            "min": 15296,
+            "max": 16233,
+            "stddev": 278.1
+          },
+          "throughput": {
+            "mean": 172569395.2,
+            "min": 166053376,
+            "max": 176225448,
+            "stddev": 3027422.74
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
-          "rawBytes": 29388,
-          "gzipBytes": 8019,
+          "rawBytes": 29393,
+          "gzipBytes": 8022,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 40992,
-          "gzipBytes": 14502,
+          "rawBytes": 40997,
+          "gzipBytes": 14503,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 50331,
-          "gzipBytes": 17063,
+          "rawBytes": 50336,
+          "gzipBytes": 17068,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 48792,
+          "rawBytes": 48797,
           "gzipBytes": 10959,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 10538,
-          "gzipBytes": 4929,
+          "rawBytes": 10543,
+          "gzipBytes": 4928,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 1070.35015,
-          "lcp": 1371.8002000000001,
+          "fcp": 1056.6676499999999,
+          "lcp": 1211.8901999999998,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1070.35015
+          "speedIndex": 1056.6676499999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1057.642,
+                1056.6676499999999,
+                1069.7057499999999
+              ],
+              "mean": 1061.338467,
+              "median": 1057.642,
+              "p95": 1069.70575,
+              "stddev": 5.929919,
+              "min": 1056.66765,
+              "max": 1069.70575
+            },
+            "lcp": {
+              "runs": [
+                1363.856,
+                1211.8901999999998,
+                1217.9409999999998
+              ],
+              "mean": 1264.5624,
+              "median": 1217.941,
+              "p95": 1363.856,
+              "stddev": 70.254619,
+              "min": 1211.8902,
+              "max": 1363.856
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1057.642,
+                1056.6676499999999,
+                1069.7057499999999
+              ],
+              "mean": 1061.338467,
+              "median": 1057.642,
+              "p95": 1069.70575,
+              "stddev": 5.929919,
+              "min": 1056.66765,
+              "max": 1069.70575
+            }
+          }
         },
         "/ask": {
           "performance": 100,
-          "fcp": 1217.7426,
-          "lcp": 1368.6568,
+          "fcp": 1219.1655500000002,
+          "lcp": 1367.8874,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1217.7426
+          "speedIndex": 1219.1655500000002,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1218.90595,
+                1219.1655500000002,
+                1219.87135
+              ],
+              "mean": 1219.314283,
+              "median": 1219.16555,
+              "p95": 1219.87135,
+              "stddev": 0.407914,
+              "min": 1218.90595,
+              "max": 1219.87135
+            },
+            "lcp": {
+              "runs": [
+                1369.8746,
+                1367.8874,
+                1368.1617999999999
+              ],
+              "mean": 1368.641267,
+              "median": 1368.1618,
+              "p95": 1369.8746,
+              "stddev": 0.879264,
+              "min": 1367.8874,
+              "max": 1369.8746
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1218.90595,
+                1219.1655500000002,
+                1219.87135
+              ],
+              "mean": 1219.314283,
+              "median": 1219.16555,
+              "p95": 1219.87135,
+              "stddev": 0.407914,
+              "min": 1218.90595,
+              "max": 1219.87135
+            }
+          }
         },
         "/show": {
-          "performance": 100,
-          "fcp": 1208.9182,
-          "lcp": 1365.5576,
-          "cls": 0,
+          "performance": 99,
+          "fcp": 1221.085,
+          "lcp": 1367.78,
+          "cls": 0.06732229647630619,
           "tbt": 0,
-          "speedIndex": 1208.9182
+          "speedIndex": 1221.085,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                99,
+                99
+              ],
+              "mean": 99.333333,
+              "median": 99,
+              "p95": 100,
+              "stddev": 0.471405,
+              "min": 99,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1217.3654999999999,
+                1221.35635,
+                1221.085
+              ],
+              "mean": 1219.935617,
+              "median": 1221.085,
+              "p95": 1221.35635,
+              "stddev": 1.82072,
+              "min": 1217.3655,
+              "max": 1221.35635
+            },
+            "lcp": {
+              "runs": [
+                1368.154,
+                1368.1418,
+                1367.78
+              ],
+              "mean": 1368.025267,
+              "median": 1368.1418,
+              "p95": 1368.154,
+              "stddev": 0.173501,
+              "min": 1367.78,
+              "max": 1368.154
+            },
+            "cls": {
+              "runs": [
+                0,
+                0.06732229647630619,
+                0.06732229647630619
+              ],
+              "mean": 0.044882,
+              "median": 0.067322,
+              "p95": 0.067322,
+              "stddev": 0.031736,
+              "min": 0,
+              "max": 0.067322
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1217.3654999999999,
+                1221.35635,
+                1221.085
+              ],
+              "mean": 1219.935617,
+              "median": 1221.085,
+              "p95": 1221.35635,
+              "stddev": 1.82072,
+              "min": 1217.3655,
+              "max": 1221.35635
+            }
+          }
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 1071.18225,
-          "lcp": 1221.8187,
+          "fcp": 1068.8015,
+          "lcp": 1369.8824,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1071.18225
+          "speedIndex": 1068.8015,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1143.61855,
+                1068.8015,
+                1144.35635
+              ],
+              "mean": 1118.925467,
+              "median": 1143.61855,
+              "p95": 1144.35635,
+              "stddev": 35.444277,
+              "min": 1068.8015,
+              "max": 1144.35635
+            },
+            "lcp": {
+              "runs": [
+                1369.4913999999999,
+                1369.8824,
+                1367.1418
+              ],
+              "mean": 1368.838533,
+              "median": 1369.4914,
+              "p95": 1369.8824,
+              "stddev": 1.210344,
+              "min": 1367.1418,
+              "max": 1369.8824
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1143.61855,
+                1068.8015,
+                1144.35635
+              ],
+              "mean": 1118.925467,
+              "median": 1143.61855,
+              "p95": 1144.35635,
+              "stddev": 35.444277,
+              "min": 1068.8015,
+              "max": 1144.35635
+            }
+          }
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 1143.8376500000002,
-          "lcp": 1367.4502000000002,
-          "cls": 0.01300637319530095,
+          "fcp": 1132.1247,
+          "lcp": 1362.4996,
+          "cls": 0,
           "tbt": 0,
-          "speedIndex": 1143.8376500000002
+          "speedIndex": 1132.1247,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1065.669625,
+                1132.1247,
+                1141.85085
+              ],
+              "mean": 1113.215058,
+              "median": 1132.1247,
+              "p95": 1141.85085,
+              "stddev": 33.853367,
+              "min": 1065.669625,
+              "max": 1141.85085
+            },
+            "lcp": {
+              "runs": [
+                1366.6714000000002,
+                1362.4996,
+                1366.4678000000001
+              ],
+              "mean": 1365.212933,
+              "median": 1366.4678,
+              "p95": 1366.6714,
+              "stddev": 1.920416,
+              "min": 1362.4996,
+              "max": 1366.6714
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1065.669625,
+                1132.1247,
+                1141.85085
+              ],
+              "mean": 1113.215058,
+              "median": 1132.1247,
+              "p95": 1141.85085,
+              "stddev": 33.853367,
+              "min": 1065.669625,
+              "max": 1141.85085
+            }
+          }
         }
       }
     },
     {
       "name": "nextjs",
-      "version": "16.4.0",
+      "version": "16.4.6",
       "versions": {
-        "next": "16.4.0",
-        "react": "19.3.0",
-        "react-dom": "19.3.0"
+        "next": "16.4.6",
+        "react": "19.3.1",
+        "react-dom": "19.3.1"
       },
       "buildTime": {
         "runs": [
-          4038,
-          3408,
-          3397
+          2446,
+          2157,
+          2162
         ],
-        "mean": 3614,
-        "median": 3408,
-        "p95": 4038,
-        "stddev": 300,
-        "min": 3397,
-        "max": 4038
+        "mean": 2255,
+        "median": 2162,
+        "p95": 2446,
+        "stddev": 135,
+        "min": 2157,
+        "max": 2446
       },
-      "outputSize": 7505379,
+      "outputSize": 7506647,
+      "bundleSize": {
+        "clientJS": 570615,
+        "clientCSS": 4035,
+        "serverBundle": 0,
+        "staticHTML": 2620633,
+        "totalOutput": 7506647
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.28,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 13
+          },
+          "requests": {
+            "mean": 14482.4,
+            "total": 144809,
+            "min": 12698,
+            "max": 15093,
+            "stddev": 751.3
+          },
+          "throughput": {
+            "mean": 669830348.8,
+            "min": 587460272,
+            "max": 698262552,
+            "stddev": 34758712.81
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 10
+          },
+          "requests": {
+            "mean": 13609.1,
+            "total": 149700,
+            "min": 13069,
+            "max": 13944,
+            "stddev": 234.05
+          },
+          "throughput": {
+            "mean": 489339438.55,
+            "min": 469961240,
+            "max": 501426240,
+            "stddev": 8400379.98
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.27,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 7
+          },
+          "requests": {
+            "mean": 13363.28,
+            "total": 146973,
+            "min": 13024,
+            "max": 13660,
+            "stddev": 167.8
+          },
+          "throughput": {
+            "mean": 603574644.37,
+            "min": 588294080,
+            "max": 617022200,
+            "stddev": 7571597.03
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.12,
+            "min": 1,
+            "stddev": 0.38,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 13
+          },
+          "requests": {
+            "mean": 11695.64,
+            "total": 128638,
+            "min": 10394,
+            "max": 12368,
+            "stddev": 487.54
+          },
+          "throughput": {
+            "mean": 771251479.28,
+            "min": 685421936,
+            "max": 815595392,
+            "stddev": 32142017.73
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 11
+          },
+          "requests": {
+            "mean": 14562.55,
+            "total": 160172,
+            "min": 14283,
+            "max": 14921,
+            "stddev": 171.55
+          },
+          "throughput": {
+            "mean": 114553949.1,
+            "min": 112364361,
+            "max": 117383507,
+            "stddev": 1350152.55
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
           "rawBytes": 45951,
-          "gzipBytes": 6802,
+          "gzipBytes": 6804,
           "statusCode": 200
         },
         "/ask": {
           "rawBytes": 35649,
-          "gzipBytes": 5173,
+          "gzipBytes": 5169,
           "statusCode": 200
         },
         "/show": {
           "rawBytes": 44858,
-          "gzipBytes": 6078,
+          "gzipBytes": 6084,
           "statusCode": 200
         },
         "/story/47760529": {
           "rawBytes": 65628,
-          "gzipBytes": 16975,
+          "gzipBytes": 16972,
           "statusCode": 200
         },
         "/user/divan": {
           "rawBytes": 7555,
-          "gzipBytes": 2148,
+          "gzipBytes": 2145,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 100,
-          "fcp": 753.3357000000001,
-          "lcp": 1882.3357,
+          "fcp": 753.3963000000001,
+          "lcp": 1861.3963,
           "cls": 0,
-          "tbt": 29,
-          "speedIndex": 753.3357000000001
+          "tbt": 8,
+          "speedIndex": 753.3963000000001,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                752.7908,
+                753.3963000000001,
+                752.9363000000001
+              ],
+              "mean": 753.041133,
+              "median": 752.9363,
+              "p95": 753.3963,
+              "stddev": 0.25807,
+              "min": 752.7908,
+              "max": 753.3963
+            },
+            "lcp": {
+              "runs": [
+                1859.7908,
+                1861.3963,
+                1859.9363
+              ],
+              "mean": 1860.374467,
+              "median": 1859.9363,
+              "p95": 1861.3963,
+              "stddev": 0.724983,
+              "min": 1859.7908,
+              "max": 1861.3963
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                7,
+                8,
+                7
+              ],
+              "mean": 7.333333,
+              "median": 7,
+              "p95": 8,
+              "stddev": 0.471405,
+              "min": 7,
+              "max": 8
+            },
+            "speedIndex": {
+              "runs": [
+                752.7908,
+                753.3963000000001,
+                752.9363000000001
+              ],
+              "mean": 753.041133,
+              "median": 752.9363,
+              "p95": 753.3963,
+              "stddev": 0.25807,
+              "min": 752.7908,
+              "max": 753.3963
+            }
+          }
         },
         "/ask": {
           "performance": 100,
-          "fcp": 753.8939,
-          "lcp": 1882.8939,
+          "fcp": 752.3578,
+          "lcp": 1860.3578,
           "cls": 0,
-          "tbt": 29,
-          "speedIndex": 753.8939
+          "tbt": 8,
+          "speedIndex": 752.3578,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                752.5839000000001,
+                752.3578,
+                752.7018
+              ],
+              "mean": 752.547833,
+              "median": 752.5839,
+              "p95": 752.7018,
+              "stddev": 0.142734,
+              "min": 752.3578,
+              "max": 752.7018
+            },
+            "lcp": {
+              "runs": [
+                1858.5839,
+                1860.3578,
+                1859.7018
+              ],
+              "mean": 1859.547833,
+              "median": 1859.7018,
+              "p95": 1860.3578,
+              "stddev": 0.732329,
+              "min": 1858.5839,
+              "max": 1860.3578
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                6,
+                8,
+                7
+              ],
+              "mean": 7,
+              "median": 7,
+              "p95": 8,
+              "stddev": 0.816497,
+              "min": 6,
+              "max": 8
+            },
+            "speedIndex": {
+              "runs": [
+                752.5839000000001,
+                752.3578,
+                752.7018
+              ],
+              "mean": 752.547833,
+              "median": 752.5839,
+              "p95": 752.7018,
+              "stddev": 0.142734,
+              "min": 752.3578,
+              "max": 752.7018
+            }
+          }
         },
         "/show": {
           "performance": 100,
-          "fcp": 753.2212,
-          "lcp": 1881.2212,
+          "fcp": 752.0764999999999,
+          "lcp": 1859.0765,
           "cls": 0,
-          "tbt": 28,
-          "speedIndex": 753.2212
+          "tbt": 7,
+          "speedIndex": 752.0764999999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                751.8316,
+                752.0764999999999,
+                751.8382999999999
+              ],
+              "mean": 751.915467,
+              "median": 751.8383,
+              "p95": 752.0765,
+              "stddev": 0.113901,
+              "min": 751.8316,
+              "max": 752.0765
+            },
+            "lcp": {
+              "runs": [
+                1858.8316,
+                1859.0765,
+                1858.8383
+              ],
+              "mean": 1858.915467,
+              "median": 1858.8383,
+              "p95": 1859.0765,
+              "stddev": 0.113901,
+              "min": 1858.8316,
+              "max": 1859.0765
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                7,
+                7,
+                7
+              ],
+              "mean": 7,
+              "median": 7,
+              "p95": 7,
+              "stddev": 0,
+              "min": 7,
+              "max": 7
+            },
+            "speedIndex": {
+              "runs": [
+                751.8316,
+                752.0764999999999,
+                751.8382999999999
+              ],
+              "mean": 751.915467,
+              "median": 751.8383,
+              "p95": 752.0765,
+              "stddev": 0.113901,
+              "min": 751.8316,
+              "max": 752.0765
+            }
+          }
         },
         "/story/47760529": {
           "performance": 100,
-          "fcp": 754.2402,
-          "lcp": 1881.2402,
+          "fcp": 752.1133,
+          "lcp": 1858.1133,
           "cls": 0,
-          "tbt": 27,
-          "speedIndex": 754.2402
+          "tbt": 6,
+          "speedIndex": 752.1133,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                752.4777999999999,
+                752.1133,
+                752.2624000000001
+              ],
+              "mean": 752.2845,
+              "median": 752.2624,
+              "p95": 752.4778,
+              "stddev": 0.149625,
+              "min": 752.1133,
+              "max": 752.4778
+            },
+            "lcp": {
+              "runs": [
+                1859.4778,
+                1858.1133,
+                1859.2624
+              ],
+              "mean": 1858.951167,
+              "median": 1859.2624,
+              "p95": 1859.4778,
+              "stddev": 0.598952,
+              "min": 1858.1133,
+              "max": 1859.4778
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                7,
+                6,
+                7
+              ],
+              "mean": 6.666667,
+              "median": 7,
+              "p95": 7,
+              "stddev": 0.471405,
+              "min": 6,
+              "max": 7
+            },
+            "speedIndex": {
+              "runs": [
+                752.4777999999999,
+                752.1133,
+                752.2624000000001
+              ],
+              "mean": 752.2845,
+              "median": 752.2624,
+              "p95": 752.4778,
+              "stddev": 0.149625,
+              "min": 752.1133,
+              "max": 752.4778
+            }
+          }
         },
         "/user/divan": {
           "performance": 100,
-          "fcp": 753.4338,
-          "lcp": 1880.4338,
+          "fcp": 752.3879,
+          "lcp": 1858.3879,
           "cls": 0,
-          "tbt": 27,
-          "speedIndex": 753.4338
+          "tbt": 6,
+          "speedIndex": 752.3879,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                751.913,
+                752.3879,
+                752.6306
+              ],
+              "mean": 752.3105,
+              "median": 752.3879,
+              "p95": 752.6306,
+              "stddev": 0.298027,
+              "min": 751.913,
+              "max": 752.6306
+            },
+            "lcp": {
+              "runs": [
+                1857.913,
+                1858.3879,
+                1352.6306
+              ],
+              "mean": 1689.643833,
+              "median": 1857.913,
+              "p95": 1858.3879,
+              "stddev": 238.304422,
+              "min": 1352.6306,
+              "max": 1858.3879
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                6,
+                6,
+                4.5
+              ],
+              "mean": 5.5,
+              "median": 6,
+              "p95": 6,
+              "stddev": 0.707107,
+              "min": 4.5,
+              "max": 6
+            },
+            "speedIndex": {
+              "runs": [
+                751.913,
+                752.3879,
+                752.6306
+              ],
+              "mean": 752.3105,
+              "median": 752.3879,
+              "p95": 752.6306,
+              "stddev": 0.298027,
+              "min": 751.913,
+              "max": 752.6306
+            }
+          }
         }
       }
     },
     {
       "name": "nuxt",
-      "version": "4.6.1",
+      "version": "4.6.4",
       "versions": {
-        "nuxt": "4.6.1",
-        "vue": "3.5.44",
-        "vite": "8.3.4"
+        "nuxt": "4.6.4",
+        "vue": "3.5.45",
+        "nitropack": "2.13.6",
+        "vite": "8.3.5"
       },
       "buildTime": {
         "runs": [
-          3857,
-          2993,
-          2965
+          2851,
+          2094,
+          2065
         ],
-        "mean": 3272,
-        "median": 2993,
-        "p95": 3857,
-        "stddev": 414,
-        "min": 2965,
-        "max": 3857
+        "mean": 2337,
+        "median": 2094,
+        "p95": 2851,
+        "stddev": 364,
+        "min": 2065,
+        "max": 2851
       },
-      "outputSize": 1217376,
+      "outputSize": 2161365,
+      "bundleSize": {
+        "clientJS": 222668,
+        "clientCSS": 7581,
+        "serverBundle": 0,
+        "staticHTML": 992929,
+        "totalOutput": 2161365
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 16
+          },
+          "requests": {
+            "mean": 15612,
+            "total": 171730,
+            "min": 14196,
+            "max": 16135,
+            "stddev": 487.06
+          },
+          "throughput": {
+            "mean": 251688029.1,
+            "min": 228853716,
+            "max": 260112335,
+            "stddev": 7836884.24
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.25,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 10
+          },
+          "requests": {
+            "mean": 15593.82,
+            "total": 171527,
+            "min": 14312,
+            "max": 16109,
+            "stddev": 532.33
+          },
+          "throughput": {
+            "mean": 195696453.82,
+            "min": 179629912,
+            "max": 202184059,
+            "stddev": 6671309.31
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.22,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 11
+          },
+          "requests": {
+            "mean": 15676,
+            "total": 156765,
+            "min": 15325,
+            "max": 15960,
+            "stddev": 180.35
+          },
+          "throughput": {
+            "mean": 240661299.2,
+            "min": 235269400,
+            "max": 245017920,
+            "stddev": 2775014.34
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.23,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 13
+          },
+          "requests": {
+            "mean": 15036,
+            "total": 165391,
+            "min": 14397,
+            "max": 15482,
+            "stddev": 344.08
+          },
+          "throughput": {
+            "mean": 406883234.91,
+            "min": 389597217,
+            "max": 418958402,
+            "stddev": 9316107.53
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.55,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 45
+          },
+          "requests": {
+            "mean": 15188.4,
+            "total": 151886,
+            "min": 13754,
+            "max": 16471,
+            "stddev": 962.99
+          },
+          "throughput": {
+            "mean": 37899468.8,
+            "min": 34316230,
+            "max": 41095145,
+            "stddev": 2402520.18
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
       "pageWeight": {
         "/": {
-          "rawBytes": 15795,
-          "gzipBytes": 3934,
+          "rawBytes": 15808,
+          "gzipBytes": 3952,
           "statusCode": 200
         },
         "/ask": {
-          "rawBytes": 12227,
-          "gzipBytes": 2701,
+          "rawBytes": 12238,
+          "gzipBytes": 2713,
           "statusCode": 200
         },
         "/show": {
-          "rawBytes": 15027,
-          "gzipBytes": 3292,
+          "rawBytes": 15039,
+          "gzipBytes": 3307,
           "statusCode": 200
         },
         "/story/47760529": {
-          "rawBytes": 26726,
-          "gzipBytes": 9078,
+          "rawBytes": 26748,
+          "gzipBytes": 9098,
           "statusCode": 200
         },
         "/user/divan": {
-          "rawBytes": 2165,
-          "gzipBytes": 917,
+          "rawBytes": 2183,
+          "gzipBytes": 930,
           "statusCode": 200
         }
       },
       "lighthouse": {
         "/": {
           "performance": 99,
-          "fcp": 1502.9759,
-          "lcp": 1653.0000499999999,
-          "cls": 0.04738033042951105,
-          "tbt": 67,
-          "speedIndex": 1502.9759
+          "fcp": 1501.9996,
+          "lcp": 1651.9996,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1501.9996,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1502.3537,
+                1501.9996,
+                1501.9344
+              ],
+              "mean": 1502.0959,
+              "median": 1501.9996,
+              "p95": 1502.3537,
+              "stddev": 0.184225,
+              "min": 1501.9344,
+              "max": 1502.3537
+            },
+            "lcp": {
+              "runs": [
+                1802.3537000000001,
+                1651.9996,
+                1651.9344
+              ],
+              "mean": 1702.0959,
+              "median": 1651.9996,
+              "p95": 1802.3537,
+              "stddev": 70.892975,
+              "min": 1651.9344,
+              "max": 1802.3537
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1502.3537,
+                1501.9996,
+                1501.9344
+              ],
+              "mean": 1502.0959,
+              "median": 1501.9996,
+              "p95": 1502.3537,
+              "stddev": 0.184225,
+              "min": 1501.9344,
+              "max": 1502.3537
+            }
+          }
         },
         "/ask": {
           "performance": 99,
-          "fcp": 1503.2875,
-          "lcp": 1653.3097500000001,
-          "cls": 0.03256531648936806,
-          "tbt": 40,
-          "speedIndex": 1503.2875
+          "fcp": 1501.7798,
+          "lcp": 1801.7797999999998,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1501.7798,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1501.7614,
+                1501.7798,
+                1501.9895
+              ],
+              "mean": 1501.843567,
+              "median": 1501.7798,
+              "p95": 1501.9895,
+              "stddev": 0.103463,
+              "min": 1501.7614,
+              "max": 1501.9895
+            },
+            "lcp": {
+              "runs": [
+                1801.7614,
+                1801.7797999999998,
+                1801.9895
+              ],
+              "mean": 1801.843567,
+              "median": 1801.7798,
+              "p95": 1801.9895,
+              "stddev": 0.103463,
+              "min": 1801.7614,
+              "max": 1801.9895
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1501.7614,
+                1501.7798,
+                1501.9895
+              ],
+              "mean": 1501.843567,
+              "median": 1501.7798,
+              "p95": 1501.9895,
+              "stddev": 0.103463,
+              "min": 1501.7614,
+              "max": 1501.9895
+            }
+          }
         },
         "/show": {
           "performance": 99,
-          "fcp": 1502.5370999999998,
-          "lcp": 1652.5622499999997,
-          "cls": 0.04570148848212856,
-          "tbt": 62,
-          "speedIndex": 1502.5370999999998
+          "fcp": 1501.6113,
+          "lcp": 1801.6113,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1501.6113,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1501.6851,
+                1501.6113,
+                1501.3367
+              ],
+              "mean": 1501.544367,
+              "median": 1501.6113,
+              "p95": 1501.6851,
+              "stddev": 0.149902,
+              "min": 1501.3367,
+              "max": 1501.6851
+            },
+            "lcp": {
+              "runs": [
+                1801.6851,
+                1801.6113,
+                1651.3366999999998
+              ],
+              "mean": 1751.544367,
+              "median": 1801.6113,
+              "p95": 1801.6851,
+              "stddev": 70.857527,
+              "min": 1651.3367,
+              "max": 1801.6851
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1501.6851,
+                1501.6113,
+                1501.3367
+              ],
+              "mean": 1501.544367,
+              "median": 1501.6113,
+              "p95": 1501.6851,
+              "stddev": 0.149902,
+              "min": 1501.3367,
+              "max": 1501.6851
+            }
+          }
         },
         "/story/47760529": {
-          "performance": 78,
-          "fcp": 1503.3498,
-          "lcp": 1653.3839,
-          "cls": 0.5192051339522703,
-          "tbt": 61.5,
-          "speedIndex": 1503.3498
+          "performance": 99,
+          "fcp": 1501.9126,
+          "lcp": 1651.9126,
+          "cls": 0,
+          "tbt": 4.5,
+          "speedIndex": 1501.9126,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1501.7286,
+                1501.9126,
+                1501.577
+              ],
+              "mean": 1501.7394,
+              "median": 1501.7286,
+              "p95": 1501.9126,
+              "stddev": 0.137221,
+              "min": 1501.577,
+              "max": 1501.9126
+            },
+            "lcp": {
+              "runs": [
+                1651.7286,
+                1651.9126,
+                1651.5769999999998
+              ],
+              "mean": 1651.7394,
+              "median": 1651.7286,
+              "p95": 1651.9126,
+              "stddev": 0.137221,
+              "min": 1651.577,
+              "max": 1651.9126
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                3,
+                4.5,
+                2.5
+              ],
+              "mean": 3.333333,
+              "median": 3,
+              "p95": 4.5,
+              "stddev": 0.849837,
+              "min": 2.5,
+              "max": 4.5
+            },
+            "speedIndex": {
+              "runs": [
+                1501.7286,
+                1501.9126,
+                1501.577
+              ],
+              "mean": 1501.7394,
+              "median": 1501.7286,
+              "p95": 1501.9126,
+              "stddev": 0.137221,
+              "min": 1501.577,
+              "max": 1501.9126
+            }
+          }
         },
         "/user/divan": {
           "performance": 99,
-          "fcp": 1502.7490000000003,
-          "lcp": 1652.7741,
+          "fcp": 1501.7982,
+          "lcp": 1651.7982000000002,
           "cls": 0,
           "tbt": 0,
-          "speedIndex": 1502.7490000000003
+          "speedIndex": 1501.7982,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                99,
+                99
+              ],
+              "mean": 99,
+              "median": 99,
+              "p95": 99,
+              "stddev": 0,
+              "min": 99,
+              "max": 99
+            },
+            "fcp": {
+              "runs": [
+                1502.0457,
+                1501.7982,
+                1502.1984
+              ],
+              "mean": 1502.0141,
+              "median": 1502.0457,
+              "p95": 1502.1984,
+              "stddev": 0.164902,
+              "min": 1501.7982,
+              "max": 1502.1984
+            },
+            "lcp": {
+              "runs": [
+                1652.0457,
+                1651.7982000000002,
+                1652.1983999999998
+              ],
+              "mean": 1652.0141,
+              "median": 1652.0457,
+              "p95": 1652.1984,
+              "stddev": 0.164902,
+              "min": 1651.7982,
+              "max": 1652.1984
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1502.0457,
+                1501.7982,
+                1502.1984
+              ],
+              "mean": 1502.0141,
+              "median": 1502.0457,
+              "p95": 1502.1984,
+              "stddev": 0.164902,
+              "min": 1501.7982,
+              "max": 1502.1984
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "tanstack",
+      "version": "1.169.5",
+      "versions": {
+        "@tanstack/react-start": "1.169.5",
+        "@tanstack/react-router": "1.170.46",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "vite": "8.3.8"
+      },
+      "buildTime": {
+        "runs": [
+          1168,
+          885,
+          857
+        ],
+        "mean": 970,
+        "median": 885,
+        "p95": 1168,
+        "stddev": 140,
+        "min": 857,
+        "max": 1168
+      },
+      "outputSize": 2254296,
+      "bundleSize": {
+        "clientJS": 351878,
+        "clientCSS": 4035,
+        "serverBundle": 0,
+        "staticHTML": 1898383,
+        "totalOutput": 2254296
+      },
+      "httpPerf": {
+        "/": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.25,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 14
+          },
+          "requests": {
+            "mean": 15132.8,
+            "total": 151332,
+            "min": 13495,
+            "max": 15620,
+            "stddev": 568.06
+          },
+          "throughput": {
+            "mean": 480798310.4,
+            "min": 428749645,
+            "max": 496263020,
+            "stddev": 18031696.57
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/ask": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.24,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 9
+          },
+          "requests": {
+            "mean": 14679.2,
+            "total": 146782,
+            "min": 14189,
+            "max": 15135,
+            "stddev": 286.61
+          },
+          "throughput": {
+            "mean": 631400038.4,
+            "min": 610410780,
+            "max": 651107700,
+            "stddev": 12326455.77
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/show": {
+          "latency": {
+            "mean": 0.06,
+            "min": 1,
+            "stddev": 0.26,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 12
+          },
+          "requests": {
+            "mean": 14148,
+            "total": 155622,
+            "min": 13629,
+            "max": 14499,
+            "stddev": 243.06
+          },
+          "throughput": {
+            "mean": 751757498.19,
+            "min": 724122399,
+            "max": 770346369,
+            "stddev": 12864296.73
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/story/47760529": {
+          "latency": {
+            "mean": 0.07,
+            "min": 1,
+            "stddev": 0.3,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 8
+          },
+          "requests": {
+            "mean": 14084,
+            "total": 140832,
+            "min": 12010,
+            "max": 14632,
+            "stddev": 724.25
+          },
+          "throughput": {
+            "mean": 706215936,
+            "min": 602253460,
+            "max": 733736272,
+            "stddev": 36395746.7
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        },
+        "/user/divan": {
+          "latency": {
+            "mean": 0.05,
+            "min": 1,
+            "stddev": 0.22,
+            "p50": 0,
+            "p97_5": 1,
+            "p99": 1,
+            "max": 10
+          },
+          "requests": {
+            "mean": 15724.8,
+            "total": 157250,
+            "min": 15275,
+            "max": 15959,
+            "stddev": 194.08
+          },
+          "throughput": {
+            "mean": 171062067.2,
+            "min": 166161450,
+            "max": 173602002,
+            "stddev": 2124983.96
+          },
+          "runCount": 1,
+          "non2xx": 0,
+          "errors": 0,
+          "timeouts": 0,
+          "duration": 10,
+          "connections": 10
+        }
+      },
+      "rendering": "ssg",
+      "streaming": null,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 31458,
+          "gzipBytes": 8287,
+          "statusCode": 200
+        },
+        "/ask": {
+          "rawBytes": 42707,
+          "gzipBytes": 14814,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 52818,
+          "gzipBytes": 17259,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 49833,
+          "gzipBytes": 11645,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 10565,
+          "gzipBytes": 4954,
+          "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 752.0078000000001,
+          "lcp": 1652.0078,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 752.0078000000001,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                754.642,
+                752.0078000000001,
+                751.7407000000001
+              ],
+              "mean": 752.796833,
+              "median": 752.0078,
+              "p95": 754.642,
+              "stddev": 1.309279,
+              "min": 751.7407,
+              "max": 754.642
+            },
+            "lcp": {
+              "runs": [
+                1654.642,
+                1652.0078,
+                1651.7407
+              ],
+              "mean": 1652.796833,
+              "median": 1652.0078,
+              "p95": 1654.642,
+              "stddev": 1.309279,
+              "min": 1651.7407,
+              "max": 1654.642
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                754.642,
+                752.0078000000001,
+                751.7407000000001
+              ],
+              "mean": 752.796833,
+              "median": 752.0078,
+              "p95": 754.642,
+              "stddev": 1.309279,
+              "min": 751.7407,
+              "max": 754.642
+            }
+          }
+        },
+        "/ask": {
+          "performance": 100,
+          "fcp": 902.3386,
+          "lcp": 1802.3386,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 902.3386,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                901.9425000000001,
+                902.3386,
+                901.9256
+              ],
+              "mean": 902.0689,
+              "median": 901.9425,
+              "p95": 902.3386,
+              "stddev": 0.190831,
+              "min": 901.9256,
+              "max": 902.3386
+            },
+            "lcp": {
+              "runs": [
+                1801.9425,
+                1802.3386,
+                1801.9256
+              ],
+              "mean": 1802.0689,
+              "median": 1801.9425,
+              "p95": 1802.3386,
+              "stddev": 0.190831,
+              "min": 1801.9256,
+              "max": 1802.3386
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                901.9425000000001,
+                902.3386,
+                901.9256
+              ],
+              "mean": 902.0689,
+              "median": 901.9425,
+              "p95": 902.3386,
+              "stddev": 0.190831,
+              "min": 901.9256,
+              "max": 902.3386
+            }
+          }
+        },
+        "/show": {
+          "performance": 100,
+          "fcp": 902.2594999999999,
+          "lcp": 1802.2595,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 902.2594999999999,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                902.3816999999999,
+                902.2594999999999,
+                902.4567
+              ],
+              "mean": 902.365967,
+              "median": 902.3817,
+              "p95": 902.4567,
+              "stddev": 0.081272,
+              "min": 902.2595,
+              "max": 902.4567
+            },
+            "lcp": {
+              "runs": [
+                1802.3817,
+                1802.2595,
+                1802.4567
+              ],
+              "mean": 1802.365967,
+              "median": 1802.3817,
+              "p95": 1802.4567,
+              "stddev": 0.081272,
+              "min": 1802.2595,
+              "max": 1802.4567
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                902.3816999999999,
+                902.2594999999999,
+                902.4567
+              ],
+              "mean": 902.365967,
+              "median": 902.3817,
+              "p95": 902.4567,
+              "stddev": 0.081272,
+              "min": 902.2595,
+              "max": 902.4567
+            }
+          }
+        },
+        "/story/47760529": {
+          "performance": 100,
+          "fcp": 752.0621000000001,
+          "lcp": 1652.0621,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 752.0621000000001,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                100,
+                100,
+                100
+              ],
+              "mean": 100,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0,
+              "min": 100,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                752.144,
+                752.0621000000001,
+                752.0678
+              ],
+              "mean": 752.0913,
+              "median": 752.0678,
+              "p95": 752.144,
+              "stddev": 0.037337,
+              "min": 752.0621,
+              "max": 752.144
+            },
+            "lcp": {
+              "runs": [
+                1652.144,
+                1652.0621,
+                1652.0678
+              ],
+              "mean": 1652.0913,
+              "median": 1652.0678,
+              "p95": 1652.144,
+              "stddev": 0.037337,
+              "min": 1652.0621,
+              "max": 1652.144
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                752.144,
+                752.0621000000001,
+                752.0678
+              ],
+              "mean": 752.0913,
+              "median": 752.0678,
+              "p95": 752.144,
+              "stddev": 0.037337,
+              "min": 752.0621,
+              "max": 752.144
+            }
+          }
+        },
+        "/user/divan": {
+          "performance": 100,
+          "fcp": 751.8233,
+          "lcp": 1651.8233,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 751.8233,
+          "runCount": 3,
+          "statistics": {
+            "performance": {
+              "runs": [
+                99,
+                100,
+                100
+              ],
+              "mean": 99.666667,
+              "median": 100,
+              "p95": 100,
+              "stddev": 0.471405,
+              "min": 99,
+              "max": 100
+            },
+            "fcp": {
+              "runs": [
+                1511.6003,
+                751.8233,
+                751.5074999999999
+              ],
+              "mean": 1004.977033,
+              "median": 751.8233,
+              "p95": 1511.6003,
+              "stddev": 358.236771,
+              "min": 751.5075,
+              "max": 1511.6003
+            },
+            "lcp": {
+              "runs": [
+                1661.6003,
+                1651.8233,
+                1651.5075
+              ],
+              "mean": 1654.977033,
+              "median": 1651.8233,
+              "p95": 1661.6003,
+              "stddev": 4.685131,
+              "min": 1651.5075,
+              "max": 1661.6003
+            },
+            "cls": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "tbt": {
+              "runs": [
+                0,
+                0,
+                0
+              ],
+              "mean": 0,
+              "median": 0,
+              "p95": 0,
+              "stddev": 0,
+              "min": 0,
+              "max": 0
+            },
+            "speedIndex": {
+              "runs": [
+                1511.6003,
+                751.8233,
+                751.5074999999999
+              ],
+              "mean": 1004.977033,
+              "median": 751.8233,
+              "p95": 1511.6003,
+              "stddev": 358.236771,
+              "min": 751.5075,
+              "max": 1511.6003
+            }
+          }
         }
       }
     }
