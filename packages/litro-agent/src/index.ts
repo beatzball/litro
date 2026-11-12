@@ -90,6 +90,8 @@ export function defineTool<In>(config: ToolConfig<In>): ToolDefinition {
 
 // AgentConfig and related types
 export interface AgentConfig {
+  /** Optional isolated session store for this agent. Overrides the runtime default. */
+  sessions?: import('./sessions/types.js').SessionStore;
   model: Provider;
   instructions: string;
   /** Deferred past v0 — a non-empty array throws at definition time. Tools

@@ -563,8 +563,9 @@ export function createAgentHandler(
       // rethrows anything else for h3 to format itself.
       if (agent.access) await agent.access(event);
 
-      if (method === 'POST') return await handlePost(event, agent, sessionId, store, telemetry);
-      return handleGet(event, agent, sessionId, store);
+      const agentStore = agent.config.sessions ?? store;
+      if (method === 'POST') return await handlePost(event, agent, sessionId, agentStore, telemetry);
+      return handleGet(event, agent, sessionId, agentStore);
     } catch (err) {
       if (err instanceof AgentError) return sendError(event, err);
       throw err;

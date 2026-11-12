@@ -2,6 +2,10 @@ import { defineAgent } from '@beatzball/litro-agent';
 import { scriptedProvider } from '@beatzball/litro-agent/providers/scripted';
 import { openaiCompatible } from '@beatzball/litro-agent/providers/openai-compatible';
 
+import { coderAccess } from '../../server/coder-auth.js';
+import { coderSessionStore } from '../../server/coder-sessions.js';
+export const access = coderAccess;
+
 // Without a model endpoint, accept a JSON argv array for a repeatable local demo.
 const scripted = scriptedProvider((request) => {
   const last = request.messages.at(-1);
@@ -18,6 +22,7 @@ const scripted = scriptedProvider((request) => {
 });
 
 export default defineAgent({
+  sessions: coderSessionStore(),
   model: process.env.LLM_URL ? openaiCompatible({ baseURL: process.env.LLM_URL, model: process.env.LLM_MODEL ?? 'gpt-4o-mini' }) : scripted,
   instructions: './instructions.md',
 });

@@ -13,6 +13,7 @@ export class CoderPage extends LitElement {
   `];
   @state() private busy = false;
   @state() private message = '';
+  @query('#token') private tokenInput?: HTMLInputElement;
   @query('textarea') private input?: HTMLTextAreaElement;
   @query('#output') private output?: HTMLElement;
   private sessionId = '';
@@ -21,20 +22,13 @@ export class CoderPage extends LitElement {
     const text = this.input?.value.trim();
     if (!text || this.busy) return;
     if (!this.sessionId) {
-      // This handler only runs in the browser. Keep the session across a reload.
-      try {
-        this.sessionId = sessionStorage.getItem('litro-coder-session') ?? '';
-        if (!this.sessionId) {
-          this.sessionId = `coder-${crypto.randomUUID()}`;
-          sessionStorage.setItem('litro-coder-session', this.sessionId);
-        }
-      } catch {
-        this.sessionId = `coder-${crypto.randomUUID()}`;
-      }
+      try { this.sessionId = sessionStorage.getItem('litro-coder-session') ?? ''; } catch { /* Storage unavailable. */ }
     }
     this.busy = true;
     this.message = '';
     try {
+      if (!this.sessionId) await this.signIn();
+      if (!this.sessionId) return;
       for await (const event of agentSession('coder', this.sessionId).send(text)) {
         if (event.kind === 'ui' && this.output) {
           await hydrateUIResult(this.output, event.payload as Parameters<typeof hydrateUIResult>[1]);
@@ -53,10 +47,32 @@ export class CoderPage extends LitElement {
     }
   }
 
+  private async signIn() {
+    const token = this.tokenInput?.value ?? '';
+    if (this.tokenInput) this.tokenInput.value = '';
+    try {
+      const response = await fetch('/api/coder/session', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'x-litro-agent': '1', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      });
+      if (!response.ok) {
+        const error = await response.json() as { statusMessage?: string };
+        throw new Error(error.statusMessage ?? 'Sign in failed. Check the access token and server configuration.');
+      }
+      this.sessionId = (await response.json() as { sessionId: string }).sessionId;
+      try { sessionStorage.setItem('litro-coder-session', this.sessionId); } catch { /* Storage unavailable. */ }
+      this.message = 'Signed in. Commands use this session until you sign in again or it expires.';
+    } catch (error) { this.message = (error as Error).message; }
+  }
+
   override render() {
     return html`<h1>Run code</h1>
       <p>Run a command in a session microVM. The Node.js machine has no internet access.</p>
       <p>Without LLM_URL, enter a JSON array of executable and arguments. Shell scripts use ["sh", "-c", script].</p>
+      <p>Sign in with the access token from the playground operator. It is cleared after sign-in.</p>
+      <label for="token">Access token</label>
+      <input id="token" type="password" autocomplete="off" />
+      <button ?disabled=${this.busy} @click=${() => this.signIn()}>Sign in / New session</button>
       <label for="command">Command</label>
       <textarea id="command">["node", "-e", "console.log(1+1)"]</textarea>
       <button ?disabled=${this.busy} @click=${() => this.run()}>Run</button>

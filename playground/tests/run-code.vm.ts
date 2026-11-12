@@ -1,11 +1,12 @@
 /** Real host proof. No model, mock server, or host-side command substitutes. */
-import { randomUUID } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { TOOL_CONFIG, type UIResult } from '@beatzball/litro-agent';
 import { Sandpiper } from '@beatzball/sandpiper';
+import { authenticatedContext } from './coder-context.js';
+import { coderIdentity } from '../server/coder-auth.js';
 import runCode from '../agents/coder/tools/run-code.js';
 import { machines, sessionMachines } from '../server/machines.js';
 
@@ -15,11 +16,13 @@ it.skipIf(!process.env.SANDPIPER_URL)('runs Node in a real session machine, rend
   const directory = await mkdtemp(join(tmpdir(), 'litro-run-code-vm-'));
   const previous = process.env.SANDPIPER_SESSIONS_DIR;
   process.env.SANDPIPER_SESSIONS_DIR = directory;
-  const ctx = { event: undefined, session: { id: `proof-${randomUUID()}`, seq: 1 } };
+  if (!process.env.CODER_ACCESS_TOKEN) throw new Error('Set CODER_ACCESS_TOKEN for the authenticated real host proof.');
+  const ctx = authenticatedContext();
+  const owner = coderIdentity(ctx.event, ctx.session.id);
   const execute = (cmd: string[]) => runCode[TOOL_CONFIG].execute({ cmd }, ctx) as Promise<UIResult>;
   let machine: Awaited<ReturnType<typeof machines.forSession>> | undefined;
   try {
-    machine = await machines.forSession(ctx.session.id, { template: 'node' });
+    machine = await machines.forSession(owner, { template: 'node' });
     const node = await execute(['node', '-e', 'console.log(1+1)']);
     expect(node.data).toEqual({ exitCode: 0, stdout: '2\n', stderr: '' });
     expect(node.html).toContain('<run-output');
@@ -27,7 +30,7 @@ it.skipIf(!process.env.SANDPIPER_URL)('runs Node in a real session machine, rend
     expect(node.html).toContain('Exit code: 0');
     expect(node.html).toMatch(/id="stdout">[\s\S]*?2\n/);
     const reloaded = sessionMachines(new Sandpiper({ baseUrl, token }), directory, baseUrl);
-    expect((await reloaded.forSession(ctx.session.id, { template: 'node' })).id).toBe(machine.id);
+    expect((await reloaded.forSession(owner, { template: 'node' })).id).toBe(machine.id);
     const blocked = await execute(['wget', '-T', '3', '-O', '-', 'http://1.1.1.1']);
     const data = blocked.data as { exitCode: number | null; stdout: string; stderr: string };
     expect(data.exitCode).not.toBeNull();
