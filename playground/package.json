@@ -18,8 +18,9 @@
     "preview:portless": "portless run litro preview",
     "generate": "litro generate",
     "mcp-app": "litro mcp-app build",
-    "test": "node --test \"mcp-server/*.test.ts\"",
-    "typecheck": "tsc -p mcp-server/tsconfig.json"
+    "test": "node --test \"mcp-server/*.test.ts\" && vitest run",
+    "typecheck": "tsc -p mcp-server/tsconfig.json && tsc -p tests/tsconfig.json",
+    "test:run-code:vm": "vitest run --config vitest.vm.config.ts"
   },
   "dependencies": {
     "@beatzball/litro": "workspace:*",
@@ -30,12 +31,14 @@
     "@lit-labs/ssr-client": "^1.1.7",
     "h3": "^1.15.6",
     "@modelcontextprotocol/sdk": "^1.31.0",
-    "zod": "^4.6.6"
+    "zod": "^4.6.6",
+    "@beatzball/sandpiper": "file:vendor/sandpiper"
   },
   "devDependencies": {
     "@types/node": "^22.19.13",
     "nitropack": "^2.13.4",
     "vite": "^8.1.6",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }
