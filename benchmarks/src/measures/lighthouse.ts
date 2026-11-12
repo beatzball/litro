@@ -1,6 +1,7 @@
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import { computeStats } from '../utils/stats.js';
+import { assertNoLiveHnRequests } from '../utils/fixture-network.js';
 import type { LighthouseMetrics, LighthouseResult } from '../types.js';
 import { LIGHTHOUSE_RUNS } from '../config.js';
 
@@ -45,6 +46,10 @@ export async function measureLighthouse(
         if (lhr.runtimeError) {
           throw new Error(`Lighthouse failed for ${route}: ${lhr.runtimeError.code}`);
         }
+
+        const network = lhr.audits['network-requests']?.details as { items?: { url: string }[] } | undefined;
+        if (!network?.items) throw new Error('Lighthouse did not provide its network request audit');
+        assertNoLiveHnRequests(network.items.map(item => item.url));
 
         runs.push({
           performance: (lhr.categories.performance?.score ?? 0) * 100,
