@@ -62,8 +62,10 @@ flowchart LR
   the limits until sandpiperd removes it.
 - **What stays on the server:** `SANDPIPER_URL` and `SANDPIPER_TOKEN`. They
   never reach the browser, the model or the machine.
-- **What comes back:** the model gets the last 8000 / 4000 characters of
-  stdout / stderr; the page gets at most 64 KiB per stream, rendered as text.
+- **What comes back:** sandpiper keeps the first 1 MiB of each stream. Of that
+  captured output, the model gets the last 8000 / 4000 characters of stdout /
+  stderr, and the page gets at most the last 64 KiB per stream, rendered as
+  text. So a very noisy command's final lines may not come back.
 - **The walls, when sandpiperd runs sandboxed** (on Linux, as root, with
   `SANDPIPER_UNSANDBOXED` unset): workload commands run as an unprivileged
   user with no network device; the VMM runs in its own sandbox; and
