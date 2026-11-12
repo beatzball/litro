@@ -1,0 +1,16 @@
+{
+  "name": "bench-mcp-flue",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "verify": "node dist/verify.mjs"
+  },
+  "dependencies": {
+    "@flue/runtime": "2.3.0",
+    "valibot": "1.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

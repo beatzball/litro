@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-12T19:36:19.715Z",
+  "host": "@mcp-use/inspector@20.3.29",
+  "playwright": "1.65.0",
+  "apps": {
+    "litro": {
+      "status": "passed",
+      "resourceBytes": 9935,
+      "resourceSha256": "9a33f3684dc08cf32c23154d0a420ae075048a476a9a74fe1878e2b27d44afb9",
+      "iframe": "about:srcdoc",
+      "renderedText": "Weather\n\nLisbon: 21°C, sunny",
+      "toolResultRendered": true
+    },
+    "mastra": {
+      "status": "passed",
+      "resourceBytes": 664825,
+      "resourceSha256": "81f3cb0a0c947e6d7da20d293f7d71cf38425e2deb58309e448de75b61345e48",
+      "iframe": "about:srcdoc",
+      "renderedText": "Weather\n\nLisbon: 21°C, sunny",
+      "toolResultRendered": true
+    }
+  },
+  "chromium": "158.0.8127.18"
+}
