@@ -26,8 +26,8 @@ export const SERVER_READY_TIMEOUT = 30_000;
 /**
  * The cross-framework routes, each with the text its own page renders.
  *
- * The markers are the `<h1>` of each page, and all three apps render the same
- * two headings, so one marker per route covers Litro, Nuxt and Next. See
+ * The markers are the `<h1>` of each page, and all comparison apps render the same
+ * two headings, so one marker per route covers every framework. See
  * `utils/page-check.ts` for why a status code on its own is not enough.
  */
 export const CROSS_FRAMEWORK_ROUTE_CHECKS = [
@@ -57,6 +57,7 @@ const LITRO_VERSION_PKGS = [
 ] as const;
 const NUXT_VERSION_PKGS = ['nuxt', 'vue', 'vite'] as const;
 const NEXT_VERSION_PKGS = ['next', 'react', 'react-dom'] as const;
+const TANSTACK_VERSION_PKGS = ['@tanstack/react-start', '@tanstack/react-router', 'react', 'react-dom', 'vite'] as const;
 
 /**
  * The build caches each framework keeps outside its output directory.
@@ -68,12 +69,13 @@ const NEXT_VERSION_PKGS = ['next', 'react', 'react-dom'] as const;
 const LITRO_CACHE_DIRS = ['.nitro', '.litro', 'node_modules/.vite'] as const;
 const NUXT_CACHE_DIRS = ['.nuxt', '.output', 'node_modules/.cache'] as const;
 const NEXT_CACHE_DIRS = ['.next'] as const;
+const TANSTACK_CACHE_DIRS = ['dist', '.tanstack', 'node_modules/.vite'] as const;
 
 export const FRAMEWORK_CONFIGS = [
   {
     name: 'litro',
     dir: 'litro',
-    installCmd: 'pnpm install',
+    installCmd: 'pnpm install --frozen-lockfile',
     buildCmd: 'pnpm exec litro build --mode static',
     outputDir: 'dist/static',
     cacheDirs: LITRO_CACHE_DIRS,
@@ -85,7 +87,7 @@ export const FRAMEWORK_CONFIGS = [
   {
     name: 'nuxt',
     dir: 'nuxt',
-    installCmd: 'npm install',
+    installCmd: 'npm ci',
     buildCmd: 'npx nuxi generate',
     outputDir: '.output/public',
     cacheDirs: NUXT_CACHE_DIRS,
@@ -97,7 +99,7 @@ export const FRAMEWORK_CONFIGS = [
   {
     name: 'nextjs',
     dir: 'nextjs',
-    installCmd: 'npm install',
+    installCmd: 'npm ci',
     buildCmd: 'npx next build',
     outputDir: 'out',
     cacheDirs: NEXT_CACHE_DIRS,
@@ -105,6 +107,18 @@ export const FRAMEWORK_CONFIGS = [
     previewPort: 4003,
     versionPkg: 'next',
     versionPkgs: NEXT_VERSION_PKGS,
+  },
+  {
+    name: 'tanstack',
+    dir: 'tanstack',
+    installCmd: 'npm ci',
+    buildCmd: 'npm run build',
+    outputDir: 'dist/client',
+    cacheDirs: TANSTACK_CACHE_DIRS,
+    previewCmd: 'npx serve dist/client -l 4004',
+    previewPort: 4004,
+    versionPkg: '@tanstack/react-start',
+    versionPkgs: TANSTACK_VERSION_PKGS,
   },
 ] as const;
 
@@ -135,7 +149,7 @@ export const HN_FRAMEWORK_CONFIGS = [
   {
     name: 'litro-lit',
     dir: 'hn-litro',
-    installCmd: 'pnpm install',
+    installCmd: 'pnpm install --frozen-lockfile',
     buildCmd: 'pnpm exec litro build --mode static',
     outputDir: 'dist/static',
     cacheDirs: LITRO_CACHE_DIRS,
@@ -147,7 +161,7 @@ export const HN_FRAMEWORK_CONFIGS = [
   {
     name: 'litro-fast',
     dir: 'hn-litro-fast',
-    installCmd: 'pnpm install',
+    installCmd: 'pnpm install --frozen-lockfile',
     buildCmd: 'pnpm exec litro build --mode static',
     outputDir: 'dist/static',
     cacheDirs: LITRO_CACHE_DIRS,
@@ -159,7 +173,7 @@ export const HN_FRAMEWORK_CONFIGS = [
   {
     name: 'litro-elena',
     dir: 'hn-litro-elena',
-    installCmd: 'pnpm install',
+    installCmd: 'pnpm install --frozen-lockfile',
     buildCmd: 'pnpm exec litro build --mode static',
     outputDir: 'dist/static',
     cacheDirs: LITRO_CACHE_DIRS,
@@ -171,7 +185,7 @@ export const HN_FRAMEWORK_CONFIGS = [
   {
     name: 'nextjs',
     dir: 'hn-nextjs',
-    installCmd: 'npm install',
+    installCmd: 'npm ci',
     buildCmd: 'npx next build',
     outputDir: 'out',
     cacheDirs: NEXT_CACHE_DIRS,
@@ -183,7 +197,7 @@ export const HN_FRAMEWORK_CONFIGS = [
   {
     name: 'nuxt',
     dir: 'hn-nuxt',
-    installCmd: 'npm install',
+    installCmd: 'npm ci',
     buildCmd: 'npx nuxi generate',
     outputDir: '.output/public',
     cacheDirs: NUXT_CACHE_DIRS,
@@ -191,6 +205,18 @@ export const HN_FRAMEWORK_CONFIGS = [
     previewPort: 4014,
     versionPkg: 'nuxt',
     versionPkgs: NUXT_VERSION_PKGS,
+  },
+  {
+    name: 'tanstack',
+    dir: 'hn-tanstack',
+    installCmd: 'npm ci',
+    buildCmd: 'npm run build',
+    outputDir: 'dist/client',
+    cacheDirs: TANSTACK_CACHE_DIRS,
+    previewCmd: 'npx serve dist/client -l 4015',
+    previewPort: 4015,
+    versionPkg: '@tanstack/react-start',
+    versionPkgs: TANSTACK_VERSION_PKGS,
   },
 ] as const;
 

@@ -462,7 +462,7 @@ jobs:
       # advisory, or any high/critical advisory in a shipped runtime
       # dependency, is not ignored there and fails this check.
       #
-      # EVERY checked-in lockfile is scanned, not just pnpm-lock.yaml. The four
+      # EVERY checked-in lockfile is scanned, not just pnpm-lock.yaml. The six
       # npm comparison apps under benchmarks/apps/ are outside the pnpm
       # workspace and carry their own package-lock.json, so for as long as this
       # job named one lockfile they were never audited at all — they had
@@ -481,4 +481,6 @@ jobs:
             --lockfile benchmarks/apps/nextjs/package-lock.json \
             --lockfile benchmarks/apps/nuxt/package-lock.json \
             --lockfile benchmarks/apps/hn-nextjs/package-lock.json \
-            --lockfile benchmarks/apps/hn-nuxt/package-lock.json
+            --lockfile benchmarks/apps/hn-nuxt/package-lock.json \
+            --lockfile benchmarks/apps/tanstack/package-lock.json \
+            --lockfile benchmarks/apps/hn-tanstack/package-lock.json

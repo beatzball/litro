@@ -1,6 +1,10 @@
 import type { RunStats } from '../types.js';
 
-export function computeStats(values: number[]): RunStats {
+export function computeStats(values: number[], precision = 0): RunStats {
+  if (values.length === 0 || values.some(v => !Number.isFinite(v))) {
+    throw new Error('Statistics require at least one finite sample');
+  }
+  const round = (value: number) => Number(value.toFixed(precision));
   const sorted = [...values].sort((a, b) => a - b);
   const n = sorted.length;
 
@@ -18,11 +22,11 @@ export function computeStats(values: number[]): RunStats {
 
   return {
     runs: values,
-    mean: Math.round(mean),
-    median: Math.round(median),
-    p95: Math.round(p95),
-    stddev: Math.round(stddev),
-    min: Math.round(sorted[0]),
-    max: Math.round(sorted[n - 1]),
+    mean: round(mean),
+    median: round(median),
+    p95: round(p95),
+    stddev: round(stddev),
+    min: round(sorted[0]),
+    max: round(sorted[n - 1]),
   };
 }

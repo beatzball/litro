@@ -69,7 +69,7 @@
     "bench:hn": "pnpm --filter @beatzball/litro-benchmarks bench:hn",
     "bench:hn:full": "pnpm --filter @beatzball/litro-benchmarks bench:hn:full",
     "bench:all": "pnpm --filter @beatzball/litro-benchmarks bench:all && pnpm bench:update-readme",
-    "bench:all:full": "pnpm --filter @beatzball/litro-benchmarks bench:all:full && pnpm bench:update-readme",
+    "bench:all:full": "pnpm --filter @beatzball/litro-benchmarks bench:all:full && pnpm bench:update-readme && pnpm bench:update-report",
     "bench:update-readme": "node scripts/update-readme-bench.mjs",
     "dev:hn-mock-api": "pnpm --filter @beatzball/hn-mock-api dev",
     "dev:hn-litro": "pnpm --filter bench-hn-litro dev",
@@ -94,7 +94,8 @@
     "check:catch-all-escape:self-test": "node scripts/check-catch-all-escape.mjs --self-test",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm -r --filter \"./packages/*\" build && changeset publish"
+    "release": "pnpm -r --filter \"./packages/*\" build && changeset publish",
+    "bench:update-report": "node scripts/update-benchmark-report.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.12",

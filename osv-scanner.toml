@@ -1,7 +1,7 @@
 # osv-scanner configuration for the Dependency Audit CI check.
 #
 # The job scans EVERY checked-in lockfile against this one config: the
-# workspace's pnpm-lock.yaml plus the four package-lock.json files of the npm
+# workspace's pnpm-lock.yaml plus the six package-lock.json files of the npm
 # comparison apps under benchmarks/apps/. An id below may therefore be matched
 # from more than one lockfile, by more than one dependency path; where that is
 # true the reason says so.
@@ -66,10 +66,6 @@ reason = "vitest is a dev/test-only dependency; not a production dependency of a
 [[IgnoredVulns]]
 id = "GHSA-7pqw-9j4j-h8q3" # extract-zip 2.0.1 (High, CVSS 8.1)
 reason = "No fixed version exists upstream as of 2026-09-13 (the advisory lists no patched release). Same package and same sole path as GHSA-jmr9-qjv8-65gv above: @beatzball/litro-benchmarks (a PRIVATE workspace) -> lighthouse -> puppeteer-core -> @puppeteer/browsers -> extract-zip, confirmed with `pnpm why -r extract-zip`, which reports that workspace and no other. Never ships to users. Revisit when @puppeteer/browsers ships a patched extract-zip."
-
-[[IgnoredVulns]]
-id = "GHSA-g3hv-75wg-m249" # minimatch 3.1.5 (Medium, CVSS_V4 6.9) -- one unfixable copy; every other copy IS fixed
-reason = "Dev/benchmark-only, and no fix exists for the one copy that is left. The advisory's single range is {introduced 0, fixed 11.0.1}, so every version below 11.0.1 matches, and the lockfiles held five copies. Four are now FIXED by overrides: `minimatch@5` and `minimatch@9` to ^11.0.1 in the root pnpm overrides, and `minimatch` to ^11.0.1 in the two npm Nuxt comparison apps under benchmarks/apps/ (glob@>=14.0.2 removed two more on its own). The fifth cannot move. Its sole path is @beatzball/litro-benchmarks (a PRIVATE workspace) -> serve 14.2.6 -> serve-handler 6.1.7 -> minimatch 3.1.5, so it never ships to users, and nothing upstream can be bumped: serve 14.2.6 is `latest` and depends on serve-handler 6.1.7, which is `latest` and pins minimatch to exactly 3.1.5. An override cannot force it either, and this is the interesting part: minimatch 11 dropped the callable default export. v3 does `module.exports = minimatch`; v11's CommonJS build does `exports.minimatch = minimatch`, and serve-handler calls the module itself at src/index.js:59 -- `if (results || minimatch(resolvedPath, slashed))` -- so forcing 11 there would throw `minimatch is not a function` at request time. The issue is denial of service through globparts amplification (CWE-1050) against an attacker-supplied pattern; serve-handler matches request paths against patterns from the benchmark's own config, which nobody but this repo supplies. osv-scanner ignores by id, so dropping any of the overrides above would be masked by this entry: keep them, or delete this entry first. Revisit when serve-handler ships a release off minimatch 3.x."
 
 [[IgnoredVulns]]
 id = "GHSA-w5hq-g745-h8pq" # uuid 8.3.2 (High)

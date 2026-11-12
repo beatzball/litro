@@ -10,7 +10,9 @@
     "bench:hn": "tsx src/runner.ts --hn --skip-lighthouse",
     "bench:hn:full": "tsx src/runner.ts --hn",
     "bench:all": "tsx src/runner.ts --cross-framework --hn --skip-lighthouse",
-    "bench:all:full": "tsx src/runner.ts --cross-framework --hn"
+    "bench:all:full": "tsx src/runner.ts --cross-framework --hn",
+    "test": "tsx --test src/__tests__/*.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
@@ -19,5 +21,8 @@
     "serve": "^14.2.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   }
 }

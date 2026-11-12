@@ -22,6 +22,11 @@ function fetchStreaming(url: string): Promise<StreamingSample> {
         method: 'GET',
       },
       (res) => {
+        if (res.statusCode !== 200) {
+          res.resume();
+          reject(new Error(`Streaming request failed with status ${res.statusCode}`));
+          return;
+        }
         const ttfb = performance.now() - start;
         let totalBytes = 0;
 
@@ -38,6 +43,7 @@ function fetchStreaming(url: string): Promise<StreamingSample> {
       },
     );
 
+    req.setTimeout(30_000, () => req.destroy(new Error('Streaming request timed out')));
     req.on('error', reject);
     req.end();
   });
@@ -71,6 +77,13 @@ export async function measureStreaming(
       ttlb: ttlbStats.median,
       delta: ttlbStats.median - ttfbStats.median,
       totalBytes: bytesStats.median,
+      runCount: ttfbValues.length,
+      statistics: {
+        ttfb: computeStats(ttfbValues, 3),
+        ttlb: computeStats(ttlbValues, 3),
+        delta: computeStats(ttlbValues.map((value, i) => value - ttfbValues[i]), 3),
+        totalBytes: bytesStats,
+      },
     };
 
     console.log(

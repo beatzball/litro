@@ -15,6 +15,12 @@ export interface FrameworkResult {
   versions: Record<string, string>;
   buildTime: RunStats;
   outputSize: number;
+  bundleSize: BundleSizeBreakdown;
+  /** Static file serving through the same preview server for every app. */
+  httpPerf: Record<string, AutocannonResult>;
+  rendering: 'ssg';
+  /** Streaming measures per-request SSR in the docs app only. */
+  streaming: null;
   pageWeight: Record<string, PageWeightResult>;
   lighthouse?: Record<string, LighthouseResult>;
 }
@@ -24,6 +30,23 @@ export interface BenchmarkResults {
     timestamp: string;
     nodeVersion: string;
     platform: string;
+    osVersion: string;
+    pnpmVersion: string;
+    context: string;
+    loadAverageEnd?: [number, number, number];
+    settings: {
+      buildRuns: number;
+      lighthouseRuns: number;
+      streamingRuns: number;
+      httpConnections: number;
+      httpDurationSeconds: number;
+      crossFramework: boolean;
+      hn: boolean;
+      buildCache: 'cold';
+      comparisonServing: 'static files via serve';
+      lighthousePreset: 'default mobile simulated throttling';
+      httpRunsPerRoute: number;
+    };
     arch: string;
     cpuModel: string;
     cpuCount: number;
@@ -87,6 +110,8 @@ export interface BundleSizeBreakdown {
 export interface AutocannonResult {
   latency: {
     mean: number;
+    min: number;
+    stddev: number;
     p50: number;
     p97_5: number;
     p99: number;
@@ -95,10 +120,18 @@ export interface AutocannonResult {
   requests: {
     mean: number;
     total: number;
+    min: number;
+    max: number;
+    stddev: number;
   };
   throughput: {
     mean: number;
+    min: number;
+    max: number;
+    stddev: number;
   };
+  runCount: number;
+  non2xx: number;
   errors: number;
   timeouts: number;
   duration: number;
@@ -111,7 +144,7 @@ export interface PageWeightResult {
   statusCode: number;
 }
 
-export interface LighthouseResult {
+export interface LighthouseMetrics {
   performance: number;
   fcp: number;
   lcp: number;
@@ -120,9 +153,17 @@ export interface LighthouseResult {
   speedIndex: number;
 }
 
+export interface LighthouseResult extends LighthouseMetrics {
+  runCount: number;
+  /** Scalars above retain the run with the median performance score. */
+  statistics: Record<keyof LighthouseMetrics, RunStats>;
+}
+
 export interface StreamingResult {
   ttfb: number;
   ttlb: number;
   delta: number;
   totalBytes: number;
+  runCount: number;
+  statistics: Record<'ttfb' | 'ttlb' | 'delta' | 'totalBytes', RunStats>;
 }

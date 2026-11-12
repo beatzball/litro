@@ -1,15 +1,18 @@
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
-import type { LighthouseResult } from '../types.js';
+import { computeStats } from '../utils/stats.js';
+import type { LighthouseMetrics, LighthouseResult } from '../types.js';
 import { LIGHTHOUSE_RUNS } from '../config.js';
 
-interface LighthouseRunData {
-  performance: number;
-  fcp: number;
-  lcp: number;
-  cls: number;
-  tbt: number;
-  speedIndex: number;
+export function summarizeLighthouseRuns(runs: LighthouseMetrics[]): LighthouseResult {
+  if (!runs.length) throw new Error('Lighthouse requires at least one run');
+  const sorted = [...runs].sort((a, b) => a.performance - b.performance);
+  const medianRun = sorted[Math.floor(sorted.length / 2)];
+  const statistics = {} as LighthouseResult['statistics'];
+  for (const key of Object.keys(medianRun) as (keyof LighthouseMetrics)[]) {
+    statistics[key] = computeStats(runs.map(run => run[key]), 6);
+  }
+  return { ...medianRun, runCount: runs.length, statistics };
 }
 
 export async function measureLighthouse(
@@ -25,7 +28,7 @@ export async function measureLighthouse(
   try {
     for (const route of routes) {
       const url = baseUrl + route;
-      const runs: LighthouseRunData[] = [];
+      const runs: LighthouseMetrics[] = [];
 
       for (let i = 0; i < LIGHTHOUSE_RUNS; i++) {
         const runResult = await lighthouse(url, {
@@ -39,6 +42,9 @@ export async function measureLighthouse(
         }
 
         const { lhr } = runResult;
+        if (lhr.runtimeError) {
+          throw new Error(`Lighthouse failed for ${route}: ${lhr.runtimeError.code}`);
+        }
 
         runs.push({
           performance: (lhr.categories.performance?.score ?? 0) * 100,
@@ -50,21 +56,8 @@ export async function measureLighthouse(
         });
       }
 
-      // Sort runs by performance score to find median
-      const sorted = [...runs].sort((a, b) => a.performance - b.performance);
-      const medianIndex = Math.floor(sorted.length / 2);
-      const medianRun = sorted[medianIndex];
-
-      results[route] = {
-        performance: medianRun.performance,
-        fcp: medianRun.fcp,
-        lcp: medianRun.lcp,
-        cls: medianRun.cls,
-        tbt: medianRun.tbt,
-        speedIndex: medianRun.speedIndex,
-      };
-
-      console.log(`  ${route}: performance=${medianRun.performance.toFixed(0)}`);
+      results[route] = summarizeLighthouseRuns(runs);
+      console.log(`  ${route}: performance=${results[route].performance.toFixed(0)}`);
     }
   } finally {
     await chrome.kill();
