@@ -7,23 +7,26 @@ at `/coder` runs commands in sandpiper microVMs. It requires authenticated acces
 
 ```mermaid
 flowchart LR
-  subgraph mac["Playground server (Node.js)"]
+  subgraph browser["Browser"]
+    page["/coder page<br/>&lt;run-output&gt; (server-rendered, then hydrated)"]
+  end
+  mcpc["MCP client"]
+
+  subgraph server["Playground server (Node.js)"]
     direction TB
-    page["/coder page<br/>&lt;run-output&gt;"]
-    login["POST /api/coder/session<br/>bearer secret → signed session ID + cookie"]
+    login["POST /api/coder/session<br/>credential → signed session ID + cookie"]
     route["Chat route<br/>/__litro/agent/coder/:session"]
     mcp["MCP route<br/>/__litro/mcp/coder"]
     guard["Access guard<br/>coder-auth.ts"]
     agent["Coder agent<br/>scripted or LLM"]
+    store[("Coder history<br/>bounded logs")]
     tool["run-code tool<br/>argv only, 10 s timeout"]
     bind["Machine bindings<br/>machines.ts<br/>principal + agent + session + transport<br/>live and rate limits"]
-    store[("Coder history<br/>bounded logs")]
     client["sandpiper client<br/>vendor/sandpiper"]
-    page --> login --> route
-    route --> guard
-    mcp --> guard
-    guard --> agent --> tool --> bind --> client
+    route --> guard --> agent --> tool
     agent --- store
+    mcp --> guard2["Access guard"] --> tool
+    tool --> bind --> client
   end
 
   subgraph host["Linux KVM host (Lima VM on a Mac)"]
@@ -32,29 +35,40 @@ flowchart LR
     subgraph jail["Per machine: sandboxed VMM"]
       vmm["VMM process<br/>own uid · namespaces · seccomp<br/>relay decodes guest frames"]
     end
-    subgraph vm["microVM (Node template)"]
+    subgraph vm["microVM (node template)"]
       guest["guest agent<br/>vsock"]
-      work["your command<br/>uid 1000 · no network"]
+      work["workload command<br/>uid 1000 · no network device"]
     end
     daemon -->|"spawns, limits, kills"| vmm
     vmm -->|vsock| guest --> work
   end
 
+  page -->|sign in| login
+  page -->|run| route
+  mcpc --> mcp
   client -->|"HTTP + SANDPIPER_TOKEN<br/>127.0.0.1:7171"| daemon
 ```
 
 - **Who may run code:** only callers with a coder credential. The guard runs
-  on both routes. Session IDs are signed and bound to the caller, so knowing
-  another session's ID is not enough.
-- **Which machine:** chat sessions keep one machine per caller and session.
-  Each MCP call gets a fresh machine that is destroyed after the call.
+  on the chat and MCP routes. Session IDs are signed and bound to the
+  credential's principal, so another principal cannot use them. Everyone who
+  shares one credential (`CODER_ACCESS_TOKEN`) shares one principal; use
+  `CODER_ACCESS_TOKENS` for separate people.
+- **Which machine:** a chat session keeps one machine per principal and
+  session. MCP calls the tool directly, without the agent loop or chat
+  history: each MCP `run-code` call gets a fresh machine, and the tool
+  destroys it when the call settles. If that destroy fails, the machine stays
+  counted against the limits until sandpiperd removes it.
 - **What stays on the server:** `SANDPIPER_URL` and `SANDPIPER_TOKEN`. They
   never reach the browser, the model or the machine.
 - **What comes back:** the model gets the last 8000 / 4000 characters of
   stdout / stderr; the page gets at most 64 KiB per stream, rendered as text.
-- **The walls:** the guest runs as an unprivileged user with no network
-  device. The VMM runs in its own sandbox, and sandpiperd checks every
-  machine's walls before it hands the machine out.
+- **The walls, when sandpiperd runs sandboxed** (on Linux, as root, with
+  `SANDPIPER_UNSANDBOXED` unset): workload commands run as an unprivileged
+  user with no network device; the VMM runs in its own sandbox; and
+  sandpiperd checks every machine's walls before it hands the machine out.
+  The playground does not check which mode the daemon runs in. An unsandboxed
+  daemon is for development only and gives none of these walls.
 
 ## Run code
 
