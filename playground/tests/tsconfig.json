@@ -17,6 +17,9 @@
       ],
       "@beatzball/litro-agent/providers/*": [
         "../../packages/litro-agent/src/providers/*.ts"
+      ],
+      "@beatzball/litro-agent/sessions/file": [
+        "../../packages/litro-agent/src/sessions/file.ts"
       ]
     }
   },
