@@ -1,0 +1,16 @@
+{
+  "name": "bench-mcp-eve",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "verify": "node smoke.mjs"
+  },
+  "dependencies": {
+    "eve": "1.0.0-rc.10",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
