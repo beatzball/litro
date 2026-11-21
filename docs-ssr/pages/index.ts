@@ -604,8 +604,8 @@ function formatSeconds(ms: number): string {
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${Math.round(bytes / 1024)} KB`;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
+  return `${Math.round(bytes / 1024)} KiB`;
 }
 
 /** The run date, so a reader can tell how old the figures are. */
@@ -665,11 +665,12 @@ export const pageData = definePageData(async (_event) => {
     };
 
     // The order the page shows, not the order the file happens to hold.
-    const order = ["litro", "nuxt", "nextjs"];
+    const order = ["litro", "nuxt", "nextjs", "tanstack"];
     const label: Record<string, string> = {
       litro: "Litro",
       nuxt: "Nuxt",
       nextjs: "Next.js",
+      tanstack: "TanStack Start",
     };
 
     benchmark = {
@@ -2279,11 +2280,13 @@ export class SplashPage extends LitroPage {
     //
     // ${benchmark.frameworks.length > 0
     //     ── Performance ──────────────────────────────────────────
-    //     Build time and output size against Next and Nuxt, every figure
-    //     read from benchmarks/results/latest.json. See the note beside
-    //     the loader in pageData: nothing is typed in, a missing figure is
-    //     left out, and with no figures at all the section is not
-    //     rendered.
+    //     Build time and output size against Next, Nuxt and TanStack
+    //     Start, every figure read from benchmarks/results/latest.json.
+    //     See the note beside the loader in pageData: nothing is typed in,
+    //     a missing figure is left out, and with no figures at all the
+    //     section is not rendered. The heading claims only what Litro
+    //     wins: TanStack Start builds faster, so it says "smallest", not
+    //     "faster".
     //
     // <section class="showcase shell" aria-label="Recipes">
     //     ── The showcase ─────────────────────────────────────────
@@ -2447,7 +2450,7 @@ export class SplashPage extends LitroPage {
             ? html`
                 <section class="stats shell" aria-label="How Litro performs">
                   <div class="section-head">
-                    <h2 class="section-title">Faster to build, smaller to ship.</h2>
+                    <h2 class="section-title">Smallest to ship.</h2>
                     <p>
                       The same minimal site, built in each framework on the same
                       machine. Median of three runs.
