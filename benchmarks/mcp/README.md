@@ -42,7 +42,9 @@ pause following that first listing. It includes only the server process,
 before warmups or tool calls. It excludes the client, inspector and operating
 system cache. Install size counts logical regular-file bytes recursively in
 `node_modules`, including dev dependencies, and excludes symlinks. It is not
-compressed download size or allocated disk blocks. Build time includes npm
+compressed download size or allocated disk blocks. A build that writes caches
+inside `node_modules` adds them: Eve's `.cache` and `.nitro` add 0.3% after its
+first build. Build time includes npm
 startup and each fixture's clean build. Eve requires its native compiler and
 Nitro output; the other fixtures use a smaller build path. Compare these build
 workloads with that difference in mind.
@@ -60,7 +62,41 @@ The app READMEs describe their native APIs. Published packages are pinned;
 this does not benchmark an unpublished workspace build or the framework's
 scaffolding CLI. The two UI resources use a native Litro bridge and the full
 bundled official MCP Apps guest SDK for Mastra. Their bytes describe these
-fixtures and runtime choices, not minimum possible framework sizes.
+fixtures and runtime choices, not minimum possible framework sizes. The Mastra
+fixture has no `tsconfig.json`, so its esbuild step reads the repository root
+`tsconfig.json`. Its published UI bytes and hash need that file; a copy built
+outside the repository is 13 bytes smaller.
+
+If an app has no `node_modules`, the run stops with `ENOENT`. Run it again with
+`--install`.
+
+## Extra checks outside the timing run
+
+Eve's `smoke.mjs` checks behavior the common verification does not: a padded
+80-character city is rejected before trimming, and a cross-origin request gets
+403. CI runs it after the suite. After a build:
+
+```sh
+(cd apps/eve && npm run verify)
+```
+
+The Mastra fixture README says its HTTP endpoint also works with the older
+`@modelcontextprotocol/sdk@1.32.2` client. No script runs this. To repeat it
+after a build, use the copy the Litro fixture locks:
+
+```sh
+PORT=4391 node apps/mastra/dist/server.mjs http &
+sleep 1
+cd apps/litro && node --input-type=module -e '
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+const c = new Client({ name: "sdk1-interop", version: "1" });
+await c.connect(new StreamableHTTPClientTransport(new URL("http://127.0.0.1:4391/mcp")));
+console.log((await c.listTools()).tools.map(t => t.name));
+console.log((await c.callTool({ name: "get-weather", arguments: { city: " Lisbon " } })).structuredContent);
+await c.close();'
+cd ../.. && kill %1
+```
 
 ## Browser resource verification
 
@@ -77,11 +113,13 @@ Run both UI fixtures with one command:
 node verify-ui.mjs
 ```
 
-The script starts each built app on a free loopback port, launches the pinned
+The script starts each built app on a free loopback port, launches the
 `@mcp-use/inspector@20.3.29` host with `npx`, drives it with Chromium, and stops
 the child processes. It asserts the heading and `Lisbon: 21°C, sunny` appear
 in the host's actual MCP App iframe. It writes `results/ui-verification.json`
 with host and browser versions. Registry access is needed to provision the
-pinned Inspector on the first run. `--app litro` or `--app mastra` selects a
+Inspector on the first run. Only its top-level version is pinned: `npx`
+resolves its dependency tree at run time, outside any lockfile and outside the
+dependency audit. A later rerun can use a different tree. `--app litro` or `--app mastra` selects a
 single check and writes an ignored partial result. This verifies Inspector;
 it does not claim support in other desktop hosts.

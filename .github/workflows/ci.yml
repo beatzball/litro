@@ -28,6 +28,9 @@ jobs:
       - name: Build and verify native MCP fixtures
         working-directory: benchmarks/mcp
         run: node run.mjs --install --verify-only
+      - name: Check Eve origin and length boundaries
+        working-directory: benchmarks/mcp/apps/eve
+        run: npm run verify
 
   test:
     name: Unit Tests
@@ -187,6 +190,8 @@ jobs:
 
   e2e:
     name: E2E Tests
+    # Pinned: the repository's Playwright cannot install its browsers on the
+    # Ubuntu 26.04 image that ubuntu-latest now selects.
     runs-on: ubuntu-24.04
     needs: [build]
     steps:
