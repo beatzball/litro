@@ -53,7 +53,7 @@ Eve can therefore participate in the deterministic HTTP benchmark without an LLM
 
 ## Maturity and observed release cadence
 
-Versions are release identifiers, not scores for reliability. Dates below come from the official npm registry `time` records, observed November 12, 2026, before 20:16 UTC: the counts include Mastra MCP `2.9.0-alpha.4` (04:29 UTC) and exclude `2.9.0-alpha.5` (20:16 UTC). The 30 calendar dates are October 14 through November 12, 2026, UTC, and the window ends at that observation. Releases published later on November 12 are not counted: Mastra MCP `2.9.0-alpha.5` (20:16 UTC) and `2.9.0` (21:21 UTC), and Eve `1.0.0-rc.11` (20:27 UTC). Counts include published numeric `x.y.z` versions; prerelease counts are stated separately and exclude arbitrary branch/snapshot builds. Publication frequency is not evidence of production stability.
+Versions are release identifiers, not scores for reliability. Dates below come from the official npm registry `time` records, observed November 12, 2026, before 20:16 UTC: the counts include Mastra MCP `2.9.0-alpha.4` (04:29 UTC) and exclude `2.9.0-alpha.5` (20:16 UTC). The 30 calendar dates are October 14 through November 12, 2026, UTC, and the window ends at that observation. Releases published later on November 12 are not counted: Mastra MCP `2.9.0-alpha.5` (20:16 UTC) and `2.9.0` (21:21 UTC), Mastra core `1.83.0-alpha.13` (20:23 UTC) and `1.83.0` (21:27 UTC), and Eve `1.0.0-rc.11` (20:27 UTC). Counts include published numeric `x.y.z` versions; prerelease counts are stated separately and exclude arbitrary branch/snapshot builds. Publication frequency is not evidence of production stability.
 
 | Package | Current selected release and UTC publication | Observed recent cadence |
 | --- | --- | --- |
@@ -88,11 +88,11 @@ APIs described above; their omission is not a zero measurement. Flue's install
 and build entries describe the local tool sample. Eve has no native MCP App
 resource in this fixture. No standalone legacy SSE server transport was measured.
 
-Mastra's stdio cold start is mostly the first `tools/list`, not process
-startup. A later probe with the suite's client split it on the same machine:
-the first stdio `tools/list` took about as long as process start plus
-connection (170–200 ms each, under heavier background load than the capture),
-and later lists took 1–3 ms. Litro's first stdio list took 1–2 ms in the same
+About half of Mastra's stdio cold start is the first `tools/list`; the other
+half is process start plus connection. A later probe with the suite's client
+split it on the same machine, under heavier background load than the capture:
+process start plus connection took 177–218 ms, the first stdio `tools/list`
+took 170–201 ms, and later lists took 1–3 ms. Litro's first stdio list took 1–2 ms in the same
 probe. The raw results keep only the sum, as the cold-start definition below
 states.
 
@@ -118,6 +118,9 @@ completed the bridge exchange and displayed `Weather` and
 records the time, host/browser versions and matching resource sizes/hashes.
 Run `npx playwright install chromium` followed by
 `node benchmarks/mcp/verify-ui.mjs` to repeat it after building the apps.
+Only the Inspector's top-level version is pinned: `npx` resolves its
+dependency tree at run time, outside any lockfile and the dependency audit, so
+a rerun can use a different tree.
 This checks the two fixtures in that host, without measuring paint latency or
 claiming every desktop host works.
 
@@ -158,7 +161,7 @@ The final results must preserve the machine's OS, CPU, architecture, Node/npm ve
 - **Different build/start surfaces:** Litro uses published package constructors with a pre-resolved agent. HTTP uses the native `createMcpHandler` on an h3 Node listener; stdio connects native `createMcpServer` to SDK `StdioServerTransport`. It excludes Nitro app compilation, filesystem agent discovery, Vite loading and `litro mcp serve` CLI startup. Mastra uses standalone `MCPServer` with a minimal Node listener. Eve uses the real native application build and `.output` Nitro server. These differences affect both build time and cold start. Eve skips sandbox prewarming because this tool opens no sandbox. Its compiler fetches model-catalog metadata after each clean `.eve` deletion, so its build cost includes network-sensitive metadata work, even though no model runs. See the [Eve fixture](../benchmarks/mcp/apps/eve/README.md) and [catalog loader][e-catalog].
 - **Different validation work:** Mastra requires its optional output schema to return plain-value `structuredContent`, so this fixture includes one and pays its validation cost. Litro does not publish output schemas; Eve returns object structured content without one. Eve also applies its raw JSON Schema bounds before the authored Zod transform: an 80-character city padded with spaces is rejected before trimming, while ordinary ` Lisbon ` trims correctly. The native behavior is retained and documented in the [Eve fixture](../benchmarks/mcp/apps/eve/README.md). Its separate smoke check (`npm run verify` in `apps/eve`) asserts the padded-80 rejection and a cross-origin 403. CI runs it after the suite's verification; `run.mjs` does not. These implementations return the same measured weather response but perform different validation work.
 - **Different wire protocols:** Mastra/Eve use modern per-request envelopes, Litro the legacy SDK handshake path. HTTP response encoding and discovery work can differ. Do not present the numbers as a controlled experiment isolating framework overhead.
-- **UI implementation choices:** Litro builds a static shell through native `buildMcpAppDocument`; Mastra supplies HTML with the official ext-apps browser bridge. Both can contain initial markup. This is not a Lit-vs-React rendering test, and it cannot establish a universal SSR advantage. Bundle size reflects the selected bridge entry point and bundler configuration as well as framework behavior. The Mastra fixture has no `tsconfig.json`, so esbuild reads the repository root one (`target: ES2022`, `useDefineForClassFields: false`). The published 664,825 bytes need that file: the same fixture built outside the repository gives 664,812 bytes with a different hash.
+- **UI implementation choices:** Litro builds a static shell through native `buildMcpAppDocument`; Mastra supplies HTML with the official ext-apps browser bridge. Both can contain initial markup. This is not a Lit-vs-React rendering test, and it cannot establish a universal SSR advantage. Bundle size reflects the selected bridge entry point and bundler configuration as well as framework behavior. The Mastra fixture has no `tsconfig.json`, so esbuild reads the nearest one, `benchmarks/tsconfig.json`. Its `strict: true` makes esbuild add `"use strict";`, which is 13 bytes. The published 664,825 bytes need that file: the same fixture built outside the repository gives 664,812 bytes with a different hash.
 - **Dependency audit fixes:** The Litro fixture pins h3 `1.15.9` and overrides transitive fflate to `0.7.5` and glob to `14.0.2`; Flue overrides its outbound MCP client from `2.0.0` to `2.4.0`. These resolve the initial CI audit findings without suppressing advisories. They affect install/build costs and are recorded in manifests, locks and raw results. The framework packages remain at the selected release versions.
 - **Development dependency size:** Full install trees include esbuild, schemas, adapters, optional peers and any fixture-specific diagnostics. They do not isolate production deployment size or the marginal cost of adding MCP to an existing app.
 - **Auth is outside the workload:** Local fixtures use local/public settings and loopback listeners; no OAuth round trip, remote proxy, TLS or authentication-provider latency is measured. Feature-table security gates remain relevant to real deployments.

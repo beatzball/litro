@@ -63,9 +63,10 @@ this does not benchmark an unpublished workspace build or the framework's
 scaffolding CLI. The two UI resources use a native Litro bridge and the full
 bundled official MCP Apps guest SDK for Mastra. Their bytes describe these
 fixtures and runtime choices, not minimum possible framework sizes. The Mastra
-fixture has no `tsconfig.json`, so its esbuild step reads the repository root
-`tsconfig.json`. Its published UI bytes and hash need that file; a copy built
-outside the repository is 13 bytes smaller.
+fixture has no `tsconfig.json`, so its esbuild step reads the nearest one,
+`benchmarks/tsconfig.json`. Its `strict: true` makes esbuild add
+`"use strict";`, which is 13 bytes. The published UI bytes and hash need that
+file; a copy built outside the repository is 13 bytes smaller.
 
 If an app has no `node_modules`, the run stops with `ENOENT`. Run it again with
 `--install`.
@@ -81,11 +82,13 @@ Eve's `smoke.mjs` checks behavior the common verification does not: a padded
 ```
 
 The Mastra fixture README says its HTTP endpoint also works with the older
-`@modelcontextprotocol/sdk@1.32.2` client. No script runs this. To repeat it
-after a build, use the copy the Litro fixture locks:
+`@modelcontextprotocol/sdk@1.32.2` client, including resource delivery. No
+script runs this. To repeat it after a build, use the copy the Litro fixture
+locks. The last line it prints is the UI resource size in bytes, 664825:
 
 ```sh
 PORT=4391 node apps/mastra/dist/server.mjs http &
+server=$!
 sleep 1
 cd apps/litro && node --input-type=module -e '
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -94,8 +97,9 @@ const c = new Client({ name: "sdk1-interop", version: "1" });
 await c.connect(new StreamableHTTPClientTransport(new URL("http://127.0.0.1:4391/mcp")));
 console.log((await c.listTools()).tools.map(t => t.name));
 console.log((await c.callTool({ name: "get-weather", arguments: { city: " Lisbon " } })).structuredContent);
+console.log(Buffer.byteLength((await c.readResource({ uri: "ui://bench-weather/card" })).contents[0].text));
 await c.close();'
-cd ../.. && kill %1
+cd ../.. && kill "$server"
 ```
 
 ## Browser resource verification
