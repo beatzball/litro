@@ -22,6 +22,11 @@ function fetchStreaming(url: string): Promise<StreamingSample> {
         method: 'GET',
       },
       (res) => {
+        if (res.statusCode !== 200) {
+          res.resume();
+          reject(new Error(`Streaming request failed with status ${res.statusCode}`));
+          return;
+        }
         const ttfb = performance.now() - start;
         let totalBytes = 0;
 
@@ -38,9 +43,37 @@ function fetchStreaming(url: string): Promise<StreamingSample> {
       },
     );
 
+    req.setTimeout(30_000, () => req.destroy(new Error('Streaming request timed out')));
     req.on('error', reject);
     req.end();
   });
+}
+
+/**
+ * Sub-millisecond timings keep three decimals, so a 0.486 ms TTFB is not
+ * published as 0 ms. Delta is the median of the per-request differences,
+ * not the difference of the two medians, so it matches its spread table.
+ */
+export function summarizeStreaming(
+  ttfbValues: number[],
+  ttlbValues: number[],
+  bytesValues: number[],
+): StreamingResult {
+  if (ttfbValues.length !== ttlbValues.length) {
+    throw new Error('Streaming TTFB and TTLB need one value per request');
+  }
+  const ttfb = computeStats(ttfbValues, 3);
+  const ttlb = computeStats(ttlbValues, 3);
+  const delta = computeStats(ttlbValues.map((value, i) => value - ttfbValues[i]), 3);
+  const totalBytes = computeStats(bytesValues);
+  return {
+    ttfb: ttfb.median,
+    ttlb: ttlb.median,
+    delta: delta.median,
+    totalBytes: totalBytes.median,
+    runCount: ttfbValues.length,
+    statistics: { ttfb, ttlb, delta, totalBytes },
+  };
 }
 
 export async function measureStreaming(
@@ -62,19 +95,11 @@ export async function measureStreaming(
       bytesValues.push(sample.totalBytes);
     }
 
-    const ttfbStats = computeStats(ttfbValues);
-    const ttlbStats = computeStats(ttlbValues);
-    const bytesStats = computeStats(bytesValues);
-
-    results[route] = {
-      ttfb: ttfbStats.median,
-      ttlb: ttlbStats.median,
-      delta: ttlbStats.median - ttfbStats.median,
-      totalBytes: bytesStats.median,
-    };
+    results[route] = summarizeStreaming(ttfbValues, ttlbValues, bytesValues);
+    const { ttfb, ttlb } = results[route];
 
     console.log(
-      `  ${route}: ttfb=${ttfbStats.median.toFixed(1)}ms, ttlb=${ttlbStats.median.toFixed(1)}ms`,
+      `  ${route}: ttfb=${ttfb.toFixed(1)}ms, ttlb=${ttlb.toFixed(1)}ms`,
     );
   }
 

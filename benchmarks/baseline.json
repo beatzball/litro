@@ -1,0 +1,276 @@
+{
+  "meta": {
+    "timestamp": "2026-10-14T14:30:59.957Z",
+    "nodeVersion": "v24.7.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpuModel": "Apple M4 Max",
+    "cpuCount": 16,
+    "memoryGB": 128,
+    "loadAverage": [
+      3.8623046875,
+      4.9228515625,
+      5.42724609375
+    ],
+    "commitSha": "95b6336",
+    "commitMessage": "fix(deps): patch six advisories, baseline braces and two unfixable mediums (#232)"
+  },
+  "crossFramework": [
+    {
+      "name": "nuxt",
+      "version": "4.6.1",
+      "versions": {
+        "nuxt": "4.6.1",
+        "vue": "3.5.44",
+        "vite": "8.3.4"
+      },
+      "buildTime": {
+        "runs": [
+          5884,
+          2454,
+          2433
+        ],
+        "mean": 3590,
+        "median": 2454,
+        "p95": 5884,
+        "stddev": 1622,
+        "min": 2433,
+        "max": 5884
+      },
+      "outputSize": 211132,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 1582,
+          "gzipBytes": 756,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 1588,
+          "gzipBytes": 754,
+          "statusCode": 200
+        }
+      }
+    },
+    {
+      "name": "nextjs",
+      "version": "16.4.0",
+      "versions": {
+        "next": "16.4.0",
+        "react": "19.3.0",
+        "react-dom": "19.3.0"
+      },
+      "buildTime": {
+        "runs": [
+          3653,
+          3372,
+          3955
+        ],
+        "mean": 3660,
+        "median": 3653,
+        "p95": 3955,
+        "stddev": 238,
+        "min": 3372,
+        "max": 3955
+      },
+      "outputSize": 636618,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 5195,
+          "gzipBytes": 1789,
+          "statusCode": 200
+        },
+        "/blog/hello": {
+          "rawBytes": 6189,
+          "gzipBytes": 1880,
+          "statusCode": 200
+        }
+      }
+    }
+  ],
+  "hnBenchmark": [
+    {
+      "name": "nextjs",
+      "version": "16.4.0",
+      "versions": {
+        "next": "16.4.0",
+        "react": "19.3.0",
+        "react-dom": "19.3.0"
+      },
+      "buildTime": {
+        "runs": [
+          4038,
+          3408,
+          3397
+        ],
+        "mean": 3614,
+        "median": 3408,
+        "p95": 4038,
+        "stddev": 300,
+        "min": 3397,
+        "max": 4038
+      },
+      "outputSize": 7505379,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 45951,
+          "gzipBytes": 6802,
+          "statusCode": 200
+        },
+        "/ask": {
+          "rawBytes": 35649,
+          "gzipBytes": 5173,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 44858,
+          "gzipBytes": 6078,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 65628,
+          "gzipBytes": 16975,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 7555,
+          "gzipBytes": 2148,
+          "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 100,
+          "fcp": 753.3357000000001,
+          "lcp": 1882.3357,
+          "cls": 0,
+          "tbt": 29,
+          "speedIndex": 753.3357000000001
+        },
+        "/ask": {
+          "performance": 100,
+          "fcp": 753.8939,
+          "lcp": 1882.8939,
+          "cls": 0,
+          "tbt": 29,
+          "speedIndex": 753.8939
+        },
+        "/show": {
+          "performance": 100,
+          "fcp": 753.2212,
+          "lcp": 1881.2212,
+          "cls": 0,
+          "tbt": 28,
+          "speedIndex": 753.2212
+        },
+        "/story/47760529": {
+          "performance": 100,
+          "fcp": 754.2402,
+          "lcp": 1881.2402,
+          "cls": 0,
+          "tbt": 27,
+          "speedIndex": 754.2402
+        },
+        "/user/divan": {
+          "performance": 100,
+          "fcp": 753.4338,
+          "lcp": 1880.4338,
+          "cls": 0,
+          "tbt": 27,
+          "speedIndex": 753.4338
+        }
+      }
+    },
+    {
+      "name": "nuxt",
+      "version": "4.6.1",
+      "versions": {
+        "nuxt": "4.6.1",
+        "vue": "3.5.44",
+        "vite": "8.3.4"
+      },
+      "buildTime": {
+        "runs": [
+          3857,
+          2993,
+          2965
+        ],
+        "mean": 3272,
+        "median": 2993,
+        "p95": 3857,
+        "stddev": 414,
+        "min": 2965,
+        "max": 3857
+      },
+      "outputSize": 1217376,
+      "pageWeight": {
+        "/": {
+          "rawBytes": 15795,
+          "gzipBytes": 3934,
+          "statusCode": 200
+        },
+        "/ask": {
+          "rawBytes": 12227,
+          "gzipBytes": 2701,
+          "statusCode": 200
+        },
+        "/show": {
+          "rawBytes": 15027,
+          "gzipBytes": 3292,
+          "statusCode": 200
+        },
+        "/story/47760529": {
+          "rawBytes": 26726,
+          "gzipBytes": 9078,
+          "statusCode": 200
+        },
+        "/user/divan": {
+          "rawBytes": 2165,
+          "gzipBytes": 917,
+          "statusCode": 200
+        }
+      },
+      "lighthouse": {
+        "/": {
+          "performance": 99,
+          "fcp": 1502.9759,
+          "lcp": 1653.0000499999999,
+          "cls": 0.04738033042951105,
+          "tbt": 67,
+          "speedIndex": 1502.9759
+        },
+        "/ask": {
+          "performance": 99,
+          "fcp": 1503.2875,
+          "lcp": 1653.3097500000001,
+          "cls": 0.03256531648936806,
+          "tbt": 40,
+          "speedIndex": 1503.2875
+        },
+        "/show": {
+          "performance": 99,
+          "fcp": 1502.5370999999998,
+          "lcp": 1652.5622499999997,
+          "cls": 0.04570148848212856,
+          "tbt": 62,
+          "speedIndex": 1502.5370999999998
+        },
+        "/story/47760529": {
+          "performance": 78,
+          "fcp": 1503.3498,
+          "lcp": 1653.3839,
+          "cls": 0.5192051339522703,
+          "tbt": 61.5,
+          "speedIndex": 1503.3498
+        },
+        "/user/divan": {
+          "performance": 99,
+          "fcp": 1502.7490000000003,
+          "lcp": 1652.7741,
+          "cls": 0,
+          "tbt": 0,
+          "speedIndex": 1502.7490000000003
+        }
+      }
+    }
+  ]
+}

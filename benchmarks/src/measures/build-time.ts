@@ -20,6 +20,10 @@ export async function measureBuildTime(
 
   for (let i = 0; i < runs; i++) {
     rmSync(distDir, { recursive: true, force: true });
+    const appDir = mode === 'ssg' ? DOCS_DIR : DOCS_SSR_DIR;
+    for (const cache of ['.nitro', '.litro', 'node_modules/.vite']) {
+      rmSync(join(appDir, cache), { recursive: true, force: true });
+    }
 
     const start = performance.now();
     execSync(buildCmd, { cwd: ROOT_DIR, stdio: 'pipe' });
