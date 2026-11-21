@@ -1,0 +1,16 @@
+{
+  "name": "bench-mcp-suite",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "measure": "node run.mjs",
+    "verify": "node run.mjs --verify-only"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

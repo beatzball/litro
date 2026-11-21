@@ -2,6 +2,11 @@
 
 The minimal suite compares Litro (Lit), Next.js, Nuxt, and TanStack Start. The HN suite compares three Litro adapters (Lit, FAST, Elena), Next.js, Nuxt, and TanStack Start using the same local mock API fixtures. A separate suite measures the full Litro docs site in SSG and SSR modes. The [benchmark page](https://litro.dev/benchmarks) reads `results/latest.json`; the [source configuration](src/config.ts) defines apps, routes, cache directories, and run counts.
 
+The independent [MCP comparison suite](mcp/README.md) has locked standalone
+apps, a common official SDK client, protocol checks, browser resource checks
+and repeated measurements. Its results are in `mcp/results/`, separate from
+`results/latest.json` used by the web benchmarks.
+
 ## Install and build
 
 Use Node 24.22.3 (Nuxt requires at least 24.15 on the Node 24 line), pnpm, npm, and an installed Chrome or Chromium browser for Lighthouse. Use the package manager versions recorded in the results when reproducing a run. Saved metadata also records npm, Chrome, Lighthouse, and the benchmark tool versions. Run these commands from the repository root:

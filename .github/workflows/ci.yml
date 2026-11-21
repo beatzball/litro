@@ -14,6 +14,24 @@ permissions:
   contents: read
 
 jobs:
+  mcp-comparison:
+    name: MCP comparison fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install comparison client
+        working-directory: benchmarks/mcp
+        run: npm ci --no-audit --no-fund
+      - name: Build and verify native MCP fixtures
+        working-directory: benchmarks/mcp
+        run: node run.mjs --install --verify-only
+      - name: Check Eve origin and length boundaries
+        working-directory: benchmarks/mcp/apps/eve
+        run: npm run verify
+
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -209,7 +227,8 @@ jobs:
 
   e2e:
     name: E2E Tests
-    # The locked Playwright release supports Ubuntu 24.04, but not 26.04.
+    # Pinned: the repository's Playwright cannot install its browsers on the
+    # Ubuntu 26.04 image that ubuntu-latest now selects.
     runs-on: ubuntu-24.04
     needs: [build]
     steps:
@@ -521,4 +540,9 @@ jobs:
             --lockfile benchmarks/apps/hn-nextjs/package-lock.json \
             --lockfile benchmarks/apps/hn-nuxt/package-lock.json \
             --lockfile benchmarks/apps/tanstack/package-lock.json \
-            --lockfile benchmarks/apps/hn-tanstack/package-lock.json
+            --lockfile benchmarks/apps/hn-tanstack/package-lock.json \
+            --lockfile benchmarks/mcp/package-lock.json \
+            --lockfile benchmarks/mcp/apps/litro/package-lock.json \
+            --lockfile benchmarks/mcp/apps/mastra/package-lock.json \
+            --lockfile benchmarks/mcp/apps/flue/package-lock.json \
+            --lockfile benchmarks/mcp/apps/eve/package-lock.json

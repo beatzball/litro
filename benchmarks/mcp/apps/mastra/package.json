@@ -1,0 +1,22 @@
+{
+  "name": "bench-mcp-mastra",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node dist/server.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@mastra/core": "1.82.0",
+    "@mastra/mcp": "2.8.0",
+    "@modelcontextprotocol/ext-apps": "2.0.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
