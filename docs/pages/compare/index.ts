@@ -230,8 +230,8 @@ export class CompareIndexPage extends LitroPage {
   /* ── Helpers ──────────────────────────────────────────────────────── */
 
   private _formatBytes(bytes: number): string {
-    if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
-    return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MiB`;
+    return `${(bytes / 1024).toFixed(1)} KiB`;
   }
 
   private _formatMs(ms: number): string {
@@ -254,6 +254,10 @@ export class CompareIndexPage extends LitroPage {
       if (formatFn(values[i]) === winnerDisplay) tied.add(i);
     }
     return tied;
+  }
+
+  private _hnLabel(name: string): string {
+    return ({ 'litro-lit': 'Litro (Lit)', 'litro-fast': 'Litro (FAST)', 'litro-elena': 'Litro (Elena)', nextjs: 'Next.js', nuxt: 'Nuxt', tanstack: 'TanStack Start' } as Record<string, string>)[name] ?? name;
   }
 
   private _hnSizeAnnotations: Record<string, string> = {
@@ -445,8 +449,8 @@ export class CompareIndexPage extends LitroPage {
     return html`
       <h2>Realistic App Benchmark</h2>
       <p class="note">
-        Five identical Hacker News clones (~100 pages, SSG). Three Litro adapters
-        (Lit, FAST, Elena) vs Next.js and Nuxt.
+        Identical Hacker News clones (~100 pages, SSG), one per framework:
+        ${frameworks.map(fw => this._hnLabel(fw.name)).join(', ')}.
       </p>
 
       <section class="summary-section" aria-label="HN benchmark summary">
@@ -460,7 +464,7 @@ export class CompareIndexPage extends LitroPage {
       <div class="annotation-legend">
         <p><span class="annotation-marker">*</span> FAST's prerender engine does not evaluate <code>:innerHTML</code> bindings — output size excludes comment tree HTML. See <a href="/docs/adapters/overview#ssr-output-fidelity">SSR output fidelity</a>.</p>
         <p><span class="annotation-marker">\u2020</span> Next.js output includes RSC payload files (<code>.txt</code>) alongside HTML, inflating total on-disk size.</p>
-        <p><span class="annotation-marker">\u2021</span> Nuxt produces the smallest page weight because it does not duplicate data for hydration. Litro and Next.js inline serialized data alongside rendered HTML for client hydration; Nuxt prerenders the HTML and ships only a minimal metadata stub, relying on the server-rendered markup without client re-rendering.</p>
+        <p><span class="annotation-marker">\u2021</span> HTML weight excludes separately fetched assets and hydration payloads. Nuxt can extract data to <code>_payload.json</code>; Litro and React frameworks serialize data differently. Smaller HTML alone does not establish a smaller full page download or the absence of hydration.</p>
       </div>
 
       <p class="note">

@@ -2,14 +2,19 @@
 import { fetchStoryWithComments, timeAgo, hostName } from '../../../../hn-shared/api';
 
 const route = useRoute();
-const id = Number(route.params.id);
+const id = computed(() => Number(route.params.id));
 
-const data = await fetchStoryWithComments(id);
-if (!data) {
-  throw createError({ statusCode: 404, statusMessage: 'Story not found' });
-}
+const { data, error } = await useAsyncData(() => `hn:story:${id.value}`, async () => {
+  const data = await fetchStoryWithComments(id.value);
+  if (!data) {
+    throw createError({ statusCode: 404, statusMessage: 'Story not found' });
+  }
+  return data;
+});
+if (error.value) throw createError(error.value);
 
-const { story, comments } = data;
+const story = computed(() => data.value!.story);
+const comments = computed(() => data.value!.comments);
 </script>
 
 <template>

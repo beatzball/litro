@@ -6,9 +6,10 @@ declare module 'autocannon' {
   }
 
   interface Result {
-    latency: { mean: number; p50: number; p97_5: number; p99: number; max: number };
-    requests: { mean: number; total: number };
-    throughput: { mean: number };
+    latency: { mean: number; min: number; stddev: number; p50: number; p97_5: number; p99: number; max: number };
+    requests: { mean: number; total: number; min: number; max: number; stddev: number };
+    throughput: { mean: number; min: number; max: number; stddev: number };
+    non2xx: number;
     errors: number;
     timeouts: number;
   }

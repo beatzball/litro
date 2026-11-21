@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { fetchAskStories, fetchStories, timeAgo, hostName } from '../../../hn-shared/api';
 
-const ids = await fetchAskStories(30);
-const stories = await fetchStories(ids);
+const { data: stories } = await useAsyncData('hn:ask', async () => {
+  const ids = await fetchAskStories(30);
+  return fetchStories(ids);
+});
 </script>
 
 <template>

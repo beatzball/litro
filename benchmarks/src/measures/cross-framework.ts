@@ -1,14 +1,16 @@
 import { execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { spawn, type ChildProcess } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { computeStats } from '../utils/stats.js';
 import { gzipSize } from '../utils/gzip.js';
 import { measureLighthouse } from './lighthouse.js';
+import { measureStaticBundleSize } from './bundle-size.js';
+import { measureHttpPerf } from './http-perf.js';
+import { startCommand, waitForReady, stopServer } from '../utils/server-lifecycle.js';
 import type { FrameworkResult, LighthouseResult, PageWeightResult } from '../types.js';
-import { SERVER_READY_TIMEOUT, CROSS_FRAMEWORK_ROUTE_CHECKS } from '../config.js';
+import { CROSS_FRAMEWORK_ROUTE_CHECKS } from '../config.js';
 import { checkPage, toRouteCheck, type RouteSpec } from '../utils/page-check.js';
 
 export interface FrameworkConfig {
@@ -26,59 +28,6 @@ export interface FrameworkConfig {
   previewPort: number;
   versionPkg: string;
   versionPkgs?: readonly string[];
-}
-
-async function walkSize(dir: string): Promise<number> {
-  let total = 0;
-  let files: string[];
-  try {
-    files = await readdir(dir, { recursive: true, encoding: 'utf-8' }) as string[];
-  } catch {
-    return 0;
-  }
-  for (const file of files) {
-    const s = await stat(join(dir, file));
-    if (s.isFile()) total += s.size;
-  }
-  return total;
-}
-
-async function waitForReady(url: string, timeout: number): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < timeout) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return;
-    } catch {
-      // not ready
-    }
-    await new Promise(r => setTimeout(r, 500));
-  }
-  throw new Error(`Server at ${url} did not become ready within ${timeout}ms`);
-}
-
-function startPreview(cmd: string, cwd: string, port: number): ChildProcess {
-  const parts = cmd.split(' ');
-  const proc = spawn(parts[0], parts.slice(1), {
-    cwd,
-    env: { ...process.env, PORT: String(port) },
-    stdio: 'pipe',
-    shell: true,
-  });
-  proc.stderr?.on('data', (d: Buffer) => {
-    const msg = d.toString().trim();
-    if (msg) console.error(`  [preview] ${msg}`);
-  });
-  return proc;
-}
-
-async function stopProc(proc: ChildProcess): Promise<void> {
-  return new Promise((resolve) => {
-    if (proc.exitCode !== null) { resolve(); return; }
-    proc.on('exit', () => resolve());
-    proc.kill('SIGTERM');
-    setTimeout(() => { if (proc.exitCode === null) proc.kill('SIGKILL'); }, 5000);
-  });
 }
 
 async function resolveVersion(appDir: string, pkg: string): Promise<string> {
@@ -119,6 +68,7 @@ export async function measureFramework(
   env?: Record<string, string>,
   measureLighthouseFlag = false,
 ): Promise<FrameworkResult> {
+  if (!Number.isSafeInteger(runs) || runs < 1) throw new Error('Build runs must be a positive integer');
   const appDir = join(appsDir, config.dir);
   console.log(`\n[cross-framework] ${config.name}`);
   const execEnv = env ? { ...process.env, ...env } : undefined;
@@ -155,23 +105,25 @@ export async function measureFramework(
   }
 
   // Measure output size (after last build)
-  const outputSize = await walkSize(join(appDir, config.outputDir));
+  const bundleSize = await measureStaticBundleSize(join(appDir, config.outputDir));
+  const outputSize = bundleSize.totalOutput;
   console.log(`  output size: ${(outputSize / 1024).toFixed(1)} KB`);
 
   // Measure page weight
   const baseUrl = `http://localhost:${config.previewPort}`;
-  const proc = startPreview(config.previewCmd, appDir, config.previewPort);
+  const proc = await startCommand(config.previewCmd, [], appDir, config.previewPort, 'preview', true, env);
 
   const pageWeight: Record<string, PageWeightResult> = {};
+  let httpPerf: FrameworkResult['httpPerf'] = {};
   let lighthouse: Record<string, LighthouseResult> | undefined;
   try {
-    await waitForReady(baseUrl, SERVER_READY_TIMEOUT);
+    await waitForReady(baseUrl, undefined, proc);
 
     const effectiveRoutes = (routes ?? CROSS_FRAMEWORK_ROUTE_CHECKS).map(toRouteCheck);
     const broken: string[] = [];
     for (const check of effectiveRoutes) {
       const route = check.path;
-      const res = await fetch(baseUrl + route);
+      const res = await fetch(baseUrl + route, { signal: AbortSignal.timeout(30_000) });
       const buf = Buffer.from(await res.arrayBuffer());
       pageWeight[route] = {
         rawBytes: buf.byteLength,
@@ -199,12 +151,15 @@ export async function measureFramework(
       );
     }
 
+    console.log('  static HTTP performance...');
+    httpPerf = await measureHttpPerf(baseUrl, effectiveRoutes.map(r => r.path));
+
     if (measureLighthouseFlag) {
       console.log(`  lighthouse audit...`);
       lighthouse = await measureLighthouse(baseUrl, effectiveRoutes.map(r => r.path));
     }
   } finally {
-    await stopProc(proc);
+    await stopServer(proc);
   }
 
   const version = await resolveVersion(appDir, config.versionPkg);
@@ -221,6 +176,10 @@ export async function measureFramework(
     versions,
     buildTime: computeStats(times),
     outputSize,
+    bundleSize,
+    httpPerf,
+    rendering: 'ssg',
+    streaming: null,
     pageWeight,
     ...(lighthouse ? { lighthouse } : {}),
   };

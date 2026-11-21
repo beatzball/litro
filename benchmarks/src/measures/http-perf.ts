@@ -19,9 +19,15 @@ export async function measureHttpPerf(
       duration,
     });
 
+    if (result.errors || result.timeouts || result.non2xx || !result.requests.total) {
+      throw new Error(`HTTP measurement failed for ${route}: errors=${result.errors}, timeouts=${result.timeouts}, non2xx=${result.non2xx}`);
+    }
+
     results[route] = {
       latency: {
         mean: result.latency.mean,
+        min: result.latency.min,
+        stddev: result.latency.stddev,
         p50: result.latency.p50,
         p97_5: result.latency.p97_5,
         p99: result.latency.p99,
@@ -30,10 +36,18 @@ export async function measureHttpPerf(
       requests: {
         mean: result.requests.mean,
         total: result.requests.total,
+        min: result.requests.min,
+        max: result.requests.max,
+        stddev: result.requests.stddev,
       },
       throughput: {
         mean: result.throughput.mean,
+        min: result.throughput.min,
+        max: result.throughput.max,
+        stddev: result.throughput.stddev,
       },
+      runCount: 1,
+      non2xx: result.non2xx,
       errors: result.errors,
       timeouts: result.timeouts,
       duration,
