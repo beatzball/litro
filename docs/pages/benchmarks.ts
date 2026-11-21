@@ -397,7 +397,7 @@ export class BenchmarksPage extends LitroPage {
               &middot; commit <code>${r.meta.commitSha}</code>
               &middot; ${r.meta.nodeVersion}
               &middot; ${r.meta.cpuModel} (${r.meta.cpuCount} cores, ${r.meta.memoryGB} GB)
-              ${r.meta.osVersion ? html`&middot; macOS ${r.meta.osVersion}` : ''}
+              ${r.meta.osVersion ? html`&middot; ${r.meta.platform === 'darwin' ? 'macOS' : r.meta.platform} ${r.meta.osVersion}` : ''}
               ${r.meta.pnpmVersion ? html`&middot; pnpm ${r.meta.pnpmVersion}` : ''}
               ${r.meta.context ? html`<br />Run context: ${r.meta.context}` : ''}
             </p>
@@ -765,7 +765,8 @@ export class BenchmarksPage extends LitroPage {
             return html`<tr><th scope="row">${this._fwLabel(fw.name)}</th><td><code>${route}</code></td><td>${lh.runCount ?? 'not recorded'}</td>
               ${metrics.map(([key]) => {
                 const spread = lh.statistics?.[key];
-                return html`<td>${lh[key].toFixed(key === 'cls' ? 3 : 1)} ${spread ? html`(${spread.min.toFixed(3)}–${spread.max.toFixed(3)})` : ''}</td>`;
+                const digits = key === 'cls' ? 3 : 1;
+                return html`<td>${lh[key].toFixed(digits)} ${spread ? html`(${spread.min.toFixed(digits)}–${spread.max.toFixed(digits)})` : ''}</td>`;
               })}
             </tr>`;
           }))}</tbody>
@@ -1111,8 +1112,9 @@ export class BenchmarksPage extends LitroPage {
         <h3>SSR Streaming</h3>
         <p class="note">
           Streaming metrics are SSR-only. TTFB is time to first byte of the
-          response; TTLB is time to last byte. Delta is how long the stream
-          took to deliver the full payload.
+          response; TTLB is time to last byte. Each column is the median over
+          the runs; Delta is the median of each request's TTLB minus its TTFB,
+          so it need not equal TTLB minus TTFB in this table.
         </p>
         <div class="table-wrap">
           <table>

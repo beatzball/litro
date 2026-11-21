@@ -17,13 +17,26 @@ interface ServerState {
 const servers = new Map<ChildProcess, ServerState>();
 const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
-/** Fail on an occupied port instead of measuring a stale server or a fallback port. */
+/**
+ * Fail on an occupied port instead of measuring a stale server or a fallback port.
+ *
+ * A wildcard probe alone is not enough: on macOS a server bound only to
+ * 127.0.0.1 (or ::1) does not block a wildcard bind, yet `localhost` requests
+ * still reach it. So the loopback addresses are probed too. A host with no
+ * IPv6 loopback reports EADDRNOTAVAIL or EAFNOSUPPORT for ::1, which is not a
+ * conflict.
+ */
 export async function assertPortAvailable(port: number): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    const probe = createServer();
-    probe.once('error', () => reject(new Error(`Benchmark port ${port} is already in use`)));
-    probe.listen({ port, exclusive: true }, () => probe.close(error => error ? reject(error) : resolve()));
-  });
+  for (const host of [undefined, '127.0.0.1', '::1']) {
+    await new Promise<void>((resolve, reject) => {
+      const probe = createServer();
+      probe.once('error', (error: NodeJS.ErrnoException) => {
+        if (host === '::1' && (error.code === 'EADDRNOTAVAIL' || error.code === 'EAFNOSUPPORT')) resolve();
+        else reject(new Error(`Benchmark port ${port} is already in use`));
+      });
+      probe.listen({ port, host, exclusive: true }, () => probe.close(error => error ? reject(error) : resolve()));
+    });
+  }
 }
 
 export async function startCommand(

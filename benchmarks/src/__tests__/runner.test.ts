@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { computeStats } from '../utils/stats.js';
 import { sanitizeContext } from '../utils/context.js';
 import { summarizeLighthouseRuns } from '../measures/lighthouse.js';
+import { summarizeStreaming } from '../measures/streaming.js';
 import { measureStaticBundleSize } from '../measures/bundle-size.js';
 import { measureFramework } from '../measures/cross-framework.js';
 import { assertPortAvailable, startCommand, stopServer, waitForReady } from '../utils/server-lifecycle.js';
@@ -52,6 +53,17 @@ test('Lighthouse keeps the median-score run and records every metric spread', ()
   for (const stats of Object.values(result.statistics)) assert.equal(stats.runs.length, 3);
 });
 
+test('streaming keeps sub-millisecond TTFB and takes delta from per-request differences', () => {
+  const result = summarizeStreaming([0.4, 0.6, 3], [6.4, 7.6, 7], [10, 10, 10]);
+  assert.equal(result.ttfb, 0.6);
+  assert.equal(result.ttlb, 7);
+  // Per-request deltas are 6, 7 and 4; their median is 6, not 7 - 0.6.
+  assert.equal(result.delta, 6);
+  assert.equal(result.delta, result.statistics.delta.median);
+  assert.equal(result.runCount, 3);
+  assert.throws(() => summarizeStreaming([1], [1, 2], [1]));
+});
+
 test('context scrubs local identifiers, paths and email addresses', () => {
   const examplePath = join(os.homedir(), 'work');
   const exampleEmail = ['person', 'example.test'].join('@');
@@ -84,6 +96,15 @@ test('an occupied port fails instead of starting or reusing a server', async () 
   try {
     await assert.rejects(assertPortAvailable(port), /already in use/);
     await assert.rejects(startCommand(process.execPath, ['-e', 'process.exit(99)'], process.cwd(), port, 'test'), /already in use/);
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+});
+
+test('a server bound only to IPv4 loopback also counts as occupied', async () => {
+  const server = createServer();
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const port = (server.address() as { port: number }).port;
+  try {
+    await assert.rejects(assertPortAvailable(port), /already in use/);
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
 });
 

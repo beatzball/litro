@@ -64,8 +64,8 @@ The detailed updater (`node scripts/update-benchmark-report.mjs`, also available
 ## Method and fairness
 
 - Minimal apps prerender `/` and `/blog/hello` with the same visible content. HN apps prerender the fixture-derived page set; the measured routes are `/`, `/ask`, `/show`, `/story/47760529`, and `/user/divan`. The runner rejects measured routes without the expected rendered content, even if they return status 200.
-- Comparison builds remove each app's output and configured framework caches before every timed build. Dependency installation is outside the timer. Timing includes each production CLI and prerender step; package-manager wrappers differ across the established app commands. Cold refers to framework build caches; operating-system file caches are not flushed, and apps run sequentially in configured order. Next.js skips type checking; all comparison apps transpile without a separate type-check pass. Docs builds clear `dist`, `.nitro`, `.litro`, and `node_modules/.vite` before each timed build.
-- Every comparison preview serves prerendered files with the same `serve` tool. HTTP results measure static-file serving and payload differences. They do not measure Next.js, Nuxt, or TanStack Start request-time SSR. Autocannon reports whole-response latency, not TTFB. Only the docs SSR streaming test measures time to first byte (TTFB) and time to last byte (TTLB).
+- Comparison builds remove each app's output and configured framework caches before every timed build. Dependency installation is outside the timer. Timing includes each production CLI and prerender step, and the launcher that starts it: `pnpm exec` for the Litro apps, `npx` for Next.js and Nuxt, and `npm run` for TanStack Start (the `buildCmd` entries in `src/config.ts`). Launcher startup is inside every build time and differs between apps; this run did not measure it separately. Cold refers to framework build caches; operating-system file caches are not flushed, and apps run sequentially in configured order. Next.js skips type checking; all comparison apps transpile without a separate type-check pass. Docs builds clear `dist`, `.nitro`, `.litro`, and `node_modules/.vite` before each timed build.
+- Every comparison preview serves prerendered files with the same `serve` tool, started as `npx serve` in each app directory. The apps do not install `serve`, so npx resolves it outside this repository's lockfiles; `toolVersions.serve` records the copy in the benchmarks workspace, which is not proven to be the copy npx ran. HTTP results measure static-file serving and payload differences. They do not measure Next.js, Nuxt, or TanStack Start request-time SSR. Autocannon reports whole-response latency, not TTFB. Its latency Min is the lowest non-zero value (`minNonZeroValue`), so a route whose median is 0 ms can show Min 1 ms. Only the docs SSR streaming test measures time to first byte (TTFB) and time to last byte (TTLB).
 - Bundle totals are bytes on disk in the static output directory, including extra payloads and assets. JS/CSS/HTML categories do not necessarily sum to total output; other files include JSON, RSC payloads, fonts, maps, and images. TanStack Start's separate `dist/server` SSR bundle is unused and excluded from this static comparison, like other apps' nonstatic server output.
 - HN Nuxt stores shared fixture data through `useAsyncData`, so initial hydration and navigation between prerendered pages use generated payloads. The old app awaited fetchers directly and re-fetched the live API during hydration; historical Nuxt numbers therefore include a different data-loading path. Nuxt keeps default link and payload prefetching, so browser audits can include adjacent route payloads; native link defaults differ across frameworks. FAST retains its app-level raw-HTML post-build fill; Elena does not hydrate.
 - HTML page weight is the response body alone, measured raw and locally gzip-compressed once per route. It excludes separately fetched JavaScript, CSS, images, JSON, and payload files. Smaller HTML does not imply a smaller full page download. Hydration serialization differs across React, Vue, Lit, FAST, and Elena; Elena has no hydration step.
@@ -166,28 +166,28 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 | App | Route | Metric | Mean | Std dev | Min | Max |
 | --- | --- | --- | --- | --- | --- | --- |
-| Litro (Lit) | / | Latency (ms) | 0.05 | 0.33 | 1 | 16 |
+| Litro (Lit) | / | Latency (ms; Min is lowest non-zero) | 0.05 | 0.33 | 1 | 16 |
 | Litro (Lit) | / | Requests/s | 15617.6 | 780.5 | 13680 | 16320 |
 | Litro (Lit) | / | Bytes/s | 55571251.2 | 2776909.66 | 48687120 | 58082880 |
-| Litro (Lit) | /blog/hello | Latency (ms) | 0.05 | 0.23 | 1 | 5 |
+| Litro (Lit) | /blog/hello | Latency (ms; Min is lowest non-zero) | 0.05 | 0.23 | 1 | 5 |
 | Litro (Lit) | /blog/hello | Requests/s | 15626.55 | 429.37 | 14444 | 16109 |
 | Litro (Lit) | /blog/hello | Bytes/s | 54989172.37 | 1506244.38 | 50828436 | 56687571 |
-| Nuxt | / | Latency (ms) | 0.15 | 0.96 | 1 | 80 |
+| Nuxt | / | Latency (ms; Min is lowest non-zero) | 0.15 | 0.96 | 1 | 80 |
 | Nuxt | / | Requests/s | 13333.6 | 1868.54 | 8595 | 15187 |
 | Nuxt | / | Bytes/s | 25253068.8 | 3535497.73 | 16278930 | 28764178 |
-| Nuxt | /blog/hello | Latency (ms) | 0.05 | 0.22 | 1 | 3 |
+| Nuxt | /blog/hello | Latency (ms; Min is lowest non-zero) | 0.05 | 0.22 | 1 | 3 |
 | Nuxt | /blog/hello | Requests/s | 15392 | 326.05 | 14833 | 15787 |
 | Nuxt | /blog/hello | Bytes/s | 29243801.6 | 619358.55 | 28182700 | 29995300 |
-| Next.js | / | Latency (ms) | 0.05 | 0.23 | 1 | 9 |
+| Next.js | / | Latency (ms; Min is lowest non-zero) | 0.05 | 0.23 | 1 | 9 |
 | Next.js | / | Requests/s | 15777.46 | 580.22 | 14434 | 16403 |
 | Next.js | / | Bytes/s | 86885841.46 | 3201472.29 | 79488038 | 90331321 |
-| Next.js | /blog/hello | Latency (ms) | 0.05 | 0.22 | 1 | 9 |
+| Next.js | /blog/hello | Latency (ms; Min is lowest non-zero) | 0.05 | 0.22 | 1 | 9 |
 | Next.js | /blog/hello | Requests/s | 14528.37 | 236.2 | 13946 | 14873 |
 | Next.js | /blog/hello | Bytes/s | 94452270.55 | 1534690.49 | 90662946 | 96689373 |
-| TanStack Start | / | Latency (ms) | 0.05 | 0.26 | 1 | 13 |
+| TanStack Start | / | Latency (ms; Min is lowest non-zero) | 0.05 | 0.26 | 1 | 13 |
 | TanStack Start | / | Requests/s | 15480 | 605.77 | 14281 | 16090 |
 | TanStack Start | / | Bytes/s | 37869977.6 | 1482316.54 | 34945607 | 39372230 |
-| TanStack Start | /blog/hello | Latency (ms) | 0.05 | 0.22 | 1 | 8 |
+| TanStack Start | /blog/hello | Latency (ms; Min is lowest non-zero) | 0.05 | 0.22 | 1 | 8 |
 | TanStack Start | /blog/hello | Requests/s | 15924 | 360.61 | 15159 | 16347 |
 | TanStack Start | /blog/hello | Bytes/s | 39079116.8 | 885154.61 | 37200186 | 40115538 |
 
@@ -373,94 +373,94 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 | App | Route | Metric | Mean | Std dev | Min | Max |
 | --- | --- | --- | --- | --- | --- | --- |
-| Litro (Lit) | / | Latency (ms) | 0.12 | 1.77 | 1 | 211 |
+| Litro (Lit) | / | Latency (ms; Min is lowest non-zero) | 0.12 | 1.77 | 1 | 211 |
 | Litro (Lit) | / | Requests/s | 13321.8 | 2550.96 | 5918 | 15055 |
 | Litro (Lit) | / | Bytes/s | 606955110.4 | 116239421.34 | 269653670 | 685981075 |
-| Litro (Lit) | /ask | Latency (ms) | 0.13 | 0.57 | 1 | 29 |
+| Litro (Lit) | /ask | Latency (ms; Min is lowest non-zero) | 0.13 | 0.57 | 1 | 29 |
 | Litro (Lit) | /ask | Requests/s | 12966.4 | 833.48 | 11460 | 14054 |
 | Litro (Lit) | /ask | Bytes/s | 720896000 | 46334869.69 | 637107240 | 781318076 |
-| Litro (Lit) | /show | Latency (ms) | 0.13 | 0.37 | 1 | 4 |
+| Litro (Lit) | /show | Latency (ms; Min is lowest non-zero) | 0.13 | 0.37 | 1 | 4 |
 | Litro (Lit) | /show | Requests/s | 11741.46 | 432.24 | 10766 | 12274 |
 | Litro (Lit) | /show | Bytes/s | 810859054.55 | 29760365.15 | 743478428 | 847617892 |
-| Litro (Lit) | /story/47760529 | Latency (ms) | 0.08 | 0.3 | 1 | 14 |
+| Litro (Lit) | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.08 | 0.3 | 1 | 14 |
 | Litro (Lit) | /story/47760529 | Requests/s | 13332 | 293.75 | 12626 | 13667 |
 | Litro (Lit) | /story/47760529 | Bytes/s | 832988774.4 | 18377098.4 | 788809350 | 853845825 |
-| Litro (Lit) | /user/divan | Latency (ms) | 0.06 | 0.88 | 1 | 111 |
+| Litro (Lit) | /user/divan | Latency (ms; Min is lowest non-zero) | 0.06 | 0.88 | 1 | 111 |
 | Litro (Lit) | /user/divan | Requests/s | 15506.8 | 822.32 | 13492 | 16849 |
 | Litro (Lit) | /user/divan | Bytes/s | 186423705.6 | 9870478.76 | 162227808 | 202592376 |
-| Litro (FAST) | / | Latency (ms) | 0.07 | 0.29 | 1 | 12 |
+| Litro (FAST) | / | Latency (ms; Min is lowest non-zero) | 0.07 | 0.29 | 1 | 12 |
 | Litro (FAST) | / | Requests/s | 14337.1 | 738.16 | 12656 | 15016 |
 | Litro (FAST) | / | Bytes/s | 548786548.37 | 28278900.58 | 484560272 | 574917592 |
-| Litro (FAST) | /ask | Latency (ms) | 0.06 | 0.26 | 1 | 11 |
+| Litro (FAST) | /ask | Latency (ms; Min is lowest non-zero) | 0.06 | 0.26 | 1 | 11 |
 | Litro (FAST) | /ask | Requests/s | 14165.46 | 372.73 | 13329 | 14767 |
 | Litro (FAST) | /ask | Bytes/s | 688509300.37 | 18236140.85 | 647882703 | 717779569 |
-| Litro (FAST) | /show | Latency (ms) | 0.06 | 0.26 | 1 | 12 |
+| Litro (FAST) | /show | Latency (ms; Min is lowest non-zero) | 0.06 | 0.26 | 1 | 12 |
 | Litro (FAST) | /show | Requests/s | 14048 | 403.07 | 13256 | 14527 |
 | Litro (FAST) | /show | Bytes/s | 831992627.2 | 24028411.33 | 785152880 | 860434210 |
-| Litro (FAST) | /story/47760529 | Latency (ms) | 0.07 | 0.36 | 1 | 17 |
+| Litro (FAST) | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.07 | 0.36 | 1 | 17 |
 | Litro (FAST) | /story/47760529 | Requests/s | 14026.55 | 813.21 | 11504 | 14482 |
 | Litro (FAST) | /story/47760529 | Bytes/s | 736839121.46 | 42825320.93 | 604351136 | 760797388 |
-| Litro (FAST) | /user/divan | Latency (ms) | 0.05 | 0.24 | 1 | 14 |
+| Litro (FAST) | /user/divan | Latency (ms; Min is lowest non-zero) | 0.05 | 0.24 | 1 | 14 |
 | Litro (FAST) | /user/divan | Requests/s | 15675.28 | 233.78 | 15252 | 16032 |
 | Litro (FAST) | /user/divan | Bytes/s | 184376599.28 | 2739041.71 | 179409276 | 188584416 |
-| Litro (Elena) | / | Latency (ms) | 0.06 | 0.23 | 1 | 6 |
+| Litro (Elena) | / | Latency (ms; Min is lowest non-zero) | 0.06 | 0.23 | 1 | 6 |
 | Litro (Elena) | / | Requests/s | 14932.8 | 571.1 | 13412 | 15471 |
 | Litro (Elena) | / | Bytes/s | 443626291.2 | 17030000.91 | 398416872 | 459581526 |
-| Litro (Elena) | /ask | Latency (ms) | 0.05 | 0.25 | 1 | 14 |
+| Litro (Elena) | /ask | Latency (ms; Min is lowest non-zero) | 0.05 | 0.25 | 1 | 14 |
 | Litro (Elena) | /ask | Requests/s | 14692.73 | 328.82 | 13935 | 15170 |
 | Litro (Elena) | /ask | Bytes/s | 606911022.55 | 13560643.35 | 575654850 | 626672700 |
-| Litro (Elena) | /show | Latency (ms) | 0.07 | 0.29 | 1 | 9 |
+| Litro (Elena) | /show | Latency (ms; Min is lowest non-zero) | 0.07 | 0.29 | 1 | 9 |
 | Litro (Elena) | /show | Requests/s | 14112.8 | 561.41 | 12643 | 14567 |
 | Litro (Elena) | /show | Bytes/s | 714866688 | 28507964.15 | 640355307 | 737803983 |
-| Litro (Elena) | /story/47760529 | Latency (ms) | 0.06 | 0.26 | 1 | 12 |
+| Litro (Elena) | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.06 | 0.26 | 1 | 12 |
 | Litro (Elena) | /story/47760529 | Requests/s | 14332 | 275.16 | 13840 | 14822 |
 | Litro (Elena) | /story/47760529 | Bytes/s | 703856640 | 13568832.75 | 679682400 | 727908420 |
-| Litro (Elena) | /user/divan | Latency (ms) | 0.04 | 0.2 | 1 | 5 |
+| Litro (Elena) | /user/divan | Latency (ms; Min is lowest non-zero) | 0.04 | 0.2 | 1 | 5 |
 | Litro (Elena) | /user/divan | Requests/s | 15897.6 | 278.1 | 15296 | 16233 |
 | Litro (Elena) | /user/divan | Bytes/s | 172569395.2 | 3027422.74 | 166053376 | 176225448 |
-| Next.js | / | Latency (ms) | 0.07 | 0.28 | 1 | 13 |
+| Next.js | / | Latency (ms; Min is lowest non-zero) | 0.07 | 0.28 | 1 | 13 |
 | Next.js | / | Requests/s | 14482.4 | 751.3 | 12698 | 15093 |
 | Next.js | / | Bytes/s | 669830348.8 | 34758712.81 | 587460272 | 698262552 |
-| Next.js | /ask | Latency (ms) | 0.06 | 0.26 | 1 | 10 |
+| Next.js | /ask | Latency (ms; Min is lowest non-zero) | 0.06 | 0.26 | 1 | 10 |
 | Next.js | /ask | Requests/s | 13609.1 | 234.05 | 13069 | 13944 |
 | Next.js | /ask | Bytes/s | 489339438.55 | 8400379.98 | 469961240 | 501426240 |
-| Next.js | /show | Latency (ms) | 0.07 | 0.27 | 1 | 7 |
+| Next.js | /show | Latency (ms; Min is lowest non-zero) | 0.07 | 0.27 | 1 | 7 |
 | Next.js | /show | Requests/s | 13363.28 | 167.8 | 13024 | 13660 |
 | Next.js | /show | Bytes/s | 603574644.37 | 7571597.03 | 588294080 | 617022200 |
-| Next.js | /story/47760529 | Latency (ms) | 0.12 | 0.38 | 1 | 13 |
+| Next.js | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.12 | 0.38 | 1 | 13 |
 | Next.js | /story/47760529 | Requests/s | 11695.64 | 487.54 | 10394 | 12368 |
 | Next.js | /story/47760529 | Bytes/s | 771251479.28 | 32142017.73 | 685421936 | 815595392 |
-| Next.js | /user/divan | Latency (ms) | 0.05 | 0.23 | 1 | 11 |
+| Next.js | /user/divan | Latency (ms; Min is lowest non-zero) | 0.05 | 0.23 | 1 | 11 |
 | Next.js | /user/divan | Requests/s | 14562.55 | 171.55 | 14283 | 14921 |
 | Next.js | /user/divan | Bytes/s | 114553949.1 | 1350152.55 | 112364361 | 117383507 |
-| Nuxt | / | Latency (ms) | 0.05 | 0.23 | 1 | 16 |
+| Nuxt | / | Latency (ms; Min is lowest non-zero) | 0.05 | 0.23 | 1 | 16 |
 | Nuxt | / | Requests/s | 15612 | 487.06 | 14196 | 16135 |
 | Nuxt | / | Bytes/s | 251688029.1 | 7836884.24 | 228853716 | 260112335 |
-| Nuxt | /ask | Latency (ms) | 0.05 | 0.25 | 1 | 10 |
+| Nuxt | /ask | Latency (ms; Min is lowest non-zero) | 0.05 | 0.25 | 1 | 10 |
 | Nuxt | /ask | Requests/s | 15593.82 | 532.33 | 14312 | 16109 |
 | Nuxt | /ask | Bytes/s | 195696453.82 | 6671309.31 | 179629912 | 202184059 |
-| Nuxt | /show | Latency (ms) | 0.05 | 0.22 | 1 | 11 |
+| Nuxt | /show | Latency (ms; Min is lowest non-zero) | 0.05 | 0.22 | 1 | 11 |
 | Nuxt | /show | Requests/s | 15676 | 180.35 | 15325 | 15960 |
 | Nuxt | /show | Bytes/s | 240661299.2 | 2775014.34 | 235269400 | 245017920 |
-| Nuxt | /story/47760529 | Latency (ms) | 0.05 | 0.23 | 1 | 13 |
+| Nuxt | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.05 | 0.23 | 1 | 13 |
 | Nuxt | /story/47760529 | Requests/s | 15036 | 344.08 | 14397 | 15482 |
 | Nuxt | /story/47760529 | Bytes/s | 406883234.91 | 9316107.53 | 389597217 | 418958402 |
-| Nuxt | /user/divan | Latency (ms) | 0.07 | 0.55 | 1 | 45 |
+| Nuxt | /user/divan | Latency (ms; Min is lowest non-zero) | 0.07 | 0.55 | 1 | 45 |
 | Nuxt | /user/divan | Requests/s | 15188.4 | 962.99 | 13754 | 16471 |
 | Nuxt | /user/divan | Bytes/s | 37899468.8 | 2402520.18 | 34316230 | 41095145 |
-| TanStack Start | / | Latency (ms) | 0.06 | 0.25 | 1 | 14 |
+| TanStack Start | / | Latency (ms; Min is lowest non-zero) | 0.06 | 0.25 | 1 | 14 |
 | TanStack Start | / | Requests/s | 15132.8 | 568.06 | 13495 | 15620 |
 | TanStack Start | / | Bytes/s | 480798310.4 | 18031696.57 | 428749645 | 496263020 |
-| TanStack Start | /ask | Latency (ms) | 0.06 | 0.24 | 1 | 9 |
+| TanStack Start | /ask | Latency (ms; Min is lowest non-zero) | 0.06 | 0.24 | 1 | 9 |
 | TanStack Start | /ask | Requests/s | 14679.2 | 286.61 | 14189 | 15135 |
 | TanStack Start | /ask | Bytes/s | 631400038.4 | 12326455.77 | 610410780 | 651107700 |
-| TanStack Start | /show | Latency (ms) | 0.06 | 0.26 | 1 | 12 |
+| TanStack Start | /show | Latency (ms; Min is lowest non-zero) | 0.06 | 0.26 | 1 | 12 |
 | TanStack Start | /show | Requests/s | 14148 | 243.06 | 13629 | 14499 |
 | TanStack Start | /show | Bytes/s | 751757498.19 | 12864296.73 | 724122399 | 770346369 |
-| TanStack Start | /story/47760529 | Latency (ms) | 0.07 | 0.3 | 1 | 8 |
+| TanStack Start | /story/47760529 | Latency (ms; Min is lowest non-zero) | 0.07 | 0.3 | 1 | 8 |
 | TanStack Start | /story/47760529 | Requests/s | 14084 | 724.25 | 12010 | 14632 |
 | TanStack Start | /story/47760529 | Bytes/s | 706215936 | 36395746.7 | 602253460 | 733736272 |
-| TanStack Start | /user/divan | Latency (ms) | 0.05 | 0.22 | 1 | 10 |
+| TanStack Start | /user/divan | Latency (ms; Min is lowest non-zero) | 0.05 | 0.22 | 1 | 10 |
 | TanStack Start | /user/divan | Requests/s | 15724.8 | 194.08 | 15275 | 15959 |
 | TanStack Start | /user/divan | Bytes/s | 171062067.2 | 2124983.96 | 166161450 | 173602002 |
 
@@ -739,28 +739,28 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 | App | Route | Metric | Mean | Std dev | Min | Max |
 | --- | --- | --- | --- | --- | --- | --- |
-| Litro docs SSG | / | Latency (ms) | 0.17 | 0.47 | 1 | 8 |
+| Litro docs SSG | / | Latency (ms; Min is lowest non-zero) | 0.17 | 0.47 | 1 | 8 |
 | Litro docs SSG | / | Requests/s | 11059.28 | 489.61 | 9871 | 11500 |
 | Litro docs SSG | / | Bytes/s | 2018365812.37 | 89147768.16 | 1801645049 | 2098968500 |
-| Litro docs SSG | /docs/introduction | Latency (ms) | 0.07 | 0.28 | 1 | 10 |
+| Litro docs SSG | /docs/introduction | Latency (ms; Min is lowest non-zero) | 0.07 | 0.28 | 1 | 10 |
 | Litro docs SSG | /docs/introduction | Requests/s | 14945.6 | 389.3 | 14236 | 15571 |
 | Litro docs SSG | /docs/introduction | Bytes/s | 1273600409.6 | 33401548.68 | 1213106504 | 1326867194 |
-| Litro docs SSG | /blog | Latency (ms) | 0.86 | 0.52 | 1 | 16 |
+| Litro docs SSG | /blog | Latency (ms; Min is lowest non-zero) | 0.86 | 0.52 | 1 | 16 |
 | Litro docs SSG | /blog | Requests/s | 8293.4 | 197.75 | 7999 | 8748 |
 | Litro docs SSG | /blog | Bytes/s | 2314626662.4 | 55237566.46 | 2233088829 | 2442187908 |
-| Litro docs SSG | /blog/welcome | Latency (ms) | 0.04 | 0.2 | 1 | 8 |
+| Litro docs SSG | /blog/welcome | Latency (ms; Min is lowest non-zero) | 0.04 | 0.2 | 1 | 8 |
 | Litro docs SSG | /blog/welcome | Requests/s | 20670.41 | 676.98 | 19800 | 22085 |
 | Litro docs SSG | /blog/welcome | Bytes/s | 639421644.8 | 20824795.92 | 612433800 | 683111135 |
-| Litro docs SSR | / | Latency (ms) | 336.36 | 35.74 | 267 | 555 |
+| Litro docs SSR | / | Latency (ms; Min is lowest non-zero) | 336.36 | 35.74 | 267 | 555 |
 | Litro docs SSR | / | Requests/s | 29.2 | 1.99 | 25 | 31 |
 | Litro docs SSR | / | Bytes/s | 5788057.6 | 394745.62 | 4955825 | 6145223 |
-| Litro docs SSR | /docs/introduction | Latency (ms) | 76.26 | 23.31 | 8 | 494 |
+| Litro docs SSR | /docs/introduction | Latency (ms; Min is lowest non-zero) | 76.26 | 23.31 | 8 | 494 |
 | Litro docs SSR | /docs/introduction | Requests/s | 129.81 | 9.47 | 118 | 150 |
 | Litro docs SSR | /docs/introduction | Bytes/s | 12058624 | 879915.76 | 10962790 | 13935750 |
-| Litro docs SSR | /blog | Latency (ms) | 119.76 | 31.33 | 10 | 627 |
+| Litro docs SSR | /blog | Latency (ms; Min is lowest non-zero) | 119.76 | 31.33 | 10 | 627 |
 | Litro docs SSR | /blog | Requests/s | 82.6 | 4.18 | 74 | 88 |
 | Litro docs SSR | /blog | Bytes/s | 25808076.8 | 1305590.99 | 23122188 | 27496656 |
-| Litro docs SSR | /blog/welcome | Latency (ms) | 14.38 | 4.5 | 3 | 131 |
+| Litro docs SSR | /blog/welcome | Latency (ms; Min is lowest non-zero) | 14.38 | 4.5 | 3 | 131 |
 | Litro docs SSR | /blog/welcome | Requests/s | 671.2 | 29.86 | 627 | 722 |
 | Litro docs SSR | /blog/welcome | Bytes/s | 22636134.4 | 1007274.95 | 21146829 | 24350894 |
 
@@ -804,12 +804,12 @@ Byte counts use B (not decimal KB). Build tables show repeated-run statistics. H
 
 ### Docs SSR streaming
 
-| Route | Runs | TTFB median (ms) | TTLB median (ms) | Delta (ms) | Payload (B) |
+| Route | Runs | TTFB median (ms) | TTLB median (ms) | Delta median (ms) | Payload (B) |
 | --- | --- | --- | --- | --- | --- |
-| / | 5 | 24 | 34 | 10 | 187438 |
-| /docs/introduction | 5 | 0 | 7 | 7 | 85575 |
-| /blog | 5 | 1 | 11 | 10 | 301538 |
-| /blog/welcome | 5 | 0 | 2 | 2 | 32185 |
+| / | 5 | 23.924 | 33.937 | 10.012 | 187438 |
+| /docs/introduction | 5 | 0.486 | 6.52 | 6.054 | 85575 |
+| /blog | 5 | 1.329 | 10.625 | 9.328 | 301538 |
+| /blog/welcome | 5 | 0.256 | 1.51 | 1.254 | 32185 |
 
 ### Docs SSR streaming spread
 

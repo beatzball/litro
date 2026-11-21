@@ -42,7 +42,7 @@ function pageTable(title, apps) {
 }
 function httpTable(title, apps) {
   section(`${title}: HTTP load`, ['App', 'Route', 'Load runs', 'Configured duration (s)', 'Connections', 'Requests', 'Requests/s (mean)', 'Bytes/s (mean)', 'Latency mean (ms)', 'p50 (ms)', 'p97.5 (ms)', 'p99 (ms)', 'Max (ms)', 'Non-2xx', 'Errors', 'Timeouts'], apps.flatMap(app => entries(app.httpPerf).map(([route, h]) => [label(app.name), route, h.runCount ?? 'not recorded', h.duration, h.connections, h.requests.total, num(h.requests.mean), num(h.throughput.mean), num(h.latency.mean), num(h.latency.p50), num(h.latency.p97_5), num(h.latency.p99), num(h.latency.max), h.non2xx ?? 0, h.errors, h.timeouts])));
-  section(`${title}: HTTP spread`, ['App', 'Route', 'Metric', 'Mean', 'Std dev', 'Min', 'Max'], apps.flatMap(app => entries(app.httpPerf).flatMap(([route, h]) => [['latency', 'Latency (ms)'], ['requests', 'Requests/s'], ['throughput', 'Bytes/s']].map(([key, title]) => [label(app.name), route, title, num(h[key].mean), num(h[key].stddev), num(h[key].min), num(h[key].max)]))));
+  section(`${title}: HTTP spread`, ['App', 'Route', 'Metric', 'Mean', 'Std dev', 'Min', 'Max'], apps.flatMap(app => entries(app.httpPerf).flatMap(([route, h]) => [['latency', 'Latency (ms; Min is lowest non-zero)'], ['requests', 'Requests/s'], ['throughput', 'Bytes/s']].map(([key, title]) => [label(app.name), route, title, num(h[key].mean), num(h[key].stddev), num(h[key].min), num(h[key].max)]))));
 }
 const lhMetrics = [['performance', 'Score (0–100)'], ['fcp', 'FCP (ms)'], ['lcp', 'LCP (ms)'], ['cls', 'CLS (unitless)'], ['tbt', 'TBT (ms)'], ['speedIndex', 'Speed Index (ms)']];
 function lighthouseTable(title, apps) {
@@ -90,7 +90,7 @@ bundleTable('Docs', docsApps);
 pageTable('Docs', docsApps);
 httpTable('Docs', docsApps);
 lighthouseTable('Docs (SSG only)', docsApps.filter(app => app.name.endsWith('SSG')));
-section('Docs SSR streaming', ['Route', 'Runs', 'TTFB median (ms)', 'TTLB median (ms)', 'Delta (ms)', 'Payload (B)'], entries(current.streaming.ssr).map(([route, s]) => [route, s.runCount ?? s.runs?.length ?? 'not recorded', num(s.ttfb), num(s.ttlb), num(s.delta), num(s.totalBytes)]));
+section('Docs SSR streaming', ['Route', 'Runs', 'TTFB median (ms)', 'TTLB median (ms)', 'Delta median (ms)', 'Payload (B)'], entries(current.streaming.ssr).map(([route, s]) => [route, s.runCount ?? s.runs?.length ?? 'not recorded', num(s.ttfb), num(s.ttlb), num(s.delta), num(s.totalBytes)]));
 section('Docs SSR streaming spread', ['Route', 'Metric (ms; totalBytes in B)', 'Runs', 'Mean', 'Median', 'p95', 'Std dev', 'Min', 'Max'], entries(current.streaming.ssr).flatMap(([route, s]) => entries(s.statistics).map(([metric, stats]) => [route, metric, ...statsCells(stats)])));
 lines.push('### Next.js and Nuxt: old versus new', '', `Historical comparison across separate runs: Node ${baseline.meta.nodeVersion} → ${m.nodeVersion}. HN Nuxt now transfers fixture data with useAsyncData instead of re-fetching live data during hydration. Different framework/peer versions, data loading, machine load, and run conditions can affect these values; these changes do not isolate the effect of a dependency upgrade. Static HTTP, bundle breakdown, and minimal-app Lighthouse were not recorded in the old baseline. See the full current tables for those measures.`, '');
 const comparisons = [];

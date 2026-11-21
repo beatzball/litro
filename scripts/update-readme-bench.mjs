@@ -28,7 +28,7 @@ function fmtMs(ms) {
 
 function fmtBytes(b) {
   if (!Number.isFinite(b)) return 'n/a';
-  return b >= 1024 ? `${(b / 1024).toFixed(1)} KiB` : `${b} B`;
+  return b >= 1024 ? `${(b / 1024).toFixed(1)} KiB` : `${Math.round(b)} B`;
 }
 
 /**

@@ -744,9 +744,9 @@
   "streaming": {
     "ssr": {
       "/": {
-        "ttfb": 24,
-        "ttlb": 34,
-        "delta": 10,
+        "ttfb": 23.924,
+        "ttlb": 33.937,
+        "delta": 10.012,
         "totalBytes": 187438,
         "runCount": 5,
         "statistics": {
@@ -813,9 +813,9 @@
         }
       },
       "/docs/introduction": {
-        "ttfb": 0,
-        "ttlb": 7,
-        "delta": 7,
+        "ttfb": 0.486,
+        "ttlb": 6.52,
+        "delta": 6.054,
         "totalBytes": 85575,
         "runCount": 5,
         "statistics": {
@@ -882,9 +882,9 @@
         }
       },
       "/blog": {
-        "ttfb": 1,
-        "ttlb": 11,
-        "delta": 10,
+        "ttfb": 1.329,
+        "ttlb": 10.625,
+        "delta": 9.328,
         "totalBytes": 301538,
         "runCount": 5,
         "statistics": {
@@ -951,9 +951,9 @@
         }
       },
       "/blog/welcome": {
-        "ttfb": 0,
-        "ttlb": 2,
-        "delta": 2,
+        "ttfb": 0.256,
+        "ttlb": 1.51,
+        "delta": 1.254,
         "totalBytes": 32185,
         "runCount": 5,
         "statistics": {
