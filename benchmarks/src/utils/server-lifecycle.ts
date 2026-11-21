@@ -21,13 +21,14 @@ const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, m
  * Fail on an occupied port instead of measuring a stale server or a fallback port.
  *
  * A wildcard probe alone is not enough: on macOS a server bound only to
- * 127.0.0.1 (or ::1) does not block a wildcard bind, yet `localhost` requests
- * still reach it. So the loopback addresses are probed too. A host with no
+ * 127.0.0.1, ::1 or the IPv4 wildcard 0.0.0.0 does not block an IPv6
+ * wildcard bind, yet `localhost` requests still reach it. So those addresses
+ * are probed too. A host with no
  * IPv6 loopback reports EADDRNOTAVAIL or EAFNOSUPPORT for ::1, which is not a
  * conflict.
  */
 export async function assertPortAvailable(port: number): Promise<void> {
-  for (const host of [undefined, '127.0.0.1', '::1']) {
+  for (const host of [undefined, '0.0.0.0', '127.0.0.1', '::1']) {
     await new Promise<void>((resolve, reject) => {
       const probe = createServer();
       probe.once('error', (error: NodeJS.ErrnoException) => {

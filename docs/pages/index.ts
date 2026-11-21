@@ -2432,7 +2432,7 @@ export class SplashPage extends LitroPage {
             ? html`
                 <section class="stats shell" aria-label="How Litro performs">
                   <div class="section-head">
-                    <h2 class="section-title">Smallest to ship.</h2>
+                    <h2 class="section-title">Smallest output.</h2>
                     <p>
                       The same minimal site, built in each framework on the same
                       machine. Median of three runs.

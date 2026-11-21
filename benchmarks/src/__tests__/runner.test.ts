@@ -108,6 +108,15 @@ test('a server bound only to IPv4 loopback also counts as occupied', async () =>
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
 });
 
+test('a server bound only to the IPv4 wildcard also counts as occupied', async () => {
+  const server = createServer();
+  await new Promise<void>(resolve => server.listen(0, '0.0.0.0', resolve));
+  const port = (server.address() as { port: number }).port;
+  try {
+    await assert.rejects(assertPortAvailable(port), /already in use/);
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+});
+
 test('readiness detects early exit and cleanup kills a surviving descendant', async () => {
   const port = await unusedPort();
   const script = "require('node:http').createServer((req,res)=>res.end('ok')).listen(Number(process.env.PORT))";
