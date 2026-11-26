@@ -36,6 +36,17 @@ VERSION_SHAPE='^[0-9]+(\.[0-9]+){0,2}$'
 # in two or more dot-separated parts, no part starting or ending with a hyphen.
 BUNDLE_ID_SHAPE='^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$'
 
+# A host that may be listed as an App-Bound domain: lowercase DNS labels, or a
+# dotted IPv4 address. Nothing else is accepted, because each host reaches
+# Info.plist through the C preprocessor (NATIVE-021), and a bracketed IPv6
+# literal has never been tried there.
+BOUND_HOST_SHAPE='^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$'
+
+# WebKit's documented limit on App-Bound Domains. The iOS 26.5 simulator still
+# honored an eleventh entry, but a limit Apple documents is the one a device
+# may enforce, so it is enforced here.
+BOUND_HOST_LIMIT=10
+
 # scheme://host[:port], lowercased, with a default port dropped, or nothing
 # when the URL has no scheme and host. The same comparison AppConfiguration
 # makes: whole origins, never prefixes.
@@ -180,7 +191,7 @@ select_app() {
   # at selection instead. Capability names are NOT checked here: a third copy
   # of the protocol's list, in bash, is the drift NATIVE-008 exists to prevent.
   start_url="$(read_typed startURL string)" || return 1
-  local start_origin count index entry_origin covered=no
+  local start_origin count index entry_origin covered=no hosts=()
   start_origin="$(origin_of "$start_url")"
   if [ -z "$start_origin" ]; then
     echo "select-app: $config has startURL '$start_url', which has no scheme and host" >&2
@@ -194,12 +205,49 @@ select_app() {
     entry_url="$(read_typed "allowedOrigins.$index" string)" || return 1
     entry_origin="$(origin_of "$entry_url")"
     [ "$entry_origin" = "$start_origin" ] && covered=yes
+    # The host alone, for App-Bound Domains: no scheme, no port. Kept even when
+    # empty, so an entry that is not an origin is refused below by name.
+    local entry_host="${entry_origin#*://}"
+    hosts+=("${entry_host%:[0-9]*}")
     index=$((index + 1))
   done
   if [ "$covered" != yes ]; then
     echo "select-app: $config starts at $start_url, but allowedOrigins does not include $start_origin" >&2
     return 1
   fi
+
+  # App-Bound Domains, only when the app asks for them (NATIVE-021). They are
+  # what lets WKWebView run a site's service worker, and so play offline. The
+  # hosts are not a second list in app.json: they are the hosts of
+  # allowedOrigins, because once the key is declared an origin missing from it
+  # fails to load, and two lists would drift.
+  local bound="none" bound_defs="" bound_type host slot=0 listed=" "
+  if bound_type="$(plutil -type appBoundDomains "$config" 2>/dev/null)"; then
+    if [ "$bound_type" != bool ]; then
+      echo "select-app: $config has 'appBoundDomains' of type $bound_type; it must be true or false" >&2
+      return 1
+    fi
+    if [ "$(plutil -extract appBoundDomains raw -o - "$config")" = true ]; then
+      bound_defs="LITRO_APP_BOUND_DOMAINS=1"
+      for host in "${hosts[@]}"; do
+        if ! [[ "$host" =~ $BOUND_HOST_SHAPE ]]; then
+          echo "select-app: $config sets appBoundDomains, and allowedOrigins has an entry whose host '$host' cannot be an App-Bound domain; use a scheme and a DNS name or an IPv4 address" >&2
+          return 1
+        fi
+        # Two origins on one host, such as two ports, are one domain.
+        case "$listed" in *" $host "*) continue ;; esac
+        listed="$listed$host "
+        bound_defs="$bound_defs LITRO_APP_BOUND_DOMAIN_$slot=$host"
+        slot=$((slot + 1))
+      done
+      if [ "$slot" -gt "$BOUND_HOST_LIMIT" ]; then
+        echo "select-app: $config sets appBoundDomains with $slot hosts; WebKit allows at most $BOUND_HOST_LIMIT App-Bound domains" >&2
+        return 1
+      fi
+      bound="$(printf '%s' "${listed# }" | sed 's/ $//')"
+    fi
+  fi
+  local bound_line="LITRO_INFOPLIST_DEFINITIONS = $bound_defs"
 
   # The icon is the asset catalog's AppIcon set, when the folder has one, and
   # it is checked down to the pixels here, because nothing later can be
@@ -246,6 +294,10 @@ LITRO_APP_DISPLAY_NAME = $name
 MARKETING_VERSION = $version
 CURRENT_PROJECT_VERSION = $build
 $icon_line
+// App-Bound Domains (NATIVE-021), as Info.plist preprocessor definitions,
+// because an xcconfig cannot hold a plist array. Empty unless app.json sets
+// appBoundDomains.
+$bound_line
 CONFIG
 
   echo "select-app: $app"
@@ -253,6 +305,7 @@ CONFIG
   echo "  bundle  : $bundle_id"
   echo "  version : $version ($build)"
   echo "  icon    : $icon"
+  echo "  bound   : $bound"
   if [ "${#skipped[@]}" -gt 0 ]; then
     echo "  not shipped: ${skipped[*]}"
   fi
@@ -380,6 +433,37 @@ PY
   fixture noorigins "{\"name\":\"T\",\"bundleIdentifier\":\"com.example.t\",\"startURL\":\"https://t.example/\",$rest}"
   expect "no allowedOrigins" reject noorigins
   expect "an app that does not exist" reject no-such-app
+
+  # App-Bound Domains (NATIVE-021): off unless asked for, and when asked for,
+  # the hosts of allowedOrigins and nothing else.
+  local who='"name":"T","bundleIdentifier":"com.example.t","startURL":"https://t.example/"'
+  fixture boundabsent "{$who,\"allowedOrigins\":[\"https://t.example\"],$rest}"
+  expect "no appBoundDomains" accept boundabsent
+  assert "no appBoundDomains, no definitions" "$(setting LITRO_INFOPLIST_DEFINITIONS)" ""
+  fixture boundfalse "{$who,\"allowedOrigins\":[\"https://t.example\"],\"appBoundDomains\":false,$rest}"
+  expect "appBoundDomains false" accept boundfalse
+  assert "appBoundDomains false, no definitions" "$(setting LITRO_INFOPLIST_DEFINITIONS)" ""
+  fixture boundtrue "{$who,\"allowedOrigins\":[\"https://t.example\",\"https://T.Example:8443\",\"http://localhost:5173\",\"http://192.168.1.20:5173\"],\"appBoundDomains\":true,$rest}"
+  expect "appBoundDomains true" accept boundtrue
+  assert "hosts of allowedOrigins, lowercased, one per host, no ports" \
+    "$(setting LITRO_INFOPLIST_DEFINITIONS)" \
+    "LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=t.example LITRO_APP_BOUND_DOMAIN_1=localhost LITRO_APP_BOUND_DOMAIN_2=192.168.1.20"
+  fixture boundstring "{$who,\"allowedOrigins\":[\"https://t.example\"],\"appBoundDomains\":\"yes\",$rest}"
+  refuse "appBoundDomains that is text" boundstring "'appBoundDomains' of type string"
+  fixture boundipv6 "{$who,\"allowedOrigins\":[\"https://t.example\",\"http://[::1]:5173\"],\"appBoundDomains\":true,$rest}"
+  refuse "an IPv6 literal as an App-Bound domain" boundipv6 "cannot be an App-Bound domain"
+  fixture boundnoscheme "{$who,\"allowedOrigins\":[\"https://t.example\",\"app.example.com\"],\"appBoundDomains\":true,$rest}"
+  refuse "an allowedOrigins entry with no scheme" boundnoscheme "cannot be an App-Bound domain"
+  local ten='"https://t.example"' eleven i
+  for i in 1 2 3 4 5 6 7 8 9; do ten="$ten,\"https://h$i.example\""; done
+  eleven="$ten,\"https://h10.example\""
+  fixture boundten "{$who,\"allowedOrigins\":[$ten],\"appBoundDomains\":true,$rest}"
+  expect "ten App-Bound domains" accept boundten
+  fixture boundeleven "{$who,\"allowedOrigins\":[$eleven],\"appBoundDomains\":true,$rest}"
+  refuse "eleven App-Bound domains" boundeleven "at most 10"
+  # Eleven origins on ten hosts is ten domains.
+  fixture boundtenhosts "{$who,\"allowedOrigins\":[$ten,\"https://t.example:8443\"],\"appBoundDomains\":true,$rest}"
+  expect "eleven origins on ten hosts" accept boundtenhosts
 
   # A rejected selection leaves the previous one in place.
   select_app "$dir/apps" "$dir/out" good >/dev/null

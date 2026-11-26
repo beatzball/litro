@@ -67,6 +67,56 @@
 			</array>
 		</dict>
 	</dict>
+	<!-- App-Bound Domains, only for an app whose app.json sets appBoundDomains
+	     to true (NATIVE-021). Without this key WKWebView offers no service
+	     workers, so a site that plays offline in Safari does not in the app.
+
+	     The hosts are those of allowedOrigins. select-app.sh writes each one as
+	     a preprocessor definition, one slot per host and ten slots in all,
+	     because an xcconfig cannot express a plist array. Ten is the limit
+	     WebKit documents.
+
+	     The key never travels alone. The shell sets
+	     limitsNavigationsToAppBoundDomains on its web view whenever this key is
+	     present: measured on the iOS 26.5 simulator, the key without that flag
+	     refuses every script the shell runs in the page, so the bridge goes
+	     dark. Write comments here without macro names, which the preprocessor
+	     would replace. -->
+#if LITRO_APP_BOUND_DOMAINS
+	<key>WKAppBoundDomains</key>
+	<array>
+#ifdef LITRO_APP_BOUND_DOMAIN_0
+		<string>LITRO_APP_BOUND_DOMAIN_0</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_1
+		<string>LITRO_APP_BOUND_DOMAIN_1</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_2
+		<string>LITRO_APP_BOUND_DOMAIN_2</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_3
+		<string>LITRO_APP_BOUND_DOMAIN_3</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_4
+		<string>LITRO_APP_BOUND_DOMAIN_4</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_5
+		<string>LITRO_APP_BOUND_DOMAIN_5</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_6
+		<string>LITRO_APP_BOUND_DOMAIN_6</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_7
+		<string>LITRO_APP_BOUND_DOMAIN_7</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_8
+		<string>LITRO_APP_BOUND_DOMAIN_8</string>
+#endif
+#ifdef LITRO_APP_BOUND_DOMAIN_9
+		<string>LITRO_APP_BOUND_DOMAIN_9</string>
+#endif
+	</array>
+#endif
 	<!-- Everything below is DEBUG ONLY, through the Info.plist preprocessor.
 	     Shell.xcconfig defines LITRO_DEBUG_NETWORKING for the Debug
 	     configuration and for no other.

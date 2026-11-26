@@ -3,7 +3,8 @@
   "bundleIdentifier": "com.qdoku.app",
   "startURL": "https://qdoku.com/",
   "allowedOrigins": ["https://qdoku.com"],
+  "appBoundDomains": true,
   "version": "1.0.0",
-  "build": "1",
+  "build": "2",
   "capabilities": ["haptics", "share", "review"]
 }
