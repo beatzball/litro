@@ -468,6 +468,25 @@ jobs:
             || { echo "WKAppBoundDomains holds $bound_count, first '$bound_first'; wanted qdoku.com alone" >&2; exit 1; }
           echo "Release declares the App-Bound domain qdoku asks for"
 
+          # The Debug line in Shell.xcconfig repeats the app's definitions,
+          # because a conditional setting replaces the plain one rather than
+          # adding to it. Nothing above would notice if the repeat went: the
+          # demo opts out, and the qdoku build is Release. So read the setting
+          # a Debug build of qdoku resolves to. It needs both halves.
+          debug_defs=$(xcodebuild -showBuildSettings \
+            -project native/LitroShell.xcodeproj \
+            -scheme LitroShell \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' 2>/dev/null \
+            | sed -n 's/^ *INFOPLIST_PREPROCESSOR_DEFINITIONS = //p')
+          for want in LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=qdoku.com LITRO_DEBUG_NETWORKING=1; do
+            case " $debug_defs " in
+              *" $want "*) ;;
+              *) echo "a Debug build of qdoku would not get $want (got '$debug_defs')" >&2; exit 1 ;;
+            esac
+          done
+          echo "a Debug build of qdoku gets its App-Bound Domains and the dev keys"
+
           # The identity in the product is the one app.json asks for. Nothing
           # else here would notice if it were not: a Release build with the
           # wrong bundle identifier and no version or build number at all still

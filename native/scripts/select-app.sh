@@ -230,6 +230,13 @@ select_app() {
     if [ "$(plutil -extract appBoundDomains raw -o - "$config")" = true ]; then
       bound_defs="LITRO_APP_BOUND_DOMAINS=1"
       for host in "${hosts[@]}"; do
+        # DNS reads a trailing dot as the same name, but whether WebKit matches
+        # a listed name to a page host spelled with the dot was not measured.
+        # Refused by name, so the fix is obvious, rather than guessed at.
+        case "$host" in *.)
+          echo "select-app: $config sets appBoundDomains, and allowedOrigins has the host '$host' with a trailing dot; write it without the dot" >&2
+          return 1 ;;
+        esac
         if ! [[ "$host" =~ $BOUND_HOST_SHAPE ]]; then
           echo "select-app: $config sets appBoundDomains, and allowedOrigins has an entry whose host '$host' cannot be an App-Bound domain; use a scheme and a DNS name or an IPv4 address" >&2
           return 1
@@ -450,6 +457,11 @@ PY
     "LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=t.example LITRO_APP_BOUND_DOMAIN_1=localhost LITRO_APP_BOUND_DOMAIN_2=192.168.1.20"
   fixture boundstring "{$who,\"allowedOrigins\":[\"https://t.example\"],\"appBoundDomains\":\"yes\",$rest}"
   refuse "appBoundDomains that is text" boundstring "'appBoundDomains' of type string"
+  # plutil reads a JSON null as type "(any)", and that must not pass as absent.
+  fixture boundnull "{$who,\"allowedOrigins\":[\"https://t.example\"],\"appBoundDomains\":null,$rest}"
+  refuse "appBoundDomains that is null" boundnull "'appBoundDomains' of type"
+  fixture bounddot "{$who,\"allowedOrigins\":[\"https://t.example\",\"https://cdn.example.\"],\"appBoundDomains\":true,$rest}"
+  refuse "an App-Bound host with a trailing dot" bounddot "with a trailing dot"
   fixture boundipv6 "{$who,\"allowedOrigins\":[\"https://t.example\",\"http://[::1]:5173\"],\"appBoundDomains\":true,$rest}"
   refuse "an IPv6 literal as an App-Bound domain" boundipv6 "cannot be an App-Bound domain"
   fixture boundnoscheme "{$who,\"allowedOrigins\":[\"https://t.example\",\"app.example.com\"],\"appBoundDomains\":true,$rest}"

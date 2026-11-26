@@ -626,7 +626,9 @@ Measured as well, so nobody tests them again:
 - The domains are the hosts of `allowedOrigins`, never a second list. Once the
   key is declared, an allowed origin missing from it fails to load, and two
   lists would drift. `select-app.sh` derives them: lowercased, one per host,
-  no scheme and no port, DNS names or dotted IPv4 only, at most ten.
+  no scheme and no port, DNS names or dotted IPv4 only, at most ten. A host
+  with a trailing dot is refused by name: DNS reads it as the same name, but
+  whether WebKit matches it to the listed name was not measured.
 - They reach Info.plist as preprocessor definitions, one per slot, because an
   xcconfig cannot hold a plist array. `Support/Info.plist` has ten slots. The
   hosts are lowercase and the macros are uppercase, so a host cannot be
@@ -646,7 +648,9 @@ Measured as well, so nobody tests them again:
 **Check.** `native/scripts/select-app.sh --self-test` for the derivation,
 `swift test --package-path native --filter AppBoundDomainsTests` for the flag,
 and the CI step that reads the built Info.plists: qdoku's Release build
-carries `["qdoku.com"]`, and the demo's Debug build carries no key. The worker
+carries `["qdoku.com"]`, and the demo's Debug build carries no key. The same
+step reads the setting a Debug build of qdoku resolves to, because neither
+plist would notice the Debug line losing its repeat. The worker
 itself needs a simulator. Build qdoku for Debug, run it, and look in the app's
 data container under
 `Library/WebKit/<bundle id>/WebsiteData/Default/<hash>/<hash>/CacheStorage/`:
