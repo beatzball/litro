@@ -1,0 +1,10 @@
+{
+  "name": "Example",
+  "bundleIdentifier": "dev.litro.shell.example",
+  "startURL": "https://example.com/",
+  "allowedOrigins": ["https://example.com"],
+  "appBoundDomains": true,
+  "version": "1.0.0",
+  "build": "1",
+  "capabilities": ["haptics", "share", "review"]
+}

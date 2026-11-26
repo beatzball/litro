@@ -696,7 +696,9 @@ Release build carries. This section grows with each.
 
 ### A real app folder
 
-**qdoku.** `native/Apps/qdoku/`: bundle identifier `com.qdoku.app`, start URL
+**qdoku.** `native/Apps/qdoku/` at first, and in qdoku's own repository since
+(see "The app folder moves to the app's repository" below): bundle identifier
+`com.qdoku.app`, start URL
 `https://qdoku.com/`, one allowed origin, `https://qdoku.com`. The origin was
 confirmed against the qdoku repository (`docs/DEPLOY.md`: production is
 https://qdoku.com, deployed by Coolify) and live: `/api/health` answered
@@ -786,6 +788,27 @@ compares `CFBundleIdentifier`, `CFBundleShortVersionString` and
 **Seen while checking, and not the shell's:** qdoku's how-to-play dialog runs
 off the right edge on an iPhone 17 Pro screen. Mobile Safari on the same
 simulator shows the same, so it is qdoku's layout, not the web view's.
+
+### The app folder moves to the app's repository
+
+Phase 4 kept app folders in `native/Apps/` and named the trigger for moving
+them: "If a real app's assets ever need to be private, move only its `Apps/`
+folder out." qdoku's repository is private, and its version and build number
+change on qdoku's schedule: raising its build for App-Bound Domains took a pull
+request here. So its folder moved to the qdoku repository, and `select-app.sh`
+takes a path as well as a name.
+
+- An argument with a slash is a path to the app's folder. The folder's name is
+  the app's name: a lowercase letter, then lowercase letters and digits,
+  because it becomes `PRODUCT_NAME`. A folder inside `native/Build` is
+  refused, because selecting clears that folder before it copies.
+- `native/Apps/` keeps the demo.
+- CI cannot read a private repository, so `native/Fixtures/example/` stands in
+  for a store app in the Release build: an https origin, an icon and App-Bound
+  Domains, selected by path. Its domain is `example.com`, which is reserved for
+  documentation.
+- The shell and both halves of the bridge stay here, so the parity check still
+  sees both halves in one commit. Only the per-app data moved.
 
 ## Risks
 

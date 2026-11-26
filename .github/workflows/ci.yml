@@ -359,10 +359,14 @@ jobs:
       # with the wrong app inside it.
       - name: Reject an unknown app
         run: |
-          if native/scripts/select-app.sh no-such-app; then
+          # A name with no hyphen, so the refusal is the missing folder and not
+          # the name's shape.
+          if native/scripts/select-app.sh nosuchapp 2> reject.log; then
             echo "select-app accepted an app that does not exist" >&2
             exit 1
           fi
+          grep -q "no app named 'nosuchapp'" reject.log \
+            || { echo "select-app refused for another reason:" >&2; cat reject.log >&2; exit 1; }
 
       - name: Select the demo app
         run: native/scripts/select-app.sh demo
@@ -421,10 +425,12 @@ jobs:
           echo "the demo declares no App-Bound Domains, as it must"
 
           # A Release build needs a shippable app, because the release guard
-          # refuses the demo on purpose. qdoku is one: an https origin and an
-          # icon. Its Release build passing is also the proof that a real app
-          # gets through the guard, rather than a patched demo.
-          native/scripts/select-app.sh qdoku
+          # refuses the demo on purpose. A real app keeps its folder in its own
+          # repository, which this job cannot read, so native/Fixtures/example
+          # stands in: an https origin, an icon, and App-Bound Domains. It is
+          # selected by path, the way a real app is, so that path is exercised
+          # too.
+          native/scripts/select-app.sh native/Fixtures/example
 
           xcodebuild build \
             -project native/LitroShell.xcodeproj \
@@ -435,7 +441,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO > release-plist.log 2>&1 \
             || { echo "the Release build failed"; tail -40 release-plist.log; exit 1; }
 
-          release_plist=release-dd/Build/Products/Release-iphonesimulator/qdoku.app/Info.plist
+          release_plist=release-dd/Build/Products/Release-iphonesimulator/example.app/Info.plist
           plutil -lint "$release_plist"
           for key in NSAppTransportSecurity NSLocalNetworkUsageDescription; do
             if plutil -extract "$key" raw -o - "$release_plist" >/dev/null 2>&1; then
@@ -449,50 +455,52 @@ jobs:
           # Build/Resources, and the export-compliance answer is there.
           icon=$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw -o - "$release_plist")
           [ "$icon" = "AppIcon" ] || { echo "the Release build has no app icon (got '$icon')" >&2; exit 1; }
-          [ -f release-dd/Build/Products/Release-iphonesimulator/qdoku.app/Assets.car ] \
+          [ -f release-dd/Build/Products/Release-iphonesimulator/example.app/Assets.car ] \
             || { echo "no compiled asset catalog in the Release build" >&2; exit 1; }
           encryption=$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$release_plist")
           [ "$encryption" = "false" ] || { echo "ITSAppUsesNonExemptEncryption is '$encryption'" >&2; exit 1; }
           echo "Release has its icon and its encryption answer"
 
-          # qdoku asks for App-Bound Domains, and they are the hosts of its
-          # allowedOrigins (NATIVE-021). Without the key a WKWebView offers no
-          # service workers, and qdoku's offline play does not exist in the app.
+          # The example asks for App-Bound Domains, and they are the hosts of
+          # its allowedOrigins (NATIVE-021). Without the key a WKWebView offers
+          # no service workers, and a site's offline play does not exist in the
+          # app.
           # Read element by element: `plutil -extract` on an array prints its
           # count, not its contents (NATIVE-014).
           [ "$(plutil -type WKAppBoundDomains "$release_plist" 2>/dev/null || true)" = array ] \
             || { echo "the Release build declares no App-Bound Domains" >&2; exit 1; }
           bound_count=$(plutil -extract WKAppBoundDomains raw -o - "$release_plist")
           bound_first=$(plutil -extract WKAppBoundDomains.0 raw -o - "$release_plist" 2>/dev/null || true)
-          [ "$bound_count" = 1 ] && [ "$bound_first" = qdoku.com ] \
-            || { echo "WKAppBoundDomains holds $bound_count, first '$bound_first'; wanted qdoku.com alone" >&2; exit 1; }
-          echo "Release declares the App-Bound domain qdoku asks for"
+          [ "$bound_count" = 1 ] && [ "$bound_first" = example.com ] \
+            || { echo "WKAppBoundDomains holds $bound_count, first '$bound_first'; wanted example.com alone" >&2; exit 1; }
+          echo "Release declares the App-Bound domain the example asks for"
 
           # The Debug line in Shell.xcconfig repeats the app's definitions,
           # because a conditional setting replaces the plain one rather than
           # adding to it. Nothing above would notice if the repeat went: the
-          # demo opts out, and the qdoku build is Release. So read the setting
-          # a Debug build of qdoku resolves to. It needs both halves.
+          # demo opts out, and the example build is Release. So read the
+          # setting a Debug build of the example resolves to. It needs both
+          # halves.
           debug_defs=$(xcodebuild -showBuildSettings \
             -project native/LitroShell.xcodeproj \
             -scheme LitroShell \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' 2>/dev/null \
             | sed -n 's/^ *INFOPLIST_PREPROCESSOR_DEFINITIONS = //p')
-          for want in LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=qdoku.com LITRO_DEBUG_NETWORKING=1; do
+          for want in LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=example.com LITRO_DEBUG_NETWORKING=1; do
             case " $debug_defs " in
               *" $want "*) ;;
-              *) echo "a Debug build of qdoku would not get $want (got '$debug_defs')" >&2; exit 1 ;;
+              *) echo "a Debug build of the example would not get $want (got '$debug_defs')" >&2; exit 1 ;;
             esac
           done
-          echo "a Debug build of qdoku gets its App-Bound Domains and the dev keys"
+          echo "a Debug build of the example gets its App-Bound Domains and the dev keys"
 
           # The identity in the product is the one app.json asks for. Nothing
           # else here would notice if it were not: a Release build with the
           # wrong bundle identifier and no version or build number at all still
           # succeeds, and every check above still passes. The bundled app.json
           # is the one the shell reads its start URL from at launch.
-          app_json=native/Apps/qdoku/app.json
+          app_json=native/Fixtures/example/app.json
           same_as_app_json() { # <Info.plist key> <app.json key>
             want=$(plutil -extract "$2" raw -o - "$app_json" 2>/dev/null || true)
             got=$(plutil -extract "$1" raw -o - "$release_plist" 2>/dev/null || true)
@@ -503,8 +511,8 @@ jobs:
           same_as_app_json CFBundleIdentifier bundleIdentifier
           same_as_app_json CFBundleShortVersionString version
           same_as_app_json CFBundleVersion build
-          cmp -s "$app_json" release-dd/Build/Products/Release-iphonesimulator/qdoku.app/app.json \
-            || { echo "the bundled app.json is not qdoku's" >&2; exit 1; }
+          cmp -s "$app_json" release-dd/Build/Products/Release-iphonesimulator/example.app/app.json \
+            || { echo "the bundled app.json is not the example's" >&2; exit 1; }
           echo "Release carries the identity app.json asks for"
 
           # Put the development configuration back for the step after this one.
