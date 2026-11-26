@@ -411,6 +411,15 @@ jobs:
           done
           echo "Debug carries both keys, as it must"
 
+          # App-Bound Domains are opt-in (NATIVE-021). The demo does not ask for
+          # them, so its build must not carry the key: with it, every origin the
+          # key leaves out fails to load.
+          if plutil -extract WKAppBoundDomains raw -o - "$debug_plist" >/dev/null 2>&1; then
+            echo "the demo build carries WKAppBoundDomains, which its app.json never asked for" >&2
+            exit 1
+          fi
+          echo "the demo declares no App-Bound Domains, as it must"
+
           # A Release build needs a shippable app, because the release guard
           # refuses the demo on purpose. qdoku is one: an https origin and an
           # icon. Its Release build passing is also the proof that a real app
@@ -445,6 +454,38 @@ jobs:
           encryption=$(plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$release_plist")
           [ "$encryption" = "false" ] || { echo "ITSAppUsesNonExemptEncryption is '$encryption'" >&2; exit 1; }
           echo "Release has its icon and its encryption answer"
+
+          # qdoku asks for App-Bound Domains, and they are the hosts of its
+          # allowedOrigins (NATIVE-021). Without the key a WKWebView offers no
+          # service workers, and qdoku's offline play does not exist in the app.
+          # Read element by element: `plutil -extract` on an array prints its
+          # count, not its contents (NATIVE-014).
+          [ "$(plutil -type WKAppBoundDomains "$release_plist" 2>/dev/null || true)" = array ] \
+            || { echo "the Release build declares no App-Bound Domains" >&2; exit 1; }
+          bound_count=$(plutil -extract WKAppBoundDomains raw -o - "$release_plist")
+          bound_first=$(plutil -extract WKAppBoundDomains.0 raw -o - "$release_plist" 2>/dev/null || true)
+          [ "$bound_count" = 1 ] && [ "$bound_first" = qdoku.com ] \
+            || { echo "WKAppBoundDomains holds $bound_count, first '$bound_first'; wanted qdoku.com alone" >&2; exit 1; }
+          echo "Release declares the App-Bound domain qdoku asks for"
+
+          # The Debug line in Shell.xcconfig repeats the app's definitions,
+          # because a conditional setting replaces the plain one rather than
+          # adding to it. Nothing above would notice if the repeat went: the
+          # demo opts out, and the qdoku build is Release. So read the setting
+          # a Debug build of qdoku resolves to. It needs both halves.
+          debug_defs=$(xcodebuild -showBuildSettings \
+            -project native/LitroShell.xcodeproj \
+            -scheme LitroShell \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' 2>/dev/null \
+            | sed -n 's/^ *INFOPLIST_PREPROCESSOR_DEFINITIONS = //p')
+          for want in LITRO_APP_BOUND_DOMAINS=1 LITRO_APP_BOUND_DOMAIN_0=qdoku.com LITRO_DEBUG_NETWORKING=1; do
+            case " $debug_defs " in
+              *" $want "*) ;;
+              *) echo "a Debug build of qdoku would not get $want (got '$debug_defs')" >&2; exit 1 ;;
+            esac
+          done
+          echo "a Debug build of qdoku gets its App-Bound Domains and the dev keys"
 
           # The identity in the product is the one app.json asks for. Nothing
           # else here would notice if it were not: a Release build with the

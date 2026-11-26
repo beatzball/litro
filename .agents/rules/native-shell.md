@@ -570,3 +570,89 @@ does exist but only changes what `env(safe-area-inset-*)` reports, leaving the
 layout viewport whole -- measured, not assumed. A window-fit test must assert
 both axes: one that checked height alone passed while the page was 96px too
 tall.
+
+## NATIVE-021 — App-Bound Domains never travel without the web view's limit
+
+**Trap.** A `WKWebView` offers a page no service workers unless the app
+declares `WKAppBoundDomains` in its Info.plist. So a site that plays offline in
+Safari does not play offline in the shell. Measured on the iOS 26.5 simulator
+against `https://qdoku.com`: `'serviceWorker' in navigator` was `false`, and
+`caches.keys()` was empty.
+
+Adding the key alone is worse than leaving it out. With
+`WKAppBoundDomains = ["qdoku.com"]` and nothing else, WebKit refused every
+script the shell runs in the page, on the very domain the key lists:
+
+```
+WKErrorDomain Code=14 "JavaScript execution targeted a frame that is not in an app-bound domain"
+```
+
+`evaluateJavaScript` carries every bridge reply, so the bridge goes dark and the
+page sees no error at all: its calls time out.
+
+With the key AND `limitsNavigationsToAppBoundDomains = true` on the web view's
+configuration, the same page registered its worker, was controlled within 20
+seconds, and stored a complete cache: `qdoku-<version>`, 67 records, the
+completeness marker among them. The bridge answered a handshake, the marker
+script ran, and a cross-origin analytics script still loaded.
+
+The flag has a cost of its own. An origin the key does not list fails to load:
+
+```
+WKErrorDomain Code=13 "Attempted to navigate away from an app-bound domain or navigate after using restricted APIs"
+```
+
+Measured with the bridge test page on a LAN address that the key left out. The
+shell shows its load failure screen.
+
+Measured as well, so nobody tests them again:
+
+- `localhost` is exempt. The test page at `http://localhost:5173` ran scripts
+  and answered the handshake with a key that listed only `qdoku.com`. A
+  localhost result therefore proves nothing about the key.
+- A dotted IPv4 address works as an entry. The same LAN page loaded and
+  answered the handshake once its address was listed.
+- An outside link still reaches `decidePolicyFor` with the flag on, so it still
+  opens in Safari.
+- An eleventh entry still worked in the simulator. WebKit documents ten as the
+  limit, and a device may enforce what the simulator does not, so ten is the
+  limit here.
+
+**Rule.**
+
+- An app opts in with `"appBoundDomains": true` in its `app.json`. It is off by
+  default, so the demo, the test page and every app that does not ask are
+  exactly as before.
+- The domains are the hosts of `allowedOrigins`, never a second list. Once the
+  key is declared, an allowed origin missing from it fails to load, and two
+  lists would drift. `select-app.sh` derives them: lowercased, one per host,
+  no scheme and no port, DNS names or dotted IPv4 only, at most ten. A host
+  with a trailing dot is refused by name: DNS reads it as the same name, but
+  whether WebKit matches it to the listed name was not measured.
+- They reach Info.plist as preprocessor definitions, one per slot, because an
+  xcconfig cannot hold a plist array. `Support/Info.plist` has ten slots. The
+  hosts are lowercase and the macros are uppercase, so a host cannot be
+  replaced by one; labels such as `unix`, `linux`, `i386` and `arm64` were
+  built and came through unchanged. A plist comment must not name a macro,
+  because the preprocessor would replace it there too. The Debug line in
+  `Support/Shell.xcconfig` repeats the definitions, because a conditional
+  setting replaces the plain one rather than adding to it.
+- The shell sets `limitsNavigationsToAppBoundDomains` from the BUILT Info.plist
+  (`AppBoundDomains.declared`), never from `app.json`. Info.plist is what
+  WebKit reads, so the key and the flag cannot disagree.
+- Reported in WebKit bug 227531 and not measured here: an app gets at most
+  three service workers across all its App-Bound Domains. One site with one
+  worker is far below that; an app spanning several sites that each run a
+  worker is not.
+
+**Check.** `native/scripts/select-app.sh --self-test` for the derivation,
+`swift test --package-path native --filter AppBoundDomainsTests` for the flag,
+and the CI step that reads the built Info.plists: qdoku's Release build
+carries `["qdoku.com"]`, and the demo's Debug build carries no key. The same
+step reads the setting a Debug build of qdoku resolves to, because neither
+plist would notice the Debug line losing its repeat. The worker
+itself needs a simulator. Build qdoku for Debug, run it, and look in the app's
+data container under
+`Library/WebKit/<bundle id>/WebsiteData/Default/<hash>/<hash>/CacheStorage/`:
+`cacheslist` names `qdoku-<version>`, and `Version 16/Records` holds 67 files
+that are not `-blob`.

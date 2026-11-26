@@ -25,6 +25,13 @@ final class ShellViewController: UIViewController {
 
     override func loadView() {
         let content = WKWebViewConfiguration()
+        // On exactly when Info.plist declares App-Bound Domains, which an app
+        // asks for with `appBoundDomains` in its app.json (NATIVE-021). The key
+        // is what lets the page run a service worker; this flag is what keeps
+        // the bridge alive once the key is there. Neither works without the
+        // other.
+        content.limitsNavigationsToAppBoundDomains =
+            AppBoundDomains.declared(in: Bundle.main.infoDictionary)
         content.userContentController.add(transport, name: handlerName)
         content.userContentController.addUserScript(BridgeTransport.markerScript)
 

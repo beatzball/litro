@@ -9,7 +9,11 @@
 // The Info.plist runs through the C preprocessor so the local-networking keys
 // can be Debug only. See the comment in Info.plist for why they must not ship.
 INFOPLIST_PREPROCESS = YES
-INFOPLIST_PREPROCESSOR_DEFINITIONS[config=Debug] = LITRO_DEBUG_NETWORKING=1
+// LITRO_INFOPLIST_DEFINITIONS is per app, from select-app.sh: the app's
+// App-Bound Domains, or nothing (NATIVE-021). The Debug line must repeat it,
+// because a conditional setting replaces the plain one rather than adding to it.
+INFOPLIST_PREPROCESSOR_DEFINITIONS = $(LITRO_INFOPLIST_DEFINITIONS)
+INFOPLIST_PREPROCESSOR_DEFINITIONS[config=Debug] = $(LITRO_INFOPLIST_DEFINITIONS) LITRO_DEBUG_NETWORKING=1
 
 SDKROOT = iphoneos
 IPHONEOS_DEPLOYMENT_TARGET = 17.0

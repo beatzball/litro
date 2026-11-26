@@ -126,8 +126,9 @@ Apps/qdoku/
   "bundleIdentifier": "com.qdoku.app",
   "startURL": "https://qdoku.com/",
   "allowedOrigins": ["https://qdoku.com"],
+  "appBoundDomains": true,
   "version": "1.0.0",
-  "build": "1",
+  "build": "2",
   "capabilities": ["haptics", "share", "review"]
 }
 ```
@@ -141,6 +142,17 @@ does nothing a reviewer can see.
 `allowedOrigins` is compared as whole origins — scheme, host and port — not as
 string prefixes. A prefix match would let `https://app.example.com.attacker.test`
 through an allowlist naming `https://app.example.com`.
+
+`appBoundDomains` is optional, and off unless it is `true`. Turn it on when
+the site needs a service worker inside the app, which is what offline play
+needs: a `WKWebView` offers service workers only to the domains an app declares
+as App-Bound. `select-app.sh` takes those domains from `allowedOrigins` (the
+hosts, lowercased, one each, at most ten) and writes them into Info.plist, and
+the shell then limits its web view to them. Two things follow, both measured.
+An origin missing from the key fails to load, so pointing the app at a LAN dev
+server works as before only because `select-app.sh` rebuilds the key from the
+edited `allowedOrigins`. And the key must never be declared without that limit,
+or the bridge stops (NATIVE-021).
 
 `version` and `build` are per app and required. They become
 `CFBundleShortVersionString` and `CFBundleVersion`: one to three whole numbers
