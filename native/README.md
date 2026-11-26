@@ -115,7 +115,8 @@ demo.
 
 Select a folder anywhere by its path. An argument with a slash in it is a path,
 and the folder's name is the app's name. That name becomes the executable's
-file name, so it must be lowercase letters and digits:
+file name, so it must start with a lowercase letter and hold only lowercase
+letters and digits:
 
 ```sh
 native/scripts/select-app.sh ../my-site/native/myapp

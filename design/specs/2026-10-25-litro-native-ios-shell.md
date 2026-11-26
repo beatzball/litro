@@ -799,8 +799,9 @@ request here. So its folder moved to the qdoku repository, and `select-app.sh`
 takes a path as well as a name.
 
 - An argument with a slash is a path to the app's folder. The folder's name is
-  the app's name, lowercase letters and digits only, because it becomes
-  `PRODUCT_NAME`.
+  the app's name: a lowercase letter, then lowercase letters and digits,
+  because it becomes `PRODUCT_NAME`. A folder inside `native/Build` is
+  refused, because selecting clears that folder before it copies.
 - `native/Apps/` keeps the demo.
 - CI cannot read a private repository, so `native/Fixtures/example/` stands in
   for a store app in the Release build: an https origin, an icon and App-Bound

@@ -8,7 +8,7 @@
 # on its failure screen.
 #
 #   native/scripts/select-app.sh demo                      # a folder in native/Apps
-#   native/scripts/select-app.sh ../my-app/native/my-app   # a folder anywhere else
+#   native/scripts/select-app.sh ../my-site/native/myapp   # a folder anywhere else
 #   native/scripts/select-app.sh --self-test               # the rules, checked
 #
 # A real app keeps its folder in its own repository, beside its site, so its
@@ -20,6 +20,12 @@
 # third-party build-time dependency.
 
 set -euo pipefail
+
+# `cd` prints the folder it moved to when CDPATH is set, and the paths here are
+# read back from `cd ... && pwd`. An exported CDPATH=. turned a valid relative
+# path into two lines. locate_app also clears it for itself, so its self-test
+# can set it.
+unset CDPATH
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -53,9 +59,10 @@ BOUND_HOST_SHAPE='^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?
 BOUND_HOST_LIMIT=10
 
 # An app's name is its folder's name, and it becomes PRODUCT_NAME: the
-# executable's file name and the app module's name. Lowercase letters and
-# digits only, because a folder outside this repository is named by someone
-# who has not read this, and a space or a dot survives into paths and signing.
+# executable's file name and the app module's name. A lowercase letter, then
+# lowercase letters and digits, because a folder outside this repository is
+# named by someone who has not read this, and a space or a dot survives into
+# paths and signing.
 APP_NAME_SHAPE='^[a-z][a-z0-9]*$'
 
 # scheme://host[:port], lowercased, with a default port dropped, or nothing
@@ -124,8 +131,11 @@ locate_app() {
         echo "select-app: no folder at '$1'" >&2
         return 1
       fi
-      app_parent="$(cd "$(dirname "$arg")" && pwd)"
-      app_name="$(basename "$arg")"
+      # The folder itself is resolved, so `./` from inside it names it too.
+      local resolved
+      resolved="$(CDPATH='' cd -- "$arg" && pwd)"
+      app_parent="$(dirname "$resolved")"
+      app_name="$(basename "$resolved")"
       ;;
     *)
       app_parent="$here/Apps"
@@ -144,7 +154,7 @@ select_app() {
   local source_dir="$apps/$app"
 
   if ! [[ "$app" =~ $APP_NAME_SHAPE ]]; then
-    echo "select-app: '$app' cannot name an app; the folder's name becomes the executable's name, so use lowercase letters and digits" >&2
+    echo "select-app: '$app' cannot name an app; the folder's name becomes the executable's name, so it must start with a lowercase letter and hold only lowercase letters and digits" >&2
     return 1
   fi
 
@@ -155,6 +165,17 @@ select_app() {
     available "$apps" >&2
     return 1
   fi
+
+  # <out> is cleared before the copy, so a folder inside it would be deleted
+  # first, and the build would be left with no app.json and a success message.
+  local source_real out_real
+  source_real="$(cd "$source_dir" && pwd -P)"
+  out_real="$(cd "$out" 2>/dev/null && pwd -P || printf '%s' "$out")"
+  case "$source_real/" in
+    "$out_real"/*)
+      echo "select-app: $source_dir is inside $out, which selecting clears; keep the app's folder somewhere else" >&2
+      return 1 ;;
+  esac
 
   local config="$source_dir/app.json"
   if [ ! -f "$config" ]; then
@@ -326,7 +347,7 @@ select_app() {
   # The per-app build settings, as a file Xcode reads rather than a value typed
   # into the project. The project file then carries no per-app logic at all.
   cat > "$out/App.xcconfig" <<CONFIG
-// Written by native/scripts/select-app.sh from $source_dir/app.json.
+// Written by native/scripts/select-app.sh from ${source_dir#"$(dirname "$here")"/}/app.json.
 // Do not edit, and do not commit: run the script instead.
 LITRO_APP = $app
 // PRODUCT_NAME becomes the executable's file name, so it is the folder name and
@@ -477,7 +498,7 @@ PY
   expect "the same origin spelled differently" accept spelling
   fixture noorigins "{\"name\":\"T\",\"bundleIdentifier\":\"com.example.t\",\"startURL\":\"https://t.example/\",$rest}"
   expect "no allowedOrigins" reject noorigins
-  expect "an app that does not exist" reject no-such-app
+  refuse "an app that does not exist" nosuchapp "no app named 'nosuchapp'"
 
   # App-Bound Domains (NATIVE-021): off unless asked for, and when asked for,
   # the hosts of allowedOrigins and nothing else.
@@ -540,8 +561,23 @@ PY
     sed 's/^/       /' "$dir/log" >&2
     failures=$((failures + 1))
   fi
+  (cd "$dir/elsewhere/repo/native/outside" && locate_app ./ && printf '%s|%s' "$app_parent" "$app_name") > "$dir/located"
+  assert "./ from inside the folder names the folder" "$(cat "$dir/located")" "$dir/elsewhere/repo/native|outside"
+  (export CDPATH=.; cd "$dir/elsewhere/repo" && locate_app native/outside && printf '%s|%s' "$app_parent" "$app_name") > "$dir/located"
+  assert "an exported CDPATH does not change a relative path" "$(cat "$dir/located")" "$dir/elsewhere/repo/native|outside"
   locate_app demo
   assert "a bare name is a folder in native/Apps" "$app_parent|$app_name" "$here/Apps|demo"
+  # A folder inside the output would be deleted before it is copied.
+  select_app "$dir/apps" "$dir/out" good > /dev/null
+  mkdir -p "$dir/out/inner"
+  cp "$dir/apps/good/app.json" "$dir/out/inner/"
+  if select_app "$dir/out" "$dir/out" inner > "$dir/log" 2>&1; then
+    echo "  FAIL an app folder inside the output -> accept" >&2
+    failures=$((failures + 1))
+  else
+    assert "an app folder inside the output is refused, and kept" \
+      "$(grep -c "which selecting clears" "$dir/log")|$([ -f "$dir/out/inner/app.json" ] && echo kept)" "1|kept"
+  fi
   if locate_app "$dir/elsewhere/nothing" 2> "$dir/log"; then
     echo "  FAIL a path to no folder -> accept" >&2
     failures=$((failures + 1))
@@ -552,6 +588,8 @@ PY
   refuse "a folder name with a capital letter" Outside "cannot name an app"
   fixture "two.parts" "{$base,$rest}"
   refuse "a folder name with a dot" "two.parts" "cannot name an app"
+  fixture 2048 "{$base,$rest}"
+  refuse "a folder name that starts with a digit" 2048 "must start with a lowercase letter"
 
   # The icon, down to its pixels. Each rejecting shape here built and shipped
   # with no usable icon before these checks existed.
