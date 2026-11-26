@@ -520,7 +520,8 @@ Info.plist names `CFBundleIconName = AppIcon`.
 
 **Check.** `native/scripts/select-app.sh --self-test` and
 `native/scripts/check-release-config.sh --self-test`, and the CI step that
-builds qdoku for Release and asserts `CFBundleIconName` and `Assets.car`.
+builds `native/Fixtures/example` for Release and asserts `CFBundleIconName` and
+`Assets.car`.
 
 ## NATIVE-020 — `vh` is not the height the web view gives the page
 
@@ -647,11 +648,13 @@ Measured as well, so nobody tests them again:
 
 **Check.** `native/scripts/select-app.sh --self-test` for the derivation,
 `swift test --package-path native --filter AppBoundDomainsTests` for the flag,
-and the CI step that reads the built Info.plists: qdoku's Release build
-carries `["qdoku.com"]`, and the demo's Debug build carries no key. The same
-step reads the setting a Debug build of qdoku resolves to, because neither
-plist would notice the Debug line losing its repeat. The worker
-itself needs a simulator. Build qdoku for Debug, run it, and look in the app's
+and the CI step that reads the built Info.plists: the example's Release build
+(`native/Fixtures/example`) carries `["example.com"]`, and the demo's Debug
+build carries no key. The same step reads the setting a Debug build of the
+example resolves to, because neither plist would notice the Debug line losing
+its repeat. The worker itself needs a simulator and a real site. Select qdoku
+by the path to its folder in its own repository, build it for Debug, run it,
+and look in the app's
 data container under
 `Library/WebKit/<bundle id>/WebsiteData/Default/<hash>/<hash>/CacheStorage/`:
 `cacheslist` names `qdoku-<version>`, and `Version 16/Records` holds 67 files

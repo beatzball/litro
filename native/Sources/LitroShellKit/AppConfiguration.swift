@@ -2,7 +2,8 @@
 //
 //  Two apps differ only by data: a name, an identifier, a start URL, the origins
 //  the web view may load, and which capability modules are on. Adding the next
-//  Litro app is a new folder under Apps/, not a new project.
+//  Litro app is a new folder, not a new project. The demo's is under Apps/; a
+//  real app keeps its own beside its site.
 
 import Foundation
 import LitroBridge
@@ -65,9 +66,9 @@ public enum AppConfigurationError: Error, CustomStringConvertible {
         switch self {
         case let .missing(name):
             return """
-            \(name) is not in the app bundle. The build copies one folder from \
-            native/Apps/ into the project's resources; run native/scripts/select-app.sh \
-            before building.
+            \(name) is not in the app bundle. The build copies one app's folder \
+            into the project's resources; run native/scripts/select-app.sh with the \
+            app's name or the path to its folder before building.
             """
         case let .unreadable(name, underlying):
             return "\(name) could not be read: \(underlying)"
@@ -83,7 +84,7 @@ public enum AppConfigurationError: Error, CustomStringConvertible {
             return """
             startURL \(url.absoluteString) is not in allowedOrigins (\(list)). The app \
             would refuse its own first page and show nothing. Add its origin to \
-            allowedOrigins in the app's app.json under native/Apps/.
+            allowedOrigins in the app's app.json.
             """
         }
     }

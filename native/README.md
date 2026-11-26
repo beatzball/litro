@@ -21,7 +21,8 @@ native/
                              the modules
   Apps/
     demo/app.json            the development app, as plain data
-    qdoku/                   a store app: app.json and its icon
+  Fixtures/
+    example/                 a store-shaped app CI builds for Release; never shipped
   Support/
     Shell.xcconfig           build settings shared by every app
     Info.plist               reads the per-app values as build settings
@@ -107,11 +108,24 @@ the address it could not reach, which is the fastest way to notice.
 
 ## Adding an app
 
-Make a folder under `Apps/` with an `app.json`, and an icon if it will ship.
-`Apps/qdoku/` is the real example:
+Make a folder with an `app.json`, and an icon if it will ship. A real app
+keeps that folder in its own repository, beside its site, so its identity, icon
+and build number change with the app and not with the shell. `Apps/` holds the
+demo.
+
+Select a folder anywhere by its path. An argument with a slash in it is a path,
+and the folder's name is the app's name. That name becomes the executable's
+file name, so it must be lowercase letters and digits:
+
+```sh
+native/scripts/select-app.sh ../my-site/native/myapp
+```
+
+`Fixtures/example/` is the shape of a store app, and what CI builds for
+Release:
 
 ```
-Apps/qdoku/
+Fixtures/example/
   app.json
   Assets.xcassets/
     Contents.json
@@ -122,13 +136,13 @@ Apps/qdoku/
 
 ```json
 {
-  "name": "Qdoku",
-  "bundleIdentifier": "com.qdoku.app",
-  "startURL": "https://qdoku.com/",
-  "allowedOrigins": ["https://qdoku.com"],
+  "name": "Example",
+  "bundleIdentifier": "dev.litro.shell.example",
+  "startURL": "https://example.com/",
+  "allowedOrigins": ["https://example.com"],
   "appBoundDomains": true,
   "version": "1.0.0",
-  "build": "2",
+  "build": "1",
   "capabilities": ["haptics", "share", "review"]
 }
 ```

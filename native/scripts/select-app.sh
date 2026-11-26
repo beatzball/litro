@@ -7,8 +7,13 @@
 # Run it before building, or the app target has no app.json and the shell stops
 # on its failure screen.
 #
-#   native/scripts/select-app.sh demo
-#   native/scripts/select-app.sh --self-test   # the rules, checked
+#   native/scripts/select-app.sh demo                      # a folder in native/Apps
+#   native/scripts/select-app.sh ../my-app/native/my-app   # a folder anywhere else
+#   native/scripts/select-app.sh --self-test               # the rules, checked
+#
+# A real app keeps its folder in its own repository, beside its site, so its
+# identity, icon and build number change with the app and not with the shell.
+# native/Apps holds the demo. An argument with a slash in it is a path.
 #
 # Nothing here depends on a tool that is not already on a Mac. `plutil` reads
 # JSON and ships with the system, so the shell keeps its promise of no
@@ -46,6 +51,12 @@ BOUND_HOST_SHAPE='^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?
 # honored an eleventh entry, but a limit Apple documents is the one a device
 # may enforce, so it is enforced here.
 BOUND_HOST_LIMIT=10
+
+# An app's name is its folder's name, and it becomes PRODUCT_NAME: the
+# executable's file name and the app module's name. Lowercase letters and
+# digits only, because a folder outside this repository is named by someone
+# who has not read this, and a space or a dot survives into paths and signing.
+APP_NAME_SHAPE='^[a-z][a-z0-9]*$'
 
 # scheme://host[:port], lowercased, with a default port dropped, or nothing
 # when the URL has no scheme and host. The same comparison AppConfiguration
@@ -102,6 +113,27 @@ available() {
   find "$1" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | sed 's/^/  /'
 }
 
+# Turns the command line's one argument into the folder that holds the app and
+# the app's name, in app_parent and app_name. A name is a folder in Apps/; an
+# argument with a slash is a path to the app's folder, relative or absolute.
+locate_app() {
+  local arg="$1"
+  case "$arg" in
+    */*)
+      if [ ! -d "$arg" ]; then
+        echo "select-app: no folder at '$1'" >&2
+        return 1
+      fi
+      app_parent="$(cd "$(dirname "$arg")" && pwd)"
+      app_name="$(basename "$arg")"
+      ;;
+    *)
+      app_parent="$here/Apps"
+      app_name="$arg"
+      ;;
+  esac
+}
+
 # Selects <app> from <apps> into <out>. Returns non-zero, with the reason on
 # stderr, and leaves <out> alone when the app cannot be selected.
 #
@@ -110,6 +142,11 @@ available() {
 select_app() {
   local apps="$1" out="$2" app="$3"
   local source_dir="$apps/$app"
+
+  if ! [[ "$app" =~ $APP_NAME_SHAPE ]]; then
+    echo "select-app: '$app' cannot name an app; the folder's name becomes the executable's name, so use lowercase letters and digits" >&2
+    return 1
+  fi
 
   # A typo must stop the build, not produce a shell with the wrong app in it.
   if [ ! -d "$source_dir" ]; then
@@ -262,7 +299,7 @@ select_app() {
   # (NATIVE-019). Xcode builds a set whose image is missing with one warning
   # and ships no icon at all; and it compiles an image with an alpha channel,
   # which App Store Connect refuses.
-  local icon_line="// No icon: Apps/$app has no Assets.xcassets/AppIcon.appiconset." icon="none"
+  local icon_line="// No icon: $source_dir has no Assets.xcassets/AppIcon.appiconset." icon="none"
   local icon_set="$source_dir/Assets.xcassets/AppIcon.appiconset"
   if [ -d "$icon_set" ]; then
     icon_problem_of "$icon_set" || return 1
@@ -289,7 +326,7 @@ select_app() {
   # The per-app build settings, as a file Xcode reads rather than a value typed
   # into the project. The project file then carries no per-app logic at all.
   cat > "$out/App.xcconfig" <<CONFIG
-// Written by native/scripts/select-app.sh from Apps/$app/app.json.
+// Written by native/scripts/select-app.sh from $source_dir/app.json.
 // Do not edit, and do not commit: run the script instead.
 LITRO_APP = $app
 // PRODUCT_NAME becomes the executable's file name, so it is the folder name and
@@ -308,6 +345,7 @@ $bound_line
 CONFIG
 
   echo "select-app: $app"
+  echo "  from    : ${source_dir#"$PWD"/}"
   echo "  name    : $name"
   echo "  bundle  : $bundle_id"
   echo "  version : $version ($build)"
@@ -482,6 +520,39 @@ PY
   select_app "$dir/apps" "$dir/out" badversion >/dev/null 2>&1 || true
   assert "a rejected app keeps the previous selection" "$(setting LITRO_APP)" "good"
 
+  # An app's folder outside native/Apps, the way a real app keeps it: a path,
+  # relative or absolute, with or without a trailing slash. Its name is the
+  # folder's name.
+  local app_parent app_name
+  mkdir -p "$dir/elsewhere/repo/native/outside"
+  cp "$dir/apps/good/app.json" "$dir/elsewhere/repo/native/outside/"
+  locate_app "$dir/elsewhere/repo/native/outside/"
+  assert "an absolute path names its folder" "$app_parent|$app_name" "$dir/elsewhere/repo/native|outside"
+  app_parent="" app_name=""
+  locate_app "$(cd "$dir/elsewhere" && pwd)/repo/native/outside"
+  assert "a path with no trailing slash" "$app_name" "outside"
+  (cd "$dir/elsewhere/repo" && locate_app native/outside && printf '%s|%s' "$app_parent" "$app_name") > "$dir/located"
+  assert "a relative path resolves from where the script runs" "$(cat "$dir/located")" "$dir/elsewhere/repo/native|outside"
+  if select_app "$app_parent" "$dir/out" "$app_name" > "$dir/log" 2>&1; then
+    assert "an app from outside native/Apps is selected" "$(setting LITRO_APP)" "outside"
+  else
+    echo "  FAIL an app from outside native/Apps -> reject" >&2
+    sed 's/^/       /' "$dir/log" >&2
+    failures=$((failures + 1))
+  fi
+  locate_app demo
+  assert "a bare name is a folder in native/Apps" "$app_parent|$app_name" "$here/Apps|demo"
+  if locate_app "$dir/elsewhere/nothing" 2> "$dir/log"; then
+    echo "  FAIL a path to no folder -> accept" >&2
+    failures=$((failures + 1))
+  else
+    assert "a path to no folder is refused" "$(grep -c "no folder at" "$dir/log")" "1"
+  fi
+  fixture Outside "{$base,$rest}"
+  refuse "a folder name with a capital letter" Outside "cannot name an app"
+  fixture "two.parts" "{$base,$rest}"
+  refuse "a folder name with a dot" "two.parts" "cannot name an app"
+
   # The icon, down to its pixels. Each rejecting shape here built and shipped
   # with no usable icon before these checks existed.
   fixture icon "{$base,$rest}"
@@ -530,11 +601,13 @@ if [ "${1:-}" = "--self-test" ]; then
 fi
 
 if [ "$#" -ne 1 ]; then
-  echo "usage: $(basename "$0") <app>" >&2
+  echo "usage: $(basename "$0") <app in native/Apps>" >&2
+  echo "       $(basename "$0") <path to an app's folder>" >&2
   echo "       $(basename "$0") --self-test" >&2
   echo "apps in $here/Apps:" >&2
   available "$here/Apps" >&2
   exit 2
 fi
 
-select_app "$here/Apps" "$here/Build" "$1"
+locate_app "$1" || exit 1
+select_app "$app_parent" "$here/Build" "$app_name"
